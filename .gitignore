@@ -1,0 +1,36 @@
+# Gradle files
+.gradle/
+build/
+/*/build/
+/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# Local user configurations
+local.properties
+.idea/workspace.xml
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+.idea/codeStyles/
+.idea/shelf/
+.idea/misc.xml
+.idea/gradle.xml
+*.iml
+
+# Log files
+*.log
+
+# Keystores & APKs
+*.apk
+*.ap_
+*.aab
+*.keystore
+*.jks
+
+# OS files
+.DS_Store
+Thumbs.db
