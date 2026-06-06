@@ -560,7 +560,7 @@ class SettingsServer(private val context: Context) {
                         calculationMethodName, adzanLeadMinutes,
                         offsetImsak, offsetSubuh, offsetSyuruq, offsetDzuhur, offsetAshar, offsetMaghrib, offsetIsya,
                         kemenagCityId, kemenagCityName, kemenagDuration, kemenagTargetDate,
-                        triggerFetch = false,
+                        triggerFetch = true,
                         adzanFooterText = adzanFooterText,
                         iqomahFooterText = iqomahFooterText
                     )
@@ -655,9 +655,7 @@ class SettingsServer(private val context: Context) {
                                         })
                                     }
                                 }
-                                for (schedule in list) {
-                                    repository.saveKemenagSchedule(schedule)
-                                }
+                                repository.saveKemenagSchedules(list)
                                 Log.d(TAG, "Successfully bulk-saved ${list.size} Kemenag schedules from WebSocket")
                                 broadcastState()
                             } catch (e: Exception) {
@@ -700,6 +698,7 @@ class SettingsServer(private val context: Context) {
                     val startTime = json.optString("standbyStartTime", "22:00")
                     val endTime = json.optString("standbyEndTime", "04:00")
                     repository.updateStandbySettings(enabled, startTime, endTime)
+                    broadcastState()
                 }
                 "register" -> {
                     val deviceId = json.optString("deviceId") ?: return
@@ -817,7 +816,15 @@ class SettingsServer(private val context: Context) {
                     val base64Data = json.optString("base64") ?: return
 
                     try {
-                        val file = File(context.filesDir, "custom_background.jpg")
+                        val oldPath = repository.getConfig().customBackgroundPath
+                        if (oldPath.isNotEmpty()) {
+                            try {
+                                val oldFile = File(oldPath)
+                                if (oldFile.exists()) oldFile.delete()
+                            } catch (_: Exception) {}
+                        }
+                        val timestamp = System.currentTimeMillis()
+                        val file = File(context.filesDir, "custom_background_$timestamp.jpg")
                         val cleanBase64 = if (base64Data.contains(",")) {
                             base64Data.substring(base64Data.indexOf(",") + 1)
                         } else {
@@ -828,18 +835,21 @@ class SettingsServer(private val context: Context) {
                             fos.write(bytes)
                         }
                         repository.updateCustomBackground(file.absolutePath)
+                        broadcastState()
                     } catch (e: Exception) {
                         Log.e(TAG, "Background upload failure", e)
                     }
                 }
                 "clear_background" -> {
                     try {
-                        val file = File(context.filesDir, "custom_background.jpg")
-                        if (file.exists()) {
-                            file.delete()
+                        val oldPath = repository.getConfig().customBackgroundPath
+                        if (oldPath.isNotEmpty()) {
+                            val oldFile = File(oldPath)
+                            if (oldFile.exists()) oldFile.delete()
                         }
                     } catch (_: Exception) {}
                     repository.updateCustomBackground("")
+                    broadcastState()
                 }
                 "upload_media" -> {
                     val filename = json.optString("filename") ?: "slide_${System.currentTimeMillis()}.jpg"
@@ -866,6 +876,7 @@ class SettingsServer(private val context: Context) {
                             fos.write(bytes)
                         }
                         repository.addMediaItem(targetFile.absolutePath, isVideo)
+                        broadcastState()
                     } catch (e: Exception) {
                         Log.e(TAG, "Media upload failure", e)
                     }
@@ -882,6 +893,7 @@ class SettingsServer(private val context: Context) {
                             }
                         } catch (_: Exception) {}
                         repository.deleteMediaItem(id)
+                        broadcastState()
                     }
                 }
                 "add_slideshow_schedule" -> {
@@ -901,12 +913,14 @@ class SettingsServer(private val context: Context) {
                 }
                 "reset" -> {
                     try {
-                        val file = File(context.filesDir, "custom_background.jpg")
-                        if (file.exists()) {
-                            file.delete()
+                        val oldPath = repository.getConfig().customBackgroundPath
+                        if (oldPath.isNotEmpty()) {
+                            val oldFile = File(oldPath)
+                            if (oldFile.exists()) oldFile.delete()
                         }
                     } catch (_: Exception) {}
                     repository.resetToDefaults()
+                    broadcastState()
                 }
             }
         } catch (e: Exception) {
@@ -946,56 +960,84 @@ class SettingsServer(private val context: Context) {
         }
 
         fun readFrame(): String? {
-            val b0 = inputStream.read()
-            if (b0 == -1) return null
-            val opcode = b0 and 0x0F
-            if (opcode == 0x08) return null // close control frame
+            val messageBuffer = ByteArrayOutputStream()
 
-            val b1 = inputStream.read()
-            if (b1 == -1) return null
-            val isMasked = (b1 and 0x80) != 0
-            var len = b1 and 0x7F
+            while (true) {
+                val b0 = inputStream.read()
+                if (b0 == -1) return null
+                val isFin = (b0 and 0x80) != 0
+                val opcode = b0 and 0x0F
 
-            var payloadLength = len.toLong()
-            if (len == 126) {
-                val byte1 = inputStream.read()
-                val byte2 = inputStream.read()
-                if (byte1 == -1 || byte2 == -1) return null
-                payloadLength = ((byte1 shl 8) or byte2).toLong()
-            } else if (len == 127) {
-                var tempLen: Long = 0
-                for (i in 0 until 8) {
-                    val b = inputStream.read()
-                    if (b == -1) return null
-                    tempLen = (tempLen shl 8) or b.toLong()
+                if (opcode == 0x08) return null // close control frame
+
+                val b1 = inputStream.read()
+                if (b1 == -1) return null
+                val isMasked = (b1 and 0x80) != 0
+                val len = b1 and 0x7F
+
+                var payloadLength = len.toLong()
+                if (len == 126) {
+                    val byte1 = inputStream.read()
+                    val byte2 = inputStream.read()
+                    if (byte1 == -1 || byte2 == -1) return null
+                    payloadLength = ((byte1 shl 8) or byte2).toLong()
+                } else if (len == 127) {
+                    var tempLen: Long = 0
+                    for (i in 0 until 8) {
+                        val b = inputStream.read()
+                        if (b == -1) return null
+                        tempLen = (tempLen shl 8) or b.toLong()
+                    }
+                    payloadLength = tempLen
                 }
-                payloadLength = tempLen
-            }
 
-            val mask = ByteArray(4)
-            if (isMasked) {
-                for (i in 0 until 4) {
-                    val b = inputStream.read()
-                    if (b == -1) return null
-                    mask[i] = b.toByte()
+                val mask = ByteArray(4)
+                if (isMasked) {
+                    for (i in 0 until 4) {
+                        val b = inputStream.read()
+                        if (b == -1) return null
+                        mask[i] = b.toByte()
+                    }
                 }
-            }
 
-            val payload = ByteArray(payloadLength.toInt())
-            var totalRead = 0
-            while (totalRead < payloadLength) {
-                val read = inputStream.read(payload, totalRead, payload.size - totalRead)
-                if (read == -1) return null
-                totalRead += read
-            }
-
-            if (isMasked) {
-                for (i in payload.indices) {
-                    payload[i] = (payload[i].toInt() xor mask[i % 4].toInt()).toByte()
+                val payload = ByteArray(payloadLength.toInt())
+                var totalRead = 0
+                while (totalRead < payloadLength) {
+                    val read = inputStream.read(payload, totalRead, payload.size - totalRead)
+                    if (read == -1) return null
+                    totalRead += read
                 }
-            }
 
-            return String(payload, Charsets.UTF_8)
+                if (isMasked) {
+                    for (i in payload.indices) {
+                        payload[i] = (payload[i].toInt() xor mask[i % 4].toInt()).toByte()
+                    }
+                }
+
+                // Handle ping/pong control frames
+                if (opcode == 0x09) {
+                    // Ping received - send pong
+                    synchronized(outputStream) {
+                        try {
+                            outputStream.write(0x8A) // FIN + pong opcode
+                            outputStream.write(payload.size)
+                            outputStream.write(payload)
+                            outputStream.flush()
+                        } catch (_: Exception) {}
+                    }
+                    continue // Read next frame
+                }
+                if (opcode == 0x0A) {
+                    continue // Pong received - ignore
+                }
+
+                messageBuffer.write(payload)
+
+                if (isFin) {
+                    return String(messageBuffer.toByteArray(), Charsets.UTF_8)
+                }
+                // If FIN is not set, continue reading continuation frames
+            }
         }
 
         fun close() {

@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.KemenagScheduleEntity
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @Composable
 fun MethodSettingsSegment(
@@ -42,6 +44,10 @@ fun MethodSettingsSegment(
         "SINGAPORE", "UMM_AL_QURA", "MUSLIM_WORLD_LEAGUE", "EGYPTIAN",
         "KARACHI", "DUBAI", "KUWAIT", "QATAR", "KEMENAG"
     )
+    val scope = rememberCoroutineScope()
+    var showCitySearchDialog by remember { mutableStateOf(false) }
+    var showSchedulesDialog by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -138,138 +144,265 @@ fun MethodSettingsSegment(
                     }
                 }
 
-                if (kemenagDuration == "SPECIFIC_DATE") {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    DatePickerField(
-                        value = kemenagTargetDate,
-                        onValueChange = { onKemenagTargetDateChange(it) },
-                        label = com.groovernapp.mosqueathan.util.Lang.get("Target End Date (YYYY-MM-DD)", "Tanggal Batas Akhir (YYYY-MM-DD)"),
-                        placeholder = "2026-12-31",
-                        modifier = Modifier.fillMaxWidth()
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    if (kemenagDuration == "SPECIFIC_DATE") {
+                        DatePickerField(
+                            value = kemenagTargetDate,
+                            onValueChange = { onKemenagTargetDateChange(it) },
+                            label = com.groovernapp.mosqueathan.util.Lang.get("Target End Date", "Tanggal Batas Akhir"),
+                            placeholder = "2026-12-31",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = kemenagCityName.ifEmpty { "-" },
+                        onValueChange = {},
+                        readOnly = true,
+                        label = {
+                            Text(
+                                text = com.groovernapp.mosqueathan.util.Lang.get("City", "Kota"),
+                                color = Color.White.copy(alpha = 0.6f)
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.White.copy(alpha = 0.2f),
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        trailingIcon = {
+                            TextButton(onClick = { showCitySearchDialog = true }) {
+                                Text(
+                                    text = com.groovernapp.mosqueathan.util.Lang.get("Change", "Ubah"),
+                                    color = Color(0xFFFFD54F),
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        },
+                        modifier = Modifier.weight(1f).onKeyEvent { event ->
+                            if (event.type == KeyEventType.KeyUp && (event.key == Key.DirectionCenter || event.key == Key.Enter)) {
+                                showCitySearchDialog = true
+                                true
+                            } else false
+                        },
+                        singleLine = true
                     )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                var searchQuery by remember { mutableStateOf("") }
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = {
-                        searchQuery = it
-                        onSearchKemenagCities(it)
-                    },
-                    label = {
-                        Text(
-                            text = com.groovernapp.mosqueathan.util.Lang.get("Search City (Indonesia)", "Cari Kota (Indonesia)"),
-                            color = Color.White.copy(alpha = 0.6f)
-                        )
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFFFFD54F),
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+            item {
+                var isDownloading by remember { mutableStateOf(false) }
 
                 Spacer(modifier = Modifier.height(16.dp))
                 TvFocusablePrimaryButton(
-                    onClick = onDownloadKemenagSchedules,
+                    onClick = {
+                        isDownloading = true
+                        onDownloadKemenagSchedules()
+                        scope.launch {
+                            delay(1500)
+                            isDownloading = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(44.dp)
+                ) {
+                    if (isDownloading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.Black,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = com.groovernapp.mosqueathan.util.Lang.get("Download Prayer Times", "Unduh Jadwal Sholat"),
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                TvFocusablePrimaryButton(
+                    onClick = { showSchedulesDialog = true },
                     modifier = Modifier.fillMaxWidth().height(44.dp)
                 ) {
                     Text(
-                        text = com.groovernapp.mosqueathan.util.Lang.get("Download Prayer Times", "Unduh Jadwal Sholat"),
+                        text = com.groovernapp.mosqueathan.util.Lang.get("View Downloaded Schedules", "Lihat Jadwal Terunduh"),
                         color = Color.Black,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
                 }
-            }
-
-            if (isSearchingCities) {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = Color(0xFFFFD54F))
-                    }
-                }
-            }
-
-            items(citySearchResults) { (id, name) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
-                        .clickable { onKemenagCitySelected(id, name) }
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = name, color = Color.White, fontSize = 14.sp)
-                }
-            }
-
-            item {
                 Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+
+    if (showCitySearchDialog) {
+        AlertDialog(
+            onDismissRequest = { showCitySearchDialog = false },
+            containerColor = Color(0xFF1E2622),
+            title = {
                 Text(
-                    text = com.groovernapp.mosqueathan.util.Lang.get("Downloaded Schedules Preview", "Pratinjau Jadwal Terunduh"),
-                    color = Color(0xFFFFD54F),
-                    fontSize = 16.sp,
+                    text = com.groovernapp.mosqueathan.util.Lang.get("Search City", "Cari Kota"),
+                    color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            if (kemenagSchedules.isEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
+            },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = {
+                            searchQuery = it
+                            onSearchKemenagCities(it)
+                        },
+                        placeholder = { Text(com.groovernapp.mosqueathan.util.Lang.get("Type city name...", "Ketik nama kota..."), color = Color.White.copy(alpha = 0.5f)) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFFFFD54F),
+                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        trailingIcon = {
+                            if (isSearchingCities) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = Color(0xFFFFD54F),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth().height(250.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        items(citySearchResults) { (id, name) ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White.copy(alpha = 0.05f))
+                                    .clickable {
+                                        onKemenagCitySelected(id, name)
+                                        showCitySearchDialog = false
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = name, color = Color.White, fontSize = 14.sp)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showCitySearchDialog = false }) {
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = Color(0xFFFFD54F))
+                }
+            }
+        )
+    }
+
+    if (showSchedulesDialog) {
+        AlertDialog(
+            onDismissRequest = { showSchedulesDialog = false },
+            containerColor = Color(0xFF1E2622),
+            title = {
+                Text(
+                    text = com.groovernapp.mosqueathan.util.Lang.get("Downloaded Schedules", "Jadwal Terunduh"),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                if (kemenagSchedules.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                         Text(
                             text = com.groovernapp.mosqueathan.util.Lang.get("No schedules downloaded yet", "Belum ada jadwal yang diunduh"),
                             color = Color.White.copy(alpha = 0.5f),
                             fontSize = 14.sp
                         )
                     }
-                }
-            } else {
-                items(kemenagSchedules) { sch ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.03f))
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth().height(350.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column {
-                            Text(
-                                text = sch.dateString,
-                                color = Color(0xFFFFD54F),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Imsak: ${sch.imsak} | Subuh: ${sch.subuh} | Terbit: ${sch.terbit}",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                text = "Dzuhur: ${sch.dzuhur} | Ashar: ${sch.ashar} | Maghrib: ${sch.maghrib} | Isya: ${sch.isya}",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 12.sp
-                            )
+                        val grouped = kemenagSchedules.groupBy { 
+                            val parts = it.dateString.split("-")
+                            if (parts.size >= 2) "${parts[1]}-${parts[0]}" else "Unknown"
+                        }
+                        
+                        grouped.forEach { (monthYear, schedules) ->
+                            item {
+                                val displayMonthYear = try {
+                                    val parts = monthYear.split("-")
+                                    val cal = java.util.Calendar.getInstance()
+                                    cal.set(parts[1].toInt(), parts[0].toInt() - 1, 1)
+                                    java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale("id")).format(cal.time)
+                                } catch (e: Exception) { monthYear }
+
+                                Text(
+                                    text = displayMonthYear,
+                                    color = Color(0xFFFFD54F),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                                )
+                            }
+                            items(schedules) { sch ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color.White.copy(alpha = 0.05f))
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = sch.dateString,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "Imsak: ${sch.imsak} | Subuh: ${sch.subuh} | Terbit: ${sch.terbit}",
+                                            color = Color.White.copy(alpha = 0.7f),
+                                            fontSize = 12.sp
+                                        )
+                                        Text(
+                                            text = "Dzuhur: ${sch.dzuhur} | Ashar: ${sch.ashar} | Maghrib: ${sch.maghrib} | Isya: ${sch.isya}",
+                                            color = Color.White.copy(alpha = 0.7f),
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSchedulesDialog = false }) {
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = Color(0xFFFFD54F))
+                }
             }
-        }
+        )
     }
 }
 

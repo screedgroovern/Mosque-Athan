@@ -1219,7 +1219,7 @@ object WebPage {
                         </span>
                     </div>
 
-                    <button class="btn btn-primary" onclick="saveLocation()" style="align-self: flex-end; margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="handleSaveClick(this, () => saveLocation())" style="align-self: flex-end; margin-top: 1rem;">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                         <span data-lang-key="btn_save_coords">Simpan Perubahan</span>
                     </button>
@@ -1283,7 +1283,7 @@ object WebPage {
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary" onclick="saveIqomah()" style="align-self: flex-end; margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="handleSaveClick(this, () => saveIqomah())" style="align-self: flex-end; margin-top: 1rem;">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                         <span data-lang-key="btn_save_iqomah">Simpan Jeda Iqomah</span>
                     </button>
@@ -1368,7 +1368,7 @@ object WebPage {
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary" onclick="saveOffsets()" style="align-self: flex-end; margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="handleSaveClick(this, () => saveOffsets())" style="align-self: flex-end; margin-top: 1rem;">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                         <span data-lang-key="btn_save_offsets">Simpan Penyesuaian Waktu</span>
                     </button>
@@ -1421,18 +1421,13 @@ object WebPage {
                         </div>
                     </div>
                     <div id="kemenag-city-picker-container" style="display: none; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
-                        <label style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);" data-lang-key="kemenag_city_label">Pilih Kota Kemenag (Indonesia)</label>
-                        <div style="display: flex; gap: 0.75rem;">
-                            <input type="text" id="kemenag-search-query" placeholder="Cari kota, misal: Jakarta, Surabaya, Yogyakarta..." style="flex: 1;" onkeypress="handleKemenagSearchKeyPress(event)">
-                            <button class="btn btn-primary" onclick="searchKemenagCities()">Cari</button>
-                        </div>
-                        <div id="kemenag-search-results" style="display: flex; flex-direction: column; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background-color: rgba(255, 255, 255, 0.02);">
-                            <!-- Results will be loaded here -->
-                        </div>
-                        <div id="kemenag-selected-city-info" style="font-size: 0.9rem; color: var(--accent); font-weight: 600; margin-top: 0.25rem;">
+                        <!-- Selected City Info -->
+                        <div id="kemenag-selected-city-info" style="font-size: 1rem; color: var(--accent); font-weight: bold; margin-bottom: 0.5rem;">
                             Kota Terpilih: -
                         </div>
-                        <div style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                        
+                        <!-- Duration Selector -->
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
                             <label style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);" data-lang-key="kemenag_duration_label">Periode Waktu Jadwal yang Diunduh</label>
                             <select id="kemenag-duration" onchange="toggleKemenagDateInput()">
                                 <option value="1_WEEK" data-lang-key="kemenag_dur_1w">1 Minggu ke Depan</option>
@@ -1446,16 +1441,37 @@ object WebPage {
                                 <option value="SPECIFIC_DATE" data-lang-key="kemenag_dur_date">Hingga Tanggal Tertentu</option>
                             </select>
                         </div>
-                        <div id="kemenag-specific-date-container" style="display: none; margin-top: 0.75rem; flex-direction: column; gap: 0.5rem;">
-                            <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-secondary);" data-lang-key="kemenag_date_label">Pilih Tanggal Batas Akhir</label>
-                            <div class="flatpickr-wrapper" id="kemenag-date-picker-wrapper">
-                                <input type="text" id="kemenag-specific-date" data-input placeholder="Pilih tanggal...">
-                                <button type="button" class="picker-btn" data-toggle title="Pilih Tanggal">
-                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
-                                </button>
+
+                        <!-- Date Picker & Search Side-by-Side -->
+                        <div style="display: flex; gap: 1rem; align-items: flex-start; width: 100%; margin-bottom: 0.5rem;">
+                            <!-- Date Container -->
+                            <div id="kemenag-specific-date-container" style="display: none; flex: 1; flex-direction: column; gap: 0.5rem;">
+                                <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-secondary);" data-lang-key="kemenag_date_label">Pilih Tanggal Batas Akhir</label>
+                                <div class="flatpickr-wrapper" id="kemenag-date-picker-wrapper">
+                                    <input type="text" id="kemenag-specific-date" data-input placeholder="Pilih tanggal...">
+                                    <button type="button" class="picker-btn" data-toggle title="Pilih Tanggal">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
+                            
+                            <!-- Search Container -->
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+                                <label style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);" data-lang-key="kemenag_city_label">Pilih Kota Kemenag (Indonesia)</label>
+                                <div style="display: flex; gap: 0.75rem; position: relative;">
+                                    <input type="text" id="kemenag-search-query" placeholder="Ketik lalu Enter..." style="flex: 1; padding-right: 2.5rem;" onkeypress="handleKemenagSearchKeyPress(event)">
+                                    <div id="kemenag-search-loading" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                                        <div class="spinner-border spinner-border-sm text-warning" role="status" style="width: 1rem; height: 1rem; border-width: 0.15em;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Suggestions List -->
+                        <div id="kemenag-search-results" style="display: flex; flex-direction: column; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background-color: rgba(255, 255, 255, 0.02);">
+                            <!-- Results will be loaded here -->
                         </div>
                         <div id="kemenag-preview-container" style="display: none; margin-top: 1.5rem; flex-direction: column; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
                             <label style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);">Pratinjau Jadwal Terunduh</label>
@@ -1479,7 +1495,7 @@ object WebPage {
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-primary" onclick="saveMethod()" style="align-self: flex-end; margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="handleSaveClick(this, () => saveMethod())" style="align-self: flex-end; margin-top: 1rem;">
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
                         <span data-lang-key="btn_save_method">Simpan Perubahan</span>
                     </button>
@@ -1674,6 +1690,7 @@ object WebPage {
                         </div>
                     </div>
                 </div>
+            </section>
             <!-- Connected Devices Section -->
             <section id="section-devices" class="content-section">
                 <div class="section-header">
@@ -2822,9 +2839,15 @@ object WebPage {
                     }
                     const data = await response.json();
                     if (data.status && data.data && data.data.jadwal) {
+                        const d = new Date();
+                        const yyyy = d.getFullYear();
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        const todayStrSafe = yyyy + '-' + mm + '-' + dd;
+                        
                         const jadwal = data.data.jadwal;
                         for (const dateString in jadwal) {
-                            if (jadwal.hasOwnProperty(dateString)) {
+                            if (jadwal.hasOwnProperty(dateString) && dateString >= todayStrSafe) {
                                 const day = jadwal[dateString];
                                 allSchedules.push({
                                     dateString: dateString,
@@ -2847,6 +2870,22 @@ object WebPage {
                 }
             }
             return allSchedules;
+        }
+
+        async function handleSaveClick(btn, saveFunc) {
+            if (btn.disabled) return;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm text-dark" role="status" aria-hidden="true" style="margin-right: 8px; width: 1rem; height: 1rem; border-width: 0.15em;"></span><span style="color: black;">' + (currentLang === 'id' ? 'Menyimpan...' : 'Saving...') + '</span>';
+            btn.disabled = true;
+            try {
+                await saveFunc();
+                await new Promise(r => setTimeout(r, 600));
+            } catch (e) {
+                console.error("Error saving:", e);
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
         }
 
         async function saveMethod() {
@@ -2897,7 +2936,10 @@ object WebPage {
             if (!query) return;
             
             const resultsContainer = document.getElementById('kemenag-search-results');
+            const loadingIndicator = document.getElementById('kemenag-search-loading');
+            
             resultsContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--text-secondary);">Mencari...</div>';
+            if (loadingIndicator) loadingIndicator.style.display = 'block';
             
             try {
                 const response = await fetch("https://api.myquran.com/v3/sholat/kabkota/cari/" + encodeURIComponent(query));
@@ -2921,6 +2963,8 @@ object WebPage {
             } catch (e) {
                 console.error("Error in searchKemenagCities", e);
                 resultsContainer.innerHTML = '<div style="padding: 1rem; text-align: center; color: var(--accent);">Gagal memuat data kota.</div>';
+            } finally {
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
             }
         }
 

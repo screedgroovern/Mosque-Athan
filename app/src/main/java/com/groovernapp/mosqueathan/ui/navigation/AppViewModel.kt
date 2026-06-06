@@ -53,7 +53,9 @@ class AppViewModel : ViewModel() {
     private var lastCalculatedDate: LocalDate? = null
     private var lastTriggeredPrayer: PrayerType? = null
     private var lastAdzanBeepedSecond = -1
-    private var isPreviewMode = false
+    var isPreviewMode = false
+        private set
+    private var currentConfig = com.groovernapp.mosqueathan.data.MosqueConfigEntity()
 
     private val _appState = MutableStateFlow<AppUiState>(
         AppUiState.Dashboard(
@@ -102,6 +104,7 @@ class AppViewModel : ViewModel() {
         this.dashboardViewModel = dashboardViewModel
         this.adzanViewModel = adzanViewModel
         this.iqomahViewModel = iqomahViewModel
+        currentConfig = repository.getConfig()
 
         if (coordinatorJob == null) {
             startCoordinator()
@@ -109,9 +112,11 @@ class AppViewModel : ViewModel() {
             transitionToDashboard()
 
             viewModelScope.launch {
-                repository.getConfigFlow().collect {
+                repository.getConfigFlow().collect { config ->
+                    currentConfig = config
                     lastCalculatedDate = null
                     lastTriggeredPrayer = null
+                    updateStandbyStatus()
                 }
             }
         }
@@ -137,7 +142,7 @@ class AppViewModel : ViewModel() {
 
         lastCalculatedDate = today
         lastTriggeredPrayer = null
-        val config = repository.getConfig()
+        val config = currentConfig
         prayerResult = PrayerCalculator.calculate(
             latitude = config.latitude,
             longitude = config.longitude,
@@ -168,8 +173,10 @@ class AppViewModel : ViewModel() {
         val currentScreen = _activeScreen.value
 
         if (currentScreen is ActiveScreen.Dashboard) {
-            val config = repository.getConfig()
+            val config = currentConfig
             val adzanLeadSeconds = config.adzanLeadMinutes * 60
+            
+            // Check if we should transition to Adzan
             prayers.forEach { (prayer, time) ->
                 val prayerMillis = time.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
                 val secondsUntilPrayer = ((prayerMillis - now) / 1000).toInt()
@@ -178,10 +185,38 @@ class AppViewModel : ViewModel() {
                     lastTriggeredPrayer = prayer
                     isPreviewMode = false
                     transitionToAdzan(prayer, time)
+                    return
                 }
             }
-        } else if (currentScreen is ActiveScreen.Adzan) {
-            // Managed by UI state flow collector in transitionToAdzan
+
+            // Check if we missed the adzan but are inside the Iqomah window
+            prayers.forEach { (prayer, time) ->
+                val prayerMillis = time.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
+                val iqomahMinutes = getIqomahMinutesFromConfig(prayer, config)
+                val iqomahDurationSeconds = iqomahMinutes * 60
+                
+                val elapsedSeconds = ((now - prayerMillis) / 1000).toInt()
+                if (iqomahDurationSeconds > 0 && elapsedSeconds in 0 until iqomahDurationSeconds) {
+                    if (lastTriggeredPrayer != prayer) {
+                        lastTriggeredPrayer = prayer
+                        isPreviewMode = false
+                        val remainingSeconds = iqomahDurationSeconds - elapsedSeconds
+                        transitionToIqomah(prayer, customDurationSeconds = remainingSeconds)
+                        return
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getIqomahMinutesFromConfig(prayerType: PrayerType, config: com.groovernapp.mosqueathan.data.MosqueConfigEntity): Int {
+        return when (prayerType) {
+            PrayerType.SUBUH -> config.iqomahSubuh
+            PrayerType.DZUHUR -> config.iqomahDzuhur
+            PrayerType.ASHAR -> config.iqomahAshar
+            PrayerType.MAGHRIB -> config.iqomahMaghrib
+            PrayerType.ISYA -> config.iqomahIsya
+            else -> 0
         }
     }
 
@@ -303,6 +338,7 @@ class AppViewModel : ViewModel() {
         iqomahCollectorJob?.cancel()
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Dashboard
+        isPreviewMode = false
 
         activeStateCollectorJob = viewModelScope.launch {
             kotlinx.coroutines.flow.combine(
@@ -329,6 +365,7 @@ class AppViewModel : ViewModel() {
         iqomahCollectorJob?.cancel()
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Settings
+        isPreviewMode = false
 
         activeStateCollectorJob = viewModelScope.launch {
             kotlinx.coroutines.flow.combine(
@@ -367,6 +404,7 @@ class AppViewModel : ViewModel() {
         iqomahCollectorJob?.cancel()
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Dashboard
+        isPreviewMode = true
 
         activeStateCollectorJob = viewModelScope.launch {
             kotlinx.coroutines.flow.combine(
@@ -381,17 +419,42 @@ class AppViewModel : ViewModel() {
                     transitionType = config.transitionType,
                     slideIntervalSeconds = config.slideIntervalSeconds,
                     videoWaitUntilEnd = config.videoWaitUntilEnd,
-                    includeDefaultImage = config.includeDefaultImage
+                    includeDefaultImage = config.includeDefaultImage,
+                    isPreviewMode = true
                 )
             }.collect { state ->
                 _appState.value = state
             }
         }
+
+        viewModelScope.launch {
+            delay(20000)
+            if (_activeScreen.value is ActiveScreen.Dashboard && isPreviewMode) {
+                exitPreview()
+            }
+        }
+    }
+
+    fun exitPreview() {
+        isPreviewMode = false
+        transitionToSettings()
     }
 
     private fun updateStandbyStatus() {
-        val config = repository.getConfig()
+        val config = currentConfig
         if (!config.standbyModeEnabled) {
+            if (_isStandbyActive.value) {
+                android.util.Log.d("StandbyDebug", "Standby disabled in config, deactivating")
+            }
+            _isStandbyActive.value = false
+            return
+        }
+
+        val currentScreen = _activeScreen.value
+        if (currentScreen is ActiveScreen.Adzan || 
+            currentScreen is ActiveScreen.Iqomah || 
+            currentScreen is ActiveScreen.Settings
+        ) {
             _isStandbyActive.value = false
             return
         }
@@ -400,22 +463,28 @@ class AppViewModel : ViewModel() {
         val now = Clock.System.now().toLocalDateTime(zone)
         val currentMinutes = now.hour * 60 + now.minute
 
-        val startMinutes = parseTimeToMinutes(config.standbyStartTime) ?: 0
-        val endMinutes = parseTimeToMinutes(config.standbyEndTime) ?: 0
+        val startMinutes = parseTimeToMinutes(config.standbyStartTime) ?: parseTimeToMinutes("22:00")!!
+        val endMinutes = parseTimeToMinutes(config.standbyEndTime) ?: parseTimeToMinutes("04:00")!!
 
-        _isStandbyActive.value = if (startMinutes <= endMinutes) {
+        val shouldBeActive = if (startMinutes <= endMinutes) {
             currentMinutes in startMinutes until endMinutes
         } else {
             // Interval crosses midnight, e.g., 22:00 to 04:00
             currentMinutes >= startMinutes || currentMinutes < endMinutes
         }
+
+        if (shouldBeActive != _isStandbyActive.value) {
+            android.util.Log.d("StandbyDebug", "Standby state changing: $shouldBeActive (current=$currentMinutes, start=$startMinutes[${config.standbyStartTime}], end=$endMinutes[${config.standbyEndTime}])")
+        }
+
+        _isStandbyActive.value = shouldBeActive
     }
 
     private fun parseTimeToMinutes(timeStr: String): Int? {
-        val parts = timeStr.split(":")
+        val parts = timeStr.trim().split(":")
         if (parts.size != 2) return null
-        val hour = parts[0].toIntOrNull() ?: return null
-        val minute = parts[1].toIntOrNull() ?: return null
+        val hour = parts[0].trim().toIntOrNull() ?: return null
+        val minute = parts[1].trim().toIntOrNull() ?: return null
         return hour * 60 + minute
     }
 

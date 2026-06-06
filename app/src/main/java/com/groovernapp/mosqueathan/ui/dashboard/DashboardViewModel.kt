@@ -128,6 +128,7 @@ class DashboardViewModel : ViewModel() {
             latitude = config.latitude,
             longitude = config.longitude,
             methodName = config.calculationMethodName,
+            offsetImsak = config.offsetImsak,
             offsetSubuh = config.offsetSubuh,
             kemenagCityId = config.kemenagCityId
         )

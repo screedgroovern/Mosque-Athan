@@ -30,6 +30,8 @@ import com.groovernapp.mosqueathan.data.AnnouncementEntity
 import com.groovernapp.mosqueathan.data.MediaEntity
 import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
 import com.groovernapp.mosqueathan.server.SettingsServer
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -515,35 +517,44 @@ fun SettingsScreen(
                             SettingsCategory.STANDBY
                         )
                     ) {
+                        var isSaving by remember { mutableStateOf(false) }
+                        val coroutineScope = rememberCoroutineScope()
+
                         TvFocusablePrimaryButton(
                             onClick = {
-                                if (selectedCategory == SettingsCategory.STANDBY) {
-                                    onSaveStandby(standbyModeEnabled, standbyStartTime, standbyEndTime)
-                                } else {
-                                    val lat = latText.toDoubleOrNull() ?: config.latitude
-                                    val lng = lngText.toDoubleOrNull() ?: config.longitude
-                                    onSaveConfig(
-                                        lat,
-                                        lng,
-                                        iqomahSubuh,
-                                        iqomahDzuhur,
-                                        iqomahAshar,
-                                        iqomahMaghrib,
-                                        iqomahIsya,
-                                        calculationMethodName,
-                                        adzanLeadMinutes,
-                                        offsetImsak,
-                                        offsetSubuh,
-                                        offsetSyuruq,
-                                        offsetDzuhur,
-                                        offsetAshar,
-                                        offsetMaghrib,
-                                        offsetIsya,
-                                        kemenagCityId,
-                                        kemenagCityName,
-                                        kemenagDuration,
-                                        kemenagTargetDate
-                                    )
+                                if (isSaving) return@TvFocusablePrimaryButton
+                                isSaving = true
+                                coroutineScope.launch {
+                                    if (selectedCategory == SettingsCategory.STANDBY) {
+                                        onSaveStandby(standbyModeEnabled, standbyStartTime, standbyEndTime)
+                                    } else {
+                                        val lat = latText.toDoubleOrNull() ?: config.latitude
+                                        val lng = lngText.toDoubleOrNull() ?: config.longitude
+                                        onSaveConfig(
+                                            lat,
+                                            lng,
+                                            iqomahSubuh,
+                                            iqomahDzuhur,
+                                            iqomahAshar,
+                                            iqomahMaghrib,
+                                            iqomahIsya,
+                                            calculationMethodName,
+                                            adzanLeadMinutes,
+                                            offsetImsak,
+                                            offsetSubuh,
+                                            offsetSyuruq,
+                                            offsetDzuhur,
+                                            offsetAshar,
+                                            offsetMaghrib,
+                                            offsetIsya,
+                                            kemenagCityId,
+                                            kemenagCityName,
+                                            kemenagDuration,
+                                            kemenagTargetDate
+                                        )
+                                    }
+                                    delay(600)
+                                    isSaving = false
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),
@@ -551,12 +562,20 @@ fun SettingsScreen(
                                 .fillMaxWidth()
                                 .height(52.dp)
                         ) {
-                            Text(
-                                text = com.groovernapp.mosqueathan.util.Lang.get("Save Settings", "Simpan Pengaturan"),
-                                color = Color.Black,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            if (isSaving) {
+                                CircularProgressIndicator(
+                                    color = Color.Black,
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text(
+                                    text = com.groovernapp.mosqueathan.util.Lang.get("Save Settings", "Simpan Pengaturan"),
+                                    color = Color.Black,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

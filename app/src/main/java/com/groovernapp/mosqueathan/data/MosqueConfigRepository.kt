@@ -199,20 +199,21 @@ class MosqueConfigRepository private constructor() {
             }
         }
         
-        var y = currentYear
-        var m = currentMonth
-        var count = 0
-        while ((y < endYear || (y == endYear && m <= endMonth)) && count < 24) {
-            triggerKemenagFetch(cityId, y, m)
-            m++
-            if (m > 12) {
-                m = 1
-                y++
+        scope.launch(Dispatchers.IO) {
+            var y = currentYear
+            var m = currentMonth
+            var count = 0
+            while ((y < endYear || (y == endYear && m <= endMonth)) && count < 24) {
+                fetchKemenagMonthSync(cityId, y, m)
+                m++
+                if (m > 12) {
+                    m = 1
+                    y++
+                }
+                count++
             }
-            count++
         }
     }
-
     suspend fun updateCustomBackground(path: String) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
@@ -560,82 +561,86 @@ class MosqueConfigRepository private constructor() {
     private val ongoingFetches = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
 
     fun triggerKemenagFetch(cityId: String, year: Int, month: Int) {
+        scope.launch(Dispatchers.IO) {
+            fetchKemenagMonthSync(cityId, year, month)
+        }
+    }
+
+    private suspend fun fetchKemenagMonthSync(cityId: String, year: Int, month: Int) {
         if (cityId.isEmpty()) return
         val key = "$cityId-$year-$month"
         if (ongoingFetches.putIfAbsent(key, true) != null) {
             return
         }
 
-        scope.launch {
-            try {
-                val monthStr = String.format("%02d", month)
-                val urlString = "https://api.myquran.com/v3/sholat/jadwal/$cityId/$year-$monthStr"
-                android.util.Log.d("KemenagFetch", "Fetching Kemenag schedule from $urlString")
-                val url = java.net.URL(urlString)
-                val connection = url.openConnection() as java.net.HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 10000
-                connection.readTimeout = 10000
-                connection.connect()
+        try {
+            val monthStr = String.format("%02d", month)
+            val urlString = "https://api.myquran.com/v3/sholat/jadwal/$cityId/$year-$monthStr"
+            android.util.Log.d("KemenagFetch", "Fetching Kemenag schedule from $urlString")
+            val url = java.net.URL(urlString)
+            val connection = url.openConnection() as java.net.HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+            connection.connect()
 
-                if (connection.responseCode == 200) {
-                    val reader = java.io.BufferedReader(java.io.InputStreamReader(connection.inputStream))
-                    val response = java.lang.StringBuilder()
-                    var line: String?
-                    while (reader.readLine().also { line = it } != null) {
-                        response.append(line)
-                    }
-                    reader.close()
+            if (connection.responseCode == 200) {
+                val reader = java.io.BufferedReader(java.io.InputStreamReader(connection.inputStream))
+                val response = java.lang.StringBuilder()
+                var line: String?
+                while (reader.readLine().also { line = it } != null) {
+                    response.append(line)
+                }
+                reader.close()
 
-                    val json = org.json.JSONObject(response.toString())
-                    if (json.optBoolean("status")) {
-                        val dataObj = json.optJSONObject("data")
-                        val jadwalObj = dataObj?.optJSONObject("jadwal")
-                        if (jadwalObj != null) {
-                            val keys = jadwalObj.keys()
-                            realm.write {
-                                while (keys.hasNext()) {
-                                    val dateStr = keys.next()
-                                    val dayObj = jadwalObj.optJSONObject(dateStr)
-                                    if (dayObj != null) {
-                                        val existing = query<KemenagScheduleEntity>("dateString == $0 AND cityId == $1", dateStr, cityId).first().find()
-                                        if (existing != null) {
-                                            existing.imsak = dayObj.optString("imsak")
-                                            existing.subuh = dayObj.optString("subuh")
-                                            existing.terbit = dayObj.optString("terbit")
-                                            existing.dhuha = dayObj.optString("dhuha")
-                                            existing.dzuhur = dayObj.optString("dzuhur")
-                                            existing.ashar = dayObj.optString("ashar")
-                                            existing.maghrib = dayObj.optString("maghrib")
-                                            existing.isya = dayObj.optString("isya")
-                                        } else {
-                                            copyToRealm(KemenagScheduleEntity().apply {
-                                                this.dateString = dateStr
-                                                this.cityId = cityId
-                                                this.imsak = dayObj.optString("imsak")
-                                                this.subuh = dayObj.optString("subuh")
-                                                this.terbit = dayObj.optString("terbit")
-                                                this.dhuha = dayObj.optString("dhuha")
-                                                this.dzuhur = dayObj.optString("dzuhur")
-                                                this.ashar = dayObj.optString("ashar")
-                                                this.maghrib = dayObj.optString("maghrib")
-                                                this.isya = dayObj.optString("isya")
-                                            })
-                                        }
+                val json = org.json.JSONObject(response.toString())
+                if (json.optBoolean("status")) {
+                    val dataObj = json.optJSONObject("data")
+                    val jadwalObj = dataObj?.optJSONObject("jadwal")
+                    if (jadwalObj != null) {
+                        val keys = jadwalObj.keys()
+                        realm.write {
+                            while (keys.hasNext()) {
+                                val dateStr = keys.next()
+                                val dayObj = jadwalObj.optJSONObject(dateStr)
+                                if (dayObj != null) {
+                                    val existing = query<KemenagScheduleEntity>("dateString == $0 AND cityId == $1", dateStr, cityId).first().find()
+                                    if (existing != null) {
+                                        existing.imsak = dayObj.optString("imsak")
+                                        existing.subuh = dayObj.optString("subuh")
+                                        existing.terbit = dayObj.optString("terbit")
+                                        existing.dhuha = dayObj.optString("dhuha")
+                                        existing.dzuhur = dayObj.optString("dzuhur")
+                                        existing.ashar = dayObj.optString("ashar")
+                                        existing.maghrib = dayObj.optString("maghrib")
+                                        existing.isya = dayObj.optString("isya")
+                                    } else {
+                                        copyToRealm(KemenagScheduleEntity().apply {
+                                            this.dateString = dateStr
+                                            this.cityId = cityId
+                                            this.imsak = dayObj.optString("imsak")
+                                            this.subuh = dayObj.optString("subuh")
+                                            this.terbit = dayObj.optString("terbit")
+                                            this.dhuha = dayObj.optString("dhuha")
+                                            this.dzuhur = dayObj.optString("dzuhur")
+                                            this.ashar = dayObj.optString("ashar")
+                                            this.maghrib = dayObj.optString("maghrib")
+                                            this.isya = dayObj.optString("isya")
+                                        })
                                     }
                                 }
                             }
-                            android.util.Log.d("KemenagFetch", "Successfully saved Kemenag schedule for $year-$monthStr")
                         }
+                        android.util.Log.d("KemenagFetch", "Successfully saved Kemenag schedule for $year-$monthStr")
                     }
-                } else {
-                    android.util.Log.e("KemenagFetch", "HTTP error code: ${connection.responseCode}")
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("KemenagFetch", "Error fetching Kemenag schedule", e)
-            } finally {
-                ongoingFetches.remove(key)
+            } else {
+                android.util.Log.e("KemenagFetch", "HTTP error code: ${connection.responseCode}")
             }
+        } catch (e: Exception) {
+            android.util.Log.e("KemenagFetch", "Error fetching Kemenag schedule", e)
+        } finally {
+            ongoingFetches.remove(key)
         }
     }
 
@@ -661,14 +666,36 @@ class MosqueConfigRepository private constructor() {
         }
     }
 
+    suspend fun saveKemenagSchedules(schedules: List<KemenagScheduleEntity>) {
+        realm.write {
+            for (schedule in schedules) {
+                val existing = query<KemenagScheduleEntity>("dateString == $0 AND cityId == $1", schedule.dateString, schedule.cityId).first().find()
+                if (existing != null) {
+                    existing.imsak = schedule.imsak
+                    existing.subuh = schedule.subuh
+                    existing.terbit = schedule.terbit
+                    existing.dhuha = schedule.dhuha
+                    existing.dzuhur = schedule.dzuhur
+                    existing.ashar = schedule.ashar
+                    existing.maghrib = schedule.maghrib
+                    existing.isya = schedule.isya
+                } else {
+                    copyToRealm(schedule)
+                }
+            }
+        }
+    }
+
     fun getKemenagSchedulesFlow(cityId: String): Flow<List<KemenagScheduleEntity>> {
-        return realm.query<KemenagScheduleEntity>("cityId == $0", cityId)
+        val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString >= $1", cityId, todayStr)
             .asFlow()
             .map { it.list.sortedBy { s -> s.dateString } }
     }
 
     fun getKemenagSchedules(cityId: String): List<KemenagScheduleEntity> {
-        return realm.query<KemenagScheduleEntity>("cityId == $0", cityId).find().sortedBy { it.dateString }
+        val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString >= $1", cityId, todayStr).find().sortedBy { it.dateString }
     }
 
     companion object {

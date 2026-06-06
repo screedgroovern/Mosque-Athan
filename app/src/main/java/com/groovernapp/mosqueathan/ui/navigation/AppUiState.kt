@@ -13,7 +13,8 @@ sealed interface AppUiState {
         val transitionType: String,
         val slideIntervalSeconds: Int,
         val videoWaitUntilEnd: Boolean,
-        val includeDefaultImage: Boolean
+        val includeDefaultImage: Boolean,
+        val isPreviewMode: Boolean = false
     ) : AppUiState
 
     data class Adzan(

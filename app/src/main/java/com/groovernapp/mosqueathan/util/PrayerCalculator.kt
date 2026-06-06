@@ -61,6 +61,7 @@ object PrayerCalculator {
         var maghribAdjusted: Instant? = null
         var ishaAdjusted: Instant? = null
         var nextFajrAdjusted: Instant? = null
+        var tomorrowImsakAdjusted: Instant? = null
 
         if (calculationMethodName == "KEMENAG" && kemenagCityId.isNotEmpty()) {
             val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
@@ -78,6 +79,7 @@ object PrayerCalculator {
             val tomorrowSchedule = repository.getKemenagSchedule(kemenagCityId, tomorrow.toString())
             if (tomorrowSchedule != null) {
                 nextFajrAdjusted = parseKemenagTime(tomorrow, tomorrowSchedule.subuh, zone)?.plus(offsetSubuh.toLong(), DateTimeUnit.MINUTE)
+                tomorrowImsakAdjusted = parseKemenagTime(tomorrow, tomorrowSchedule.imsak, zone)?.plus(offsetImsak.toLong(), DateTimeUnit.MINUTE)
             }
         }
 
@@ -115,14 +117,16 @@ object PrayerCalculator {
         }
 
         val (nextPrayer, nextPrayerInstant) = when {
+            now < imsakFinal -> PrayerType.IMSAK to imsakFinal
             now < fajrFinal -> PrayerType.SUBUH to fajrFinal
+            now < sunriseFinal -> PrayerType.SYURUQ to sunriseFinal
             now < dhuhrFinal -> PrayerType.DZUHUR to dhuhrFinal
             now < asrFinal -> PrayerType.ASHAR to asrFinal
             now < maghribFinal -> PrayerType.MAGHRIB to maghribFinal
             now < ishaFinal -> PrayerType.ISYA to ishaFinal
             else -> {
+                val tomorrow = today.plus(1, DateTimeUnit.DAY)
                 val tomorrowFajr = nextFajrAdjusted ?: run {
-                    val tomorrow = today.plus(1, DateTimeUnit.DAY)
                     val tomorrowPrayerTimes = PrayerTimes(
                         coordinates = Coordinates(latitude, longitude),
                         dateComponents = DateComponents(
@@ -134,7 +138,8 @@ object PrayerCalculator {
                     )
                     tomorrowPrayerTimes.fajr.plus(offsetSubuh.toLong(), DateTimeUnit.MINUTE)
                 }
-                PrayerType.SUBUH to tomorrowFajr
+                val tomorrowImsak = tomorrowImsakAdjusted ?: tomorrowFajr.plus((-10 + offsetImsak).toLong(), DateTimeUnit.MINUTE)
+                PrayerType.IMSAK to tomorrowImsak
             }
         }
 //        val dummy = LocalDateTime(2026, 6, 5, 10, 3, 50)
@@ -160,20 +165,25 @@ object PrayerCalculator {
         latitude: Double,
         longitude: Double,
         methodName: String,
+        offsetImsak: Int,
         offsetSubuh: Int,
         kemenagCityId: String
     ): Pair<PrayerType, LocalDateTime> {
         val zone = TimeZone.currentSystemDefault()
         val today = now.toLocalDateTime(zone).date
         
+        val imsakFinal = result.imsak.toInstant(zone)
         val fajrFinal = result.subuh.toInstant(zone)
+        val sunriseFinal = result.syuruq.toInstant(zone)
         val dhuhrFinal = result.dzuhur.toInstant(zone)
         val asrFinal = result.ashar.toInstant(zone)
         val maghribFinal = result.maghrib.toInstant(zone)
         val ishaFinal = result.isya.toInstant(zone)
         
         val (nextPrayer, nextPrayerInstant) = when {
+            now < imsakFinal -> PrayerType.IMSAK to imsakFinal
             now < fajrFinal -> PrayerType.SUBUH to fajrFinal
+            now < sunriseFinal -> PrayerType.SYURUQ to sunriseFinal
             now < dhuhrFinal -> PrayerType.DZUHUR to dhuhrFinal
             now < asrFinal -> PrayerType.ASHAR to asrFinal
             now < maghribFinal -> PrayerType.MAGHRIB to maghribFinal
@@ -186,11 +196,13 @@ object PrayerCalculator {
                     CalculationMethod.SINGAPORE
                 }
                 var nextFajrAdjusted: Instant? = null
+                var tomorrowImsakAdjusted: Instant? = null
                 if (methodName == "KEMENAG" && kemenagCityId.isNotEmpty()) {
                     val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
                     val tomorrowSchedule = repository.getKemenagSchedule(kemenagCityId, tomorrow.toString())
                     if (tomorrowSchedule != null) {
                         nextFajrAdjusted = parseKemenagTime(tomorrow, tomorrowSchedule.subuh, zone)?.plus(offsetSubuh.toLong(), DateTimeUnit.MINUTE)
+                        tomorrowImsakAdjusted = parseKemenagTime(tomorrow, tomorrowSchedule.imsak, zone)?.plus(offsetImsak.toLong(), DateTimeUnit.MINUTE)
                     }
                 }
                 val tomorrowFajr = nextFajrAdjusted ?: run {
@@ -201,7 +213,8 @@ object PrayerCalculator {
                     )
                     tomorrowPrayerTimes.fajr.plus(offsetSubuh.toLong(), DateTimeUnit.MINUTE)
                 }
-                PrayerType.SUBUH to tomorrowFajr
+                val tomorrowImsakFinal = tomorrowImsakAdjusted ?: tomorrowFajr.plus((-10 + offsetImsak).toLong(), DateTimeUnit.MINUTE)
+                PrayerType.IMSAK to tomorrowImsakFinal
             }
         }
         return nextPrayer to nextPrayerInstant.toLocalDateTime(zone)

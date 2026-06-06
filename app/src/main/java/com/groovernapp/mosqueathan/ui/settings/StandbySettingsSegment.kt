@@ -1,21 +1,18 @@
 package com.groovernapp.mosqueathan.ui.settings
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.input.key.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.util.Lang
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerField(
     value: String,
@@ -24,90 +21,91 @@ fun TimePickerField(
     placeholder: String,
     modifier: Modifier = Modifier
 ) {
-    var showDialog by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
+    val parts = value.split(":")
+    var hour by remember(value) { mutableIntStateOf(parts.getOrNull(0)?.toIntOrNull() ?: 0) }
+    var minute by remember(value) { mutableIntStateOf(parts.getOrNull(1)?.toIntOrNull() ?: 0) }
 
-    if (isPressed) {
-        LaunchedEffect(isPressed) {
-            if (isPressed) {
-                showDialog = true
-            }
-        }
+    fun emitChange() {
+        val h = hour.toString().padStart(2, '0')
+        val m = minute.toString().padStart(2, '0')
+        onValueChange("$h:$m")
     }
 
-    OutlinedTextField(
-        value = value,
-        onValueChange = {},
-        readOnly = true,
-        interactionSource = interactionSource,
-        label = { Text(label) },
-        placeholder = { Text(placeholder) },
-        colors = textFieldColors(),
-        modifier = modifier.onKeyEvent { event ->
-            if (event.type == KeyEventType.KeyUp && (event.key == Key.DirectionCenter || event.key == Key.Enter)) {
-                showDialog = true
-                true
-            } else {
-                false
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 13.sp
+        )
+        Spacer(Modifier.height(8.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Hour stepper
+            TvFocusableButton(
+                onClick = { hour = (hour - 1 + 24) % 24; emitChange() },
+                shape = RoundedCornerShape(6.dp),
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier.size(36.dp)
+            ) {
+                Text("−", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
-        }.clickable { showDialog = true }
-    )
 
-    if (showDialog) {
-        val timeParts = value.split(":")
-        val initialHour = timeParts.getOrNull(0)?.toIntOrNull() ?: 0
-        val initialMinute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
-        val timePickerState = rememberTimePickerState(
-            initialHour = initialHour,
-            initialMinute = initialMinute,
-            is24Hour = true
-        )
+            Text(
+                text = hour.toString().padStart(2, '0'),
+                color = Color(0xFFFFD54F),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.width(36.dp),
+                textAlign = TextAlign.Center
+            )
 
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    val hourStr = timePickerState.hour.toString().padStart(2, '0')
-                    val minStr = timePickerState.minute.toString().padStart(2, '0')
-                    onValueChange("$hourStr:$minStr")
-                    showDialog = false
-                }) {
-                    Text(Lang.get("OK", "OK"), color = Color(0xFFFFD54F))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text(Lang.get("Cancel", "Batal"), color = Color.White)
-                }
-            },
-            title = {
-                Text(text = label, color = Color.White)
-            },
-            text = {
-                TimePicker(
-                    state = timePickerState,
-                    colors = TimePickerDefaults.colors(
-                        clockDialColor = Color.White.copy(alpha = 0.1f),
-                        clockDialSelectedContentColor = Color.Black,
-                        clockDialUnselectedContentColor = Color.White,
-                        selectorColor = Color(0xFFFFD54F),
-                        periodSelectorBorderColor = Color(0xFFFFD54F),
-                        periodSelectorSelectedContainerColor = Color(0xFFFFD54F),
-                        periodSelectorUnselectedContainerColor = Color.Transparent,
-                        periodSelectorSelectedContentColor = Color.Black,
-                        periodSelectorUnselectedContentColor = Color.White,
-                        timeSelectorSelectedContainerColor = Color(0xFFFFD54F).copy(alpha = 0.3f),
-                        timeSelectorUnselectedContainerColor = Color.White.copy(alpha = 0.1f),
-                        timeSelectorSelectedContentColor = Color(0xFFFFD54F),
-                        timeSelectorUnselectedContentColor = Color.White
-                    )
-                )
-            },
-            containerColor = Color(0xFF101915),
-            titleContentColor = Color.White,
-            textContentColor = Color.White
-        )
+            TvFocusableButton(
+                onClick = { hour = (hour + 1) % 24; emitChange() },
+                shape = RoundedCornerShape(6.dp),
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier.size(36.dp)
+            ) {
+                Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Text(
+                text = ":",
+                color = Color.White,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 2.dp)
+            )
+
+            // Minute stepper
+            TvFocusableButton(
+                onClick = { minute = (minute - 1 + 60) % 60; emitChange() },
+                shape = RoundedCornerShape(6.dp),
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier.size(36.dp)
+            ) {
+                Text("−", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Text(
+                text = minute.toString().padStart(2, '0'),
+                color = Color(0xFFFFD54F),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.width(36.dp),
+                textAlign = TextAlign.Center
+            )
+
+            TvFocusableButton(
+                onClick = { minute = (minute + 1) % 60; emitChange() },
+                shape = RoundedCornerShape(6.dp),
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier.size(36.dp)
+            ) {
+                Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+        }
     }
 }
 
