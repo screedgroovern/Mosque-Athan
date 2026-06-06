@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.input.key.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -306,7 +307,14 @@ fun DatePickerField(
             focusedTextColor = Color.White,
             unfocusedTextColor = Color.White
         ),
-        modifier = modifier
+        modifier = modifier.onKeyEvent { event ->
+            if (event.type == KeyEventType.KeyUp && (event.key == Key.DirectionCenter || event.key == Key.Enter)) {
+                showDialog = true
+                true
+            } else {
+                false
+            }
+        }.clickable { showDialog = true }
     )
 
     if (showDialog) {

@@ -2,7 +2,9 @@ package com.groovernapp.mosqueathan.ui.settings
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.input.key.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,7 +44,14 @@ fun TimePickerField(
         label = { Text(label) },
         placeholder = { Text(placeholder) },
         colors = textFieldColors(),
-        modifier = modifier
+        modifier = modifier.onKeyEvent { event ->
+            if (event.type == KeyEventType.KeyUp && (event.key == Key.DirectionCenter || event.key == Key.Enter)) {
+                showDialog = true
+                true
+            } else {
+                false
+            }
+        }.clickable { showDialog = true }
     )
 
     if (showDialog) {

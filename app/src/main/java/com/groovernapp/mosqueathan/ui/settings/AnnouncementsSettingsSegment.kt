@@ -10,6 +10,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -225,13 +228,13 @@ fun AnnouncementsSettingsSegment(
                         editTextValue = footer
                         editingAdzanIndex = index
                     }) {
-                        Text("✏️", fontSize = 18.sp)
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = Color.Blue)
                     }
                     IconButton(onClick = {
                         val updated = adzanFooters.toMutableList().apply { removeAt(index) }
                         onUpdateFooters(formatFooterTexts(updated), config.iqomahFooterText)
                     }) {
-                        Text("🗑️", fontSize = 18.sp)
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove", tint = Color.Red)
                     }
                 }
             }
@@ -296,13 +299,13 @@ fun AnnouncementsSettingsSegment(
                         editTextValue = footer
                         editingIqomahIndex = index
                     }) {
-                        Text("✏️", fontSize = 18.sp)
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = Color.Blue)
                     }
                     IconButton(onClick = {
                         val updated = iqomahFooters.toMutableList().apply { removeAt(index) }
                         onUpdateFooters(config.adzanFooterText, formatFooterTexts(updated))
                     }) {
-                        Text("🗑️", fontSize = 18.sp)
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove", tint = Color.Red)
                     }
                 }
             }
@@ -395,10 +398,10 @@ fun AnnouncementsSettingsSegment(
                         editTextValue = announcement.content
                         editingAnnouncement = announcement
                     }) {
-                        Text("✏️", fontSize = 18.sp)
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = Color.Blue)
                     }
                     IconButton(onClick = { onDeleteAnnouncement(announcement.id) }) {
-                        Text("🗑️", fontSize = 18.sp)
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove", tint = Color.Red)
                     }
                 }
             }
