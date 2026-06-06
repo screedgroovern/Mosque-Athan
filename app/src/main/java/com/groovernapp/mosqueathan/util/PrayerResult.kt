@@ -4,6 +4,7 @@ import com.groovernapp.mosqueathan.domain.PrayerType
 import kotlinx.datetime.LocalDateTime
 
 data class PrayerResult(
+    val imsak: LocalDateTime,
     val subuh: LocalDateTime,
     val syuruq: LocalDateTime,
     val dzuhur: LocalDateTime,

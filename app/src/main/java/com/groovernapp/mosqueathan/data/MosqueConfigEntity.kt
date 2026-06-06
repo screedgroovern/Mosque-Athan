@@ -20,4 +20,23 @@ class MosqueConfigEntity : RealmObject {
     var transitionType: String = "FADE"
     var slideIntervalSeconds: Int = 10
     var videoWaitUntilEnd: Boolean = false
+    var showSettingsOnTv: Boolean = false
+    var pinCode: String = ""
+    var offsetImsak: Int = 0
+    var offsetSubuh: Int = 0
+    var offsetSyuruq: Int = 0
+    var offsetDzuhur: Int = 0
+    var offsetAshar: Int = 0
+    var offsetMaghrib: Int = 0
+    var offsetIsya: Int = 0
+    var includeDefaultImage: Boolean = true
+    var kemenagCityId: String = "58a2fc6ed39fd083f55d4182bf88826d"
+    var kemenagCityName: String = "KOTA JAKARTA"
+    var kemenagDuration: String = "1_MONTH"
+    var kemenagTargetDate: String = ""
+    var adzanFooterText: String = "Mohon bersiap dan hentikan aktivitas sementara."
+    var iqomahFooterText: String = "Mari merapatkan dan meluruskan shaf."
+    var standbyModeEnabled: Boolean = MosqueConfig.DEFAULT_STANDBY_ENABLED
+    var standbyStartTime: String = MosqueConfig.DEFAULT_STANDBY_START_TIME
+    var standbyEndTime: String = MosqueConfig.DEFAULT_STANDBY_END_TIME
 }

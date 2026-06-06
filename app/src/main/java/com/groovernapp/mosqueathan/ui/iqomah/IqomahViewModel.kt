@@ -27,18 +27,35 @@ class IqomahViewModel : ViewModel() {
 
     private var countdownJob: Job? = null
 
-    fun start(prayerType: PrayerType) {
+    fun start(prayerType: PrayerType, customDurationSeconds: Int? = null) {
+        val config = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance().getConfig()
+        val footerRaw = config.iqomahFooterText.ifEmpty { "Mari merapatkan dan meluruskan shaf." }
+        val footer = try {
+            if (footerRaw.trim().startsWith("[")) {
+                val arr = org.json.JSONArray(footerRaw)
+                val list = mutableListOf<String>()
+                for (i in 0 until arr.length()) {
+                    list.add(arr.getString(i))
+                }
+                list.joinToString("   •   ")
+            } else {
+                footerRaw
+            }
+        } catch (e: Exception) {
+            footerRaw
+        }
         countdownJob?.cancel()
         countdownJob = viewModelScope.launch {
             val minutes = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance().getIqomahMinutes(prayerType)
-            var remaining = minutes * 60
+            var remaining = customDurationSeconds ?: (minutes * 60)
             while (remaining >= 0) {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
                 _uiState.value = IqomahUiModel(
                     prayerType = prayerType,
                     iqomahMinutes = minutes,
                     remainingSeconds = remaining,
-                    currentTime = now.toClockString()
+                    currentTime = now.toClockString(),
+                    footerText = footer
                 )
                 if (remaining == 0) break
                 delay(1000)

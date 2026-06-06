@@ -15,7 +15,8 @@ import androidx.compose.ui.unit.sp
 fun PrayerItem(
     title: String,
     time: String,
-    highlighted: Boolean
+    highlighted: Boolean,
+    isSlideshowActive: Boolean
 ) {
     val color = if (highlighted) Color(0xFFFFD54F) else Color.White
 
@@ -24,16 +25,16 @@ fun PrayerItem(
         Text(
             text = title,
             color = color,
-            fontSize = 20.sp,
+            fontSize = if (isSlideshowActive) 16.sp else 20.sp,
             fontWeight = FontWeight.SemiBold
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(if (isSlideshowActive) 5.dp else 6.dp))
 
         Text(
             text = time,
             color = color,
-            fontSize = 28.sp,
+            fontSize = if (isSlideshowActive) 22.sp else 28.sp,
             fontWeight = FontWeight.Bold
         )
     }

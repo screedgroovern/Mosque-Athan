@@ -5,16 +5,17 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -27,6 +28,9 @@ import com.groovernapp.mosqueathan.R
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.data.AnnouncementEntity
 import com.groovernapp.mosqueathan.data.MediaEntity
+import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
+import com.groovernapp.mosqueathan.server.SettingsServer
+
 
 @Composable
 fun SettingsScreen(
@@ -41,36 +45,68 @@ fun SettingsScreen(
         iqomahMaghrib: Int,
         iqomahIsya: Int,
         calculationMethodName: String,
-        adzanLeadMinutes: Int
+        adzanLeadMinutes: Int,
+        offsetImsak: Int,
+        offsetSubuh: Int,
+        offsetSyuruq: Int,
+        offsetDzuhur: Int,
+        offsetAshar: Int,
+        offsetMaghrib: Int,
+        offsetIsya: Int,
+        kemenagCityId: String,
+        kemenagCityName: String,
+        kemenagDuration: String,
+        kemenagTargetDate: String
     ) -> Unit,
     onAddAnnouncement: (String) -> Unit,
     onDeleteAnnouncement: (String) -> Unit,
+    onEditAnnouncement: (String, String) -> Unit,
+    onReorderAnnouncements: (List<String>) -> Unit,
     onResetToDefaults: () -> Unit,
     onSelectCustomBackground: (android.net.Uri) -> Unit,
     onClearCustomBackground: () -> Unit,
     mediaList: List<MediaEntity>,
-    onAddMediaItem: (android.net.Uri) -> Unit,
+    onAddMediaItems: (List<android.net.Uri>) -> Unit,
     onDeleteMediaItem: (MediaEntity) -> Unit,
-    onUpdateThemeSettings: (String, Int, Boolean) -> Unit,
+    onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit,
+    onUpdateShowSettingsOnTv: (Boolean) -> Unit,
+    devices: List<ConnectedDeviceEntity>,
+    citySearchResults: List<Pair<String, String>> = emptyList(),
+    isSearchingCities: Boolean = false,
+    kemenagSchedules: List<com.groovernapp.mosqueathan.data.KemenagScheduleEntity> = emptyList(),
+    onSearchKemenagCities: (String) -> Unit = {},
+    onSetDeviceMaster: (String) -> Unit,
+    onUpdatePinCode: (String) -> Unit,
+    onDeleteDevice: (String) -> Unit,
+    onUpdateFooters: (String, String) -> Unit = { _, _ -> },
+    onPreviewAdzan: () -> Unit = {},
+    onPreviewIqomah: () -> Unit = {},
+    onPreviewSlideshow: () -> Unit = {},
+    onDownloadKemenagSchedules: (cityId: String, cityName: String, duration: String, targetDate: String) -> Unit = { _, _, _, _ -> },
+    slideshowSchedules: List<com.groovernapp.mosqueathan.data.SlideshowScheduleEntity> = emptyList(),
+    onAddSlideshowSchedule: (String, String) -> Unit = { _, _ -> },
+    onDeleteSlideshowSchedule: (String) -> Unit = {},
+    onSaveStandby: (Boolean, String, String) -> Unit = { _, _, _ -> },
     onBack: () -> Unit
 ) {
-    val singleBackgroundLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
-    ) { uri: android.net.Uri? ->
-        if (uri != null) {
-            onSelectCustomBackground(uri)
-        }
-    }
-
     val mediaPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
-    ) { uri: android.net.Uri? ->
-        if (uri != null) {
-            onAddMediaItem(uri)
+        contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
+    ) { uris: List<android.net.Uri> ->
+        if (uris.isNotEmpty()) {
+            onAddMediaItems(uris)
         }
     }
 
-    var selectedCategory by remember { mutableStateOf(SettingsCategory.LOCATION) }
+    val showAllSettings = true // Set to true so settings can be accessed directly on TV devices
+
+    var selectedCategory by remember(showAllSettings) { 
+        mutableStateOf(if (showAllSettings) SettingsCategory.LOCATION else SettingsCategory.WEB_CONTROL) 
+    }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isTv = remember(context) {
+        val uiModeManager = context.getSystemService(android.content.Context.UI_MODE_SERVICE) as android.app.UiModeManager
+        uiModeManager.currentModeType == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
+    }
 
     // Location States
     var latText by remember(config.latitude) { mutableStateOf(config.latitude.toString()) }
@@ -84,15 +120,26 @@ fun SettingsScreen(
     var iqomahIsya by remember(config.iqomahIsya) { mutableStateOf(config.iqomahIsya) }
     var adzanLeadMinutes by remember(config.adzanLeadMinutes) { mutableStateOf(config.adzanLeadMinutes) }
 
+    // Offset States
+    var offsetImsak by remember(config.offsetImsak) { mutableStateOf(config.offsetImsak) }
+    var offsetSubuh by remember(config.offsetSubuh) { mutableStateOf(config.offsetSubuh) }
+    var offsetSyuruq by remember(config.offsetSyuruq) { mutableStateOf(config.offsetSyuruq) }
+    var offsetDzuhur by remember(config.offsetDzuhur) { mutableStateOf(config.offsetDzuhur) }
+    var offsetAshar by remember(config.offsetAshar) { mutableStateOf(config.offsetAshar) }
+    var offsetMaghrib by remember(config.offsetMaghrib) { mutableStateOf(config.offsetMaghrib) }
+    var offsetIsya by remember(config.offsetIsya) { mutableStateOf(config.offsetIsya) }
+
     // Calculation Method State
     var calculationMethodName by remember(config.calculationMethodName) { mutableStateOf(config.calculationMethodName) }
+    var kemenagCityId by remember(config.kemenagCityId) { mutableStateOf(config.kemenagCityId) }
+    var kemenagCityName by remember(config.kemenagCityName) { mutableStateOf(config.kemenagCityName) }
+    var kemenagDuration by remember(config.kemenagDuration) { mutableStateOf(config.kemenagDuration) }
+    var kemenagTargetDate by remember(config.kemenagTargetDate) { mutableStateOf(config.kemenagTargetDate) }
 
-    // Announcement input state
-    var newAnnouncementText by remember { mutableStateOf("") }
-
-    val calculationMethods = listOf(
-        "SINGAPORE", "UMM_AL_QURA", "MUSLIM_WORLD_LEAGUE", "EGYPTIAN", "KARACHI", "DUBAI", "KUWAIT", "QATAR"
-    )
+    // Standby States
+    var standbyModeEnabled by remember(config.standbyModeEnabled) { mutableStateOf(config.standbyModeEnabled) }
+    var standbyStartTime by remember(config.standbyStartTime) { mutableStateOf(config.standbyStartTime) }
+    var standbyEndTime by remember(config.standbyEndTime) { mutableStateOf(config.standbyEndTime) }
 
     val customBgBitmap = remember(config.customBackgroundPath) {
         if (config.customBackgroundPath.isNotEmpty() && java.io.File(config.customBackgroundPath).exists()) {
@@ -148,50 +195,125 @@ fun SettingsScreen(
                     .weight(0.3f)
                     .fillMaxHeight()
                     .padding(end = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "PENGATURAN",
-                    color = Color(0xFFFFD54F),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp, start = 12.dp)
-                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = com.groovernapp.mosqueathan.util.Lang.get("SETTINGS", "PENGATURAN"),
+                        color = Color(0xFFFFD54F),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 16.dp, start = 12.dp)
+                    )
 
-                SettingsCategory.values().forEach { category ->
-                    val isSelected = selectedCategory == category
-                    Box(
+                    val displayedCategories = if (showAllSettings) {
+                        SettingsCategory.values()
+                    } else {
+                        arrayOf(SettingsCategory.WEB_CONTROL)
+                    }
+
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) Color(0xFFFFD54F).copy(alpha = 0.15f) else Color.Transparent)
-                            .border(
-                                width = 1.dp,
-                                color = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.15f),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .clickable { selectedCategory = category }
-                            .padding(horizontal = 20.dp, vertical = 16.dp),
-                        contentAlignment = Alignment.CenterStart
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            text = category.displayName,
-                            color = if (isSelected) Color(0xFFFFD54F) else Color.White,
-                            fontSize = 18.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                        )
+                        displayedCategories.forEach { category ->
+                            val isSelected = selectedCategory == category
+                            val interactionSource = remember { MutableInteractionSource() }
+                            val isFocused by interactionSource.collectIsFocusedAsState()
+                            val isHovered by interactionSource.collectIsHoveredAsState()
+                            val isFocusedOrHovered = isFocused || isHovered
+
+                            val borderColor = when {
+                                isSelected -> Color(0xFFFFD54F)
+                                isFocusedOrHovered -> Color(0xFFFFD54F).copy(alpha = 0.8f)
+                                else -> Color.White.copy(alpha = 0.15f)
+                            }
+                            val borderWidth = if (isSelected || isFocusedOrHovered) 2.dp else 1.dp
+                            val backgroundColor = when {
+                                isSelected && isFocusedOrHovered -> Color(0xFFFFD54F).copy(alpha = 0.25f)
+                                isSelected -> Color(0xFFFFD54F).copy(alpha = 0.15f)
+                                isFocusedOrHovered -> Color.White.copy(alpha = 0.12f)
+                                else -> Color.Transparent
+                            }
+                            val textColor = if (isSelected || isFocusedOrHovered) Color(0xFFFFD54F) else Color.White
+                            val textWeight = if (isSelected || isFocusedOrHovered) FontWeight.Bold else FontWeight.Medium
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(
+                                        width = borderWidth,
+                                        color = borderColor,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .background(
+                                        backgroundColor,
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable(
+                                        interactionSource = interactionSource,
+                                        indication = androidx.compose.foundation.LocalIndication.current
+                                    ) {
+                                        selectedCategory = category
+                                    }
+                                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                Text(
+                                    text = category.getDisplayName(),
+                                    color = textColor,
+                                    fontSize = 18.sp,
+                                    fontWeight = textWeight
+                                )
+                            }
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                Button(
-                    onClick = onBack,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.2f)),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
                 ) {
-                    Text("Kembali", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    val ipAddress = remember { SettingsServer.getIpAddress() }
+                    val versionName = remember(context) {
+                        try {
+                            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                            packageInfo.versionName ?: "Unknown"
+                        } catch (e: Exception) {
+                            "Unknown"
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier.padding(start = 12.dp, bottom = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+
+                        Text(
+                            text = com.groovernapp.mosqueathan.util.Lang.get("App Version: v$versionName", "Versi Aplikasi: v$versionName"),
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+
+                    TvFocusableButton(
+                        onClick = onBack,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                    ) {
+                        Text(
+                            com.groovernapp.mosqueathan.util.Lang.get("Back", "Kembali"),
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
@@ -212,429 +334,225 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = selectedCategory.displayName,
+                            text = selectedCategory.getDisplayName(),
                             color = Color.White,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = selectedCategory.description,
+                            text = selectedCategory.getDescription(),
                             color = Color.White.copy(alpha = 0.6f),
                             fontSize = 15.sp
                         )
                         Spacer(modifier = Modifier.height(28.dp))
 
-                        // Category specific UI
+                        // Category specific UI — each segment is in its own file
                         when (selectedCategory) {
                             SettingsCategory.LOCATION -> {
-                                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    OutlinedTextField(
-                                        value = latText,
-                                        onValueChange = { latText = it },
-                                        label = { Text("Latitude") },
-                                        colors = textFieldColors(),
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                    OutlinedTextField(
-                                        value = lngText,
-                                        onValueChange = { lngText = it },
-                                        label = { Text("Longitude") },
-                                        colors = textFieldColors(),
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
+                                LocationSettingsSegment(
+                                    latText = latText,
+                                    onLatTextChange = { latText = it },
+                                    lngText = lngText,
+                                    onLngTextChange = { lngText = it },
+                                    calculationMethodName = calculationMethodName,
+                                    kemenagCityName = kemenagCityName
+                                )
                             }
 
                             SettingsCategory.IQOMAH -> {
-                                LazyColumn(
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.fillMaxHeight(0.85f)
-                                ) {
-                                    item { IqomahAdjustmentRow("Subuh", iqomahSubuh) { iqomahSubuh = it } }
-                                    item { IqomahAdjustmentRow("Dzuhur", iqomahDzuhur) { iqomahDzuhur = it } }
-                                    item { IqomahAdjustmentRow("Ashar", iqomahAshar) { iqomahAshar = it } }
-                                    item { IqomahAdjustmentRow("Maghrib", iqomahMaghrib) { iqomahMaghrib = it } }
-                                    item { IqomahAdjustmentRow("Isya", iqomahIsya) { iqomahIsya = it } }
-                                    item { IqomahAdjustmentRow("Persiapan Adzan", adzanLeadMinutes) { adzanLeadMinutes = it } }
-                                }
+                                IqomahSettingsSegment(
+                                    adzanLeadMinutes = adzanLeadMinutes,
+                                    onAdzanLeadMinutesChange = { adzanLeadMinutes = it },
+                                    iqomahSubuh = iqomahSubuh,
+                                    onIqomahSubuhChange = { iqomahSubuh = it },
+                                    iqomahDzuhur = iqomahDzuhur,
+                                    onIqomahDzuhurChange = { iqomahDzuhur = it },
+                                    iqomahAshar = iqomahAshar,
+                                    onIqomahAsharChange = { iqomahAshar = it },
+                                    iqomahMaghrib = iqomahMaghrib,
+                                    onIqomahMaghribChange = { iqomahMaghrib = it },
+                                    iqomahIsya = iqomahIsya,
+                                    onIqomahIsyaChange = { iqomahIsya = it }
+                                )
+                            }
+
+                            SettingsCategory.PRAYER_OFFSETS -> {
+                                PrayerOffsetsSettingsSegment(
+                                    offsetImsak = offsetImsak,
+                                    offsetSubuh = offsetSubuh,
+                                    offsetSyuruq = offsetSyuruq,
+                                    offsetDzuhur = offsetDzuhur,
+                                    offsetAshar = offsetAshar,
+                                    offsetMaghrib = offsetMaghrib,
+                                    offsetIsya = offsetIsya,
+                                    onOffsetImsakChange = { offsetImsak = it },
+                                    onOffsetSubuhChange = { offsetSubuh = it },
+                                    onOffsetSyuruqChange = { offsetSyuruq = it },
+                                    onOffsetDzuhurChange = { offsetDzuhur = it },
+                                    onOffsetAsharChange = { offsetAshar = it },
+                                    onOffsetMaghribChange = { offsetMaghrib = it },
+                                    onOffsetIsyaChange = { offsetIsya = it }
+                                )
                             }
 
                             SettingsCategory.METHOD -> {
-                                LazyColumn(
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                                    modifier = Modifier.fillMaxHeight(0.8f)
-                                ) {
-                                    items(calculationMethods) { method ->
-                                        val isSelected = calculationMethodName == method
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(if (isSelected) Color(0xFFFFD54F).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f))
-                                                .border(
-                                                    width = 1.dp,
-                                                    color = if (isSelected) Color(0xFFFFD54F) else Color.Transparent,
-                                                    shape = RoundedCornerShape(8.dp)
-                                                )
-                                                .clickable { calculationMethodName = method }
-                                                .padding(horizontal = 20.dp, vertical = 14.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            RadioButton(
-                                                selected = isSelected,
-                                                onClick = { calculationMethodName = method },
-                                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFFD54F))
-                                            )
-                                            Spacer(modifier = Modifier.width(12.dp))
-                                            Text(
-                                                text = method,
-                                                color = Color.White,
-                                                fontSize = 16.sp,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                                            )
-                                        }
+                                MethodSettingsSegment(
+                                    calculationMethodName = calculationMethodName,
+                                    kemenagCityId = kemenagCityId,
+                                    kemenagCityName = kemenagCityName,
+                                    kemenagDuration = kemenagDuration,
+                                    kemenagTargetDate = kemenagTargetDate,
+                                    citySearchResults = citySearchResults,
+                                    isSearchingCities = isSearchingCities,
+                                    kemenagSchedules = kemenagSchedules,
+                                    onMethodChange = { calculationMethodName = it },
+                                    onKemenagCitySelected = { id, name ->
+                                        kemenagCityId = id
+                                        kemenagCityName = name
+                                    },
+                                    onKemenagDurationChange = { kemenagDuration = it },
+                                    onKemenagTargetDateChange = { kemenagTargetDate = it },
+                                    onSearchKemenagCities = onSearchKemenagCities,
+                                    onDownloadKemenagSchedules = {
+                                        onDownloadKemenagSchedules(kemenagCityId, kemenagCityName, kemenagDuration, kemenagTargetDate)
                                     }
-                                }
+                                )
                             }
 
                             SettingsCategory.ANNOUNCEMENTS -> {
-                                Column(modifier = Modifier.fillMaxSize()) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        OutlinedTextField(
-                                            value = newAnnouncementText,
-                                            onValueChange = { newAnnouncementText = it },
-                                            placeholder = { Text("Ketik pengumuman baru di sini...") },
-                                            colors = textFieldColors(),
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        Button(
-                                            onClick = {
-                                                if (newAnnouncementText.isNotBlank()) {
-                                                    onAddAnnouncement(newAnnouncementText.trim())
-                                                    newAnnouncementText = ""
-                                                }
-                                            },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD54F)),
-                                            shape = RoundedCornerShape(8.dp),
-                                            modifier = Modifier.height(56.dp)
-                                        ) {
-                                            Text("Tambah", color = Color.Black, fontWeight = FontWeight.Bold)
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(16.dp))
-
-                                    LazyColumn(
-                                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        items(announcements) { announcement ->
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clip(RoundedCornerShape(8.dp))
-                                                    .background(Color.White.copy(alpha = 0.05f))
-                                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = announcement.content,
-                                                    color = Color.White,
-                                                    fontSize = 15.sp,
-                                                    modifier = Modifier.weight(0.85f)
-                                                )
-                                                Button(
-                                                    onClick = { onDeleteAnnouncement(announcement.id) },
-                                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.7f)),
-                                                    shape = RoundedCornerShape(6.dp),
-                                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                                    modifier = Modifier.height(32.dp)
-                                                ) {
-                                                    Text("Hapus", color = Color.White, fontSize = 13.sp)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                                  AnnouncementsSettingsSegment(
+                                      config = config,
+                                      announcements = announcements,
+                                      onAddAnnouncement = onAddAnnouncement,
+                                      onDeleteAnnouncement = onDeleteAnnouncement,
+                                      onEditAnnouncement = onEditAnnouncement,
+                                      onUpdateFooters = onUpdateFooters,
+                                      onPreviewAdzan = onPreviewAdzan,
+                                      onPreviewIqomah = onPreviewIqomah
+                                  )
+                             }
 
                             SettingsCategory.THEME -> {
-                                LazyColumn(
-                                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                                    modifier = Modifier.fillMaxHeight(0.85f)
-                                ) {
-                                    // Section 1: Single Background
-                                    item {
-                                        Text("PILIHAN 1: Gambar Latar Belakang Tunggal", color = Color(0xFFFFD54F), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        val hasCustomBackground = config.customBackgroundPath.isNotEmpty()
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.05f)).padding(16.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = if (hasCustomBackground) "Gambar kustom aktif" else "Gambar default aktif (Masjidil Haram)",
-                                                color = Color.White,
-                                                fontSize = 15.sp,
-                                                modifier = Modifier.weight(0.6f)
-                                            )
-                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                Button(
-                                                    onClick = { singleBackgroundLauncher.launch("image/*") },
-                                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD54F)),
-                                                    shape = RoundedCornerShape(6.dp),
-                                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                                    modifier = Modifier.height(36.dp)
-                                                ) {
-                                                    Text("Pilih Gambar", color = Color.Black, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                                }
-                                                if (hasCustomBackground) {
-                                                    Button(
-                                                        onClick = onClearCustomBackground,
-                                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.7f)),
-                                                        shape = RoundedCornerShape(6.dp),
-                                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                                        modifier = Modifier.height(36.dp)
-                                                    ) {
-                                                        Text("Hapus", color = Color.White, fontSize = 13.sp)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // Section 2: Slideshow Presentation
-                                    item {
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text("PILIHAN 2: Presentasi Slideshow (Multi Gambar & Video)", color = Color(0xFFFFD54F), fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                    }
-
-                                    // Transition Type
-                                    item {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.05f)).padding(16.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text("Animasi Transisi", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                listOf("FADE", "SLIDE", "ZOOM", "INSTANT").forEach { type ->
-                                                    val isSelected = config.transitionType == type
-                                                    Button(
-                                                        onClick = { onUpdateThemeSettings(type, config.slideIntervalSeconds, config.videoWaitUntilEnd) },
-                                                        colors = ButtonDefaults.buttonColors(
-                                                            containerColor = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.1f)
-                                                        ),
-                                                        shape = RoundedCornerShape(6.dp),
-                                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                                                        modifier = Modifier.height(32.dp)
-                                                    ) {
-                                                        Text(type, color = if (isSelected) Color.Black else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // Interval Selector
-                                    item {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.05f)).padding(16.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text("Interval Slideshow", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                            ) {
-                                                Button(
-                                                    onClick = {
-                                                        if (config.slideIntervalSeconds > 5) {
-                                                            onUpdateThemeSettings(config.transitionType, config.slideIntervalSeconds - 5, config.videoWaitUntilEnd)
-                                                        }
-                                                    },
-                                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.15f)),
-                                                    shape = RoundedCornerShape(6.dp),
-                                                    contentPadding = PaddingValues(0.dp),
-                                                    modifier = Modifier.size(32.dp)
-                                                ) {
-                                                    Text("-", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                                }
-
-                                                Text(
-                                                    text = "${config.slideIntervalSeconds} detik",
-                                                    color = Color.White,
-                                                    fontSize = 15.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-
-                                                Button(
-                                                    onClick = {
-                                                        if (config.slideIntervalSeconds < 120) {
-                                                            onUpdateThemeSettings(config.transitionType, config.slideIntervalSeconds + 5, config.videoWaitUntilEnd)
-                                                        }
-                                                    },
-                                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.15f)),
-                                                    shape = RoundedCornerShape(6.dp),
-                                                    contentPadding = PaddingValues(0.dp),
-                                                    modifier = Modifier.size(32.dp)
-                                                ) {
-                                                    Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // Video Playback Behavior
-                                    item {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.05f)).padding(16.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text("Durasi Putar Video", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                                                Spacer(modifier = Modifier.height(2.dp))
-                                                Text("Tunggu video selesai diputar atau ikuti interval slide biasa", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp)
-                                            }
-                                            Spacer(modifier = Modifier.width(16.dp))
-                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                listOf(false, true).forEach { waitEnd ->
-                                                    val isSelected = config.videoWaitUntilEnd == waitEnd
-                                                    val label = if (waitEnd) "Selesai Video" else "Ikuti Interval"
-                                                    Button(
-                                                        onClick = { onUpdateThemeSettings(config.transitionType, config.slideIntervalSeconds, waitEnd) },
-                                                        colors = ButtonDefaults.buttonColors(
-                                                            containerColor = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.1f)
-                                                        ),
-                                                        shape = RoundedCornerShape(6.dp),
-                                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                                        modifier = Modifier.height(32.dp)
-                                                    ) {
-                                                        Text(label, color = if (isSelected) Color.Black else Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // Add Media Item Button
-                                    item {
-                                        Button(
-                                            onClick = {
-                                                mediaPickerLauncher.launch(
-                                                    androidx.activity.result.PickVisualMediaRequest(
-                                                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                                                    )
-                                                )
-                                            },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD54F)),
-                                            shape = RoundedCornerShape(8.dp),
-                                            modifier = Modifier.fillMaxWidth().height(48.dp)
-                                        ) {
-                                            Text("Tambah Gambar / Video ke Slideshow", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                                        }
-                                    }
-
-                                    // Media playlist items
-                                    if (mediaList.isEmpty()) {
-                                        item {
-                                            Box(
-                                                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text("Belum ada media slideshow. Tambahkan file untuk memulai.", color = Color.White.copy(alpha = 0.5f), fontSize = 14.sp)
-                                            }
-                                        }
-                                    } else {
-                                        items(mediaList) { mediaItem ->
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Color.White.copy(alpha = 0.05f)).padding(horizontal = 16.dp, vertical = 10.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Column(modifier = Modifier.weight(0.7f)) {
-                                                    Text(
-                                                        text = if (mediaItem.isVideo) "📹 VIDEO" else "🖼️ GAMBAR",
-                                                        color = Color(0xFFFFD54F),
-                                                        fontSize = 11.sp,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                    Text(
-                                                        text = mediaItem.filePath.substringAfterLast("/"),
-                                                        color = Color.White,
-                                                        fontSize = 14.sp,
-                                                        maxLines = 1
-                                                    )
-                                                }
-                                                Button(
-                                                    onClick = { onDeleteMediaItem(mediaItem) },
-                                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.7f)),
-                                                    shape = RoundedCornerShape(6.dp),
-                                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                                    modifier = Modifier.height(32.dp)
-                                                ) {
-                                                    Text("Hapus", color = Color.White, fontSize = 13.sp)
-                                                }
-                                            }
-                                        }
+                                val backgroundPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+                                    contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
+                                ) { uri: android.net.Uri? ->
+                                    if (uri != null) {
+                                        onSelectCustomBackground(uri)
                                     }
                                 }
+                                ThemeSettingsSegment(
+                                    config = config,
+                                    transitionType = config.transitionType,
+                                    slideIntervalSeconds = config.slideIntervalSeconds,
+                                    videoWaitUntilEnd = config.videoWaitUntilEnd,
+                                    includeDefaultImage = config.includeDefaultImage,
+                                    mediaList = mediaList,
+                                    slideshowSchedules = slideshowSchedules,
+                                    onUpdateThemeSettings = onUpdateThemeSettings,
+                                    onAddMediaItem = {
+                                        mediaPickerLauncher.launch(
+                                            androidx.activity.result.PickVisualMediaRequest(
+                                                androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                                            )
+                                        )
+                                    },
+                                    onDeleteMediaItem = onDeleteMediaItem,
+                                    onSelectCustomBackground = {
+                                        backgroundPickerLauncher.launch(
+                                            androidx.activity.result.PickVisualMediaRequest(
+                                                androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                                            )
+                                        )
+                                    },
+                                    onClearCustomBackground = onClearCustomBackground,
+                                    onAddSlideshowSchedule = onAddSlideshowSchedule,
+                                    onDeleteSlideshowSchedule = onDeleteSlideshowSchedule,
+                                    onPreviewSlideshow = onPreviewSlideshow
+                                )
+                            }
+
+                            SettingsCategory.WEB_CONTROL -> {
+                                WebControlSettingsSegment(
+                                    showSettingsOnTv = config.showSettingsOnTv,
+                                    isTv = isTv,
+                                    onUpdateShowSettingsOnTv = onUpdateShowSettingsOnTv
+                                )
+                            }
+
+                            SettingsCategory.DEVICES -> {
+                                DevicesSettingsSegment(
+                                    config = config,
+                                    devices = devices,
+                                    onSetDeviceMaster = onSetDeviceMaster,
+                                    onDeleteDevice = onDeleteDevice
+                                )
+                            }
+
+                            SettingsCategory.STANDBY -> {
+                                StandbySettingsSegment(
+                                    standbyModeEnabled = standbyModeEnabled,
+                                    onStandbyModeEnabledChange = { standbyModeEnabled = it },
+                                    standbyStartTime = standbyStartTime,
+                                    onStandbyStartTimeChange = { standbyStartTime = it },
+                                    standbyEndTime = standbyEndTime,
+                                    onStandbyEndTimeChange = { standbyEndTime = it }
+                                )
                             }
 
                             SettingsCategory.RESET -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Button(
-                                        onClick = onResetToDefaults,
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f)),
-                                        shape = RoundedCornerShape(8.dp),
-                                        modifier = Modifier.height(56.dp).padding(horizontal = 32.dp)
-                                    ) {
-                                        Text("RESET SEMUA PENGATURAN KE DEFAULT", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                    }
-                                }
+                                ResetSettingsSegment(onResetToDefaults = onResetToDefaults)
                             }
                         }
                     }
 
-                    // Save / Apply Button
-                    if (selectedCategory in listOf(SettingsCategory.LOCATION, SettingsCategory.IQOMAH, SettingsCategory.METHOD)) {
-                        Button(
+                    // Save / Apply Button (only for config-saving categories)
+                    if (selectedCategory in listOf(
+                            SettingsCategory.LOCATION,
+                            SettingsCategory.IQOMAH,
+                            SettingsCategory.PRAYER_OFFSETS,
+                            SettingsCategory.METHOD,
+                            SettingsCategory.STANDBY
+                        )
+                    ) {
+                        TvFocusablePrimaryButton(
                             onClick = {
-                                val lat = latText.toDoubleOrNull() ?: config.latitude
-                                val lng = lngText.toDoubleOrNull() ?: config.longitude
-                                onSaveConfig(
-                                    lat,
-                                    lng,
-                                    iqomahSubuh,
-                                    iqomahDzuhur,
-                                    iqomahAshar,
-                                    iqomahMaghrib,
-                                    iqomahIsya,
-                                    calculationMethodName,
-                                    adzanLeadMinutes
-                                )
+                                if (selectedCategory == SettingsCategory.STANDBY) {
+                                    onSaveStandby(standbyModeEnabled, standbyStartTime, standbyEndTime)
+                                } else {
+                                    val lat = latText.toDoubleOrNull() ?: config.latitude
+                                    val lng = lngText.toDoubleOrNull() ?: config.longitude
+                                    onSaveConfig(
+                                        lat,
+                                        lng,
+                                        iqomahSubuh,
+                                        iqomahDzuhur,
+                                        iqomahAshar,
+                                        iqomahMaghrib,
+                                        iqomahIsya,
+                                        calculationMethodName,
+                                        adzanLeadMinutes,
+                                        offsetImsak,
+                                        offsetSubuh,
+                                        offsetSyuruq,
+                                        offsetDzuhur,
+                                        offsetAshar,
+                                        offsetMaghrib,
+                                        offsetIsya,
+                                        kemenagCityId,
+                                        kemenagCityName,
+                                        kemenagDuration,
+                                        kemenagTargetDate
+                                    )
+                                }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD54F)),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp)
                         ) {
                             Text(
-                                text = "Simpan Pengaturan",
+                                text = com.groovernapp.mosqueathan.util.Lang.get("Save Settings", "Simpan Pengaturan"),
                                 color = Color.Black,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
@@ -647,100 +565,49 @@ fun SettingsScreen(
     }
 }
 
-@Composable
-private fun IqomahAdjustmentRow(
-    title: String,
-    value: Int,
-    onValueChange: (Int) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .padding(horizontal = 20.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            color = Color.White,
-            fontSize = 17.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Button(
-                onClick = { if (value > 0) onValueChange(value - 1) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.15f)),
-                shape = RoundedCornerShape(6.dp),
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier.size(36.dp)
-            ) {
-                Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            }
-
-            Text(
-                text = "$value menit",
-                color = Color.White,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.width(76.dp)
-            )
-
-            Button(
-                onClick = { onValueChange(value + 1) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.15f)),
-                shape = RoundedCornerShape(6.dp),
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier.size(36.dp)
-            ) {
-                Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
-
-@Composable
-private fun textFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
-    focusedBorderColor = Color(0xFFFFD54F),
-    unfocusedBorderColor = Color.White.copy(alpha = 0.25f),
-    focusedLabelColor = Color(0xFFFFD54F),
-    unfocusedLabelColor = Color.White.copy(alpha = 0.6f),
-    cursorColor = Color(0xFFFFD54F)
-)
 
 enum class SettingsCategory(
-    val displayName: String,
-    val description: String
+    val getDisplayName: @Composable () -> String,
+    val getDescription: @Composable () -> String
 ) {
     LOCATION(
-        displayName = "Koordinat Masjid",
-        description = "Sesuaikan koordinat lintang (latitude) dan bujur (longitude) masjid untuk menghitung jadwal sholat dengan akurat."
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Mosque Coordinates", "Koordinat Masjid") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Adjust the latitude and longitude coordinates of the mosque to calculate prayer times accurately.", "Sesuaikan koordinat lintang (latitude) dan bujur (longitude) masjid untuk menghitung jadwal sholat dengan akurat.") }
     ),
     IQOMAH(
-        displayName = "Durasi & Jeda Waktu",
-        description = "Atur jeda waktu tunggu (menit) sebelum iqomah untuk setiap waktu sholat berjamaah, serta durasi tampilan persiapan adzan sebelum waktu sholat tiba."
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Duration & Interval", "Durasi & Jeda Waktu") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Set the countdown waiting time (minutes) before iqomah for each prayer, as well as the adzan preparation duration.", "Atur jeda waktu tunggu (menit) sebelum iqomah untuk setiap waktu sholat berjamaah, serta durasi tampilan persiapan adzan sebelum waktu sholat tiba.") }
+    ),
+    PRAYER_OFFSETS(
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Prayer Time Adjustments", "Penyesuaian Waktu Sholat") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Adjust each prayer time to be a few minutes earlier or later relative to calculations.", "Sesuaikan masing-masing waktu sholat agar beberapa menit lebih cepat atau lebih lambat dari hasil perhitungan.") }
     ),
     METHOD(
-        displayName = "Metode Perhitungan",
-        description = "Pilih standar konvensi perhitungan waktu sholat yang ingin diterapkan di wilayah masjid Anda."
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Calculation Method", "Metode Perhitungan") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Select the standard prayer calculation convention to apply in your area.", "Pilih standar konvensi perhitungan waktu sholat yang ingin diterapkan di wilayah masjid Anda.") }
     ),
     ANNOUNCEMENTS(
-        displayName = "Kelola Pengumuman",
-        description = "Tambahkan, kelola, atau hapus teks berjalan yang akan ditampilkan di bagian bawah layar utama."
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Manage Announcements", "Kelola Pengumuman") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Add, manage, or delete scrolling running text shown at the bottom of the main dashboard.", "Tambahkan, kelola, atau hapus teks berjalan yang akan ditampilkan di bagian bawah layar utama.") }
     ),
     THEME(
-        displayName = "Latar Belakang",
-        description = "Pilih gambar latar belakang layar utama dari penyimpanan perangkat Anda."
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Background Theme", "Latar Belakang") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Choose a custom background image or slideshow media from your device.", "Pilih gambar latar belakang layar utama dari penyimpanan perangkat Anda.") }
+    ),
+    STANDBY(
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Standby & Screen", "Standby & Layar") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Configure automatic standby hours (black screen) and keep the TV screen always active outside those hours.", "Atur jam operasional standby otomatis (layar hitam) dan jaga agar layar TV selalu aktif di luar jam tersebut.") }
+    ),
+    WEB_CONTROL(
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Web Control (Remote)", "Kontrol Web (Remote)") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Access and configure all application settings from a phone/laptop browser on the same network.", "Akses dan atur seluruh konfigurasi aplikasi dari browser HP atau Laptop Anda melalui koneksi lokal.") }
+    ),
+    DEVICES(
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Connected Devices", "Perangkat Terhubung") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Manage devices connected to the remote web control, assign Master, and set security PIN.", "Kelola perangkat/HP yang terhubung ke kontrol web remote, tentukan Master, dan atur keamanan PIN.") }
     ),
     RESET(
-        displayName = "Reset Pengaturan",
-        description = "Mengembalikan seluruh nilai koordinat, durasi iqomah, metode, serta running text ke konfigurasi bawaan (default)."
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Reset Settings", "Reset Pengaturan") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Restore all coordinates, iqomah durations, calculation method, and announcements to factory defaults.", "Mengembalikan seluruh nilai koordinat, durasi iqomah, metode, serta running text ke konfigurasi bawaan (default).") }
     )
 }

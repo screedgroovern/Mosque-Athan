@@ -28,7 +28,7 @@ fun RunningTextBar(text: String) {
         Text(
             text = text,
             color = Color.White,
-            fontSize = 20.sp,
+            fontSize = 30.sp,
             maxLines = 1,
             softWrap = false,
             modifier = Modifier.basicMarquee(

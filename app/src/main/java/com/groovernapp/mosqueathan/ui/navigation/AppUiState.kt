@@ -12,7 +12,8 @@ sealed interface AppUiState {
         val mediaList: List<com.groovernapp.mosqueathan.data.MediaEntity>,
         val transitionType: String,
         val slideIntervalSeconds: Int,
-        val videoWaitUntilEnd: Boolean
+        val videoWaitUntilEnd: Boolean,
+        val includeDefaultImage: Boolean
     ) : AppUiState
 
     data class Adzan(

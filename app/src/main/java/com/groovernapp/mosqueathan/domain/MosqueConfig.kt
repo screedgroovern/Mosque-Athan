@@ -17,4 +17,8 @@ object MosqueConfig {
     const val IQOMAH_ISYA = 10
 
     const val DEFAULT_ADZAN_LEAD_MINUTES = 3
+
+    const val DEFAULT_STANDBY_ENABLED = false
+    const val DEFAULT_STANDBY_START_TIME = "22:00"
+    const val DEFAULT_STANDBY_END_TIME = "04:00"
 }

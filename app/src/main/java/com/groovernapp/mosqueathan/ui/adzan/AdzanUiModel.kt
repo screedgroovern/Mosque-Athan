@@ -6,7 +6,8 @@ data class AdzanUiModel(
     val prayerType: PrayerType,
     val prayerTime: String,
     val currentTime: String,
-    val remainingSeconds: Int
+    val remainingSeconds: Int,
+    val footerText: String = "Mohon bersiap dan hentikan aktivitas sementara."
 ) {
     val countdown: String
         get() {

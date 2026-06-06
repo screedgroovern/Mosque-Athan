@@ -24,20 +24,34 @@ fun DashboardScreen(
     transitionType: String,
     slideIntervalSeconds: Int,
     videoWaitUntilEnd: Boolean,
+    includeDefaultImage: Boolean,
     onNavigateToSettings: () -> Unit
 ) {
-    var currentMediaIndex by remember(mediaList) { mutableStateOf(0) }
+    val slideshowList = remember(mediaList, includeDefaultImage) {
+        val list = mediaList.toMutableList()
+        if (includeDefaultImage) {
+            val defaultMedia = MediaEntity().apply {
+                id = "default_bg"
+                filePath = ""
+                isVideo = false
+            }
+            list.add(0, defaultMedia)
+        }
+        list
+    }
 
-    if (mediaList.isNotEmpty()) {
-        val currentMedia = mediaList.getOrNull(currentMediaIndex)
+    var currentMediaIndex by remember(slideshowList) { mutableStateOf(0) }
+
+    if (slideshowList.isNotEmpty()) {
+        val currentMedia = slideshowList.getOrNull(currentMediaIndex)
         val isVideo = currentMedia?.isVideo == true
 
-        LaunchedEffect(currentMediaIndex, mediaList, slideIntervalSeconds, videoWaitUntilEnd) {
+        LaunchedEffect(currentMediaIndex, slideshowList, slideIntervalSeconds, videoWaitUntilEnd) {
             if (isVideo && videoWaitUntilEnd) {
                 // Video completion listener will handle advancing the slide index.
             } else {
                 delay(slideIntervalSeconds * 1000L)
-                currentMediaIndex = (currentMediaIndex + 1) % mediaList.size
+                currentMediaIndex = (currentMediaIndex + 1) % slideshowList.size
             }
         }
     }
@@ -57,66 +71,82 @@ fun DashboardScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        if (mediaList.isNotEmpty()) {
-            val currentMedia = mediaList.getOrNull(currentMediaIndex)
-            if (currentMedia != null) {
-                AnimatedContent(
-                    targetState = currentMedia,
-                    transitionSpec = {
-                        when (transitionType) {
-                            "SLIDE" -> {
-                                (slideInHorizontally { width -> width } + fadeIn(animationSpec = tween(500))) togetherWith
-                                        (slideOutHorizontally { width -> -width } + fadeOut(animationSpec = tween(500)))
+        val isSlideshowActive = (state as? DashboardUiState.Dashboard)?.isSlideshowActive == true
+
+        AnimatedContent(
+            targetState = isSlideshowActive,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(600)) togetherWith fadeOut(animationSpec = tween(600))
+            },
+            label = "BackgroundModeTransition"
+        ) { isSlideshow ->
+            if (isSlideshow && slideshowList.isNotEmpty()) {
+                val currentMedia = slideshowList.getOrNull(currentMediaIndex)
+                if (currentMedia != null) {
+                    AnimatedContent(
+                        targetState = currentMedia,
+                        transitionSpec = {
+                            when (transitionType) {
+                                "SLIDE" -> {
+                                    (slideInHorizontally { width -> width } + fadeIn(animationSpec = tween(500))) togetherWith
+                                            (slideOutHorizontally { width -> -width } + fadeOut(animationSpec = tween(500)))
+                                }
+                                "ZOOM" -> {
+                                    (scaleIn(initialScale = 0.8f) + fadeIn(animationSpec = tween(500))) togetherWith
+                                            (scaleOut(targetScale = 1.2f) + fadeOut(animationSpec = tween(500)))
+                                }
+                                "INSTANT" -> {
+                                    ContentTransform(
+                                        initialContentExit = ExitTransition.None,
+                                        targetContentEnter = EnterTransition.None
+                                    )
+                                }
+                                else -> { // "FADE"
+                                    fadeIn(animationSpec = tween(600)) togetherWith fadeOut(animationSpec = tween(600))
+                                }
                             }
-                            "ZOOM" -> {
-                                (scaleIn(initialScale = 0.8f) + fadeIn(animationSpec = tween(500))) togetherWith
-                                        (scaleOut(targetScale = 1.2f) + fadeOut(animationSpec = tween(500)))
+                        },
+                        label = "SlideshowTransition"
+                    ) { media ->
+                        MediaSlide(
+                            media = media,
+                            videoWaitUntilEnd = videoWaitUntilEnd,
+                            onVideoEnded = {
+                                currentMediaIndex = (currentMediaIndex + 1) % slideshowList.size
                             }
-                            "INSTANT" -> {
-                                ContentTransform(
-                                    initialContentExit = ExitTransition.None,
-                                    targetContentEnter = EnterTransition.None
-                                )
-                            }
-                            else -> { // "FADE"
-                                fadeIn(animationSpec = tween(600)) togetherWith fadeOut(animationSpec = tween(600))
-                            }
-                        }
-                    },
-                    label = "SlideshowTransition"
-                ) { media ->
-                    MediaSlide(
-                        media = media,
-                        videoWaitUntilEnd = videoWaitUntilEnd,
-                        onVideoEnded = {
-                            currentMediaIndex = (currentMediaIndex + 1) % mediaList.size
-                        }
+                        )
+                    }
+                }
+            } else {
+                if (customBgBitmap != null) {
+                    Image(
+                        bitmap = customBgBitmap,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.main_bg_default),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
-        } else {
-            if (customBgBitmap != null) {
-                Image(
-                    bitmap = customBgBitmap,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Image(
-                    painter = painterResource(R.drawable.main_bg_default),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.45f))
-        )
+        AnimatedVisibility(
+            visible = !isSlideshowActive,
+            enter = fadeIn(animationSpec = tween(600)),
+            exit = fadeOut(animationSpec = tween(600))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.45f))
+            )
+        }
 
         when (state) {
             is DashboardUiState.Dashboard -> DashboardContent(state, customBackgroundPath, onNavigateToSettings)

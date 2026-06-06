@@ -30,6 +30,22 @@ class AdzanViewModel : ViewModel() {
     private var countdownJob: Job? = null
 
     fun start(prayerType: PrayerType, prayerTime: LocalDateTime) {
+        val config = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance().getConfig()
+        val footerRaw = config.adzanFooterText.ifEmpty { "Mohon bersiap dan hentikan aktivitas sementara." }
+        val footer = try {
+            if (footerRaw.trim().startsWith("[")) {
+                val arr = org.json.JSONArray(footerRaw)
+                val list = mutableListOf<String>()
+                for (i in 0 until arr.length()) {
+                    list.add(arr.getString(i))
+                }
+                list.joinToString("   •   ")
+            } else {
+                footerRaw
+            }
+        } catch (e: Exception) {
+            footerRaw
+        }
         countdownJob?.cancel()
         countdownJob = viewModelScope.launch {
             var remaining = secondsUntil(prayerTime)
@@ -39,7 +55,8 @@ class AdzanViewModel : ViewModel() {
                     prayerType = prayerType,
                     prayerTime = PrayerUtils.formatTime(prayerTime),
                     currentTime = now.toClockString(),
-                    remainingSeconds = remaining
+                    remainingSeconds = remaining,
+                    footerText = footer
                 )
                 delay(1000)
                 remaining = secondsUntil(prayerTime)
@@ -49,7 +66,8 @@ class AdzanViewModel : ViewModel() {
                 prayerType = prayerType,
                 prayerTime = PrayerUtils.formatTime(prayerTime),
                 currentTime = now.toClockString(),
-                remainingSeconds = 0
+                remainingSeconds = 0,
+                footerText = footer
             )
         }
     }

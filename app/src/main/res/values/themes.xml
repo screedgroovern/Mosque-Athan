@@ -5,4 +5,12 @@
         name="Theme.MosqueAthan"
         parent="android:Theme.Material.Light.NoActionBar" />
 
+    <!-- Theme for Splash Screen -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#060907</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_mosque_athan</item>
+        <item name="windowSplashScreenAnimationDuration">1000</item>
+        <item name="postSplashScreenTheme">@style/Theme.MosqueAthan</item>
+    </style>
+
 </resources>

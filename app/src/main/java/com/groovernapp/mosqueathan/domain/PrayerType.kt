@@ -1,6 +1,7 @@
 package com.groovernapp.mosqueathan.domain
 
 enum class PrayerType {
+    IMSAK,
     SUBUH,
     SYURUQ,
     DZUHUR,
@@ -16,6 +17,6 @@ enum class PrayerType {
             ASHAR -> MosqueConfig.IQOMAH_ASHAR
             MAGHRIB -> MosqueConfig.IQOMAH_MAGHRIB
             ISYA -> MosqueConfig.IQOMAH_ISYA
-            SYURUQ -> 0
+            IMSAK, SYURUQ -> 0
     }
 }

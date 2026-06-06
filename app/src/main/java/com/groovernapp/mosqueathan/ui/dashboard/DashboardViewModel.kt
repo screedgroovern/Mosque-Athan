@@ -16,6 +16,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.Instant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
@@ -34,6 +35,7 @@ class DashboardViewModel : ViewModel() {
                 gregorianDate = "-",
                 hijriDate = "-",
                 prayerTimes = PrayerTimesUiModel(
+                    imsak = "--:--",
                     subuh = "--:--",
                     syuruq = "--:--",
                     dzuhur = "--:--",
@@ -119,11 +121,46 @@ class DashboardViewModel : ViewModel() {
         result: PrayerResult,
         now: LocalDateTime
     ) {
+        val config = repository.getConfig()
+        val (nextPrayerType, nextPrayerTime) = PrayerCalculator.getNextPrayer(
+            result = result,
+            now = Clock.System.now(),
+            latitude = config.latitude,
+            longitude = config.longitude,
+            methodName = config.calculationMethodName,
+            offsetSubuh = config.offsetSubuh,
+            kemenagCityId = config.kemenagCityId
+        )
+
+        val slideshowSchedules = repository.getSlideshowSchedules()
+        var slideshowActive = false
+        if (slideshowSchedules.isNotEmpty()) {
+            val currentHourMinute = "%02d:%02d".format(now.hour, now.minute)
+            for (sched in slideshowSchedules) {
+                val start = sched.startTime
+                val end = sched.endTime
+                if (start.isNotEmpty() && end.isNotEmpty()) {
+                    if (start <= end) {
+                        if (currentHourMinute >= start && currentHourMinute < end) {
+                            slideshowActive = true
+                            break
+                        }
+                    } else {
+                        // Overnight slot, e.g. 22:00 to 04:00
+                        if (currentHourMinute >= start || currentHourMinute < end) {
+                            slideshowActive = true
+                            break
+                        }
+                    }
+                }
+            }
+        }
+
         val dashboardState =
             DashboardUiState.Dashboard(
                 currentTime = now.toClockString(),
                 gregorianDate = "${now.day} ${
-                    now.month.name
+                    now.month.toIndonesian()
                         .lowercase()
                         .replaceFirstChar {
                             it.uppercase()
@@ -132,21 +169,23 @@ class DashboardViewModel : ViewModel() {
                 hijriDate = hijriDate,
                 prayerTimes =
                     PrayerTimesUiModel(
+                        imsak = PrayerUtils.formatTime(result.imsak),
                         subuh = PrayerUtils.formatTime(result.subuh),
                         syuruq = PrayerUtils.formatTime(result.syuruq),
                         dzuhur = PrayerUtils.formatTime(result.dzuhur),
                         ashar = PrayerUtils.formatTime(result.ashar),
                         maghrib = PrayerUtils.formatTime(result.maghrib),
                         isya = PrayerUtils.formatTime(result.isya),
-                        highlightedPrayer = result.nextPrayer
+                        highlightedPrayer = nextPrayerType
                     ),
                 nextPrayer =
                     NextPrayerUiModel(
-                        prayerType = result.nextPrayer,
-                        prayerTime = PrayerUtils.formatTime(result.nextPrayerTime),
-                        countdown = PrayerUtils.countdown(result.nextPrayerTime)
+                        prayerType = nextPrayerType,
+                        prayerTime = PrayerUtils.formatTime(nextPrayerTime),
+                        countdown = PrayerUtils.countdown(nextPrayerTime)
                     ),
-                runningText = activeAnnouncementsText
+                runningText = activeAnnouncementsText,
+                isSlideshowActive = slideshowActive
             )
 
         _uiState.value = dashboardState
@@ -164,7 +203,15 @@ class DashboardViewModel : ViewModel() {
         prayerResult = PrayerCalculator.calculate(
             latitude = config.latitude,
             longitude = config.longitude,
-            calculationMethodName = config.calculationMethodName
+            calculationMethodName = config.calculationMethodName,
+            offsetImsak = config.offsetImsak,
+            offsetSubuh = config.offsetSubuh,
+            offsetSyuruq = config.offsetSyuruq,
+            offsetDzuhur = config.offsetDzuhur,
+            offsetAshar = config.offsetAshar,
+            offsetMaghrib = config.offsetMaghrib,
+            offsetIsya = config.offsetIsya,
+            kemenagCityId = config.kemenagCityId
         )
     }
 

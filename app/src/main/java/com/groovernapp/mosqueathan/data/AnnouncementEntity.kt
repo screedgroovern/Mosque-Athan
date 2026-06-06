@@ -8,4 +8,5 @@ class AnnouncementEntity : RealmObject {
     var id: String = ""
     var content: String = ""
     var isActive: Boolean = true
+    var position: Int = 0
 }

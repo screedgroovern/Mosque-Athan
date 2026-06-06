@@ -32,6 +32,14 @@ android {
             )
         }
     }
+
+    applicationVariants.all {
+        outputs.forEach { output ->
+            val apkOutput = output as? com.android.build.gradle.api.ApkVariantOutput
+            apkOutput?.outputFileName = "Mosque Athan.apk"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
@@ -51,6 +59,7 @@ kotlin {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.ui.tooling.preview)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
@@ -63,4 +72,7 @@ dependencies {
     implementation(libs.realm.base)
     implementation(libs.adhan)
     implementation(libs.ummalqura.calendar)
+    implementation(libs.zxing)
+    implementation(libs.androidx.core.splashscreen)
+    debugImplementation(libs.androidx.ui.tooling)
 }

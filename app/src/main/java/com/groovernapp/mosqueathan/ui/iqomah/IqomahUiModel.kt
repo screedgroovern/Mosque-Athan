@@ -6,7 +6,8 @@ data class IqomahUiModel(
     val prayerType: PrayerType,
     val iqomahMinutes: Int,
     val remainingSeconds: Int,
-    val currentTime: String
+    val currentTime: String,
+    val footerText: String = "Mari merapatkan dan meluruskan shaf."
 ) {
     val iqomahCountdown: String
         get() {

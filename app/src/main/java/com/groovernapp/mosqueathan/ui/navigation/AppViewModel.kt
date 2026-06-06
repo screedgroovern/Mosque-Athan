@@ -19,10 +19,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 
 class AppViewModel : ViewModel() {
@@ -49,6 +52,8 @@ class AppViewModel : ViewModel() {
     private var prayerResult: PrayerResult? = null
     private var lastCalculatedDate: LocalDate? = null
     private var lastTriggeredPrayer: PrayerType? = null
+    private var lastAdzanBeepedSecond = -1
+    private var isPreviewMode = false
 
     private val _appState = MutableStateFlow<AppUiState>(
         AppUiState.Dashboard(
@@ -57,6 +62,7 @@ class AppViewModel : ViewModel() {
                 gregorianDate = "-",
                 hijriDate = "-",
                 prayerTimes = PrayerTimesUiModel(
+                    imsak = "--:--",
                     subuh = "--:--",
                     syuruq = "--:--",
                     dzuhur = "--:--",
@@ -70,16 +76,21 @@ class AppViewModel : ViewModel() {
                     prayerTime = "--:--",
                     countdown = "--:--:--"
                 ),
-                runningText = ""
+                runningText = "",
+                isSlideshowActive = false
             ),
             customBackgroundPath = "",
             mediaList = emptyList(),
             transitionType = "FADE",
             slideIntervalSeconds = 10,
-            videoWaitUntilEnd = false
+            videoWaitUntilEnd = false,
+            includeDefaultImage = true
         )
     )
     val appState: StateFlow<AppUiState> = _appState.asStateFlow()
+
+    private val _isStandbyActive = MutableStateFlow(false)
+    val isStandbyActive: StateFlow<Boolean> = _isStandbyActive.asStateFlow()
 
     private val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
 
@@ -111,6 +122,7 @@ class AppViewModel : ViewModel() {
             while (true) {
                 refreshPrayerSchedule()
                 checkTransitions()
+                updateStandbyStatus()
                 delay(1000)
             }
         }
@@ -129,7 +141,15 @@ class AppViewModel : ViewModel() {
         prayerResult = PrayerCalculator.calculate(
             latitude = config.latitude,
             longitude = config.longitude,
-            calculationMethodName = config.calculationMethodName
+            calculationMethodName = config.calculationMethodName,
+            offsetImsak = config.offsetImsak,
+            offsetSubuh = config.offsetSubuh,
+            offsetSyuruq = config.offsetSyuruq,
+            offsetDzuhur = config.offsetDzuhur,
+            offsetAshar = config.offsetAshar,
+            offsetMaghrib = config.offsetMaghrib,
+            offsetIsya = config.offsetIsya,
+            kemenagCityId = config.kemenagCityId
         )
     }
 
@@ -156,43 +176,92 @@ class AppViewModel : ViewModel() {
                 
                 if (lastTriggeredPrayer != prayer && secondsUntilPrayer in 1..adzanLeadSeconds) {
                     lastTriggeredPrayer = prayer
+                    isPreviewMode = false
                     transitionToAdzan(prayer, time)
                 }
             }
         } else if (currentScreen is ActiveScreen.Adzan) {
-            val prayerTime = currentScreen.prayerTime
-            val prayerMillis = prayerTime.toInstant(TimeZone.currentSystemDefault()).toEpochMilliseconds()
-            val secondsUntilPrayer = ((prayerMillis - now) / 1000).toInt()
+            // Managed by UI state flow collector in transitionToAdzan
+        }
+    }
 
-            if (secondsUntilPrayer <= 0) {
-                try {
-                    ToneGenerator(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 100)
-                        .startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 1400)
-                } catch (_: Exception) {
-                    // Suppress audio failure if executed outside supported environment
+    private fun playShortBeep() {
+        playSineWave(1800.0, 150)
+    }
+
+    private fun playLongBeep() {
+        playSineWave(2200.0, 1500)
+    }
+
+    private fun playSineWave(frequency: Double, durationMs: Int) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val sampleRate = 8000
+                val numSamples = (durationMs / 1000.0 * sampleRate).toInt()
+                val samples = ShortArray(numSamples)
+                for (i in 0 until numSamples) {
+                    val t = i.toDouble() / sampleRate
+                    samples[i] = (Math.sin(2.0 * Math.PI * frequency * t) * Short.MAX_VALUE).toInt().toShort()
                 }
-                transitionToIqomah(currentScreen.prayerType)
+                val audioTrack = android.media.AudioTrack(
+                    android.media.AudioManager.STREAM_ALARM,
+                    sampleRate,
+                    android.media.AudioFormat.CHANNEL_OUT_MONO,
+                    android.media.AudioFormat.ENCODING_PCM_16BIT,
+                    numSamples * 2,
+                    android.media.AudioTrack.MODE_STATIC
+                )
+                audioTrack.write(samples, 0, numSamples)
+                audioTrack.play()
+                delay(durationMs.toLong() + 100)
+                audioTrack.release()
+            } catch (_: Exception) {
+                // Suppress audio failure if executed outside supported environment
             }
         }
     }
 
     private fun transitionToAdzan(prayerType: PrayerType, prayerTime: LocalDateTime) {
+        lastAdzanBeepedSecond = -1
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Adzan(prayerType, prayerTime)
         adzanViewModel.start(prayerType, prayerTime)
 
         activeStateCollectorJob = viewModelScope.launch {
+            var hasStarted = false
             adzanViewModel.uiState.collect { state ->
                 _appState.value = AppUiState.Adzan(state)
+                val remaining = state.remainingSeconds
+                if (remaining > 0) {
+                    hasStarted = true
+                }
+                if (hasStarted) {
+                    if (remaining in 1..3 && remaining != lastAdzanBeepedSecond) {
+                        lastAdzanBeepedSecond = remaining
+                        playShortBeep()
+                    }
+                    if (remaining == 0 && lastAdzanBeepedSecond != 0) {
+                        lastAdzanBeepedSecond = 0
+                        playLongBeep()
+                        if (isPreviewMode) {
+                            viewModelScope.launch {
+                                delay(2000)
+                                transitionToSettings()
+                            }
+                        } else {
+                            transitionToIqomah(prayerType)
+                        }
+                    }
+                }
             }
         }
     }
 
-    private fun transitionToIqomah(prayerType: PrayerType) {
+    private fun transitionToIqomah(prayerType: PrayerType, customDurationSeconds: Int? = null) {
         iqomahCollectorJob?.cancel()
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Iqomah(prayerType)
-        iqomahViewModel.start(prayerType)
+        iqomahViewModel.start(prayerType, customDurationSeconds)
 
         activeStateCollectorJob = viewModelScope.launch {
             iqomahViewModel.uiState.collect { state ->
@@ -202,24 +271,29 @@ class AppViewModel : ViewModel() {
 
         iqomahCollectorJob = viewModelScope.launch {
             var hasStarted = false
+            var lastIqomahBeepedSecond = -1
             iqomahViewModel.uiState.collect { state ->
-                if (state.remainingSeconds > 0) {
+                val remaining = state.remainingSeconds
+                if (remaining > 0) {
                     hasStarted = true
                 }
-                if (hasStarted && state.remainingSeconds == 0) {
-                    viewModelScope.launch {
-                        try {
-                            val tg = ToneGenerator(android.media.AudioManager.STREAM_ALARM, 100)
-                            tg.startTone(ToneGenerator.TONE_PROP_BEEP, 250)
-                            delay(350)
-                            tg.startTone(ToneGenerator.TONE_PROP_BEEP, 250)
-                            delay(350)
-                            tg.startTone(ToneGenerator.TONE_PROP_BEEP, 600)
-                        } catch (_: Exception) {
-                            // Suppress audio failure if executed outside supported environment
+                if (hasStarted) {
+                    if (remaining in 1..3 && remaining != lastIqomahBeepedSecond) {
+                        lastIqomahBeepedSecond = remaining
+                        playShortBeep()
+                    }
+                    if (remaining == 0 && lastIqomahBeepedSecond != 0) {
+                        lastIqomahBeepedSecond = 0
+                        playLongBeep()
+                        if (isPreviewMode) {
+                            viewModelScope.launch {
+                                delay(2000)
+                                transitionToSettings()
+                            }
+                        } else {
+                            transitionToDashboard()
                         }
                     }
-                    transitionToDashboard()
                 }
             }
         }
@@ -242,7 +316,8 @@ class AppViewModel : ViewModel() {
                     mediaList = mediaList,
                     transitionType = config.transitionType,
                     slideIntervalSeconds = config.slideIntervalSeconds,
-                    videoWaitUntilEnd = config.videoWaitUntilEnd
+                    videoWaitUntilEnd = config.videoWaitUntilEnd,
+                    includeDefaultImage = config.includeDefaultImage
                 )
             }.collect { state ->
                 _appState.value = state
@@ -274,6 +349,74 @@ class AppViewModel : ViewModel() {
         } else {
             transitionToSettings()
         }
+    }
+
+    fun previewAdzan() {
+        isPreviewMode = true
+        val zone = TimeZone.currentSystemDefault()
+        val simulatedTime = Clock.System.now().plus(20, DateTimeUnit.SECOND).toLocalDateTime(zone)
+        transitionToAdzan(PrayerType.SUBUH, simulatedTime)
+    }
+
+    fun previewIqomah() {
+        isPreviewMode = true
+        transitionToIqomah(PrayerType.SUBUH, customDurationSeconds = 20)
+    }
+
+    fun previewSlideshow() {
+        iqomahCollectorJob?.cancel()
+        activeStateCollectorJob?.cancel()
+        _activeScreen.value = ActiveScreen.Dashboard
+
+        activeStateCollectorJob = viewModelScope.launch {
+            kotlinx.coroutines.flow.combine(
+                dashboardViewModel.uiState,
+                repository.getConfigFlow(),
+                repository.getMediaListFlow()
+            ) { dashboardState, config, mediaList ->
+                AppUiState.Dashboard(
+                    state = dashboardState.copy(isSlideshowActive = true),
+                    customBackgroundPath = config.customBackgroundPath,
+                    mediaList = mediaList,
+                    transitionType = config.transitionType,
+                    slideIntervalSeconds = config.slideIntervalSeconds,
+                    videoWaitUntilEnd = config.videoWaitUntilEnd,
+                    includeDefaultImage = config.includeDefaultImage
+                )
+            }.collect { state ->
+                _appState.value = state
+            }
+        }
+    }
+
+    private fun updateStandbyStatus() {
+        val config = repository.getConfig()
+        if (!config.standbyModeEnabled) {
+            _isStandbyActive.value = false
+            return
+        }
+
+        val zone = TimeZone.currentSystemDefault()
+        val now = Clock.System.now().toLocalDateTime(zone)
+        val currentMinutes = now.hour * 60 + now.minute
+
+        val startMinutes = parseTimeToMinutes(config.standbyStartTime) ?: 0
+        val endMinutes = parseTimeToMinutes(config.standbyEndTime) ?: 0
+
+        _isStandbyActive.value = if (startMinutes <= endMinutes) {
+            currentMinutes in startMinutes until endMinutes
+        } else {
+            // Interval crosses midnight, e.g., 22:00 to 04:00
+            currentMinutes >= startMinutes || currentMinutes < endMinutes
+        }
+    }
+
+    private fun parseTimeToMinutes(timeStr: String): Int? {
+        val parts = timeStr.split(":")
+        if (parts.size != 2) return null
+        val hour = parts[0].toIntOrNull() ?: return null
+        val minute = parts[1].toIntOrNull() ?: return null
+        return hour * 60 + minute
     }
 
     override fun onCleared() {

@@ -11,7 +11,8 @@ sealed interface DashboardUiState {
         val hijriDate: String,
         val prayerTimes: PrayerTimesUiModel,
         val nextPrayer: NextPrayerUiModel,
-        val runningText: String
+        val runningText: String,
+        val isSlideshowActive: Boolean = false
     ) : DashboardUiState
 
     data class Adzan(

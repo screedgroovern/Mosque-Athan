@@ -12,51 +12,65 @@ import com.groovernapp.mosqueathan.ui.dashboard.PrayerTimesUiModel
 
 @Composable
 fun PrayerTimesPanel(
-    prayerTimes: PrayerTimesUiModel
+    prayerTimes: PrayerTimesUiModel,
+    isSlideshowActive: Boolean
 ) {
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.Black.copy(alpha = 0.55f))
-            .padding(vertical = 20.dp),
+            .padding(vertical = if (isSlideshowActive) 16.dp else 20.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
 
         PrayerItem(
+            "IMSAK",
+            prayerTimes.imsak,
+            prayerTimes.highlightedPrayer == PrayerType.IMSAK,
+            isSlideshowActive
+        )
+
+        PrayerItem(
             "SUBUH",
             prayerTimes.subuh,
-            prayerTimes.highlightedPrayer == PrayerType.SUBUH
+            prayerTimes.highlightedPrayer == PrayerType.SUBUH,
+            isSlideshowActive
         )
 
         PrayerItem(
             "SYURUQ",
             prayerTimes.syuruq,
-            prayerTimes.highlightedPrayer == PrayerType.SYURUQ
+            prayerTimes.highlightedPrayer == PrayerType.SYURUQ,
+            isSlideshowActive
         )
 
         PrayerItem(
             "DZUHUR",
             prayerTimes.dzuhur,
-            prayerTimes.highlightedPrayer == PrayerType.DZUHUR
+            prayerTimes.highlightedPrayer == PrayerType.DZUHUR,
+            isSlideshowActive
         )
 
         PrayerItem(
             "ASHAR",
             prayerTimes.ashar,
-            prayerTimes.highlightedPrayer == PrayerType.ASHAR
+            prayerTimes.highlightedPrayer == PrayerType.ASHAR,
+            isSlideshowActive
         )
 
         PrayerItem(
             "MAGHRIB",
             prayerTimes.maghrib,
-            prayerTimes.highlightedPrayer == PrayerType.MAGHRIB
+            prayerTimes.highlightedPrayer == PrayerType.MAGHRIB,
+            isSlideshowActive
         )
 
         PrayerItem(
             "ISYA",
             prayerTimes.isya,
-            prayerTimes.highlightedPrayer == PrayerType.ISYA
+            prayerTimes.highlightedPrayer == PrayerType.ISYA,
+            isSlideshowActive
         )
     }
 }
