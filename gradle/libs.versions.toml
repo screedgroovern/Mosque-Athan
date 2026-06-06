@@ -1,7 +1,7 @@
 [versions]
 versionName = "1.1.5"
-code = "3"
-versionCode = "3"
+code = "4"
+versionCode = "4"
 compileSdk = "36"
 minSdk = "26"
 
