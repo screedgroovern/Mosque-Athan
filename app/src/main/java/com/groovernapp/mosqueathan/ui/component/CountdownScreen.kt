@@ -25,14 +25,16 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.groovernapp.mosqueathan.R
+import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 
 @Composable
 fun CountdownScreen(
     backgroundImageRes: Int,
     currentTime: String,
-    infoText: String,
     titleText: String,
     prayerName: String,
     countdownValue: String,
@@ -69,25 +71,13 @@ fun CountdownScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
+                Text(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = currentTime,
-                        color = Color.White,
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = infoText,
-                        color = Color.White.copy(alpha = 0.86f),
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                    text = currentTime,
+                    color = Color.White,
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.Bold
+                )
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -142,6 +132,21 @@ private fun CountdownPanel(value: String) {
             color = Color.White,
             fontSize = 112.sp,
             fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Preview(showBackground = true, device = "spec:width=1920dp,height=1080dp")
+@Composable
+fun CountdownScreenPreview() {
+    MosqueAthanTheme {
+        CountdownScreen(
+            backgroundImageRes = R.drawable.iqomah_bg_default,
+            currentTime = "18:30",
+            titleText = "Menuju Waktu",
+            prayerName = "Maghrib",
+            countdownValue = "05:00",
+            footerText = "Bersegeralah menuju masjid untuk menunaikan shalat berjamaah."
         )
     }
 }

@@ -10,7 +10,6 @@ fun AdzanScreen(state: AdzanUiModel, onDismiss: () -> Unit = {}) {
     CountdownScreen(
         backgroundImageRes = R.drawable.adzan_bg_default,
         currentTime = state.currentTime,
-        infoText = "Waktu ${state.prayerType.name} ${state.prayerTime}",
         titleText = "MENJELANG ADZAN",
         prayerName = state.prayerType.name,
         countdownValue = state.countdown,

@@ -10,7 +10,6 @@ fun IqomahScreen(state: IqomahUiModel, onDismiss: () -> Unit = {}) {
     CountdownScreen(
         backgroundImageRes = R.drawable.iqomah_bg_default,
         currentTime = state.currentTime,
-        infoText = "Iqomah ${state.iqomahMinutes} menit",
         titleText = "MENUJU IQOMAH",
         prayerName = state.prayerType.name,
         countdownValue = state.iqomahCountdown,
