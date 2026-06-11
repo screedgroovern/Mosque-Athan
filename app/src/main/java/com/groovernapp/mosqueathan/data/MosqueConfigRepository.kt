@@ -370,10 +370,10 @@ class MosqueConfigRepository private constructor() {
         return realm.query<SlideshowScheduleEntity>().find().sortedBy { it.startTime }
     }
 
-    suspend fun addSlideshowSchedule(startTime: String, endTime: String) {
+    suspend fun addSlideshowSchedule(startTime: String, endTime: String, customId: String = "") {
         realm.write {
             copyToRealm(SlideshowScheduleEntity().apply {
-                this.id = java.util.UUID.randomUUID().toString()
+                this.id = if (customId.isNotEmpty()) customId else java.util.UUID.randomUUID().toString()
                 this.startTime = startTime
                 this.endTime = endTime
             })
@@ -413,11 +413,11 @@ class MosqueConfigRepository private constructor() {
             .sortedBy { it.position }
     }
 
-    suspend fun addAnnouncement(content: String) {
+    suspend fun addAnnouncement(content: String, customId: String = "") {
         realm.write {
             val maxPos = query<AnnouncementEntity>().find().maxOfOrNull { it.position } ?: -1
             copyToRealm(AnnouncementEntity().apply {
-                id = java.util.UUID.randomUUID().toString()
+                id = if (customId.isNotEmpty()) customId else java.util.UUID.randomUUID().toString()
                 this.content = content
                 isActive = true
                 position = maxPos + 1

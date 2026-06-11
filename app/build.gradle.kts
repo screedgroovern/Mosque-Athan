@@ -34,9 +34,10 @@ android {
     }
 
     applicationVariants.all {
+        val version = versionName
         outputs.forEach { output ->
             val apkOutput = output as? com.android.build.gradle.api.ApkVariantOutput
-            apkOutput?.outputFileName = "Mosque Athan.apk"
+            apkOutput?.outputFileName = "Mosque Athan - $version.apk"
         }
     }
 

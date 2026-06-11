@@ -20,14 +20,14 @@ fun RunningTextBar(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .background(Color(0xFF105E3D))
+            .background(Color(0xFF0F3316))
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.CenterStart
     ) {
 
         Text(
             text = text,
-            color = Color(0xFFFFFF00),
+            color = Color(0xFFFFC107),
             fontSize = 30.sp,
             maxLines = 1,
             softWrap = false,

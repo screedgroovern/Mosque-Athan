@@ -35,3 +35,4 @@ local.properties
 .DS_Store
 Thumbs.db
 /.idea/planningMode.xml
+/.idea/vcs.xml

@@ -14,6 +14,8 @@ object WebPage {
     <!-- Flatpickr CSS & JS for Date/Time Picker -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- HTML5 QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
     <style>
         :root {
             --bg-base: #060907;
@@ -1007,8 +1009,44 @@ object WebPage {
     <div id="connection-overlay" class="connection-overlay">
         <div class="spinner"></div>
         <div class="overlay-title" data-lang-key="overlay_connecting">Menghubungkan ke Aplikasi...</div>
-        <div class="overlay-desc" data-lang-key="overlay_connecting_desc">Pastikan perangkat Android Anda tetap menyala and menjalankan aplikasi.</div>
+        <div class="overlay-desc" data-lang-key="overlay_connecting_desc">Pastikan perangkat Android Anda tetap menyala dan menjalankan aplikasi.</div>
         <div id="connection-error-details" style="color: var(--danger); font-size: 0.9rem; margin-top: 1.5rem; text-align: center; font-family: monospace; white-space: pre-wrap; display: none;"></div>
+        <button class="btn btn-secondary" id="btn-work-offline" style="margin-top: 1.5rem; padding: 0.8rem 1.5rem;" data-lang-key="btn_work_offline" onclick="enterOfflineMode()">Bekerja Offline</button>
+        <div id="ip-override-container" style="margin-top: 2rem; text-align: center; width: 90%; max-width: 320px; display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);">
+            <label style="font-size: 0.85rem; color: var(--text-secondary);" data-lang-key="label_tv_ip">IP Address TV (Jika Berubah):</label>
+            <div style="display: flex; gap: 0.5rem; width: 100%;">
+                <input type="text" id="input-tv-ip" placeholder="Contoh: 192.168.1.15" style="flex: 1; padding: 0.6rem; font-size: 0.9rem; text-align: center; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-primary);">
+                <button class="btn btn-primary" onclick="changeTvIp()" style="padding: 0.6rem 1rem; font-size: 0.9rem;" data-lang-key="btn_connect">Hubungkan</button>
+            </div>
+            <button class="btn btn-secondary" onclick="startQrScanner()" style="justify-content: center; padding: 0.6rem; font-size: 0.9rem; width: 100%; border: 1px dashed var(--border-color); display: flex; align-items: center; gap: 0.5rem;" data-lang-key="btn_scan_qr">
+                📷 Pindai QR TV
+            </button>
+        </div>
+    </div>
+
+    <!-- QR Scanner Modal Overlay (hidden by default) -->
+    <div id="qr-scanner-overlay" class="connection-overlay" style="display: none; background-color: rgba(12, 18, 15, 0.98); backdrop-filter: blur(12px); z-index: 2100;">
+        <div style="max-width: 400px; width: 90%; background-color: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); padding: 2rem; border-radius: 16px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 1.5rem;">
+            <div class="overlay-title" style="color: var(--accent);" data-lang-key="title_qr_scanner">Pindai Kode QR TV</div>
+            <div id="reader" style="width: 100%; border-radius: 8px; overflow: hidden; background: #000;"></div>
+            <button class="btn btn-secondary" onclick="stopQrScanner()" style="width: 100%; justify-content: center; padding: 0.8rem;" data-lang-key="btn_cancel">Batal</button>
+        </div>
+    </div>
+
+    <!-- Sync Offline Changes Dialog (hidden by default) -->
+    <div id="sync-dialog-overlay" class="connection-overlay" style="display: none; background-color: rgba(12, 18, 15, 0.95); backdrop-filter: blur(12px); z-index: 1800;">
+        <div style="max-width: 450px; width: 90%; background-color: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 16px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <svg width="48" height="48" fill="none" stroke="var(--accent)" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 1.5rem;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5M7 7l-4 4 4 4"></path>
+            </svg>
+            <div class="overlay-title" style="margin-bottom: 0.5rem; color: var(--accent);" data-lang-key="dialog_sync_title">Sinkronisasi Perubahan Offline</div>
+            <div class="overlay-desc" style="margin-bottom: 2rem;" data-lang-key="dialog_sync_desc">Terdapat perubahan yang Anda buat selama offline. Apakah Anda ingin mengunggah perubahan ini ke TV?</div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-secondary" onclick="discardOfflineChanges()" style="flex: 1; justify-content: center; padding: 0.8rem;" data-lang-key="btn_discard">Abaikan</button>
+                <button class="btn btn-primary" onclick="syncOfflineChanges()" style="flex: 1; justify-content: center; padding: 0.8rem;" data-lang-key="btn_sync_now">Sinkronkan</button>
+            </div>
+        </div>
     </div>
 
     <!-- PIN Entry Overlay (hidden by default) -->
@@ -1045,6 +1083,24 @@ object WebPage {
                 <button class="btn btn-secondary" onclick="closeMasterTransferDialog()" data-lang-key="btn_cancel">Batal</button>
                 <button class="btn btn-primary" id="btn-confirm-master-transfer" data-lang-key="btn_confirm">Konfirmasi</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Upload Progress Overlay (hidden by default) -->
+    <div id="upload-progress-overlay" class="connection-overlay" style="display: none; background-color: rgba(6, 9, 7, 0.95); backdrop-filter: blur(12px); z-index: 2500;">
+        <div style="max-width: 400px; width: 90%; background-color: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 16px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+            <div id="upload-progress-icon" style="margin-bottom: 1.5rem;">
+                <svg width="48" height="48" fill="none" stroke="var(--accent)" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+            </div>
+            <div class="overlay-title" id="upload-progress-title" style="margin-bottom: 0.5rem; color: var(--accent); font-size: 1.25rem;">Mengunggah File...</div>
+            <div class="overlay-desc" id="upload-progress-desc" style="margin-bottom: 2rem; font-size: 0.9rem;">Mohon tunggu, sedang mengirim data ke TV.</div>
+            
+            <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 0.75rem;">
+                <div id="upload-progress-bar" style="width: 0%; height: 100%; background: var(--accent); transition: width 0.2s ease;"></div>
+            </div>
+            <div id="upload-progress-text" style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">0%</div>
         </div>
     </div>
 
@@ -1831,12 +1887,87 @@ object WebPage {
         let kemenagSchedules = [];
         let slideshowSchedules = [];
         let selectedMethodName = '';
+        let isOfflineMode = false;
+        let offlineActionsQueue = [];
+        let offlineFilesQueue = [];
+        let pendingTvState = null;
+        let isSyncing = false;
+
+        // Auto-sync custom_tv_ip with the current URL if loaded directly from a TV/emulator settings server
+        const locHostname = window.location.hostname;
+        const locPort = window.location.port;
+        if (locHostname && (
+            (locHostname !== 'localhost' && locHostname !== '127.0.0.1' && locHostname !== '::1') ||
+            locPort === '8080'
+        )) {
+            localStorage.setItem('custom_tv_ip', window.location.host);
+        }
 
         let kemenagDatePicker;
         let schedStartTimePicker;
         let schedEndTimePicker;
         let standbyStartTimePicker;
         let standbyEndTimePicker;
+
+        // IndexedDB Helper for Large Offline Files
+        const dbName = "MosqueAthanRemoteDB";
+        const storeName = "OfflineFiles";
+
+        function getBaseUrl() {
+            let host = localStorage.getItem('custom_tv_ip') || window.location.host;
+            if (!host.includes(':')) {
+                host = host + ':8080';
+            }
+            const proto = window.location.protocol;
+            return proto + '//' + host;
+        }
+
+        function getDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, 1);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(storeName)) {
+                        db.createObjectStore(storeName, { keyPath: "id" });
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = (e) => reject(e.target.error);
+            });
+        }
+
+        async function saveFileToDB(id, payload) {
+            try {
+                const db = await getDB();
+                const tx = db.transaction(storeName, "readwrite");
+                tx.objectStore(storeName).put({ id, payload });
+                return new Promise((res, rej) => {
+                    tx.oncomplete = () => res();
+                    tx.onerror = () => rej(tx.error);
+                });
+            } catch (e) { console.error("IDB save error", e); }
+        }
+
+        async function getAllFilesFromDB() {
+            try {
+                const db = await getDB();
+                return new Promise((res, rej) => {
+                    const tx = db.transaction(storeName, "readonly");
+                    const store = tx.objectStore(storeName);
+                    const request = store.getAll();
+                    request.onsuccess = () => res(request.result.map(item => item.payload));
+                    request.onerror = () => rej(request.error);
+                });
+            } catch (e) { return []; }
+        }
+
+        async function clearFilesFromDB() {
+            try {
+                const db = await getDB();
+                const tx = db.transaction(storeName, "readwrite");
+                tx.objectStore(storeName).clear();
+            } catch (e) {}
+        }
 
         const translations = {
             id: {
@@ -1858,6 +1989,24 @@ object WebPage {
                 status_disconnected: "Terputus",
                 overlay_connecting: "Menghubungkan ke Aplikasi...",
                 overlay_connecting_desc: "Pastikan perangkat Android Anda tetap menyala dan menjalankan aplikasi.",
+                btn_work_offline: "Bekerja Offline",
+                btn_sync_now: "Sinkronkan Sekarang",
+                btn_discard: "Abaikan",
+                dialog_sync_title: "Sinkronisasi Perubahan Offline",
+                dialog_sync_desc: "Terdapat perubahan offline pada perangkat ini yang belum disimpan ke TV. Perubahan baru dari TV telah digabungkan secara otomatis. Apakah Anda ingin mengunggah perubahan lokal Anda sekarang?",
+                toast_saved_offline: "Disimpan secara offline!",
+                toast_syncing: "Menyinkronkan ke TV...",
+                toast_sync_success: "Sinkronisasi berhasil!",
+                toast_sync_failed: "Sinkronisasi gagal.",
+                status_offline_mode: "Mode Offline (Draf)",
+                offline_media_warning: "File media baru akan diunggah setelah tersambung kembali ke TV.",
+                btn_continue_offline: "Lanjut Bekerja Offline",
+                label_tv_ip: "IP Address TV (Jika Berubah):",
+                btn_connect: "Hubungkan",
+                title_qr_scanner: "Pindai Kode QR TV",
+                btn_scan_qr: "Pindai QR TV",
+                toast_invalid_qr: "Kode QR tidak valid. Pastikan itu adalah Kode QR dari layar TV MosqueAthan.",
+                toast_scanner_error: "Kamera tidak ditemukan atau izin ditolak.",
                 overlay_locked: "Akses Terkunci",
                 overlay_locked_desc: "Masukkan PIN Keamanan untuk mengakses Kontrol Web Remote.",
                 overlay_locked_placeholder: "Masukkan PIN Keamanan...",
@@ -2015,6 +2164,24 @@ object WebPage {
                 status_disconnected: "Disconnected",
                 overlay_connecting: "Connecting to Application...",
                 overlay_connecting_desc: "Make sure your Android device remains powered on and running the app.",
+                btn_work_offline: "Work Offline",
+                btn_sync_now: "Sync Now",
+                btn_discard: "Discard",
+                dialog_sync_title: "Sync Offline Changes",
+                dialog_sync_desc: "There are offline changes on this device that have not been saved to the TV. New changes from the TV have been merged automatically. Do you want to upload your local changes now?",
+                toast_saved_offline: "Saved offline!",
+                toast_syncing: "Syncing to TV...",
+                toast_sync_success: "Sync successful!",
+                toast_sync_failed: "Sync failed.",
+                status_offline_mode: "Offline Mode (Draft)",
+                offline_media_warning: "New media files will be uploaded once reconnected to the TV.",
+                btn_continue_offline: "Continue Working Offline",
+                label_tv_ip: "TV IP Address (If Changed):",
+                btn_connect: "Connect",
+                title_qr_scanner: "Scan TV QR Code",
+                btn_scan_qr: "Scan TV QR",
+                toast_invalid_qr: "Invalid QR code. Make sure it is from the MosqueAthan TV screen.",
+                toast_scanner_error: "Camera not found or permission denied.",
                 overlay_locked: "Access Locked",
                 overlay_locked_desc: "Enter the Security PIN to access the Web Remote Control.",
                 overlay_locked_placeholder: "Enter Security PIN...",
@@ -2228,8 +2395,12 @@ object WebPage {
         // Connect WebSocket
         function connect() {
             try {
+                let host = localStorage.getItem('custom_tv_ip') || window.location.host;
+                if (!host.includes(':')) {
+                    host = host + ':8080';
+                }
                 const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = proto + '//' + window.location.host;
+                const wsUrl = proto + '//' + host;
                 ws = new WebSocket(wsUrl);
 
                 ws.onopen = () => {
@@ -2239,7 +2410,9 @@ object WebPage {
                     
                     const dot = document.getElementById('status-dot');
                     dot.classList.add('online');
-                    document.getElementById('status-text').innerText = translations[currentLang].status_connected;
+                    document.getElementById('status-text').innerText = isOfflineMode 
+                        ? (translations[currentLang].status_connected + " (" + (translations[currentLang].status_offline_mode || "Draf") + ")")
+                        : translations[currentLang].status_connected;
                     showToast(translations[currentLang].toast_connected);
 
                     // Immediately register device
@@ -2274,11 +2447,32 @@ object WebPage {
                                 errEl.style.display = 'block';
                             }
                         } else if (data.type === 'state') {
-                            appConfig = data.config;
-                            announcements = data.announcements;
-                            mediaList = data.mediaList;
-                            kemenagSchedules = data.kemenagSchedules || [];
-                            slideshowSchedules = data.slideshowSchedules || [];
+                            if (isSyncing) {
+                                pendingTvState = data;
+                                return;
+                            }
+                            const hasOfflineChanges = offlineActionsQueue.length > 0 || offlineFilesQueue.length > 0;
+                            if (hasOfflineChanges) {
+                                pendingTvState = data;
+                                mergeIncomingState(data);
+                                document.getElementById('sync-dialog-overlay').style.display = 'flex';
+                            } else {
+                                appConfig = data.config;
+                                announcements = data.announcements;
+                                mediaList = data.mediaList;
+                                kemenagSchedules = data.kemenagSchedules || [];
+                                slideshowSchedules = data.slideshowSchedules || [];
+                                
+                                const tvState = {
+                                    config: appConfig,
+                                    announcements: announcements,
+                                    mediaList: mediaList,
+                                    kemenagSchedules: kemenagSchedules,
+                                    slideshowSchedules: slideshowSchedules
+                                };
+                                localStorage.setItem('last_known_tv_state', JSON.stringify(tvState));
+                                updateUI();
+                            }
                             
                             // We also get 'devices' list in data
                             const devices = data.devices || [];
@@ -2293,7 +2487,6 @@ object WebPage {
                                 }
                             }
                             
-                            updateUI();
                             updateDevicesUI(devices);
                         } else if (data.type === 'kemenag_cities_results') {
                             const resultsContainer = document.getElementById('kemenag-search-results');
@@ -2366,6 +2559,583 @@ object WebPage {
                     errDetails.style.display = 'block';
                 }
             }
+        }
+
+        async function initializeOfflineState() {
+            const lastTvState = localStorage.getItem('last_known_tv_state');
+            if (lastTvState) {
+                try {
+                    const tv = JSON.parse(lastTvState);
+                    appConfig = tv.config || appConfig;
+                    announcements = tv.announcements || announcements;
+                    mediaList = tv.mediaList || mediaList;
+                    kemenagSchedules = tv.kemenagSchedules || kemenagSchedules;
+                    slideshowSchedules = tv.slideshowSchedules || slideshowSchedules;
+                } catch (e) {
+                    console.error("Error parsing last TV state", e);
+                }
+            }
+
+            const savedDraft = localStorage.getItem('offline_settings_draft');
+            if (savedDraft) {
+                try {
+                    const draft = JSON.parse(savedDraft);
+                    appConfig = draft.config || appConfig;
+                    announcements = draft.announcements || announcements;
+                    slideshowSchedules = draft.slideshowSchedules || slideshowSchedules;
+                    kemenagSchedules = draft.kemenagSchedules || kemenagSchedules;
+                    // We don't restore mediaList from draft because it might contain huge base64
+                    // We will re-apply them from offlineFilesQueue below
+                } catch (e) {
+                    console.error("Error parsing offline draft", e);
+                }
+            }
+            
+            try {
+                offlineActionsQueue = JSON.parse(localStorage.getItem('offline_actions') || '[]');
+            } catch (e) {
+                offlineActionsQueue = [];
+            }
+
+            // Restore Large Files from IndexedDB
+            offlineFilesQueue = await getAllFilesFromDB();
+
+            const customIp = localStorage.getItem('custom_tv_ip');
+            const inputField = document.getElementById('input-tv-ip');
+            if (inputField && customIp) {
+                inputField.value = customIp;
+            }
+            
+            if (offlineActionsQueue.length > 0 || offlineFilesQueue.length > 0) {
+                for (const action of offlineActionsQueue) applyActionLocally(action);
+                for (const file of offlineFilesQueue) applyActionLocally(file);
+            }
+
+            updateOfflineButtonText();
+            updateUI();
+        }
+
+        function saveOfflineDraft() {
+            try {
+                // Save text-based config to localStorage
+                const draft = {
+                    config: appConfig,
+                    announcements: announcements,
+                    slideshowSchedules: slideshowSchedules,
+                    kemenagSchedules: kemenagSchedules
+                    // Specifically exclude mediaList to avoid QuotaExceededError
+                };
+                localStorage.setItem('offline_settings_draft', JSON.stringify(draft));
+                localStorage.setItem('offline_actions', JSON.stringify(offlineActionsQueue));
+            } catch (e) {
+                console.warn("Failed to save draft to localStorage", e);
+            }
+            updateOfflineButtonText();
+        }
+
+        function enterOfflineMode() {
+            document.getElementById('connection-overlay').style.display = 'none';
+            
+            if (!isOfflineMode) {
+                isOfflineMode = true;
+            }
+            
+            updateUI();
+            
+            const dot = document.getElementById('status-dot');
+            if (dot) {
+                dot.className = 'status-dot';
+                dot.style.backgroundColor = 'var(--warning)';
+            }
+            const statusText = document.getElementById('status-text');
+            if (statusText) {
+                statusText.innerText = (translations[currentLang].status_offline_mode || "Mode Offline (Draf)");
+            }
+            
+            showToast(currentLang === 'id' ? "Masuk ke mode offline. Perubahan disimpan di browser." : "Entered offline mode. Changes saved in browser.", "warning");
+        }
+
+        function changeTvIp() {
+            let ip = document.getElementById('input-tv-ip').value.trim();
+            if (!ip) return;
+            ip = ip.replace(/^(https?:\/\/|wss?:\/\/)/, '').split('/')[0];
+            
+            localStorage.setItem('custom_tv_ip', ip);
+            
+            if (ws) {
+                try {
+                    ws.onclose = null;
+                    ws.close();
+                } catch(e){}
+            }
+            
+            showToast(currentLang === 'id' ? "Menghubungkan ke IP baru..." : "Connecting to new IP...", "info");
+            connect();
+        }
+
+        let html5QrCode = null;
+
+        async function startQrScanner() {
+            // Visually show the overlay first so user knows something is happening
+            document.getElementById('qr-scanner-overlay').style.display = 'flex';
+            
+            // Wait for the DOM to settle
+            await new Promise(r => setTimeout(r, 100));
+
+            if (typeof Html5Qrcode === 'undefined') {
+                showToast(currentLang === 'id' ? "Fitur pemindai memerlukan koneksi internet untuk memuat library. Silakan ketik IP secara manual." : "Scanner requires internet connection to load the library. Please type the IP manually.", "error");
+                document.getElementById('qr-scanner-overlay').style.display = 'none';
+                return;
+            }
+
+            if (!window.isSecureContext && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+                showToast(currentLang === 'id' ? "Browser memblokir kamera pada koneksi HTTP (bukan HTTPS). Gunakan IP manual atau aktifkan HTTPS." : "Browser blocks camera on HTTP (non-HTTPS) connections. Use manual IP or enable HTTPS.", "error");
+            }
+
+            try {
+                if (html5QrCode) {
+                    try { await html5QrCode.stop(); } catch(e) {}
+                    html5QrCode = null;
+                }
+                
+                const readerElement = document.getElementById("reader");
+                readerElement.innerHTML = ""; // Clear any previous instance
+                
+                html5QrCode = new Html5Qrcode("reader");
+                const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText, decodedResult) => {
+                        try {
+                            let parsedHost = decodedText.trim();
+                            parsedHost = parsedHost.replace(/^(https?:\/\/|wss?:\/\/)/, '').split('/')[0];
+                            
+                            if (parsedHost.match(/^[0-9a-zA-Z\.\-:]+$/)) {
+                                let ip = parsedHost.split(':')[0];
+                                const inputIp = document.getElementById('input-tv-ip');
+                                if (inputIp) inputIp.value = ip;
+                                
+                                stopQrScanner();
+                                changeTvIp();
+                            } else {
+                                showToast(translations[currentLang].toast_invalid_qr || "Kode QR tidak valid.", "error");
+                            }
+                        } catch(e) {
+                            console.error("QR parse error", e);
+                        }
+                    },
+                    (errorMessage) => {
+                        // ignore scan errors
+                    }
+                );
+            } catch (err) {
+                console.error("Camera start error", err);
+                showToast(translations[currentLang].toast_scanner_error || "Kamera tidak ditemukan atau izin ditolak. Pastikan menggunakan HTTPS.", "error");
+                stopQrScanner();
+            }
+        }
+
+        async function stopQrScanner() {
+            document.getElementById('qr-scanner-overlay').style.display = 'none';
+            if (html5QrCode) {
+                try {
+                    await html5QrCode.stop();
+                } catch (err) {
+                    console.error("Error stopping scanner", err);
+                } finally {
+                    html5QrCode = null;
+                    const readerElement = document.getElementById("reader");
+                    if (readerElement) readerElement.innerHTML = "";
+                }
+            }
+        }
+
+        function applyActionLocally(payload) {
+            switch (payload.action) {
+                case 'update_config':
+                    appConfig.latitude = payload.latitude;
+                    appConfig.longitude = payload.longitude;
+                    appConfig.iqomahSubuh = payload.iqomahSubuh;
+                    appConfig.iqomahDzuhur = payload.iqomahDzuhur;
+                    appConfig.iqomahAshar = payload.iqomahAshar;
+                    appConfig.iqomahMaghrib = payload.iqomahMaghrib;
+                    appConfig.iqomahIsya = payload.iqomahIsya;
+                    appConfig.calculationMethodName = payload.calculationMethodName;
+                    appConfig.adzanLeadMinutes = payload.adzanLeadMinutes;
+                    appConfig.offsetImsak = payload.offsetImsak;
+                    appConfig.offsetSubuh = payload.offsetSubuh;
+                    appConfig.offsetSyuruq = payload.offsetSyuruq;
+                    appConfig.offsetDzuhur = payload.offsetDzuhur;
+                    appConfig.offsetAshar = payload.offsetAshar;
+                    appConfig.offsetMaghrib = payload.offsetMaghrib;
+                    appConfig.offsetIsya = payload.offsetIsya;
+                    appConfig.kemenagCityId = payload.kemenagCityId;
+                    appConfig.kemenagCityName = payload.kemenagCityName;
+                    appConfig.kemenagDuration = payload.kemenagDuration;
+                    appConfig.kemenagTargetDate = payload.kemenagTargetDate;
+                    appConfig.adzanFooterText = payload.adzanFooterText;
+                    appConfig.iqomahFooterText = payload.iqomahFooterText;
+                    break;
+                case 'add_announcement':
+                    announcements.push({
+                        id: payload.id,
+                        content: payload.content,
+                        isActive: true
+                    });
+                    break;
+                case 'delete_announcement':
+                    announcements = announcements.filter(a => a.id !== payload.id);
+                    break;
+                case 'update_announcement':
+                    const ann = announcements.find(a => a.id === payload.id);
+                    if (ann) {
+                        ann.content = payload.content;
+                        ann.isActive = payload.isActive;
+                    }
+                    break;
+                case 'reorder_announcements':
+                    const idMap = new Map(announcements.map(a => [a.id, a]));
+                    announcements = payload.ids.map(id => idMap.get(id)).filter(Boolean);
+                    break;
+                case 'update_theme':
+                    appConfig.transitionType = payload.transitionType;
+                    appConfig.slideIntervalSeconds = payload.slideIntervalSeconds;
+                    appConfig.videoWaitUntilEnd = payload.videoWaitUntilEnd;
+                    appConfig.includeDefaultImage = payload.includeDefaultImage;
+                    break;
+                case 'update_show_settings_on_tv':
+                    appConfig.showSettingsOnTv = payload.show;
+                    break;
+                case 'update_standby':
+                    appConfig.standbyModeEnabled = payload.standbyModeEnabled;
+                    appConfig.standbyStartTime = payload.standbyStartTime;
+                    appConfig.standbyEndTime = payload.standbyEndTime;
+                    break;
+                case 'add_slideshow_schedule':
+                    slideshowSchedules.push({
+                        id: payload.id,
+                        startTime: payload.startTime,
+                        endTime: payload.endTime
+                    });
+                    break;
+                case 'delete_slideshow_schedule':
+                    slideshowSchedules = slideshowSchedules.filter(s => s.id !== payload.id);
+                    break;
+                case 'upload_background':
+                    appConfig.customBackgroundPath = payload.base64;
+                    break;
+                case 'clear_background':
+                    appConfig.customBackgroundPath = '';
+                    break;
+                case 'upload_media':
+                    mediaList.push({
+                        id: payload.id,
+                        filePath: payload.base64,
+                        isVideo: payload.isVideo
+                    });
+                    break;
+                case 'delete_media':
+                    mediaList = mediaList.filter(m => m.id !== payload.id);
+                    break;
+                case 'save_kemenag_schedules':
+                    kemenagSchedules = payload.schedules;
+                    break;
+                case 'reset':
+                    appConfig = {
+                        latitude: 0,
+                        longitude: 0,
+                        iqomahSubuh: 10,
+                        iqomahDzuhur: 10,
+                        iqomahAshar: 10,
+                        iqomahMaghrib: 10,
+                        iqomahIsya: 10,
+                        calculationMethodName: 'KEMENAG',
+                        adzanLeadMinutes: 3,
+                        showSettingsOnTv: true,
+                        standbyModeEnabled: false,
+                        standbyStartTime: '22:00',
+                        standbyEndTime: '04:00'
+                    };
+                    announcements = [];
+                    slideshowSchedules = [];
+                    mediaList = [];
+                    kemenagSchedules = [];
+                    break;
+            }
+            updateUI();
+        }
+
+        function mergeIncomingState(data) {
+            appConfig = data.config;
+            announcements = data.announcements;
+            mediaList = data.mediaList;
+            kemenagSchedules = data.kemenagSchedules || [];
+            slideshowSchedules = data.slideshowSchedules || [];
+
+            for (const action of offlineActionsQueue) {
+                applyActionLocally(action);
+            }
+
+            for (const fileAction of offlineFilesQueue) {
+                applyActionLocally(fileAction);
+            }
+
+            updateUI();
+        }
+
+        async function uploadFileViaPost(file, isBackground, isVideo) {
+            return new Promise((resolve, reject) => {
+                const url = getBaseUrl() + '/upload?filename=' + encodeURIComponent(file.name) + 
+                            '&isBackground=' + isBackground + 
+                            '&isVideo=' + isVideo;
+                
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', url, true);
+
+                // UI references
+                const overlay = document.getElementById('upload-progress-overlay');
+                const progressBar = document.getElementById('upload-progress-bar');
+                const progressText = document.getElementById('upload-progress-text');
+                const title = document.getElementById('upload-progress-title');
+                
+                overlay.style.display = 'flex';
+                title.innerText = currentLang === 'id' ? 'Mengunggah File...' : 'Uploading File...';
+                progressBar.style.width = '0%';
+                progressText.innerText = '0%';
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        progressBar.style.width = percent + '%';
+                        progressText.innerText = percent + '%';
+                    }
+                };
+
+                xhr.onload = () => {
+                    overlay.style.display = 'none';
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(xhr.response);
+                    } else {
+                        reject(new Error('Upload failed: ' + xhr.status));
+                    }
+                };
+
+                xhr.onerror = () => {
+                    overlay.style.display = 'none';
+                    reject(new Error('Network error'));
+                };
+
+                xhr.send(file);
+            });
+        }
+
+        async function uploadBase64ViaPost(base64Data, filename, isBackground, isVideo, onProgress) {
+            return new Promise((resolve, reject) => {
+                const parts = base64Data.split(',');
+                const byteString = atob(parts[1]);
+                const mimeString = parts[0].split(':')[1].split(';')[0];
+                
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) {
+                    ia[i] = byteString.charCodeAt(i);
+                }
+                const blob = new Blob([ab], {type: mimeString});
+                
+                const url = getBaseUrl() + '/upload?filename=' + encodeURIComponent(filename) + 
+                            '&isBackground=' + isBackground + 
+                            '&isVideo=' + isVideo;
+                
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', url, true);
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable && onProgress) {
+                        onProgress(Math.round((e.loaded / e.total) * 100));
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(xhr.response);
+                    } else {
+                        reject(new Error('Upload failed: ' + xhr.status));
+                    }
+                };
+
+                xhr.onerror = () => reject(new Error('Network error'));
+                xhr.send(blob);
+            });
+        }
+
+        async function safeSend(payload) {
+            if (payload.action === 'register' || payload.action === 'verify_pin') {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify(payload));
+                }
+                return;
+            }
+            if (payload.action === 'preview_adzan' || payload.action === 'preview_iqomah') {
+                if (isOfflineMode || !ws || ws.readyState !== WebSocket.OPEN) {
+                    showToast(currentLang === 'id' ? "Preview layar memerlukan koneksi ke TV." : "Screen preview requires TV connection.", "error");
+                    return;
+                }
+                ws.send(JSON.stringify(payload));
+                return;
+            }
+            if (isOfflineMode || !ws || ws.readyState !== WebSocket.OPEN) {
+                if (payload.action === 'set_master' || payload.action === 'delete_device' || payload.action === 'set_pin') {
+                    showToast(currentLang === 'id' ? "Pengelolaan perangkat memerlukan koneksi ke TV." : "Device management requires TV connection.", "error");
+                    return;
+                }
+                
+                if ((payload.action === 'add_announcement' || payload.action === 'add_slideshow_schedule' || payload.action === 'upload_media') && !payload.id) {
+                    payload.id = 'uuid_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+                }
+                
+                applyActionLocally(payload);
+                
+                const isMediaUpload = payload.action === 'upload_background' || payload.action === 'upload_media';
+                if (isMediaUpload) {
+                    offlineFilesQueue.push(payload);
+                    await saveFileToDB(payload.id || 'bg_' + Date.now(), payload);
+                    saveOfflineDraft();
+                    showToast(translations[currentLang].offline_media_warning || "File media baru akan diunggah setelah tersambung kembali ke TV.", "info");
+                } else {
+                    if (payload.action === 'update_config' || payload.action === 'update_theme' || payload.action === 'update_standby' || payload.action === 'update_show_settings_on_tv') {
+                        offlineActionsQueue = offlineActionsQueue.filter(a => a.action !== payload.action);
+                    }
+                    offlineActionsQueue.push(payload);
+                    saveOfflineDraft();
+                    showToast(translations[currentLang].toast_saved_offline || "Disimpan secara offline!", "info");
+                }
+            } else {
+                ws.send(JSON.stringify(payload));
+            }
+        }
+
+        async function syncOfflineChanges() {
+            document.getElementById('sync-dialog-overlay').style.display = 'none';
+            
+            const overlay = document.getElementById('upload-progress-overlay');
+            const progressBar = document.getElementById('upload-progress-bar');
+            const progressText = document.getElementById('upload-progress-text');
+            const title = document.getElementById('upload-progress-title');
+            const desc = document.getElementById('upload-progress-desc');
+
+            overlay.style.display = 'flex';
+            title.innerText = currentLang === 'id' ? 'Sinkronisasi Data...' : 'Syncing Data...';
+            isSyncing = true;
+            
+            try {
+                const totalActions = offlineActionsQueue.length;
+                for (let i = 0; i < totalActions; i++) {
+                    const action = offlineActionsQueue[i];
+                    desc.innerText = (currentLang === 'id' ? 'Mengirim pengaturan ' : 'Sending settings ') + (i + 1) + '/' + totalActions;
+                    const percent = Math.round(((i) / (totalActions + offlineFilesQueue.length)) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressText.innerText = percent + '%';
+                    
+                    ws.send(JSON.stringify(action));
+                    await new Promise(r => setTimeout(r, 150));
+                }
+
+                const totalFiles = offlineFilesQueue.length;
+                for (let i = 0; i < totalFiles; i++) {
+                    const fileAction = offlineFilesQueue[i];
+                    const basePercent = Math.round(((totalActions + i) / (totalActions + totalFiles)) * 100);
+                    const nextBasePercent = Math.round(((totalActions + i + 1) / (totalActions + totalFiles)) * 100);
+                    
+                    desc.innerText = (currentLang === 'id' ? 'Mengunggah file ' : 'Uploading file ') + (i + 1) + '/' + totalFiles;
+                    
+                    try {
+                        if (fileAction.action === 'upload_background') {
+                            await uploadBase64ViaPost(fileAction.base64, fileAction.filename, true, false, (p) => {
+                                const overall = basePercent + Math.round((p / 100) * (nextBasePercent - basePercent));
+                                progressBar.style.width = overall + '%';
+                                progressText.innerText = overall + '%';
+                            });
+                        } else if (fileAction.action === 'upload_media') {
+                            await uploadBase64ViaPost(fileAction.base64, fileAction.filename, false, fileAction.isVideo, (p) => {
+                                const overall = basePercent + Math.round((p / 100) * (nextBasePercent - basePercent));
+                                progressBar.style.width = overall + '%';
+                                progressText.innerText = overall + '%';
+                            });
+                        }
+                    } catch (e) {
+                        console.error("Sync file failed", e);
+                    }
+                }
+                
+                progressBar.style.width = '100%';
+                progressText.innerText = '100%';
+                await new Promise(r => setTimeout(r, 500));
+                
+                offlineActionsQueue = [];
+                offlineFilesQueue = [];
+                localStorage.removeItem('offline_settings_draft');
+                localStorage.removeItem('offline_actions');
+                await clearFilesFromDB();
+                isOfflineMode = false;
+                
+                showToast(translations[currentLang].toast_sync_success || "Sinkronisasi berhasil!", "success");
+            } catch (e) {
+                console.error("Error syncing offline changes", e);
+                showToast(translations[currentLang].toast_sync_failed || "Sinkronisasi gagal.", "error");
+            } finally {
+                overlay.style.display = 'none';
+                isSyncing = false;
+                if (pendingTvState) {
+                    appConfig = pendingTvState.config;
+                    announcements = pendingTvState.announcements;
+                    mediaList = pendingTvState.mediaList;
+                    kemenagSchedules = pendingTvState.kemenagSchedules || [];
+                    slideshowSchedules = pendingTvState.slideshowSchedules || [];
+                    
+                    const tvState = {
+                        config: appConfig,
+                        announcements: announcements,
+                        mediaList: mediaList,
+                        kemenagSchedules: kemenagSchedules,
+                        slideshowSchedules: slideshowSchedules
+                    };
+                    localStorage.setItem('last_known_tv_state', JSON.stringify(tvState));
+                    updateUI();
+                    pendingTvState = null;
+                }
+            }
+        }
+
+        async function discardOfflineChanges() {
+            document.getElementById('sync-dialog-overlay').style.display = 'none';
+            offlineActionsQueue = [];
+            offlineFilesQueue = [];
+            localStorage.removeItem('offline_settings_draft');
+            localStorage.removeItem('offline_actions');
+            await clearFilesFromDB();
+            isOfflineMode = false;
+            
+            if (pendingTvState) {
+                appConfig = pendingTvState.config;
+                announcements = pendingTvState.announcements;
+                mediaList = pendingTvState.mediaList;
+                kemenagSchedules = pendingTvState.kemenagSchedules || [];
+                slideshowSchedules = pendingTvState.slideshowSchedules || [];
+                
+                const tvState = {
+                    config: appConfig,
+                    announcements: announcements,
+                    mediaList: mediaList,
+                    kemenagSchedules: kemenagSchedules,
+                    slideshowSchedules: slideshowSchedules
+                };
+                localStorage.setItem('last_known_tv_state', JSON.stringify(tvState));
+                updateUI();
+                pendingTvState = null;
+            }
+            showToast(currentLang === 'id' ? "Perubahan offline diabaikan." : "Offline changes discarded.", "info");
         }
 
         // Update HTML controls with latest state
@@ -2550,7 +3320,8 @@ object WebPage {
             const bgInfo = document.getElementById('active-bg-info');
             const clearBtn = document.getElementById('btn-clear-bg');
             if (appConfig.customBackgroundPath) {
-                const name = appConfig.customBackgroundPath.split('/').pop();
+                const isLocal = appConfig.customBackgroundPath.startsWith('data:') || appConfig.customBackgroundPath.startsWith('blob:');
+                const name = isLocal ? 'local_background.jpg' : appConfig.customBackgroundPath.split('/').pop();
                 bgInfo.innerText = (currentLang === 'id' ? 'Gambar aktif: ' : 'Active background: ') + name;
                 clearBtn.style.display = 'inline-block';
             } else {
@@ -2601,8 +3372,9 @@ object WebPage {
                 const card = document.createElement('div');
                 card.className = 'media-card-item';
                 
-                const previewSrc = '/media?path=' + encodeURIComponent(item.filePath);
-                const filename = item.filePath.split('/').pop();
+                const isLocalPreview = item.filePath.startsWith('data:') || item.filePath.startsWith('blob:');
+                const previewSrc = isLocalPreview ? item.filePath : '/media?path=' + encodeURIComponent(item.filePath);
+                const filename = isLocalPreview ? (item.isVideo ? 'local_video.mp4' : 'local_image.jpg') : item.filePath.split('/').pop();
                 
                 let mediaTag = '';
                 const videoLabel = currentLang === 'id' ? '📹 VIDEO' : '📹 VIDEO';
@@ -2916,10 +3688,10 @@ object WebPage {
                     const months = getRequiredMonths(appConfig.kemenagDuration, appConfig.kemenagTargetDate);
                     const schedules = await fetchKemenagSchedules(kemenagCityId, months);
                     if (schedules && schedules.length > 0) {
-                        ws.send(JSON.stringify({
+                        safeSend({
                             action: 'save_kemenag_schedules',
                             schedules: schedules
-                        }));
+                        });
                         showToast(currentLang === 'id' ? ('Berhasil menyinkronkan jadwal ' + schedules.length + ' hari ke TV') : ('Successfully synced ' + schedules.length + ' days of schedules to TV'), 'success');
                     }
                 } catch (e) {
@@ -3005,10 +3777,10 @@ object WebPage {
             const content = input.value.trim();
             if (!content) return;
             
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'add_announcement',
                 content: content
-            }));
+            });
             
             input.value = '';
             showToast(translations[currentLang].toast_announcement_added);
@@ -3019,22 +3791,22 @@ object WebPage {
             if (newContent !== null) {
                 const trimmed = newContent.trim();
                 if (trimmed) {
-                    ws.send(JSON.stringify({
+                    safeSend({
                         action: 'update_announcement',
                         id: id,
                         content: trimmed,
                         isActive: true
-                    }));
+                    });
                     showToast(currentLang === 'id' ? 'Pengumuman diperbarui.' : 'Announcement updated.');
                 }
             }
         }
 
         function deleteAnnouncement(id) {
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'delete_announcement',
                 id: id
-            }));
+            });
             showToast(translations[currentLang].toast_announcement_deleted);
         }
 
@@ -3043,10 +3815,10 @@ object WebPage {
             const items = Array.from(announceContainer.querySelectorAll('.announcement-item'));
             const ids = items.map(item => item.getAttribute('data-id'));
             
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'reorder_announcements',
                 ids: ids
-            }));
+            });
             showToast(translations[currentLang].toast_announcements_reordered);
         }
 
@@ -3166,16 +3938,16 @@ object WebPage {
         }
 
         function previewAdzan() {
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'preview_adzan'
-            }));
+            });
             showToast(currentLang === 'id' ? 'Menampilkan preview layar Adzan...' : 'Showing Adzan screen preview...');
         }
 
         function previewIqomah() {
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'preview_iqomah'
-            }));
+            });
             showToast(currentLang === 'id' ? 'Menampilkan preview layar Iqomah...' : 'Showing Iqomah screen preview...');
         }
 
@@ -3204,10 +3976,10 @@ object WebPage {
 
         function toggleShowSettingsOnTv(checked) {
             appConfig.showSettingsOnTv = checked;
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'update_show_settings_on_tv',
                 show: checked
-            }));
+            });
             showToast(checked ? translations[currentLang].toast_tv_settings_shown : translations[currentLang].toast_tv_settings_hidden);
         }
 
@@ -3225,72 +3997,94 @@ object WebPage {
         }
 
         function sendStandbyUpdate() {
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'update_standby',
                 standbyModeEnabled: !!appConfig.standbyModeEnabled,
                 standbyStartTime: appConfig.standbyStartTime || '22:00',
                 standbyEndTime: appConfig.standbyEndTime || '04:00'
-            }));
+            });
         }
 
         function sendThemeUpdate() {
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'update_theme',
                 transitionType: appConfig.transitionType || 'FADE',
                 slideIntervalSeconds: appConfig.slideIntervalSeconds || 10,
                 videoWaitUntilEnd: !!appConfig.videoWaitUntilEnd,
                 includeDefaultImage: appConfig.includeDefaultImage !== false
-            }));
+            });
         }
 
-        function uploadSingleBackground(input) {
+        async function uploadSingleBackground(input) {
             const file = input.files[0];
             if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                ws.send(JSON.stringify({
-                    action: 'upload_background',
-                    filename: file.name,
-                    base64: e.target.result
-                }));
+            if (isOfflineMode || !ws || ws.readyState !== WebSocket.OPEN) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    await safeSend({
+                        action: 'upload_background',
+                        filename: file.name,
+                        base64: e.target.result
+                    });
+                };
+                reader.readAsDataURL(file);
+            } else {
                 showToast(translations[currentLang].toast_bg_uploaded);
-            };
-            reader.readAsDataURL(file);
+                try {
+                    await uploadFileViaPost(file, true, false);
+                } catch (e) {
+                    console.error(e);
+                    showToast("Upload failed", "error");
+                }
+            }
             input.value = ''; // Reset
         }
 
         function clearBackground() {
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'clear_background'
-            }));
+            });
             showToast(translations[currentLang].toast_bg_cleared);
         }
 
-        function uploadMediaFile(input) {
+        async function uploadMediaFile(input) {
             const file = input.files[0];
             if (!file) return;
 
-            const isVideo = file.type.startsWith('video/');
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                ws.send(JSON.stringify({
-                    action: 'upload_media',
-                    filename: file.name,
-                    isVideo: isVideo,
-                    base64: e.target.result
-                }));
+            const isVideo = file.type.startsWith('video/') || 
+                            file.name.toLowerCase().endsWith('.mp4') || 
+                            file.name.toLowerCase().endsWith('.mkv') || 
+                            file.name.toLowerCase().endsWith('.mov');
+
+            if (isOfflineMode || !ws || ws.readyState !== WebSocket.OPEN) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    await safeSend({
+                        action: 'upload_media',
+                        filename: file.name,
+                        isVideo: isVideo,
+                        base64: e.target.result
+                    });
+                };
+                reader.readAsDataURL(file);
+            } else {
                 showToast(translations[currentLang].toast_media_uploaded);
-            };
-            reader.readAsDataURL(file);
+                try {
+                    await uploadFileViaPost(file, false, isVideo);
+                } catch (e) {
+                    console.error(e);
+                    showToast("Upload failed", "error");
+                }
+            }
             input.value = ''; // Reset
         }
 
         function deleteMedia(id) {
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'delete_media',
                 id: id
-            }));
+            });
             showToast(translations[currentLang].toast_media_deleted);
         }
 
@@ -3366,11 +4160,11 @@ object WebPage {
                 }
             }
 
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'add_slideshow_schedule',
                 startTime: startVal,
                 endTime: endVal
-            }));
+            });
             showToast(currentLang === 'id' ? 'Jadwal slideshow berhasil ditambahkan!' : 'Slideshow schedule added successfully!');
             if (schedStartTimePicker) schedStartTimePicker.clear();
             else document.getElementById('sched-start-time').value = '';
@@ -3379,24 +4173,24 @@ object WebPage {
         }
 
         function deleteSlideshowSchedule(id) {
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'delete_slideshow_schedule',
                 id: id
-            }));
+            });
             showToast(currentLang === 'id' ? 'Jadwal slideshow berhasil dihapus!' : 'Slideshow schedule deleted!');
         }
 
         function confirmReset() {
             if (confirm(translations[currentLang].confirm_reset)) {
-                ws.send(JSON.stringify({
+                safeSend({
                     action: 'reset'
-                }));
+                });
                 showToast(translations[currentLang].toast_reset_warning, 'warning');
             }
         }
 
         function sendUpdate() {
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'update_config',
                 latitude: appConfig.latitude,
                 longitude: appConfig.longitude,
@@ -3420,7 +4214,7 @@ object WebPage {
                 kemenagTargetDate: appConfig.kemenagTargetDate || '',
                 adzanFooterText: appConfig.adzanFooterText || '',
                 iqomahFooterText: appConfig.iqomahFooterText || ''
-            }));
+            });
         }
 
         // Map variables
@@ -3491,6 +4285,10 @@ object WebPage {
 
         // Initialize Leaflet Map
         function initMap() {
+            if (typeof L === 'undefined') {
+                showToast(currentLang === 'id' ? "Fitur peta memerlukan koneksi internet untuk memuat library. Silakan ketik koordinat secara manual." : "Map feature requires internet connection to load the library. Please type coordinates manually.", "error");
+                return;
+            }
             let lat = parseFloat(document.getElementById('latitude').value);
             let lng = parseFloat(document.getElementById('longitude').value);
             
@@ -3808,11 +4606,11 @@ object WebPage {
                     return;
                 }
 
-                ws.send(JSON.stringify({
+                safeSend({
                     action: 'set_master',
                     targetId: targetId,
                     pin: pin
-                }));
+                });
 
                 overlay.style.display = 'none';
                 showToast(translations[currentLang].toast_processing_master);
@@ -3827,10 +4625,10 @@ object WebPage {
         function deleteDevice(targetId, targetName) {
             const confirmMsg = translations[currentLang].confirm_delete_device + " '" + targetName + "'? " + translations[currentLang].confirm_delete_device_desc;
             if (confirm(confirmMsg)) {
-                ws.send(JSON.stringify({
+                safeSend({
                     action: 'delete_device',
                     targetId: targetId
-                }));
+                });
                 showToast(translations[currentLang].toast_deleting_device);
             }
         }
@@ -3839,10 +4637,10 @@ object WebPage {
             const input = document.getElementById('set-pin-input');
             const pin = input.value.trim();
             
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'set_pin',
                 pin: pin
-            }));
+            });
             showToast(translations[currentLang].toast_saving_pin);
             input.value = '';
         }
@@ -3852,10 +4650,10 @@ object WebPage {
             const pin = input.value.trim();
             if (!pin) return;
             
-            ws.send(JSON.stringify({
+            safeSend({
                 action: 'verify_pin',
                 pin: pin
-            }));
+            });
         }
 
         // Setup Enter key listeners
@@ -3888,53 +4686,58 @@ object WebPage {
             }
         });
 
-        // Initialize Flatpickr instances
-        kemenagDatePicker = flatpickr("#kemenag-date-picker-wrapper", {
-            wrap: true,
-            dateFormat: "Y-m-d",
-            disableMobile: "true"
-        });
-        schedStartTimePicker = flatpickr("#sched-start-time-wrapper", {
-            wrap: true,
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: true,
-            disableMobile: "true"
-        });
-        schedEndTimePicker = flatpickr("#sched-end-time-wrapper", {
-            wrap: true,
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: true,
-            disableMobile: "true"
-        });
-        standbyStartTimePicker = flatpickr("#standby-start-wrapper", {
-            wrap: true,
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: true,
-            disableMobile: "true",
-            onChange: function(selectedDates, dateStr, instance) {
-                updateStandbyTimes();
-            }
-        });
-        standbyEndTimePicker = flatpickr("#standby-end-wrapper", {
-            wrap: true,
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: "H:i",
-            time_24hr: true,
-            disableMobile: "true",
-            onChange: function(selectedDates, dateStr, instance) {
-                updateStandbyTimes();
-            }
-        });
+        // Initialize Flatpickr instances if library is loaded
+        if (typeof flatpickr !== 'undefined') {
+            kemenagDatePicker = flatpickr("#kemenag-date-picker-wrapper", {
+                wrap: true,
+                dateFormat: "Y-m-d",
+                disableMobile: "true"
+            });
+            schedStartTimePicker = flatpickr("#sched-start-time-wrapper", {
+                wrap: true,
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                disableMobile: "true"
+            });
+            schedEndTimePicker = flatpickr("#sched-end-time-wrapper", {
+                wrap: true,
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                disableMobile: "true"
+            });
+            standbyStartTimePicker = flatpickr("#standby-start-wrapper", {
+                wrap: true,
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                disableMobile: "true",
+                onChange: function(selectedDates, dateStr, instance) {
+                    updateStandbyTimes();
+                }
+            });
+            standbyEndTimePicker = flatpickr("#standby-end-wrapper", {
+                wrap: true,
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                disableMobile: "true",
+                onChange: function(selectedDates, dateStr, instance) {
+                    updateStandbyTimes();
+                }
+            });
+        } else {
+            console.warn("Flatpickr is not loaded. Time pickers will fall back to native/standard inputs.");
+        }
 
         // Start
         setLanguage(currentLang);
+        initializeOfflineState();
         connect();
     </script>
 </body>

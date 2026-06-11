@@ -153,15 +153,23 @@ class SettingsServer(private val context: Context) {
                 serverSocket = ServerSocket(port)
                 Log.d(TAG, "Server listening on port $port")
                 while (isRunning) {
-                    val socket = serverSocket?.accept() ?: break
-                    logDebug("Socket accepted from ${socket.remoteSocketAddress}")
                     try {
-                        socket.tcpNoDelay = true
+                        val socket = serverSocket?.accept() ?: break
+                        logDebug("Socket accepted from ${socket.remoteSocketAddress}")
+                        try {
+                            socket.tcpNoDelay = true
+                            socket.soTimeout = 5000 // 5s timeout for initial handshake/headers
+                        } catch (e: Exception) {
+                            logDebug("Could not set socket options: ${e.message}")
+                        }
+                        scope.launch {
+                            handleClient(socket)
+                        }
                     } catch (e: Exception) {
-                        logDebug("Could not set tcpNoDelay: ${e.message}")
-                    }
-                    scope.launch {
-                        handleClient(socket)
+                        if (isRunning) {
+                            Log.e(TAG, "Accept error", e)
+                            delay(1000)
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -187,10 +195,18 @@ class SettingsServer(private val context: Context) {
         val out = ByteArrayOutputStream()
         val last4 = IntArray(4) { -1 }
         var count = 0
+        val maxHeaderSize = 128 * 1024 // 128KB limit for headers to prevent OOM
+        
         while (true) {
             val b = inputStream.read()
             if (b == -1) break
             out.write(b)
+            
+            if (out.size() > maxHeaderSize) {
+                logDebug("Headers exceed max size, closing connection")
+                break
+            }
+
             last4[count % 4] = b
             count++
             if (count >= 4) {
@@ -274,6 +290,9 @@ class SettingsServer(private val context: Context) {
                 outputStream.flush()
                 logDebug("Handshake sent to ${socket.remoteSocketAddress}")
 
+                // Reset timeout for the long-lived WebSocket connection
+                try { socket.soTimeout = 0 } catch (_: Exception) {}
+
                 val connection = WebSocketConnection(socket, inputStream, outputStream)
                 activeConnections.add(connection)
                 logDebug("WebSocket connection registered. Active count: ${activeConnections.size}")
@@ -305,6 +324,117 @@ class SettingsServer(private val context: Context) {
                 // HTTP serving
                 val uri = Uri.parse(pathWithQuery)
                 val path = uri.path ?: "/"
+
+                if (method == "OPTIONS") {
+                    val response = "HTTP/1.1 204 No Content\r\n" +
+                            "Access-Control-Allow-Origin: *\r\n" +
+                            "Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n" +
+                            "Access-Control-Allow-Headers: Content-Type, Content-Length\r\n" +
+                            "Access-Control-Max-Age: 86400\r\n" +
+                            "Connection: close\r\n\r\n"
+                    outputStream.write(response.toByteArray(Charsets.UTF_8))
+                    outputStream.flush()
+                    try { socket.close() } catch (_: Exception) {}
+                    return
+                }
+
+                if (method == "POST" && path == "/upload") {
+                    val isVideo = uri.getQueryParameter("isVideo") == "true"
+                    val isBackground = uri.getQueryParameter("isBackground") == "true"
+                    val filename = uri.getQueryParameter("filename") ?: "upload_${System.currentTimeMillis()}"
+                    val contentLength = headers["content-length"]?.toLongOrNull() ?: -1L
+                    logDebug("Starting upload: $filename, size: $contentLength, isVideo: $isVideo")
+
+                    // Set a longer timeout for the upload process
+                    try { socket.soTimeout = 60000 } catch (_: Exception) {}
+
+                    try {
+                        val targetFile = if (isBackground) {
+                            val oldPath = repository.getConfig().customBackgroundPath
+                            if (oldPath.isNotEmpty()) {
+                                try { File(oldPath).delete() } catch (_: Exception) {}
+                            }
+                            val extension = if (filename.contains(".")) filename.substring(filename.lastIndexOf(".")) else ".jpg"
+                            File(context.filesDir, "custom_background_${System.currentTimeMillis()}$extension")
+                        } else {
+                            val dir = File(context.filesDir, "presentation")
+                            if (!dir.exists()) dir.mkdirs()
+                            val safeName = "${System.currentTimeMillis()}_${File(filename).name}"
+                            File(dir, safeName)
+                        }
+
+                        var totalRead = 0L
+                        var lastLogTime = System.currentTimeMillis()
+                        
+                        FileOutputStream(targetFile).use { fos ->
+                            val buffer = ByteArray(32768) // Larger buffer for faster video transfer
+                            if (contentLength > 0) {
+                                var remaining = contentLength
+                                while (remaining > 0) {
+                                    val toRead = Math.min(buffer.size.toLong(), remaining).toInt()
+                                    val read = inputStream.read(buffer, 0, toRead)
+                                    if (read == -1) break
+                                    if (read > 0) {
+                                        fos.write(buffer, 0, read)
+                                        remaining -= read
+                                        totalRead += read
+                                        
+                                        // Log progress every 2 seconds
+                                        val now = System.currentTimeMillis()
+                                        if (now - lastLogTime > 2000) {
+                                            logDebug("Uploading $filename: ${ (totalRead * 100 / contentLength) }% ($totalRead bytes)")
+                                            lastLogTime = now
+                                        }
+                                    }
+                                }
+                            } else {
+                                var read: Int
+                                while (inputStream.read(buffer).also { read = it } != -1) {
+                                    if (read > 0) {
+                                        fos.write(buffer, 0, read)
+                                        totalRead += read
+                                    }
+                                }
+                            }
+                        }
+
+                        if (contentLength == -1L || totalRead == contentLength) {
+                            logDebug("Upload complete: ${targetFile.absolutePath} ($totalRead bytes)")
+                            if (isBackground) {
+                                repository.updateCustomBackground(targetFile.absolutePath)
+                            } else {
+                                repository.addMediaItem(targetFile.absolutePath, isVideo)
+                            }
+                            broadcastState()
+                            
+                            val response = "HTTP/1.1 200 OK\r\n" +
+                                    "Access-Control-Allow-Origin: *\r\n" +
+                                    "Content-Length: 0\r\n" +
+                                    "Connection: close\r\n\r\n"
+                            outputStream.write(response.toByteArray(Charsets.UTF_8))
+                        } else {
+                            logDebug("Upload incomplete: expected $contentLength, got $totalRead. Deleting partial file.")
+                            targetFile.delete()
+                            val response = "HTTP/1.1 400 Bad Request\r\n" +
+                                    "Access-Control-Allow-Origin: *\r\n" +
+                                    "Content-Length: 0\r\n" +
+                                    "Connection: close\r\n\r\n"
+                            outputStream.write(response.toByteArray(Charsets.UTF_8))
+                        }
+                        outputStream.flush()
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Upload failed", e)
+                        logDebug("Upload error: ${e.message}")
+                        val response = "HTTP/1.1 500 Internal Server Error\r\n" +
+                                "Access-Control-Allow-Origin: *\r\n" +
+                                "Content-Length: 0\r\n" +
+                                "Connection: close\r\n\r\n"
+                        outputStream.write(response.toByteArray(Charsets.UTF_8))
+                        outputStream.flush()
+                    }
+                    try { socket.close() } catch (_: Exception) {}
+                    return
+                }
 
                 if (path == "/logs") {
                     val logs = SettingsServer.getDebugLogs()
@@ -397,12 +527,17 @@ class SettingsServer(private val context: Context) {
     }
 
     private fun getCurrentStateJson(): String {
-        val config = repository.getConfig()
-        val announcements = repository.getActiveAnnouncements()
-        val mediaList = repository.getMediaList()
+        try {
+            logDebug("Generating current state JSON...")
+            val startTime = System.currentTimeMillis()
+            
+            val config = repository.getConfig()
+            val announcements = repository.getActiveAnnouncements()
+            val mediaList = repository.getMediaList()
 
-        val json = JSONObject()
-        json.put("type", "state")
+            val json = JSONObject()
+            json.put("type", "state")
+            // ... (rest of the logic)
 
         val configJson = JSONObject().apply {
             put("latitude", config.latitude)
@@ -512,8 +647,19 @@ class SettingsServer(private val context: Context) {
         }
         json.put("slideshowSchedules", slideshowArray)
 
-        return json.toString()
+        val result = json.toString()
+        val duration = System.currentTimeMillis() - startTime
+        logDebug("State JSON generated in ${duration}ms, size: ${result.length} bytes")
+        return result
+    } catch (e: Exception) {
+        Log.e(TAG, "Error generating state JSON", e)
+        logDebug("Error generating state JSON: ${e.message}")
+        return JSONObject().apply { 
+            put("type", "error")
+            put("message", "Internal server error generating state")
+        }.toString()
     }
+}
 
     private fun broadcastState() {
         val state = getCurrentStateJson()
@@ -525,34 +671,50 @@ class SettingsServer(private val context: Context) {
     private suspend fun handleWebSocketMessage(message: String, connection: WebSocketConnection) {
         try {
             val json = JSONObject(message)
-            val action = json.optString("action") ?: return
+            val action = json.optString("action").takeIf { it.isNotEmpty() } ?: return
+
+            // Authorization check for non-registration/verification actions
+            if (action != "register" && action != "verify_pin") {
+                val deviceId = connectionDeviceMap[connection]
+                val config = repository.getConfig()
+                val devices = repository.getConnectedDevices()
+                val isAllowed = deviceId != null && (config.pinCode.isEmpty() || devices.any { it.deviceId == deviceId && it.isAllowed })
+                if (!isAllowed) {
+                    connection.send(JSONObject().apply {
+                        put("type", "error")
+                        put("message", "Akses ditolak. Silakan masukkan PIN terlebih dahulu.")
+                    }.toString())
+                    return
+                }
+            }
 
             when (action) {
                 "update_config" -> {
-                    val lat = json.optDouble("latitude")
-                    val lng = json.optDouble("longitude")
-                    val iqomahSubuh = json.optInt("iqomahSubuh")
-                    val iqomahDzuhur = json.optInt("iqomahDzuhur")
-                    val iqomahAshar = json.optInt("iqomahAshar")
-                    val iqomahMaghrib = json.optInt("iqomahMaghrib")
-                    val iqomahIsya = json.optInt("iqomahIsya")
-                    val calculationMethodName = json.optString("calculationMethodName")
-                    val adzanLeadMinutes = json.optInt("adzanLeadMinutes")
-
                     val config = repository.getConfig()
-                    val offsetImsak = if (json.has("offsetImsak")) json.getInt("offsetImsak") else config.offsetImsak
-                    val offsetSubuh = if (json.has("offsetSubuh")) json.getInt("offsetSubuh") else config.offsetSubuh
-                    val offsetSyuruq = if (json.has("offsetSyuruq")) json.getInt("offsetSyuruq") else config.offsetSyuruq
-                    val offsetDzuhur = if (json.has("offsetDzuhur")) json.getInt("offsetDzuhur") else config.offsetDzuhur
-                    val offsetAshar = if (json.has("offsetAshar")) json.getInt("offsetAshar") else config.offsetAshar
-                    val offsetMaghrib = if (json.has("offsetMaghrib")) json.getInt("offsetMaghrib") else config.offsetMaghrib
-                    val offsetIsya = if (json.has("offsetIsya")) json.getInt("offsetIsya") else config.offsetIsya
-                    val kemenagCityId = if (json.has("kemenagCityId")) json.getString("kemenagCityId") else config.kemenagCityId
-                    val kemenagCityName = if (json.has("kemenagCityName")) json.getString("kemenagCityName") else config.kemenagCityName
-                    val kemenagDuration = if (json.has("kemenagDuration")) json.getString("kemenagDuration") else config.kemenagDuration
-                    val kemenagTargetDate = if (json.has("kemenagTargetDate")) json.getString("kemenagTargetDate") else config.kemenagTargetDate
-                    val adzanFooterText = if (json.has("adzanFooterText")) json.getString("adzanFooterText") else config.adzanFooterText
-                    val iqomahFooterText = if (json.has("iqomahFooterText")) json.getString("iqomahFooterText") else config.iqomahFooterText
+                    val lat = if (json.has("latitude") && !json.isNull("latitude")) json.optDouble("latitude") else config.latitude
+                    val lng = if (json.has("longitude") && !json.isNull("longitude")) json.optDouble("longitude") else config.longitude
+                    val iqomahSubuh = if (json.has("iqomahSubuh") && !json.isNull("iqomahSubuh")) json.optInt("iqomahSubuh") else config.iqomahSubuh
+                    val iqomahDzuhur = if (json.has("iqomahDzuhur") && !json.isNull("iqomahDzuhur")) json.optInt("iqomahDzuhur") else config.iqomahDzuhur
+                    val iqomahAshar = if (json.has("iqomahAshar") && !json.isNull("iqomahAshar")) json.optInt("iqomahAshar") else config.iqomahAshar
+                    val iqomahMaghrib = if (json.has("iqomahMaghrib") && !json.isNull("iqomahMaghrib")) json.optInt("iqomahMaghrib") else config.iqomahMaghrib
+                    val iqomahIsya = if (json.has("iqomahIsya") && !json.isNull("iqomahIsya")) json.optInt("iqomahIsya") else config.iqomahIsya
+                    val calculationMethodName = if (json.has("calculationMethodName") && !json.isNull("calculationMethodName")) json.optString("calculationMethodName") else config.calculationMethodName
+                    val adzanLeadMinutes = if (json.has("adzanLeadMinutes") && !json.isNull("adzanLeadMinutes")) json.optInt("adzanLeadMinutes") else config.adzanLeadMinutes
+
+                    val offsetImsak = if (json.has("offsetImsak") && !json.isNull("offsetImsak")) json.optInt("offsetImsak") else config.offsetImsak
+                    val offsetSubuh = if (json.has("offsetSubuh") && !json.isNull("offsetSubuh")) json.optInt("offsetSubuh") else config.offsetSubuh
+                    val offsetSyuruq = if (json.has("offsetSyuruq") && !json.isNull("offsetSyuruq")) json.optInt("offsetSyuruq") else config.offsetSyuruq
+                    val offsetDzuhur = if (json.has("offsetDzuhur") && !json.isNull("offsetDzuhur")) json.optInt("offsetDzuhur") else config.offsetDzuhur
+                    val offsetAshar = if (json.has("offsetAshar") && !json.isNull("offsetAshar")) json.optInt("offsetAshar") else config.offsetAshar
+                    val offsetMaghrib = if (json.has("offsetMaghrib") && !json.isNull("offsetMaghrib")) json.optInt("offsetMaghrib") else config.offsetMaghrib
+                    val offsetIsya = if (json.has("offsetIsya") && !json.isNull("offsetIsya")) json.optInt("offsetIsya") else config.offsetIsya
+
+                    val kemenagCityId = if (json.has("kemenagCityId") && !json.isNull("kemenagCityId")) json.optString("kemenagCityId") else config.kemenagCityId
+                    val kemenagCityName = if (json.has("kemenagCityName") && !json.isNull("kemenagCityName")) json.optString("kemenagCityName") else config.kemenagCityName
+                    val kemenagDuration = if (json.has("kemenagDuration") && !json.isNull("kemenagDuration")) json.optString("kemenagDuration") else config.kemenagDuration
+                    val kemenagTargetDate = if (json.has("kemenagTargetDate") && !json.isNull("kemenagTargetDate")) json.optString("kemenagTargetDate") else config.kemenagTargetDate
+                    val adzanFooterText = if (json.has("adzanFooterText") && !json.isNull("adzanFooterText")) json.optString("adzanFooterText") else config.adzanFooterText
+                    val iqomahFooterText = if (json.has("iqomahFooterText") && !json.isNull("iqomahFooterText")) json.optString("iqomahFooterText") else config.iqomahFooterText
 
                     repository.updateConfig(
                         lat, lng,
@@ -576,9 +738,10 @@ class SettingsServer(private val context: Context) {
                     }
                 }
                 "add_announcement" -> {
-                    val content = json.optString("content") ?: return
+                    val content = json.optString("content").takeIf { it.isNotEmpty() } ?: return
+                    val customId = json.optString("id", "")
                     if (content.isNotBlank()) {
-                        repository.addAnnouncement(content)
+                        repository.addAnnouncement(content, customId)
                     }
                 }
                 "search_kemenag_cities" -> {
@@ -665,12 +828,12 @@ class SettingsServer(private val context: Context) {
                     }
                 }
                 "delete_announcement" -> {
-                    val id = json.optString("id") ?: return
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     repository.deleteAnnouncement(id)
                 }
                 "update_announcement" -> {
-                    val id = json.optString("id") ?: return
-                    val content = json.optString("content") ?: return
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val content = json.optString("content", "")
                     val isActive = json.optBoolean("isActive", true)
                     repository.updateAnnouncement(id, content, isActive)
                 }
@@ -683,10 +846,11 @@ class SettingsServer(private val context: Context) {
                     repository.updateAnnouncementsOrder(ids)
                 }
                 "update_theme" -> {
-                    val transitionType = json.optString("transitionType")
-                    val slideIntervalSeconds = json.optInt("slideIntervalSeconds")
-                    val videoWaitUntilEnd = json.optBoolean("videoWaitUntilEnd")
-                    val includeDefaultImage = json.optBoolean("includeDefaultImage", true)
+                    val config = repository.getConfig()
+                    val transitionType = if (json.has("transitionType") && !json.isNull("transitionType")) json.optString("transitionType") else config.transitionType
+                    val slideIntervalSeconds = if (json.has("slideIntervalSeconds") && !json.isNull("slideIntervalSeconds")) json.optInt("slideIntervalSeconds") else config.slideIntervalSeconds
+                    val videoWaitUntilEnd = if (json.has("videoWaitUntilEnd") && !json.isNull("videoWaitUntilEnd")) json.optBoolean("videoWaitUntilEnd") else config.videoWaitUntilEnd
+                    val includeDefaultImage = if (json.has("includeDefaultImage") && !json.isNull("includeDefaultImage")) json.optBoolean("includeDefaultImage") else config.includeDefaultImage
                     repository.updateThemeSettings(transitionType, slideIntervalSeconds, videoWaitUntilEnd, includeDefaultImage)
                 }
                 "update_show_settings_on_tv" -> {
@@ -694,15 +858,16 @@ class SettingsServer(private val context: Context) {
                     repository.updateShowSettingsOnTv(show)
                 }
                 "update_standby" -> {
-                    val enabled = json.optBoolean("standbyModeEnabled")
-                    val startTime = json.optString("standbyStartTime", "22:00")
-                    val endTime = json.optString("standbyEndTime", "04:00")
+                    val config = repository.getConfig()
+                    val enabled = if (json.has("standbyModeEnabled") && !json.isNull("standbyModeEnabled")) json.optBoolean("standbyModeEnabled") else config.standbyModeEnabled
+                    val startTime = if (json.has("standbyStartTime") && !json.isNull("standbyStartTime")) json.optString("standbyStartTime") else config.standbyStartTime
+                    val endTime = if (json.has("standbyEndTime") && !json.isNull("standbyEndTime")) json.optString("standbyEndTime") else config.standbyEndTime
                     repository.updateStandbySettings(enabled, startTime, endTime)
                     broadcastState()
                 }
                 "register" -> {
-                    val deviceId = json.optString("deviceId") ?: return
-                    val deviceName = json.optString("deviceName") ?: "Remote Client"
+                    val deviceId = json.optString("deviceId").takeIf { it.isNotEmpty() } ?: return
+                    val deviceName = json.optString("deviceName").takeIf { it.isNotEmpty() } ?: "Remote Client"
                     connectionDeviceMap[connection] = deviceId
                     
                     val registered = repository.registerDevice(deviceId, deviceName)
@@ -725,7 +890,7 @@ class SettingsServer(private val context: Context) {
                 }
                 "verify_pin" -> {
                     val pin = json.optString("pin") ?: ""
-                    val deviceId = connectionDeviceMap[connection] ?: return
+                    val deviceId = connectionDeviceMap[connection].takeIf { !it.isNullOrEmpty() } ?: return
                     val config = repository.getConfig()
                     
                     if (config.pinCode == pin) {
@@ -748,7 +913,7 @@ class SettingsServer(private val context: Context) {
                 }
                 "set_pin" -> {
                     val pin = json.optString("pin") ?: ""
-                    val deviceId = connectionDeviceMap[connection] ?: return
+                    val deviceId = connectionDeviceMap[connection].takeIf { !it.isNullOrEmpty() } ?: return
                     val devices = repository.getConnectedDevices()
                     val hasMaster = devices.any { it.isMaster }
                     val isMaster = devices.firstOrNull { it.deviceId == deviceId }?.isMaster == true
@@ -764,9 +929,9 @@ class SettingsServer(private val context: Context) {
                     }
                 }
                 "set_master" -> {
-                    val targetId = json.optString("targetId") ?: return
+                    val targetId = json.optString("targetId").takeIf { it.isNotEmpty() } ?: return
                     val pin = json.optString("pin") ?: ""
-                    val deviceId = connectionDeviceMap[connection] ?: return
+                    val deviceId = connectionDeviceMap[connection].takeIf { !it.isNullOrEmpty() } ?: return
                     
                     val devices = repository.getConnectedDevices()
                     val hasMaster = devices.any { it.isMaster }
@@ -795,8 +960,8 @@ class SettingsServer(private val context: Context) {
                     }
                 }
                 "delete_device" -> {
-                    val targetId = json.optString("targetId") ?: return
-                    val deviceId = connectionDeviceMap[connection] ?: return
+                    val targetId = json.optString("targetId").takeIf { it.isNotEmpty() } ?: return
+                    val deviceId = connectionDeviceMap[connection].takeIf { !it.isNullOrEmpty() } ?: return
                     
                     val devices = repository.getConnectedDevices()
                     val isMaster = devices.firstOrNull { it.deviceId == deviceId }?.isMaster == true
@@ -824,7 +989,9 @@ class SettingsServer(private val context: Context) {
                             } catch (_: Exception) {}
                         }
                         val timestamp = System.currentTimeMillis()
-                        val file = File(context.filesDir, "custom_background_$timestamp.jpg")
+                        // Ensure we use the correct extension from filename if possible
+                        val extension = if (filename.contains(".")) filename.substring(filename.lastIndexOf(".")) else ".jpg"
+                        val file = File(context.filesDir, "custom_background_$timestamp$extension")
                         val cleanBase64 = if (base64Data.contains(",")) {
                             base64Data.substring(base64Data.indexOf(",") + 1)
                         } else {
@@ -836,7 +1003,7 @@ class SettingsServer(private val context: Context) {
                         }
                         repository.updateCustomBackground(file.absolutePath)
                         broadcastState()
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
                         Log.e(TAG, "Background upload failure", e)
                     }
                 }
@@ -862,8 +1029,8 @@ class SettingsServer(private val context: Context) {
                             dir.mkdirs()
                         }
 
-                        // Prevent path traversal in directory
-                        val safeName = File(filename).name
+                        // Use a timestamp to prevent collisions during offline sync
+                        val safeName = "${System.currentTimeMillis()}_${File(filename).name}"
                         val targetFile = File(dir, safeName)
 
                         val cleanBase64 = if (base64Data.contains(",")) {
@@ -877,12 +1044,12 @@ class SettingsServer(private val context: Context) {
                         }
                         repository.addMediaItem(targetFile.absolutePath, isVideo)
                         broadcastState()
-                    } catch (e: Exception) {
+                    } catch (e: Throwable) {
                         Log.e(TAG, "Media upload failure", e)
                     }
                 }
                 "delete_media" -> {
-                    val id = json.optString("id") ?: return
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val mediaList = repository.getMediaList()
                     val targetMedia = mediaList.find { it.id == id }
                     if (targetMedia != null) {
@@ -897,15 +1064,16 @@ class SettingsServer(private val context: Context) {
                     }
                 }
                 "add_slideshow_schedule" -> {
-                    val startTime = json.optString("startTime") ?: ""
-                    val endTime = json.optString("endTime") ?: ""
+                    val startTime = json.optString("startTime").takeIf { it.isNotEmpty() } ?: return
+                    val endTime = json.optString("endTime").takeIf { it.isNotEmpty() } ?: return
+                    val customId = json.optString("id", "")
                     if (startTime.isNotEmpty() && endTime.isNotEmpty()) {
-                        repository.addSlideshowSchedule(startTime, endTime)
+                        repository.addSlideshowSchedule(startTime, endTime, customId)
                         broadcastState()
                     }
                 }
                 "delete_slideshow_schedule" -> {
-                    val id = json.optString("id") ?: ""
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     if (id.isNotEmpty()) {
                         repository.deleteSlideshowSchedule(id)
                         broadcastState()
@@ -961,6 +1129,7 @@ class SettingsServer(private val context: Context) {
 
         fun readFrame(): String? {
             val messageBuffer = ByteArrayOutputStream()
+            val MAX_MESSAGE_SIZE = 10 * 1024 * 1024 // 10MB limit to prevent OOM
 
             while (true) {
                 val b0 = inputStream.read()
@@ -980,15 +1149,20 @@ class SettingsServer(private val context: Context) {
                     val byte1 = inputStream.read()
                     val byte2 = inputStream.read()
                     if (byte1 == -1 || byte2 == -1) return null
-                    payloadLength = ((byte1 shl 8) or byte2).toLong()
+                    payloadLength = ((byte1 shl 8) or (byte2 and 0xFF)).toLong()
                 } else if (len == 127) {
                     var tempLen: Long = 0
                     for (i in 0 until 8) {
                         val b = inputStream.read()
                         if (b == -1) return null
-                        tempLen = (tempLen shl 8) or b.toLong()
+                        tempLen = (tempLen shl 8) or (b and 0xFF).toLong()
                     }
                     payloadLength = tempLen
+                }
+
+                if (messageBuffer.size() + payloadLength > MAX_MESSAGE_SIZE) {
+                    Log.e(TAG, "WebSocket message exceeds limit, closing")
+                    return null
                 }
 
                 val mask = ByteArray(4)
