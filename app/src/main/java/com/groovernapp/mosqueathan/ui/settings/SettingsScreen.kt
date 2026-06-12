@@ -147,7 +147,7 @@ fun SettingsScreen(
         if (config.customBackgroundPath.isNotEmpty() && java.io.File(config.customBackgroundPath).exists()) {
             try {
                 android.graphics.BitmapFactory.decodeFile(config.customBackgroundPath)?.asImageBitmap()
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 null
             }
         } else {

@@ -18,6 +18,7 @@ import java.net.Socket
 import java.net.URLDecoder
 import java.security.MessageDigest
 import java.util.concurrent.CopyOnWriteArrayList
+import com.groovernapp.mosqueathan.utils.ImageUtils
 
 class SettingsServer(private val context: Context) {
 
@@ -401,8 +402,12 @@ class SettingsServer(private val context: Context) {
                         if (contentLength == -1L || totalRead == contentLength) {
                             logDebug("Upload complete: ${targetFile.absolutePath} ($totalRead bytes)")
                             if (isBackground) {
+                                ImageUtils.downscaleImageInPlace(targetFile)
                                 repository.updateCustomBackground(targetFile.absolutePath)
                             } else {
+                                if (!isVideo) {
+                                    ImageUtils.downscaleImageInPlace(targetFile)
+                                }
                                 repository.addMediaItem(targetFile.absolutePath, isVideo)
                             }
                             broadcastState()
@@ -475,21 +480,93 @@ class SettingsServer(private val context: Context) {
 
                         if (fileCanonical.startsWith(filesDirCanonical) && file.exists()) {
                             val mimeType = if (file.name.lowercase().endsWith(".mp4")) "video/mp4" else "image/jpeg"
-                            val length = file.length()
-                            val responseHeaders = "HTTP/1.1 200 OK\r\n" +
-                                    "Content-Type: $mimeType\r\n" +
-                                    "Content-Length: $length\r\n" +
-                                    "Connection: close\r\n\r\n"
-                            outputStream.write(responseHeaders.toByteArray(Charsets.UTF_8))
+                            val fileLength = file.length()
+                            val rangeHeader = headers["range"]
 
-                            val buffer = ByteArray(8192)
-                            var bytesRead: Int
-                            FileInputStream(file).use { fis ->
-                                while (fis.read(buffer).also { bytesRead = it } != -1) {
-                                    outputStream.write(buffer, 0, bytesRead)
+                            if (rangeHeader != null && rangeHeader.startsWith("bytes=")) {
+                                val rangeValue = rangeHeader.substring(6).trim()
+                                var start = 0L
+                                var end = fileLength - 1
+
+                                val hyphenIdx = rangeValue.indexOf('-')
+                                if (hyphenIdx != -1) {
+                                    val startStr = rangeValue.substring(0, hyphenIdx).trim()
+                                    val endStr = rangeValue.substring(hyphenIdx + 1).trim()
+
+                                    try {
+                                        if (startStr.isNotEmpty()) {
+                                            start = startStr.toLong()
+                                            if (endStr.isNotEmpty()) {
+                                                end = endStr.toLong()
+                                            }
+                                        } else if (endStr.isNotEmpty()) {
+                                            start = fileLength - endStr.toLong()
+                                            end = fileLength - 1
+                                        }
+                                    } catch (_: Exception) {}
                                 }
+
+                                // Clamp values
+                                if (start < 0) start = 0
+                                if (end >= fileLength) end = fileLength - 1
+
+                                if (start > end) {
+                                    val responseHeaders = "HTTP/1.1 416 Range Not Satisfiable\r\n" +
+                                            "Content-Range: bytes */$fileLength\r\n" +
+                                            "Content-Length: 0\r\n" +
+                                            "Connection: close\r\n\r\n"
+                                    outputStream.write(responseHeaders.toByteArray(Charsets.UTF_8))
+                                    outputStream.flush()
+                                } else {
+                                    val contentLength = end - start + 1
+                                    val responseHeaders = "HTTP/1.1 206 Partial Content\r\n" +
+                                            "Content-Type: $mimeType\r\n" +
+                                            "Content-Range: bytes $start-$end/$fileLength\r\n" +
+                                            "Content-Length: $contentLength\r\n" +
+                                            "Accept-Ranges: bytes\r\n" +
+                                            "Connection: close\r\n\r\n"
+                                    outputStream.write(responseHeaders.toByteArray(Charsets.UTF_8))
+
+                                    FileInputStream(file).use { fis ->
+                                        var skipped = 0L
+                                        while (skipped < start) {
+                                            val n = fis.skip(start - skipped)
+                                            if (n <= 0) {
+                                                if (fis.read() == -1) break
+                                                skipped++
+                                            } else {
+                                                skipped += n
+                                            }
+                                        }
+                                        val buffer = ByteArray(8192)
+                                        var remaining = contentLength
+                                        while (remaining > 0) {
+                                            val toRead = remaining.coerceAtMost(buffer.size.toLong()).toInt()
+                                            val read = fis.read(buffer, 0, toRead)
+                                            if (read == -1) break
+                                            outputStream.write(buffer, 0, read)
+                                            remaining -= read
+                                        }
+                                    }
+                                    outputStream.flush()
+                                }
+                            } else {
+                                val responseHeaders = "HTTP/1.1 200 OK\r\n" +
+                                        "Content-Type: $mimeType\r\n" +
+                                        "Content-Length: $fileLength\r\n" +
+                                        "Accept-Ranges: bytes\r\n" +
+                                        "Connection: close\r\n\r\n"
+                                outputStream.write(responseHeaders.toByteArray(Charsets.UTF_8))
+
+                                val buffer = ByteArray(8192)
+                                var bytesRead: Int
+                                FileInputStream(file).use { fis ->
+                                    while (fis.read(buffer).also { bytesRead = it } != -1) {
+                                        outputStream.write(buffer, 0, bytesRead)
+                                    }
+                                }
+                                outputStream.flush()
                             }
-                            outputStream.flush()
                         } else {
                             serve404(outputStream)
                         }
@@ -1001,6 +1078,7 @@ class SettingsServer(private val context: Context) {
                         FileOutputStream(file).use { fos ->
                             fos.write(bytes)
                         }
+                        ImageUtils.downscaleImageInPlace(file)
                         repository.updateCustomBackground(file.absolutePath)
                         broadcastState()
                     } catch (e: Throwable) {
@@ -1041,6 +1119,9 @@ class SettingsServer(private val context: Context) {
                         val bytes = Base64.decode(cleanBase64, Base64.DEFAULT)
                         FileOutputStream(targetFile).use { fos ->
                             fos.write(bytes)
+                        }
+                        if (!isVideo) {
+                            ImageUtils.downscaleImageInPlace(targetFile)
                         }
                         repository.addMediaItem(targetFile.absolutePath, isVideo)
                         broadcastState()

@@ -3384,7 +3384,7 @@ object WebPage {
                 if (item.isVideo) {
                     mediaTag = '<div class="media-preview-container">' +
                             '<span class="media-type-badge">' + videoLabel + '</span>' +
-                            '<video class="media-preview-img" style="opacity: 0.6;">' +
+                            '<video class="media-preview-img" style="opacity: 0.6;" preload="metadata" muted playsinline>' +
                                 '<source src="' + previewSrc + '" type="video/mp4">' +
                             '</video>' +
                             '<svg width="24" height="24" fill="var(--accent)" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="position:absolute; pointer-events:none; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">' +
@@ -4015,24 +4015,87 @@ object WebPage {
             });
         }
 
+        async function resizeImage(file, maxWidth = 1920, maxHeight = 1080) {
+            return new Promise((resolve) => {
+                if (file.type.startsWith('video/')) {
+                    resolve(file);
+                    return;
+                }
+                const img = new Image();
+                img.src = URL.createObjectURL(file);
+                img.onload = () => {
+                    URL.revokeObjectURL(img.src);
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width <= maxWidth && height <= maxHeight) {
+                        resolve(file);
+                        return;
+                    }
+                    
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+                    
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            const resizedFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                            resolve(resizedFile);
+                        } else {
+                            resolve(file);
+                        }
+                    }, 'image/jpeg', 0.9); // Quality = 90%
+                };
+                img.onerror = () => {
+                    resolve(file);
+                };
+            });
+        }
+
         async function uploadSingleBackground(input) {
             const file = input.files[0];
             if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) { // 2MB
+                alert(currentLang === 'id' ? 
+                    "Gambar berukuran besar terdeteksi. Sistem akan secara otomatis mengompresi dan menyesuaikan resolusi gambar agar ukuran lebih hemat dan performa TV tetap lancar." : 
+                    "Large image detected. The system will automatically compress and adjust the image resolution to save storage and keep the TV performance optimal."
+                );
+            }
+
+            const processedFile = await resizeImage(file);
 
             if (isOfflineMode || !ws || ws.readyState !== WebSocket.OPEN) {
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     await safeSend({
                         action: 'upload_background',
-                        filename: file.name,
+                        filename: processedFile.name,
                         base64: e.target.result
                     });
                 };
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(processedFile);
             } else {
                 showToast(translations[currentLang].toast_bg_uploaded);
                 try {
-                    await uploadFileViaPost(file, true, false);
+                    await uploadFileViaPost(processedFile, true, false);
                 } catch (e) {
                     console.error(e);
                     showToast("Upload failed", "error");
@@ -4057,21 +4120,30 @@ object WebPage {
                             file.name.toLowerCase().endsWith('.mkv') || 
                             file.name.toLowerCase().endsWith('.mov');
 
+            if (!isVideo && file.size > 2 * 1024 * 1024) { // 2MB
+                alert(currentLang === 'id' ? 
+                    "Gambar berukuran besar terdeteksi. Sistem akan secara otomatis mengompresi dan menyesuaikan resolusi gambar agar ukuran lebih hemat dan performa TV tetap lancar." : 
+                    "Large image detected. The system will automatically compress and adjust the image resolution to save storage and keep the TV performance optimal."
+                );
+            }
+
+            const processedFile = isVideo ? file : await resizeImage(file);
+
             if (isOfflineMode || !ws || ws.readyState !== WebSocket.OPEN) {
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     await safeSend({
                         action: 'upload_media',
-                        filename: file.name,
+                        filename: processedFile.name,
                         isVideo: isVideo,
                         base64: e.target.result
                     });
                 };
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(processedFile);
             } else {
                 showToast(translations[currentLang].toast_media_uploaded);
                 try {
-                    await uploadFileViaPost(file, false, isVideo);
+                    await uploadFileViaPost(processedFile, false, isVideo);
                 } catch (e) {
                     console.error(e);
                     showToast("Upload failed", "error");

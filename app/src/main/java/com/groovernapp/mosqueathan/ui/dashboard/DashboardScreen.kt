@@ -60,7 +60,7 @@ fun DashboardScreen(
         if (customBackgroundPath.isNotEmpty() && java.io.File(customBackgroundPath).exists()) {
             try {
                 android.graphics.BitmapFactory.decodeFile(customBackgroundPath)?.asImageBitmap()
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 null
             }
         } else {
@@ -194,7 +194,7 @@ private fun MediaSlide(
             if (media.filePath.isNotEmpty() && java.io.File(media.filePath).exists()) {
                 try {
                     android.graphics.BitmapFactory.decodeFile(media.filePath)?.asImageBitmap()
-                } catch (e: Exception) {
+                } catch (e: Throwable) {
                     null
                 }
             } else {

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
+import com.groovernapp.mosqueathan.utils.ImageUtils
 
 class SettingsViewModel : ViewModel() {
 
@@ -188,14 +189,39 @@ class SettingsViewModel : ViewModel() {
         }
     }
 
+    private fun getUriSize(context: android.content.Context, uri: android.net.Uri): Long {
+        var size = 0L
+        try {
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val sizeIndex = cursor.getColumnIndex(android.provider.OpenableColumns.SIZE)
+                if (cursor.moveToFirst() && sizeIndex != -1) {
+                    size = cursor.getLong(sizeIndex)
+                }
+            }
+        } catch (_: Exception) {}
+        return size
+    }
+
     fun updateCustomBackground(uri: android.net.Uri, context: android.content.Context) {
         viewModelScope.launch {
             try {
+                val size = getUriSize(context, uri)
+                if (size > 2 * 1024 * 1024) { // 2MB
+                    viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Gambar besar terdeteksi. Sistem akan mengoptimalkan ukuran gambar secara otomatis.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
                 val inputStream = context.contentResolver.openInputStream(uri) ?: return@launch
                 val file = java.io.File(context.filesDir, "custom_background.jpg")
                 file.outputStream().use { outputStream ->
                     inputStream.use { it.copyTo(outputStream) }
                 }
+                ImageUtils.downscaleImageInPlace(file)
                 repository.updateCustomBackground(file.absolutePath)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -217,12 +243,20 @@ class SettingsViewModel : ViewModel() {
 
     fun addMediaItems(uris: List<android.net.Uri>, context: android.content.Context) {
         viewModelScope.launch {
+            var largeImageDetected = false
             uris.forEach { uri ->
                 try {
                     val mimeType = context.contentResolver.getType(uri)
                     val isVideo = mimeType?.startsWith("video") == true
-                    val extension = if (isVideo) "mp4" else "jpg"
+                    
+                    if (!isVideo) {
+                        val size = getUriSize(context, uri)
+                        if (size > 2 * 1024 * 1024) { // 2MB
+                            largeImageDetected = true
+                        }
+                    }
 
+                    val extension = if (isVideo) "mp4" else "jpg"
                     val filename = "presentation_${System.currentTimeMillis()}_${java.util.UUID.randomUUID().toString().take(5)}.$extension"
                     val dir = java.io.File(context.filesDir, "presentation")
                     if (!dir.exists()) {
@@ -234,9 +268,24 @@ class SettingsViewModel : ViewModel() {
                     file.outputStream().use { outputStream ->
                         inputStream.use { it.copyTo(outputStream) }
                     }
+
+                    if (!isVideo) {
+                        ImageUtils.downscaleImageInPlace(file)
+                    }
+
                     repository.addMediaItem(file.absolutePath, isVideo)
                 } catch (e: Exception) {
                     e.printStackTrace()
+                }
+            }
+
+            if (largeImageDetected) {
+                viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Gambar besar terdeteksi. Sistem akan mengoptimalkan ukuran gambar secara otomatis.",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
