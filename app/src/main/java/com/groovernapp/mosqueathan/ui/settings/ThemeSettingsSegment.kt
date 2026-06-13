@@ -1,6 +1,8 @@
 package com.groovernapp.mosqueathan.ui.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,11 +24,17 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import com.groovernapp.mosqueathan.util.Lang
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,133 +61,84 @@ fun ThemeSettingsSegment(
     onDeleteMediaItem: (MediaEntity) -> Unit,
     onSelectCustomBackground: () -> Unit,
     onClearCustomBackground: () -> Unit,
-    onAddSlideshowSchedule: (String, String) -> Unit,
+    onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit,
     onDeleteSlideshowSchedule: (String) -> Unit,
     onPreviewSlideshow: () -> Unit = {}
 ) {
-    var showScheduleDialog by remember { mutableStateOf(false) }
-    var startTimeText by remember { mutableStateOf("") }
-    var endTimeText by remember { mutableStateOf("") }
-    var validationErrorMsg by remember { mutableStateOf<String?>(null) }
+    var isSpecificDate by remember { mutableStateOf(false) }
+    var selectedDayIndex by remember { mutableIntStateOf(0) }
+    var specificDateText by remember { mutableStateOf("") }
+    var startTimeText by remember { mutableStateOf("00:00") }
+    var endTimeText by remember { mutableStateOf("00:00") }
+    var dayDropdownExpanded by remember { mutableStateOf(false) }
+    var showListDialog by remember { mutableStateOf(false) }
+
+    val daysOfWeek = remember {
+        listOf(
+            "Monday" to Lang.get("Monday", "Senin"),
+            "Tuesday" to Lang.get("Tuesday", "Selasa"),
+            "Wednesday" to Lang.get("Wednesday", "Rabu"),
+            "Thursday" to Lang.get("Thursday", "Kamis"),
+            "Friday" to Lang.get("Friday", "Jumat"),
+            "Saturday" to Lang.get("Saturday", "Sabtu"),
+            "Sunday" to Lang.get("Sunday", "Minggu")
+        )
+    }
 
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    if (showScheduleDialog) {
+    if (showListDialog) {
         AlertDialog(
-            onDismissRequest = { },
-            title = { Text("Tambah Sesi Slideshow", color = Color.White) },
+            onDismissRequest = { showListDialog = false },
+            title = { Text(Lang.get("Slideshow Times List", "Daftar Jadwal Slideshow"), color = Color.White) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        "Masukkan jam mulai dan jam berakhir (Format 24 Jam):",
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontSize = 14.sp
-                    )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TimePickerField(
-                            value = startTimeText,
-                            onValueChange = { startTimeText = it },
-                            label = "Waktu Mulai",
-                            placeholder = "HH:mm",
-                            modifier = Modifier.weight(1f)
-                        )
-                        TimePickerField(
-                            value = endTimeText,
-                            onValueChange = { endTimeText = it },
-                            label = "Waktu Selesai",
-                            placeholder = "HH:mm",
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    validationErrorMsg?.let {
-                        Text(it, color = Color.Red, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                Box(modifier = Modifier.width(400.dp).height(300.dp)) {
+                    if (slideshowSchedules.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(Lang.get("No slideshow schedules set.", "Tidak ada jadwal slideshow."), color = Color.White.copy(alpha = 0.5f))
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(slideshowSchedules) { schedule ->
+                                val dayLabel = if (schedule.isSpecificDate) {
+                                    schedule.day
+                                } else {
+                                    daysOfWeek.firstOrNull { it.first.equals(schedule.day, ignoreCase = true) }?.second ?: schedule.day
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color.White.copy(alpha = 0.05f))
+                                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(text = dayLabel, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        Text(text = "${schedule.startTime} - ${schedule.endTime}", color = Color(0xFFFFD54F), fontSize = 13.sp)
+                                    }
+                                    TvFocusableDangerButton(
+                                        onClick = { onDeleteSlideshowSchedule(schedule.id) },
+                                        shape = RoundedCornerShape(6.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                        modifier = Modifier.height(32.dp)
+                                    ) {
+                                        Text(Lang.get("Delete", "Hapus"), color = Color.White, fontSize = 13.sp)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             },
             confirmButton = {
                 TvFocusablePrimaryButton(
-                    onClick = {
-                        val startParts = startTimeText.split(":")
-                        val endParts = endTimeText.split(":")
-                        val sh = startParts.getOrNull(0)?.toIntOrNull()
-                        val sm = startParts.getOrNull(1)?.toIntOrNull()
-                        val eh = endParts.getOrNull(0)?.toIntOrNull()
-                        val em = endParts.getOrNull(1)?.toIntOrNull()
-
-                        if (sh == null || sm == null || eh == null || em == null || sh !in 0..23 || sm !in 0..59 || eh !in 0..23 || em !in 0..59) {
-                            return@TvFocusablePrimaryButton
-                        }
-
-                        val startTimeStr = "%02d:%02d".format(sh, sm)
-                        val endTimeStr = "%02d:%02d".format(eh, em)
-
-                        // Calculate today's prayer times to validate collision
-                        val calculatedTimes = PrayerCalculator.calculate(
-                            latitude = config.latitude,
-                            longitude = config.longitude,
-                            calculationMethodName = config.calculationMethodName,
-                            offsetImsak = config.offsetImsak,
-                            offsetSubuh = config.offsetSubuh,
-                            offsetSyuruq = config.offsetSyuruq,
-                            offsetDzuhur = config.offsetDzuhur,
-                            offsetAshar = config.offsetAshar,
-                            offsetMaghrib = config.offsetMaghrib,
-                            offsetIsya = config.offsetIsya,
-                            kemenagCityId = config.kemenagCityId
-                        )
-
-                        val startMinutes = sh * 60 + sm
-                        val endMinutes = eh * 60 + em
-
-                         val prayers = listOf(
-                            "Subuh" to ((calculatedTimes.subuh.hour * 60 + calculatedTimes.subuh.minute) to config.iqomahSubuh),
-                            "Dzuhur" to ((calculatedTimes.dzuhur.hour * 60 + calculatedTimes.dzuhur.minute) to config.iqomahDzuhur),
-                            "Ashar" to ((calculatedTimes.ashar.hour * 60 + calculatedTimes.ashar.minute) to config.iqomahAshar),
-                            "Maghrib" to ((calculatedTimes.maghrib.hour * 60 + calculatedTimes.maghrib.minute) to config.iqomahMaghrib),
-                            "Isya" to ((calculatedTimes.isya.hour * 60 + calculatedTimes.isya.minute) to config.iqomahIsya)
-                        )
-
-                        var collisionDetected: String? = null
-                        for ((name, pair) in prayers) {
-                            val prayerMin = pair.first
-                            val iqomahDuration = pair.second
-                            val startLeadMin = prayerMin - config.adzanLeadMinutes
-                            val endBufferMin = prayerMin + iqomahDuration
-
-                            // Check collision in minutes (handling overnight range is optional for validation but standard ranges need it)
-                            val isColliding = if (startMinutes <= endMinutes) {
-                                // standard range
-                                !(endMinutes < startLeadMin || startMinutes > endBufferMin)
-                            } else {
-                                // overnight range
-                                startMinutes <= endBufferMin || endMinutes >= startLeadMin
-                            }
-
-                            if (isColliding) {
-                                val prayerTimeFormatted = "%02d:%02d".format(prayerMin / 60, prayerMin % 60)
-                                val endIqomahFormatted = "%02d:%02d".format(endBufferMin / 60, endBufferMin % 60)
-                                collisionDetected = "Waktu tabrakan dengan sesi sholat $name (Adzan $prayerTimeFormatted sampai Iqomah selesai $endIqomahFormatted)."
-                                break
-                            }
-                        }
-
-                        if (collisionDetected == null) {
-                            onAddSlideshowSchedule(startTimeStr, endTimeStr)
-                            startTimeText = ""
-                            endTimeText = ""
-                        }
-                    }
+                    onClick = { showListDialog = false }
                 ) {
-                    Text("Tambah", color = Color.Black, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showScheduleDialog = false }) {
-                    Text("Batal", color = Color.White)
+                    Text(Lang.get("Close", "Tutup"), color = Color.Black, fontWeight = FontWeight.Bold)
                 }
             },
             containerColor = Color(0xFF181C1A)
@@ -530,83 +489,145 @@ fun ThemeSettingsSegment(
         // Slideshow active schedules section
         item {
             Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                "2. JADWAL AKTIF SLIDESHOW",
+                color = Color(0xFFFFD54F),
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Specific Date Checkbox / Switch
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().clickable { isSpecificDate = !isSpecificDate }
             ) {
+                Checkbox(
+                    checked = isSpecificDate,
+                    onCheckedChange = { isSpecificDate = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = Color(0xFFFFD54F),
+                        checkmarkColor = Color.Black,
+                        uncheckedColor = Color.White.copy(alpha = 0.6f)
+                    )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "JADWAL AKTIF SLIDESHOW",
-                    color = Color(0xFFFFD54F),
-                    fontWeight = FontWeight.Bold,
+                    text = Lang.get("Specific Date", "Tanggal Spesifik"),
+                    color = Color.White,
                     fontSize = 14.sp
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TvFocusableButton(
-                        onClick = onPreviewSlideshow,
-                        shape = RoundedCornerShape(6.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        modifier = Modifier.height(28.dp)
-                    ) {
-                        Text("Preview Slideshow", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                    TvFocusablePrimaryButton(
-                        onClick = { showScheduleDialog = true },
-                        shape = RoundedCornerShape(6.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        modifier = Modifier.height(28.dp)
-                    ) {
-                        Text("Tambah", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
             }
-        }
+            
+            Spacer(modifier = Modifier.height(12.dp))
 
-        if (slideshowSchedules.isEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Slideshow akan aktif jika jadwal di-set. Jika kosong, slideshow tidak pernah berputar.",
-                        color = Color.White.copy(alpha = 0.5f),
-                        fontSize = 14.sp
+            // Day or Date Input (above)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = if (isSpecificDate) Lang.get("Date", "Tanggal") else Lang.get("Day", "Hari"),
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 13.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                if (isSpecificDate) {
+                    DatePickerField(
+                        value = specificDateText,
+                        onValueChange = { specificDateText = it },
+                        label = "",
+                        placeholder = "YYYY-MM-DD",
+                        modifier = Modifier.fillMaxWidth()
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White.copy(alpha = 0.05f))
+                            .clickable { dayDropdownExpanded = true }
+                            .padding(horizontal = 16.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Text(text = daysOfWeek[selectedDayIndex].second, color = Color.White, fontSize = 16.sp)
+                        DropdownMenu(
+                            expanded = dayDropdownExpanded,
+                            onDismissRequest = { dayDropdownExpanded = false },
+                            modifier = Modifier.background(Color(0xFF0C120F))
+                        ) {
+                            daysOfWeek.forEachIndexed { index, (_, label) ->
+                                DropdownMenuItem(
+                                    text = { Text(text = label, color = Color.White) },
+                                    onClick = {
+                                        selectedDayIndex = index
+                                        dayDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
-        } else {
-            items(slideshowSchedules) { schedule ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Start & End Time Inputs (below)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Start Time
+                TimePickerField(
+                    value = startTimeText,
+                    onValueChange = { startTimeText = it },
+                    label = Lang.get("Start Time (HH:mm)", "Mulai (HH:mm)"),
+                    placeholder = "00:00",
+                    modifier = Modifier.weight(1f)
+                )
+
+                // End Time
+                TimePickerField(
+                    value = endTimeText,
+                    onValueChange = { endTimeText = it },
+                    label = Lang.get("End Time (HH:mm)", "Selesai (HH:mm)"),
+                    placeholder = "00:00",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Buttons: Add, Slideshow Times, Preview Slideshow
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                TvFocusablePrimaryButton(
+                    onClick = {
+                        val dayVal = if (isSpecificDate) specificDateText else daysOfWeek[selectedDayIndex].first
+                        if (dayVal.isNotEmpty() && startTimeText.isNotEmpty() && endTimeText.isNotEmpty()) {
+                            onAddSlideshowSchedule(dayVal, isSpecificDate, startTimeText, endTimeText)
+                        }
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "⏰  ",
-                            color = Color(0xFFFFD54F),
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            text = "${schedule.startTime} s/d ${schedule.endTime}",
-                            color = Color.White,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    TvFocusableDangerButton(
-                        onClick = { onDeleteSlideshowSchedule(schedule.id) },
-                        shape = RoundedCornerShape(6.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        modifier = Modifier.height(32.dp)
-                    ) {
-                        Text("Hapus", color = Color.White, fontSize = 13.sp)
-                    }
+                    Text(Lang.get("Add", "Tambah"), color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+
+                TvFocusableButton(
+                    onClick = { showListDialog = true },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(Lang.get("Slideshow Times", "Jadwal Slideshow"), color = Color.White, fontWeight = FontWeight.Bold)
+                }
+
+                TvFocusableButton(
+                    onClick = onPreviewSlideshow,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(Lang.get("Preview Slideshow", "Preview Slideshow"), color = Color.White, fontWeight = FontWeight.Bold)
                 }
             }
         }

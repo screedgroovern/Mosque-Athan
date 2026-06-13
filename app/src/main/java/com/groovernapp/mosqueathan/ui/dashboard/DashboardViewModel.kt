@@ -136,23 +136,10 @@ class DashboardViewModel : ViewModel() {
         val slideshowSchedules = repository.getSlideshowSchedules()
         var slideshowActive = false
         if (slideshowSchedules.isNotEmpty()) {
-            val currentHourMinute = "%02d:%02d".format(now.hour, now.minute)
             for (sched in slideshowSchedules) {
-                val start = sched.startTime
-                val end = sched.endTime
-                if (start.isNotEmpty() && end.isNotEmpty()) {
-                    if (start <= end) {
-                        if (currentHourMinute >= start && currentHourMinute < end) {
-                            slideshowActive = true
-                            break
-                        }
-                    } else {
-                        // Overnight slot, e.g. 22:00 to 04:00
-                        if (currentHourMinute >= start || currentHourMinute < end) {
-                            slideshowActive = true
-                            break
-                        }
-                    }
+                if (com.groovernapp.mosqueathan.util.PrayerUtils.isScheduleActive(now, sched.day, sched.isSpecificDate, sched.startTime, sched.endTime)) {
+                    slideshowActive = true
+                    break
                 }
             }
         }

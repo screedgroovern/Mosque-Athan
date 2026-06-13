@@ -306,23 +306,43 @@ class SettingsViewModel : ViewModel() {
     private val _slideshowSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.SlideshowScheduleEntity>>(emptyList())
     val slideshowSchedulesState = _slideshowSchedulesState.asStateFlow()
 
+    private val _standbySchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.StandbyScheduleEntity>>(emptyList())
+    val standbySchedulesState = _standbySchedulesState.asStateFlow()
+
     init {
         viewModelScope.launch {
             repository.getSlideshowSchedulesFlow().collect {
                 _slideshowSchedulesState.value = it
             }
         }
+        viewModelScope.launch {
+            repository.getStandbySchedulesFlow().collect {
+                _standbySchedulesState.value = it
+            }
+        }
     }
 
-    fun addSlideshowSchedule(startTime: String, endTime: String) {
+    fun addSlideshowSchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String) {
         viewModelScope.launch {
-            repository.addSlideshowSchedule(startTime, endTime)
+            repository.addSlideshowSchedule(day, isSpecificDate, startTime, endTime)
         }
     }
 
     fun deleteSlideshowSchedule(id: String) {
         viewModelScope.launch {
             repository.deleteSlideshowSchedule(id)
+        }
+    }
+
+    fun addStandbySchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String) {
+        viewModelScope.launch {
+            repository.addStandbySchedule(day, isSpecificDate, startTime, endTime)
+        }
+    }
+
+    fun deleteStandbySchedule(id: String) {
+        viewModelScope.launch {
+            repository.deleteStandbySchedule(id)
         }
     }
 

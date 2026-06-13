@@ -86,8 +86,11 @@ fun SettingsScreen(
     onPreviewSlideshow: () -> Unit = {},
     onDownloadKemenagSchedules: (cityId: String, cityName: String, duration: String, targetDate: String) -> Unit = { _, _, _, _ -> },
     slideshowSchedules: List<com.groovernapp.mosqueathan.data.SlideshowScheduleEntity> = emptyList(),
-    onAddSlideshowSchedule: (String, String) -> Unit = { _, _ -> },
+    onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit = { _, _, _, _ -> },
     onDeleteSlideshowSchedule: (String) -> Unit = {},
+    standbySchedules: List<com.groovernapp.mosqueathan.data.StandbyScheduleEntity> = emptyList(),
+    onAddStandbySchedule: (String, Boolean, String, String) -> Unit = { _, _, _, _ -> },
+    onDeleteStandbySchedule: (String) -> Unit = {},
     onSaveStandby: (Boolean, String, String) -> Unit = { _, _, _ -> },
     onBack: () -> Unit
 ) {
@@ -495,10 +498,9 @@ fun SettingsScreen(
                                 StandbySettingsSegment(
                                     standbyModeEnabled = standbyModeEnabled,
                                     onStandbyModeEnabledChange = { standbyModeEnabled = it },
-                                    standbyStartTime = standbyStartTime,
-                                    onStandbyStartTimeChange = { standbyStartTime = it },
-                                    standbyEndTime = standbyEndTime,
-                                    onStandbyEndTimeChange = { standbyEndTime = it }
+                                    standbySchedules = standbySchedules,
+                                    onAddStandbySchedule = onAddStandbySchedule,
+                                    onDeleteStandbySchedule = onDeleteStandbySchedule
                                 )
                             }
 

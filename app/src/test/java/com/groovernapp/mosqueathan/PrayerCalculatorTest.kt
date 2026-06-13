@@ -47,10 +47,10 @@ class PrayerCalculatorTest {
         
         val result = PrayerCalculator.calculate(mockNow)
         
-        // Next prayer after Isha should be SUBUH (representing tomorrow's Subuh)
-        assertEquals(PrayerType.SUBUH, result.nextPrayer)
+        // Next prayer after Isha should be IMSAK (representing tomorrow's Imsak)
+        assertEquals(PrayerType.IMSAK, result.nextPrayer)
         
-        // Next prayer time should be tomorrow's Subuh (June 5, 2026)
+        // Next prayer time should be tomorrow's Imsak (June 5, 2026)
         val nextPrayerLocal = result.nextPrayerTime
         assertEquals(2026, nextPrayerLocal.year)
         assertEquals(6, nextPrayerLocal.month.number)
@@ -214,11 +214,11 @@ class PrayerCalculatorTest {
             kemenagCityId = cityId
         )
 
-        // Next prayer should be SUBUH tomorrow (June 6) at 04:38
-        assertEquals(PrayerType.SUBUH, resultAfterIsha.nextPrayer)
+        // Next prayer should be IMSAK tomorrow (June 6) at 04:27
+        assertEquals(PrayerType.IMSAK, resultAfterIsha.nextPrayer)
         assertEquals(6, resultAfterIsha.nextPrayerTime.day)
         assertEquals(4, resultAfterIsha.nextPrayerTime.hour)
-        assertEquals(38, resultAfterIsha.nextPrayerTime.minute)
+        assertEquals(27, resultAfterIsha.nextPrayerTime.minute)
     }
 
     @Test

@@ -461,20 +461,18 @@ class AppViewModel : ViewModel() {
 
         val zone = TimeZone.currentSystemDefault()
         val now = Clock.System.now().toLocalDateTime(zone)
-        val currentMinutes = now.hour * 60 + now.minute
 
-        val startMinutes = parseTimeToMinutes(config.standbyStartTime) ?: parseTimeToMinutes("22:00")!!
-        val endMinutes = parseTimeToMinutes(config.standbyEndTime) ?: parseTimeToMinutes("04:00")!!
-
-        val shouldBeActive = if (startMinutes <= endMinutes) {
-            currentMinutes in startMinutes until endMinutes
-        } else {
-            // Interval crosses midnight, e.g., 22:00 to 04:00
-            currentMinutes >= startMinutes || currentMinutes < endMinutes
+        val standbySchedules = repository.getStandbySchedules()
+        var shouldBeActive = false
+        for (sched in standbySchedules) {
+            if (com.groovernapp.mosqueathan.util.PrayerUtils.isScheduleActive(now, sched.day, sched.isSpecificDate, sched.startTime, sched.endTime)) {
+                shouldBeActive = true
+                break
+            }
         }
 
         if (shouldBeActive != _isStandbyActive.value) {
-            android.util.Log.d("StandbyDebug", "Standby state changing: $shouldBeActive (current=$currentMinutes, start=$startMinutes[${config.standbyStartTime}], end=$endMinutes[${config.standbyEndTime}])")
+            android.util.Log.d("StandbyDebug", "Standby state changing: $shouldBeActive")
         }
 
         _isStandbyActive.value = shouldBeActive

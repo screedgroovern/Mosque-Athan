@@ -6,6 +6,8 @@ import io.realm.kotlin.types.annotations.PrimaryKey
 class SlideshowScheduleEntity : RealmObject {
     @PrimaryKey
     var id: String = ""
+    var day: String = "" // Day of week (e.g., Monday) or Specific Date (YYYY-MM-DD)
+    var isSpecificDate: Boolean = false
     var startTime: String = "" // HH:mm
     var endTime: String = "" // HH:mm
 }

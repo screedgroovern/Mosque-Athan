@@ -1691,34 +1691,62 @@ object WebPage {
                             <h3 style="font-size:1.15rem; font-weight:700; margin-bottom:0.75rem;" data-lang-key="label_slideshow_sched_title">2. Jadwal Aktif Sesi Slideshow</h3>
                             <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1rem;" data-lang-key="desc_slideshow_sched">Tentukan kapan mode slideshow ini berjalan. Selama masa aktif slideshow, ClockSection dan overlay hitam di-hide. Waktu di-set tidak boleh menabrak sesi menjelang adzan hingga iqomah selesai sholat.</p>
                             
-                            <div style="display:flex; gap:0.75rem; align-items:flex-end; background:rgba(255,255,255,0.01); border:1px solid var(--border-color); padding:1rem; border-radius:8px; margin-bottom:1rem; max-width:500px;">
-                                <div style="display:flex; flex-direction:column; gap:0.25rem; flex: 1;">
-                                    <label style="font-size:0.8rem; color:var(--text-secondary);">Mulai (HH:MM)</label>
-                                    <div class="flatpickr-wrapper" id="sched-start-time-wrapper">
-                                        <input type="text" id="sched-start-time" data-input placeholder="00:00" style="padding:0.35rem 2rem 0.35rem 0.5rem; background:#000; color:#fff; border:1px solid var(--border-color); border-radius:4px; font-size: 0.9rem; width: 100%;">
-                                        <button type="button" class="picker-btn" data-toggle title="Pilih Jam" style="padding: 4px; right: 4px;">
-                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div style="display:flex; flex-direction:column; gap:0.25rem; flex: 1;">
-                                    <label style="font-size:0.8rem; color:var(--text-secondary);">Selesai (HH:MM)</label>
-                                    <div class="flatpickr-wrapper" id="sched-end-time-wrapper">
-                                        <input type="text" id="sched-end-time" data-input placeholder="00:00" style="padding:0.35rem 2rem 0.35rem 0.5rem; background:#000; color:#fff; border:1px solid var(--border-color); border-radius:4px; font-size: 0.9rem; width: 100%;">
-                                        <button type="button" class="picker-btn" data-toggle title="Pilih Jam" style="padding: 4px; right: 4px;">
-                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                                <button class="btn btn-primary" onclick="addSlideshowSchedule()" style="height:32px; padding:0 1rem; display:flex; align-items:center; justify-content:center;">Tambah</button>
+                            <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:0.5rem; margin-bottom: 1rem;">
+                                <input type="checkbox" id="slideshowSpecificDate" onchange="toggleSlideshowDateInput(this.checked)" style="width: auto;">
+                                <label for="slideshowSpecificDate" style="text-transform: none; margin: 0; font-size: 0.9rem;">Tanggal Spesifik</label>
                             </div>
 
-                            <div style="display:flex; flex-direction:column; gap:0.5rem; max-width:500px;" id="slideshow-schedules-container">
-                                <!-- Rendered dynamically -->
+                            <div class="form-grid" style="max-width: 500px; margin-bottom: 1rem;">
+                                <div id="slideshow-day-select-group" class="form-group">
+                                    <label>Hari</label>
+                                    <select id="slideshowDay">
+                                        <option value="Monday">Senin</option>
+                                        <option value="Tuesday">Selasa</option>
+                                        <option value="Wednesday">Rabu</option>
+                                        <option value="Thursday">Kamis</option>
+                                        <option value="Friday">Jumat</option>
+                                        <option value="Saturday">Sabtu</option>
+                                        <option value="Sunday">Minggu</option>
+                                    </select>
+                                </div>
+                                <div id="slideshow-date-input-group" class="form-group" style="display:none;">
+                                    <label>Tanggal</label>
+                                    <div class="flatpickr-wrapper" id="slideshow-date-wrapper">
+                                        <input type="text" id="slideshowDate" data-input placeholder="YYYY-MM-DD">
+                                        <button type="button" class="picker-btn" data-toggle title="Pilih Tanggal">
+                                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Mulai (HH:MM)</label>
+                                    <div class="flatpickr-wrapper" id="sched-start-time-wrapper">
+                                        <input type="text" id="sched-start-time" data-input placeholder="00:00">
+                                        <button type="button" class="picker-btn" data-toggle title="Pilih Jam">
+                                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Selesai (HH:MM)</label>
+                                    <div class="flatpickr-wrapper" id="sched-end-time-wrapper">
+                                        <input type="text" id="sched-end-time" data-input placeholder="00:00">
+                                        <button type="button" class="picker-btn" data-toggle title="Pilih Jam">
+                                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="display:flex; gap:1rem; max-width:500px;">
+                                <button class="btn btn-primary" onclick="addSlideshowSchedule()" style="flex:1;">Tambah</button>
+                                <button class="btn btn-secondary" onclick="openSlideshowListDialog()" style="flex:1;">Jadwal Slideshow</button>
                             </div>
                         </div>
 
@@ -1824,9 +1852,37 @@ object WebPage {
                         </label>
                     </div>
 
+                    <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:0.5rem; margin-bottom: 1rem;">
+                        <input type="checkbox" id="standbySpecificDate" onchange="toggleStandbyDateInput(this.checked)" style="width: auto;">
+                        <label for="standbySpecificDate" style="text-transform: none; margin: 0; font-size: 0.9rem;">Tanggal Spesifik</label>
+                    </div>
+
                     <div class="form-grid">
+                        <div id="standby-day-select-group" class="form-group">
+                            <label>Hari</label>
+                            <select id="standbyDay">
+                                <option value="Monday">Senin</option>
+                                <option value="Tuesday">Selasa</option>
+                                <option value="Wednesday">Rabu</option>
+                                <option value="Thursday">Kamis</option>
+                                <option value="Friday">Jumat</option>
+                                <option value="Saturday">Sabtu</option>
+                                <option value="Sunday">Minggu</option>
+                            </select>
+                        </div>
+                        <div id="standby-date-input-group" class="form-group" style="display:none;">
+                            <label>Tanggal</label>
+                            <div class="flatpickr-wrapper" id="standby-date-wrapper">
+                                <input type="text" id="standbyDate" data-input placeholder="YYYY-MM-DD">
+                                <button type="button" class="picker-btn" data-toggle title="Pilih Tanggal">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                         <div class="form-group">
-                            <label for="standbyStartTime" data-lang-key="label_standby_start">Waktu Standby (Mulai)</label>
+                            <label for="standbyStartTime" data-lang-key="label_standby_start">Mulai (HH:MM)</label>
                             <div class="flatpickr-wrapper" id="standby-start-wrapper">
                                 <input type="text" id="standbyStartTime" data-input placeholder="22:00">
                                 <button type="button" class="picker-btn" data-toggle title="Pilih Jam">
@@ -1837,7 +1893,7 @@ object WebPage {
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="standbyEndTime" data-lang-key="label_standby_end">Waktu Bangun (Selesai)</label>
+                            <label for="standbyEndTime" data-lang-key="label_standby_end">Selesai (HH:MM)</label>
                             <div class="flatpickr-wrapper" id="standby-end-wrapper">
                                 <input type="text" id="standbyEndTime" data-input placeholder="04:00">
                                 <button type="button" class="picker-btn" data-toggle title="Pilih Jam">
@@ -1847,6 +1903,11 @@ object WebPage {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                    
+                    <div style="display:flex; gap:1rem; margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="addStandbySchedule()" style="flex:1;">Tambah</button>
+                        <button class="btn btn-secondary" onclick="openStandbyListDialog()" style="flex:1;">Waktu Standby</button>
                     </div>
                 </div>
             </section>
@@ -1872,6 +1933,28 @@ object WebPage {
             </section>
 
         </main>
+    </div>
+
+    <!-- Standby Schedules Dialog Modal -->
+    <div id="standby-dialog-overlay" class="connection-overlay" style="display: none; background-color: rgba(12, 18, 15, 0.9); backdrop-filter: blur(8px); z-index: 1500;">
+        <div style="max-width: 500px; width: 90%; background-color: rgba(20, 30, 25, 0.98); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 1.5rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary);">Daftar Waktu Standby</h3>
+            <div style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;" id="standby-schedules-list"></div>
+            <div style="display: flex; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeStandbyListDialog()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slideshow Schedules Dialog Modal -->
+    <div id="slideshow-dialog-overlay" class="connection-overlay" style="display: none; background-color: rgba(12, 18, 15, 0.9); backdrop-filter: blur(8px); z-index: 1500;">
+        <div style="max-width: 500px; width: 90%; background-color: rgba(20, 30, 25, 0.98); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 1.5rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary);">Daftar Jadwal Slideshow</h3>
+            <div style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;" id="slideshow-schedules-list"></div>
+            <div style="display: flex; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="closeSlideshowListDialog()">Tutup</button>
+            </div>
+        </div>
     </div>
 
     <!-- Toast Notifications Container -->
@@ -1908,6 +1991,8 @@ object WebPage {
         let schedEndTimePicker;
         let standbyStartTimePicker;
         let standbyEndTimePicker;
+        let standbyDatePicker;
+        let slideshowDatePicker;
 
         // IndexedDB Helper for Large Offline Files
         const dbName = "MosqueAthanRemoteDB";
@@ -2458,6 +2543,7 @@ object WebPage {
                                 document.getElementById('sync-dialog-overlay').style.display = 'flex';
                             } else {
                                 appConfig = data.config;
+                                appConfig.standbySchedules = data.standbySchedules || [];
                                 announcements = data.announcements;
                                 mediaList = data.mediaList;
                                 kemenagSchedules = data.kemenagSchedules || [];
@@ -2816,12 +2902,29 @@ object WebPage {
                 case 'add_slideshow_schedule':
                     slideshowSchedules.push({
                         id: payload.id,
+                        day: payload.day,
+                        isSpecificDate: payload.isSpecificDate,
                         startTime: payload.startTime,
                         endTime: payload.endTime
                     });
                     break;
                 case 'delete_slideshow_schedule':
                     slideshowSchedules = slideshowSchedules.filter(s => s.id !== payload.id);
+                    break;
+                case 'add_standby_schedule':
+                    if (!appConfig.standbySchedules) appConfig.standbySchedules = [];
+                    appConfig.standbySchedules.push({
+                        id: payload.id,
+                        day: payload.day,
+                        isSpecificDate: payload.isSpecificDate,
+                        startTime: payload.startTime,
+                        endTime: payload.endTime
+                    });
+                    break;
+                case 'delete_standby_schedule':
+                    if (appConfig.standbySchedules) {
+                        appConfig.standbySchedules = appConfig.standbySchedules.filter(s => s.id !== payload.id);
+                    }
                     break;
                 case 'upload_background':
                     appConfig.customBackgroundPath = payload.base64;
@@ -2873,6 +2976,7 @@ object WebPage {
             mediaList = data.mediaList;
             kemenagSchedules = data.kemenagSchedules || [];
             slideshowSchedules = data.slideshowSchedules || [];
+            appConfig.standbySchedules = data.standbySchedules || [];
 
             for (const action of offlineActionsQueue) {
                 applyActionLocally(action);
@@ -3089,6 +3193,7 @@ object WebPage {
                 isSyncing = false;
                 if (pendingTvState) {
                     appConfig = pendingTvState.config;
+                    appConfig.standbySchedules = pendingTvState.standbySchedules || [];
                     announcements = pendingTvState.announcements;
                     mediaList = pendingTvState.mediaList;
                     kemenagSchedules = pendingTvState.kemenagSchedules || [];
@@ -3119,6 +3224,7 @@ object WebPage {
             
             if (pendingTvState) {
                 appConfig = pendingTvState.config;
+                appConfig.standbySchedules = pendingTvState.standbySchedules || [];
                 announcements = pendingTvState.announcements;
                 mediaList = pendingTvState.mediaList;
                 kemenagSchedules = pendingTvState.kemenagSchedules || [];
@@ -3329,27 +3435,12 @@ object WebPage {
                 clearBtn.style.display = 'none';
             }
 
-            // Populate Slideshow Schedules
-            const schedContainer = document.getElementById('slideshow-schedules-container');
-            schedContainer.innerHTML = '';
-            const schedulesList = slideshowSchedules || [];
-            if (schedulesList.length === 0) {
-                schedContainer.innerHTML = '<div style="font-size:0.9rem; color:var(--text-muted);" data-lang-key="desc_no_sched">Tidak ada jadwal slideshow aktif (slideshow mati).</div>';
-            } else {
-                schedulesList.forEach(sched => {
-                    const row = document.createElement('div');
-                    row.style.display = 'flex';
-                    row.style.justifyContent = 'space-between';
-                    row.style.alignItems = 'center';
-                    row.style.padding = '0.5rem 0.75rem';
-                    row.style.background = 'rgba(255,255,255,0.03)';
-                    row.style.border = '1px solid var(--border-color)';
-                    row.style.borderRadius = '6px';
-                    
-                    row.innerHTML = '<span style="font-weight:700; font-size:0.95rem;">⏰ ' + sched.startTime + ' s/d ' + sched.endTime + '</span>' +
-                        '<button class="delete-btn" style="padding:0.25rem 0.5rem; font-size:0.8rem;" onclick="deleteSlideshowSchedule(\'' + sched.id + '\')">' + (currentLang === 'id' ? 'Hapus' : 'Delete') + '</button>';
-                    schedContainer.appendChild(row);
-                });
+            // If the dialogs are open, update them
+            if (document.getElementById('standby-dialog-overlay').style.display === 'flex') {
+                renderStandbySchedulesList();
+            }
+            if (document.getElementById('slideshow-dialog-overlay').style.display === 'flex') {
+                renderSlideshowSchedulesList();
             }
 
             // Theme/Slideshow configs
@@ -3410,16 +3501,6 @@ object WebPage {
             const standbyModeCheckbox = document.getElementById('standbyModeEnabled');
             if (standbyModeCheckbox) {
                 standbyModeCheckbox.checked = !!appConfig.standbyModeEnabled;
-            }
-            if (standbyStartTimePicker) {
-                standbyStartTimePicker.setDate(appConfig.standbyStartTime || '22:00', false);
-            } else {
-                document.getElementById('standbyStartTime').value = appConfig.standbyStartTime || '22:00';
-            }
-            if (standbyEndTimePicker) {
-                standbyEndTimePicker.setDate(appConfig.standbyEndTime || '04:00', false);
-            } else {
-                document.getElementById('standbyEndTime').value = appConfig.standbyEndTime || '04:00';
             }
         }
 
@@ -3989,19 +4070,97 @@ object WebPage {
             showToast(checked ? (currentLang === 'id' ? 'Mode Standby otomatis diaktifkan!' : 'Automatic Standby mode enabled!') : (currentLang === 'id' ? 'Mode Standby otomatis dinonaktifkan!' : 'Automatic Standby mode disabled!'));
         }
 
-        function updateStandbyTimes() {
-            appConfig.standbyStartTime = document.getElementById('standbyStartTime').value;
-            appConfig.standbyEndTime = document.getElementById('standbyEndTime').value;
-            sendStandbyUpdate();
-            showToast(currentLang === 'id' ? 'Waktu standby diperbarui!' : 'Standby times updated!');
-        }
-
         function sendStandbyUpdate() {
             safeSend({
                 action: 'update_standby',
-                standbyModeEnabled: !!appConfig.standbyModeEnabled,
-                standbyStartTime: appConfig.standbyStartTime || '22:00',
-                standbyEndTime: appConfig.standbyEndTime || '04:00'
+                standbyModeEnabled: !!appConfig.standbyModeEnabled
+            });
+        }
+
+        // Standby schedules JS functions
+        function toggleStandbyDateInput(checked) {
+            document.getElementById('standby-day-select-group').style.display = checked ? 'none' : 'flex';
+            document.getElementById('standby-date-input-group').style.display = checked ? 'flex' : 'none';
+        }
+
+        function addStandbySchedule() {
+            const isSpecific = document.getElementById('standbySpecificDate').checked;
+            const dayVal = isSpecific ? document.getElementById('standbyDate').value : document.getElementById('standbyDay').value;
+            const startVal = document.getElementById('standbyStartTime').value;
+            const endVal = document.getElementById('standbyEndTime').value;
+
+            if (!dayVal || !startVal || !endVal) {
+                showToast(currentLang === 'id' ? 'Hari/tanggal, jam mulai, dan jam selesai harus diisi.' : 'Day/date, start, and end times are required.', 'error');
+                return;
+            }
+
+            safeSend({
+                action: 'add_standby_schedule',
+                day: dayVal,
+                isSpecificDate: isSpecific,
+                startTime: startVal,
+                endTime: endVal
+            });
+
+            showToast(currentLang === 'id' ? 'Jadwal standby berhasil ditambahkan!' : 'Standby schedule added successfully!');
+            if (isSpecific && standbyDatePicker) standbyDatePicker.clear();
+            if (standbyStartTimePicker) standbyStartTimePicker.clear();
+            if (standbyEndTimePicker) standbyEndTimePicker.clear();
+        }
+
+        function deleteStandbySchedule(id) {
+            safeSend({
+                action: 'delete_standby_schedule',
+                id: id
+            });
+            showToast(currentLang === 'id' ? 'Jadwal standby berhasil dihapus!' : 'Standby schedule deleted!');
+        }
+
+        function openStandbyListDialog() {
+            renderStandbySchedulesList();
+            document.getElementById('standby-dialog-overlay').style.display = 'flex';
+        }
+
+        function closeStandbyListDialog() {
+            document.getElementById('standby-dialog-overlay').style.display = 'none';
+        }
+
+        const indonesianDays = {
+            Monday: "Senin",
+            Tuesday: "Selasa",
+            Wednesday: "Rabu",
+            Thursday: "Kamis",
+            Friday: "Jumat",
+            Saturday: "Sabtu",
+            Sunday: "Minggu"
+        };
+
+        function renderStandbySchedulesList() {
+            const container = document.getElementById('standby-schedules-list');
+            container.innerHTML = '';
+            const list = appConfig.standbySchedules || [];
+            if (list.length === 0) {
+                container.innerHTML = '<div style="font-size:0.9rem; color:var(--text-muted); text-align:center;">' + 
+                    (currentLang === 'id' ? 'Tidak ada jadwal standby.' : 'No standby schedules set.') + '</div>';
+                return;
+            }
+            list.forEach(sched => {
+                const dayLabel = sched.isSpecificDate ? sched.day : (currentLang === 'id' ? (indonesianDays[sched.day] || sched.day) : sched.day);
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.justifyContent = 'space-between';
+                row.style.alignItems = 'center';
+                row.style.padding = '0.5rem 0.75rem';
+                row.style.background = 'rgba(255,255,255,0.03)';
+                row.style.border = '1px solid var(--border-color)';
+                row.style.borderRadius = '6px';
+                
+                row.innerHTML = '<div>' +
+                    '<div style="font-weight:700; font-size:0.95rem; color:#fff;">' + dayLabel + '</div>' +
+                    '<div style="font-size:0.85rem; color:var(--accent);">⏰ ' + sched.startTime + ' s/d ' + sched.endTime + '</div>' +
+                    '</div>' +
+                    '<button class="delete-btn" style="padding:0.25rem 0.5rem; font-size:0.8rem;" onclick="deleteStandbySchedule(\'' + sched.id + '\')">' + (currentLang === 'id' ? 'Hapus' : 'Delete') + '</button>';
+                container.appendChild(row);
             });
         }
 
@@ -4074,10 +4233,14 @@ object WebPage {
             if (!file) return;
 
             if (file.size > 2 * 1024 * 1024) { // 2MB
-                alert(currentLang === 'id' ? 
-                    "Gambar berukuran besar terdeteksi. Sistem akan secara otomatis mengompresi dan menyesuaikan resolusi gambar agar ukuran lebih hemat dan performa TV tetap lancar." : 
-                    "Large image detected. The system will automatically compress and adjust the image resolution to save storage and keep the TV performance optimal."
+                const proceed = confirm(currentLang === 'id' ? 
+                    "Gambar berukuran besar terdeteksi. Sistem akan secara otomatis mengompresi dan menyesuaikan resolusi gambar agar ukuran lebih hemat dan performa TV tetap lancar. Lanjutkan?" : 
+                    "Large image detected. The system will automatically compress and adjust the image resolution to save storage and keep the TV performance optimal. Proceed?"
                 );
+                if (!proceed) {
+                    input.value = ''; // Reset
+                    return;
+                }
             }
 
             const processedFile = await resizeImage(file);
@@ -4121,10 +4284,14 @@ object WebPage {
                             file.name.toLowerCase().endsWith('.mov');
 
             if (!isVideo && file.size > 2 * 1024 * 1024) { // 2MB
-                alert(currentLang === 'id' ? 
-                    "Gambar berukuran besar terdeteksi. Sistem akan secara otomatis mengompresi dan menyesuaikan resolusi gambar agar ukuran lebih hemat dan performa TV tetap lancar." : 
-                    "Large image detected. The system will automatically compress and adjust the image resolution to save storage and keep the TV performance optimal."
+                const proceed = confirm(currentLang === 'id' ? 
+                    "Gambar berukuran besar terdeteksi. Sistem akan secara otomatis mengompresi dan menyesuaikan resolusi gambar agar ukuran lebih hemat dan performa TV tetap lancar. Lanjutkan?" : 
+                    "Large image detected. The system will automatically compress and adjust the image resolution to save storage and keep the TV performance optimal. Proceed?"
                 );
+                if (!proceed) {
+                    input.value = ''; // Reset
+                    return;
+                }
             }
 
             const processedFile = isVideo ? file : await resizeImage(file);
@@ -4160,88 +4327,33 @@ object WebPage {
             showToast(translations[currentLang].toast_media_deleted);
         }
 
+        function toggleSlideshowDateInput(checked) {
+            document.getElementById('slideshow-day-select-group').style.display = checked ? 'none' : 'flex';
+            document.getElementById('slideshow-date-input-group').style.display = checked ? 'flex' : 'none';
+        }
+
         function addSlideshowSchedule() {
+            const isSpecific = document.getElementById('slideshowSpecificDate').checked;
+            const dayVal = isSpecific ? document.getElementById('slideshowDate').value : document.getElementById('slideshowDay').value;
             const startVal = document.getElementById('sched-start-time').value;
             const endVal = document.getElementById('sched-end-time').value;
             
-            if (!startVal || !endVal) {
-                showToast(currentLang === 'id' ? 'Jam mulai & jam selesai harus diisi.' : 'Start and end times are required.', 'error');
+            if (!dayVal || !startVal || !endVal) {
+                showToast(currentLang === 'id' ? 'Hari/tanggal, jam mulai, dan jam selesai harus diisi.' : 'Day/date, start, and end times are required.', 'error');
                 return;
-            }
-
-            // Client-side validation for collision with daily prayers
-            // Parse schedule times in minutes
-            const startParts = startVal.split(':');
-            const endParts = endVal.split(':');
-            const startMin = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
-            const endMin = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
-
-            // Retrieve prayer times calculated from schedules preview or estimate (fallback mock-check if calculations are complex or missing on web client)
-            // A reliable calculation on client side using simple estimation or just check schedules list if loaded
-            const kemenagPreviewRows = Array.from(document.getElementById('kemenag-preview-body')?.children || []);
-            let targetSchedule = null;
-            if (kemenagPreviewRows.length > 0) {
-                // Parse first row as reference prayer times for today
-                const cells = kemenagPreviewRows[0].querySelectorAll('td');
-                if (cells.length >= 7) {
-                    targetSchedule = {
-                        subuh: cells[2].innerText.trim(),
-                        dzuhur: cells[3].innerText.trim(),
-                        ashar: cells[4].innerText.trim(),
-                        maghrib: cells[5].innerText.trim(),
-                        isya: cells[6].innerText.trim()
-                    };
-                }
-            }
-
-            if (targetSchedule) {
-                const adzanLead = appConfig.adzanLeadMinutes || 0;
-                const iqomahs = {
-                    subuh: appConfig.iqomahSubuh || 0,
-                    dzuhur: appConfig.iqomahDzuhur || 0,
-                    ashar: appConfig.iqomahAshar || 0,
-                    maghrib: appConfig.iqomahMaghrib || 0,
-                    isya: appConfig.iqomahIsya || 0
-                };
-
-                let collisionDetected = null;
-                for (const name in iqomahs) {
-                    const timeStr = targetSchedule[name];
-                    if (timeStr && timeStr.includes(':')) {
-                        const parts = timeStr.split(':');
-                        const pMin = parseInt(parts[0]) * 60 + parseInt(parts[1]);
-                        const leadStart = pMin - adzanLead;
-                        const leadEnd = pMin + iqomahs[name];
-
-                        const isColliding = (startMin <= endMin)
-                            ? !(endMin < leadStart || startMin > leadEnd)
-                            : (startMin <= leadEnd || endMin >= leadStart);
-
-                        if (isColliding) {
-                            collisionDetected = (currentLang === 'id')
-                                ? 'Tabrakan dengan sesi sholat ' + name.toUpperCase() + ' (' + timeStr + ').'
-                                : 'Collides with ' + name.toUpperCase() + ' prayer time (' + timeStr + ').';
-                            break;
-                        }
-                    }
-                }
-
-                if (collisionDetected) {
-                    showToast(collisionDetected, 'error');
-                    return;
-                }
             }
 
             safeSend({
                 action: 'add_slideshow_schedule',
+                day: dayVal,
+                isSpecificDate: isSpecific,
                 startTime: startVal,
                 endTime: endVal
             });
             showToast(currentLang === 'id' ? 'Jadwal slideshow berhasil ditambahkan!' : 'Slideshow schedule added successfully!');
+            if (isSpecific && slideshowDatePicker) slideshowDatePicker.clear();
             if (schedStartTimePicker) schedStartTimePicker.clear();
-            else document.getElementById('sched-start-time').value = '';
             if (schedEndTimePicker) schedEndTimePicker.clear();
-            else document.getElementById('sched-end-time').value = '';
         }
 
         function deleteSlideshowSchedule(id) {
@@ -4250,6 +4362,44 @@ object WebPage {
                 id: id
             });
             showToast(currentLang === 'id' ? 'Jadwal slideshow berhasil dihapus!' : 'Slideshow schedule deleted!');
+        }
+
+        function openSlideshowListDialog() {
+            renderSlideshowSchedulesList();
+            document.getElementById('slideshow-dialog-overlay').style.display = 'flex';
+        }
+
+        function closeSlideshowListDialog() {
+            document.getElementById('slideshow-dialog-overlay').style.display = 'none';
+        }
+
+        function renderSlideshowSchedulesList() {
+            const container = document.getElementById('slideshow-schedules-list');
+            container.innerHTML = '';
+            const list = slideshowSchedules || [];
+            if (list.length === 0) {
+                container.innerHTML = '<div style="font-size:0.9rem; color:var(--text-muted); text-align:center;">' + 
+                    (currentLang === 'id' ? 'Tidak ada jadwal slideshow.' : 'No slideshow schedules set.') + '</div>';
+                return;
+            }
+            list.forEach(sched => {
+                const dayLabel = sched.isSpecificDate ? sched.day : (currentLang === 'id' ? (indonesianDays[sched.day] || sched.day) : sched.day);
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.justifyContent = 'space-between';
+                row.style.alignItems = 'center';
+                row.style.padding = '0.5rem 0.75rem';
+                row.style.background = 'rgba(255,255,255,0.03)';
+                row.style.border = '1px solid var(--border-color)';
+                row.style.borderRadius = '6px';
+                
+                row.innerHTML = '<div>' +
+                    '<div style="font-weight:700; font-size:0.95rem; color:#fff;">' + dayLabel + '</div>' +
+                    '<div style="font-size:0.85rem; color:var(--accent);">⏰ ' + sched.startTime + ' s/d ' + sched.endTime + '</div>' +
+                    '</div>' +
+                    '<button class="delete-btn" style="padding:0.25rem 0.5rem; font-size:0.8rem;" onclick="deleteSlideshowSchedule(\'' + sched.id + '\')">' + (currentLang === 'id' ? 'Hapus' : 'Delete') + '</button>';
+                container.appendChild(row);
+            });
         }
 
         function confirmReset() {
@@ -4787,10 +4937,7 @@ object WebPage {
                 noCalendar: true,
                 dateFormat: "H:i",
                 time_24hr: true,
-                disableMobile: "true",
-                onChange: function(selectedDates, dateStr, instance) {
-                    updateStandbyTimes();
-                }
+                disableMobile: "true"
             });
             standbyEndTimePicker = flatpickr("#standby-end-wrapper", {
                 wrap: true,
@@ -4798,10 +4945,17 @@ object WebPage {
                 noCalendar: true,
                 dateFormat: "H:i",
                 time_24hr: true,
-                disableMobile: "true",
-                onChange: function(selectedDates, dateStr, instance) {
-                    updateStandbyTimes();
-                }
+                disableMobile: "true"
+            });
+            standbyDatePicker = flatpickr("#standby-date-wrapper", {
+                wrap: true,
+                dateFormat: "Y-m-d",
+                disableMobile: "true"
+            });
+            slideshowDatePicker = flatpickr("#slideshow-date-wrapper", {
+                wrap: true,
+                dateFormat: "Y-m-d",
+                disableMobile: "true"
             });
         } else {
             console.warn("Flatpickr is not loaded. Time pickers will fall back to native/standard inputs.");

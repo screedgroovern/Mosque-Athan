@@ -20,7 +20,7 @@ import kotlin.time.Clock
 
 class MosqueConfigRepository private constructor() {
 
-    private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class))
+    private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class))
         .name("mosque_athan.realm")
         .schemaVersion(12)
         .deleteRealmIfMigrationNeeded()
@@ -276,6 +276,9 @@ class MosqueConfigRepository private constructor() {
             val allSlideshowSchedules = query<SlideshowScheduleEntity>().find()
             delete(allSlideshowSchedules)
 
+            val allStandbySchedules = query<StandbyScheduleEntity>().find()
+            delete(allStandbySchedules)
+
             copyToRealm(AnnouncementEntity().apply {
                 id = "default_1"
                 content = "Mari rapatkan shaf dan mohon handphone di-silent."
@@ -370,10 +373,12 @@ class MosqueConfigRepository private constructor() {
         return realm.query<SlideshowScheduleEntity>().find().sortedBy { it.startTime }
     }
 
-    suspend fun addSlideshowSchedule(startTime: String, endTime: String, customId: String = "") {
+    suspend fun addSlideshowSchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String, customId: String = "") {
         realm.write {
             copyToRealm(SlideshowScheduleEntity().apply {
                 this.id = if (customId.isNotEmpty()) customId else java.util.UUID.randomUUID().toString()
+                this.day = day
+                this.isSpecificDate = isSpecificDate
                 this.startTime = startTime
                 this.endTime = endTime
             })
@@ -383,6 +388,37 @@ class MosqueConfigRepository private constructor() {
     suspend fun deleteSlideshowSchedule(id: String) {
         realm.write {
             val item = query<SlideshowScheduleEntity>("id == $0", id).first().find()
+            if (item != null) {
+                delete(item)
+            }
+        }
+    }
+
+    fun getStandbySchedulesFlow(): Flow<List<StandbyScheduleEntity>> {
+        return realm.query<StandbyScheduleEntity>()
+            .asFlow()
+            .map { it.list.sortedBy { s -> s.startTime } }
+    }
+
+    fun getStandbySchedules(): List<StandbyScheduleEntity> {
+        return realm.query<StandbyScheduleEntity>().find().sortedBy { it.startTime }
+    }
+
+    suspend fun addStandbySchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String, customId: String = "") {
+        realm.write {
+            copyToRealm(StandbyScheduleEntity().apply {
+                this.id = if (customId.isNotEmpty()) customId else java.util.UUID.randomUUID().toString()
+                this.day = day
+                this.isSpecificDate = isSpecificDate
+                this.startTime = startTime
+                this.endTime = endTime
+            })
+        }
+    }
+
+    suspend fun deleteStandbySchedule(id: String) {
+        realm.write {
+            val item = query<StandbyScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
                 delete(item)
             }

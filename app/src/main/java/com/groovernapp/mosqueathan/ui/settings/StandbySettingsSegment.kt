@@ -1,17 +1,32 @@
 package com.groovernapp.mosqueathan.ui.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.data.StandbyScheduleEntity
 
 @Composable
 fun TimePickerField(
@@ -113,12 +128,95 @@ fun TimePickerField(
 fun StandbySettingsSegment(
     standbyModeEnabled: Boolean,
     onStandbyModeEnabledChange: (Boolean) -> Unit,
-    standbyStartTime: String,
-    onStandbyStartTimeChange: (String) -> Unit,
-    standbyEndTime: String,
-    onStandbyEndTimeChange: (String) -> Unit
+    standbySchedules: List<StandbyScheduleEntity>,
+    onAddStandbySchedule: (day: String, isSpecificDate: Boolean, startTime: String, endTime: String) -> Unit,
+    onDeleteStandbySchedule: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+    var isSpecificDate by remember { mutableStateOf(false) }
+    var selectedDayIndex by remember { mutableIntStateOf(0) }
+    var specificDateText by remember { mutableStateOf("") }
+    var startTimeText by remember { mutableStateOf("22:00") }
+    var endTimeText by remember { mutableStateOf("04:00") }
+    
+    var dayDropdownExpanded by remember { mutableStateOf(false) }
+    var showListDialog by remember { mutableStateOf(false) }
+
+    val daysOfWeek = remember {
+        listOf(
+            "Monday" to Lang.get("Monday", "Senin"),
+            "Tuesday" to Lang.get("Tuesday", "Selasa"),
+            "Wednesday" to Lang.get("Wednesday", "Rabu"),
+            "Thursday" to Lang.get("Thursday", "Kamis"),
+            "Friday" to Lang.get("Friday", "Jumat"),
+            "Saturday" to Lang.get("Saturday", "Sabtu"),
+            "Sunday" to Lang.get("Sunday", "Minggu")
+        )
+    }
+
+    if (showListDialog) {
+        AlertDialog(
+            onDismissRequest = { showListDialog = false },
+            title = { Text(Lang.get("Standby Times List", "Daftar Waktu Standby"), color = Color.White) },
+            text = {
+                Box(modifier = Modifier.width(400.dp).height(300.dp)) {
+                    if (standbySchedules.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(Lang.get("No standby schedules set.", "Tidak ada jadwal standby."), color = Color.White.copy(alpha = 0.5f))
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(standbySchedules) { schedule ->
+                                val dayLabel = if (schedule.isSpecificDate) {
+                                    schedule.day
+                                } else {
+                                    daysOfWeek.firstOrNull { it.first.equals(schedule.day, ignoreCase = true) }?.second ?: schedule.day
+                                }
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color.White.copy(alpha = 0.05f))
+                                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(text = dayLabel, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        Text(text = "${schedule.startTime} - ${schedule.endTime}", color = Color(0xFFFFD54F), fontSize = 13.sp)
+                                    }
+                                    TvFocusableDangerButton(
+                                        onClick = { onDeleteStandbySchedule(schedule.id) },
+                                        shape = RoundedCornerShape(6.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                        modifier = Modifier.height(32.dp)
+                                    ) {
+                                        Text(Lang.get("Delete", "Hapus"), color = Color.White, fontSize = 13.sp)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TvFocusablePrimaryButton(
+                    onClick = { showListDialog = false }
+                ) {
+                    Text(Lang.get("Close", "Tutup"), color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = Color(0xFF181C1A)
+        )
+    }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+        modifier = Modifier.verticalScroll(rememberScrollState())
+    ) {
+        // Toggle Switch standbyModeEnabled
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -155,30 +253,130 @@ fun StandbySettingsSegment(
 
         Divider(color = Color.White.copy(alpha = 0.15f))
 
+        // Specific Date Checkbox / Switch
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().clickable { isSpecificDate = !isSpecificDate }
+        ) {
+            Checkbox(
+                checked = isSpecificDate,
+                onCheckedChange = { isSpecificDate = it },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = Color(0xFFFFD54F),
+                    checkmarkColor = Color.Black,
+                    uncheckedColor = Color.White.copy(alpha = 0.6f)
+                )
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = Lang.get("Specific Date", "Tanggal Spesifik"),
+                color = Color.White,
+                fontSize = 14.sp
+            )
+        }
+
+        // Day or Date Input (above)
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = if (isSpecificDate) Lang.get("Date", "Tanggal") else Lang.get("Day", "Hari"),
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 13.sp
+            )
+            Spacer(Modifier.height(8.dp))
+            if (isSpecificDate) {
+                DatePickerField(
+                    value = specificDateText,
+                    onValueChange = { specificDateText = it },
+                    label = "",
+                    placeholder = "YYYY-MM-DD",
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.05f))
+                        .clickable { dayDropdownExpanded = true }
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Text(text = daysOfWeek[selectedDayIndex].second, color = Color.White, fontSize = 16.sp)
+                    DropdownMenu(
+                        expanded = dayDropdownExpanded,
+                        onDismissRequest = { dayDropdownExpanded = false },
+                        modifier = Modifier.background(Color(0xFF0C120F))
+                    ) {
+                        daysOfWeek.forEachIndexed { index, (_, label) ->
+                            DropdownMenuItem(
+                                text = { Text(text = label, color = Color.White) },
+                                onClick = {
+                                    selectedDayIndex = index
+                                    dayDropdownExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Start & End Time Inputs (below)
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
+            // Start Time
             TimePickerField(
-                value = standbyStartTime,
-                onValueChange = onStandbyStartTimeChange,
-                label = Lang.get("Standby Start (HH:mm)", "Mulai Standby (HH:mm)"),
+                value = startTimeText,
+                onValueChange = { startTimeText = it },
+                label = Lang.get("Start Time (HH:mm)", "Mulai (HH:mm)"),
                 placeholder = "22:00",
                 modifier = Modifier.weight(1f)
             )
+
+            // End Time
             TimePickerField(
-                value = standbyEndTime,
-                onValueChange = onStandbyEndTimeChange,
-                label = Lang.get("Standby End (HH:mm)", "Selesai Standby (HH:mm)"),
+                value = endTimeText,
+                onValueChange = { endTimeText = it },
+                label = Lang.get("End Time (HH:mm)", "Selesai (HH:mm)"),
                 placeholder = "04:00",
                 modifier = Modifier.weight(1f)
             )
         }
 
+        // Add Button & Standby Times List Button
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TvFocusablePrimaryButton(
+                onClick = {
+                    val dayVal = if (isSpecificDate) specificDateText else daysOfWeek[selectedDayIndex].first
+                    if (dayVal.isNotEmpty() && startTimeText.isNotEmpty() && endTimeText.isNotEmpty()) {
+                        onAddStandbySchedule(dayVal, isSpecificDate, startTimeText, endTimeText)
+                    }
+                },
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(Lang.get("Add", "Tambah"), color = Color.Black, fontWeight = FontWeight.Bold)
+            }
+
+            TvFocusableButton(
+                onClick = { showListDialog = true },
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(Lang.get("Standby Times", "Waktu Standby"), color = Color.White, fontWeight = FontWeight.Bold)
+            }
+        }
+
         Text(
             text = Lang.get(
-                "Use 24-hour format (e.g., 22:00 for standby, 04:30 for wake up). While standby is active, the screen is kept black to save energy and screen life.",
-                "Gunakan format 24 jam (misal 22:00 untuk mulai, 04:30 untuk bangun). Selama standby aktif, layar akan berwarna hitam penuh untuk menghemat energi."
+                "You can now set multiple standby schedules for different days or specific dates. TV will sleep during active standby periods.",
+                "Anda sekarang dapat mengatur beberapa jadwal standby untuk hari yang berbeda atau tanggal spesifik. TV akan mati selama periode standby aktif."
             ),
             color = Color.White.copy(alpha = 0.5f),
             fontSize = 13.sp

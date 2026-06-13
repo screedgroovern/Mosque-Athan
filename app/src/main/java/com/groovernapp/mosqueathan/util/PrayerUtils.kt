@@ -3,6 +3,7 @@ package com.groovernapp.mosqueathan.util
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
+import kotlinx.datetime.number
 import kotlin.time.Clock
 
 object PrayerUtils {
@@ -16,7 +17,7 @@ object PrayerUtils {
     ): String {
         val zone = TimeZone.currentSystemDefault()
         val nowMillis = Clock.System.now().toEpochMilliseconds()
-        val targetMillis =target.toInstant(zone).toEpochMilliseconds()
+        val targetMillis = target.toInstant(zone).toEpochMilliseconds()
         val diff = (targetMillis - nowMillis).coerceAtLeast(0)
         val totalSeconds = diff / 1000
         val hours = totalSeconds / 3600
@@ -24,5 +25,45 @@ object PrayerUtils {
         val seconds = totalSeconds % 60
 
         return "%02d:%02d:%02d".format(hours, minutes, seconds)
+    }
+
+    fun parseTimeToMinutes(timeStr: String): Int? {
+        val parts = timeStr.trim().split(":")
+        if (parts.size != 2) return null
+        val hour = parts[0].trim().toIntOrNull() ?: return null
+        val minute = parts[1].trim().toIntOrNull() ?: return null
+        return hour * 60 + minute
+    }
+
+    fun isScheduleActive(
+        now: LocalDateTime,
+        day: String,
+        isSpecificDate: Boolean,
+        startTime: String,
+        endTime: String
+    ): Boolean {
+        if (day.isEmpty() || startTime.isEmpty() || endTime.isEmpty()) return false
+
+        if (isSpecificDate) {
+            val todayStr = "%04d-%02d-%02d".format(now.year, now.month.number, now.day)
+            if (day.trim() != todayStr) {
+                return false
+            }
+        } else {
+            val currentDayName = now.dayOfWeek.name // MONDAY, TUESDAY...
+            if (!day.equals(currentDayName, ignoreCase = true)) {
+                return false
+            }
+        }
+
+        val currentMinutes = now.hour * 60 + now.minute
+        val startMinutes = parseTimeToMinutes(startTime) ?: return false
+        val endMinutes = parseTimeToMinutes(endTime) ?: return false
+
+        return if (startMinutes <= endMinutes) {
+            currentMinutes in startMinutes until endMinutes
+        } else {
+            currentMinutes >= startMinutes || currentMinutes < endMinutes
+        }
     }
 }

@@ -718,11 +718,27 @@ class SettingsServer(private val context: Context) {
         for (sched in schedulesList) {
             slideshowArray.put(JSONObject().apply {
                 put("id", sched.id)
+                put("day", sched.day)
+                put("isSpecificDate", sched.isSpecificDate)
                 put("startTime", sched.startTime)
                 put("endTime", sched.endTime)
             })
         }
         json.put("slideshowSchedules", slideshowArray)
+
+        // Serialize standby schedules
+        val standbyArray = JSONArray()
+        val standbySchedulesList = repository.getStandbySchedules()
+        for (sched in standbySchedulesList) {
+            standbyArray.put(JSONObject().apply {
+                put("id", sched.id)
+                put("day", sched.day)
+                put("isSpecificDate", sched.isSpecificDate)
+                put("startTime", sched.startTime)
+                put("endTime", sched.endTime)
+            })
+        }
+        json.put("standbySchedules", standbyArray)
 
         val result = json.toString()
         val duration = System.currentTimeMillis() - startTime
@@ -1145,11 +1161,13 @@ class SettingsServer(private val context: Context) {
                     }
                 }
                 "add_slideshow_schedule" -> {
+                    val day = json.optString("day", "Monday")
+                    val isSpecificDate = json.optBoolean("isSpecificDate", false)
                     val startTime = json.optString("startTime").takeIf { it.isNotEmpty() } ?: return
                     val endTime = json.optString("endTime").takeIf { it.isNotEmpty() } ?: return
                     val customId = json.optString("id", "")
                     if (startTime.isNotEmpty() && endTime.isNotEmpty()) {
-                        repository.addSlideshowSchedule(startTime, endTime, customId)
+                        repository.addSlideshowSchedule(day, isSpecificDate, startTime, endTime, customId)
                         broadcastState()
                     }
                 }
@@ -1157,6 +1175,24 @@ class SettingsServer(private val context: Context) {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     if (id.isNotEmpty()) {
                         repository.deleteSlideshowSchedule(id)
+                        broadcastState()
+                    }
+                }
+                "add_standby_schedule" -> {
+                    val day = json.optString("day", "Monday")
+                    val isSpecificDate = json.optBoolean("isSpecificDate", false)
+                    val startTime = json.optString("startTime").takeIf { it.isNotEmpty() } ?: return
+                    val endTime = json.optString("endTime").takeIf { it.isNotEmpty() } ?: return
+                    val customId = json.optString("id", "")
+                    if (startTime.isNotEmpty() && endTime.isNotEmpty()) {
+                        repository.addStandbySchedule(day, isSpecificDate, startTime, endTime, customId)
+                        broadcastState()
+                    }
+                }
+                "delete_standby_schedule" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    if (id.isNotEmpty()) {
+                        repository.deleteStandbySchedule(id)
                         broadcastState()
                     }
                 }

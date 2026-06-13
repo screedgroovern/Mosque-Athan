@@ -137,6 +137,7 @@ class MainActivity : ComponentActivity() {
                             val isSearchingCities by settingsViewModel.isSearchingCities.collectAsState()
                             val kemenagSchedules by settingsViewModel.kemenagSchedulesState.collectAsState()
                             val slideshowSchedules by settingsViewModel.slideshowSchedulesState.collectAsState()
+                            val standbySchedules by settingsViewModel.standbySchedulesState.collectAsState()
                             SettingsScreen(
                                 config = state.config,
                                 announcements = state.announcements,
@@ -258,19 +259,26 @@ class MainActivity : ComponentActivity() {
                                     )
                                 },
                                 slideshowSchedules = slideshowSchedules,
-                                onAddSlideshowSchedule = { startTime, endTime ->
-                                    settingsViewModel.addSlideshowSchedule(startTime, endTime)
-                                },
-                                onDeleteSlideshowSchedule = { id ->
-                                    settingsViewModel.deleteSlideshowSchedule(id)
-                                },
-                                onSaveStandby = { enabled, startTime, endTime ->
-                                    settingsViewModel.updateStandbySettings(
-                                        enabled,
-                                        startTime,
-                                        endTime
-                                    )
-                                },
+                                onAddSlideshowSchedule = { day, isSpecificDate, startTime, endTime ->
+                                     settingsViewModel.addSlideshowSchedule(day, isSpecificDate, startTime, endTime)
+                                 },
+                                 onDeleteSlideshowSchedule = { id ->
+                                     settingsViewModel.deleteSlideshowSchedule(id)
+                                 },
+                                 standbySchedules = standbySchedules,
+                                 onAddStandbySchedule = { day, isSpecificDate, startTime, endTime ->
+                                     settingsViewModel.addStandbySchedule(day, isSpecificDate, startTime, endTime)
+                                 },
+                                 onDeleteStandbySchedule = { id ->
+                                     settingsViewModel.deleteStandbySchedule(id)
+                                 },
+                                 onSaveStandby = { enabled, startTime, endTime ->
+                                     settingsViewModel.updateStandbySettings(
+                                         enabled,
+                                         startTime,
+                                         endTime
+                                     )
+                                 },
                                 onBack = {
                                     appViewModel.transitionToDashboard()
                                 }
