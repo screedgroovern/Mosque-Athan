@@ -315,7 +315,8 @@ object WebPageCss {
         }
 
         .card.disabled-card {
-            opacity: 0.6;
+            opacity: 0.5;
+            pointer-events: none;
         }
 
         .card.disabled-card input,

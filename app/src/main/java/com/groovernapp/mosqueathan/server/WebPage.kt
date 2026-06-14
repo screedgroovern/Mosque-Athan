@@ -269,23 +269,8 @@ object WebPage {
         <div style="max-width: 600px; width: 95%; background-color: rgba(20, 30, 25, 0.98); border: 1px solid var(--border-color); padding: 2rem; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 1.5rem;">
             <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary);" data-lang-key="title_downloaded_schedules">Jadwal Terunduh</h3>
             
-            <div style="overflow-x: auto; max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background-color: rgba(0,0,0,0.2);" id="kemenag-dialog-table-container">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; color: var(--text-primary);">
-                    <thead style="position: sticky; top: 0; background-color: #0c120f; border-bottom: 2px solid var(--border-color); z-index: 1;">
-                        <tr>
-                            <th style="padding: 0.75rem 1rem;">Tanggal</th>
-                            <th style="padding: 0.75rem 0.5rem;">Imsak</th>
-                            <th style="padding: 0.75rem 0.5rem;">Subuh</th>
-                            <th style="padding: 0.75rem 0.5rem;">Dzuhur</th>
-                            <th style="padding: 0.75rem 0.5rem;">Ashar</th>
-                            <th style="padding: 0.75rem 0.5rem;">Maghrib</th>
-                            <th style="padding: 0.75rem 0.5rem;">Isya</th>
-                        </tr>
-                    </thead>
-                    <tbody id="kemenag-dialog-preview-body">
-                        <!-- Data will load here dynamically -->
-                    </tbody>
-                </table>
+            <div style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; padding-right: 0.5rem;" id="kemenag-dialog-list-container">
+                <!-- Data will load here dynamically as month-grouped cards -->
             </div>
             
             <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 1rem;">

@@ -1,8 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings.prayerschedule
 
-import android.content.res.Configuration
 import com.groovernapp.mosqueathan.ui.settings.*
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -51,7 +48,7 @@ fun OffsetAdjustmentRow(
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold
             )
-     
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -64,7 +61,7 @@ fun OffsetAdjustmentRow(
                 ) {
                     Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-     
+
                 val sign = if (value > 0) "+" else ""
                 Text(
                     text = "$sign$value",
@@ -74,7 +71,7 @@ fun OffsetAdjustmentRow(
                     modifier = Modifier.width(36.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-     
+
                 TvFocusableButton(
                     onClick = { if (value < 60) onValueChange(value + 1) },
                     shape = RoundedCornerShape(6.dp),
@@ -83,7 +80,7 @@ fun OffsetAdjustmentRow(
                 ) {
                     Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-                
+
                 Text(
                     text = Lang.get("minutes", "menit"),
                     color = Color.White.copy(alpha = 0.7f),
@@ -108,7 +105,7 @@ fun OffsetAdjustmentRow(
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold
             )
-     
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -121,7 +118,7 @@ fun OffsetAdjustmentRow(
                 ) {
                     Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-     
+
                 val sign = if (value > 0) "+" else ""
                 Text(
                     text = "$sign$value",
@@ -131,7 +128,7 @@ fun OffsetAdjustmentRow(
                     modifier = Modifier.width(36.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-     
+
                 TvFocusableButton(
                     onClick = { if (value < 60) onValueChange(value + 1) },
                     shape = RoundedCornerShape(6.dp),
@@ -140,7 +137,7 @@ fun OffsetAdjustmentRow(
                 ) {
                     Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-                
+
                 Text(
                     text = Lang.get("minutes", "menit"),
                     color = Color.White.copy(alpha = 0.7f),

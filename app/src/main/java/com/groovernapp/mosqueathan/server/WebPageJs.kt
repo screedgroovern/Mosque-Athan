@@ -1868,27 +1868,75 @@ object WebPageJs {
             const overlay = document.getElementById('kemenag-schedules-dialog-overlay');
             if (overlay) {
                 overlay.style.display = 'flex';
-                const tbody = document.getElementById('kemenag-dialog-preview-body');
-                if (tbody) {
+                const container = document.getElementById('kemenag-dialog-list-container');
+                if (container) {
+                    container.innerHTML = '';
                     if (kemenagSchedules && kemenagSchedules.length > 0) {
-                        tbody.innerHTML = '';
+                        const months = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+                        const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                        
+                        const grouped = {};
                         kemenagSchedules.forEach(sch => {
-                            const tr = document.createElement('tr');
-                            tr.style.borderBottom = '1px solid var(--border-color)';
-                            tr.innerHTML = 
-                                '<td style="padding: 0.75rem 1rem;">' + sch.dateString + '</td>' +
-                                '<td style="padding: 0.75rem 0.5rem;">' + sch.imsak + '</td>' +
-                                '<td style="padding: 0.75rem 0.5rem;">' + sch.subuh + '</td>' +
-                                '<td style="padding: 0.75rem 0.5rem;">' + sch.dzuhur + '</td>' +
-                                '<td style="padding: 0.75rem 0.5rem;">' + sch.ashar + '</td>' +
-                                '<td style="padding: 0.75rem 0.5rem;">' + sch.maghrib + '</td>' +
-                                '<td style="padding: 0.75rem 0.5rem;">' + sch.isya + '</td>';
-                            tbody.appendChild(tr);
+                            const parts = sch.dateString.split("-");
+                            if (parts.length >= 3) {
+                                const key = parts[1] + "-" + parts[2]; // MM-yyyy
+                                if (!grouped[key]) {
+                                    grouped[key] = [];
+                                }
+                                grouped[key].push(sch);
+                            }
+                        });
+
+                        const sortedKeys = Object.keys(grouped).sort((a, b) => {
+                            const [m1, y1] = a.split("-").map(Number);
+                            const [m2, y2] = b.split("-").map(Number);
+                            return y1 !== y2 ? y1 - y2 : m1 - m2;
+                        });
+
+                        sortedKeys.forEach(key => {
+                            const [m, y] = key.split("-").map(Number);
+                            const monthName = currentLang === 'id' ? months[m - 1] : monthsEn[m - 1];
+                            const headerText = monthName + " " + y;
+
+                            const headerDiv = document.createElement('div');
+                            headerDiv.style.color = 'var(--accent)';
+                            headerDiv.style.fontWeight = 'bold';
+                            headerDiv.style.fontSize = '1.05rem';
+                            headerDiv.style.marginTop = '1rem';
+                            headerDiv.style.marginBottom = '0.25rem';
+                            headerDiv.innerText = headerText;
+                            container.appendChild(headerDiv);
+
+                            grouped[key].forEach(sch => {
+                                const card = document.createElement('div');
+                                card.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+                                card.style.border = '1px solid var(--border-color)';
+                                card.style.borderRadius = '8px';
+                                card.style.padding = '0.75rem 1rem';
+                                card.style.display = 'flex';
+                                card.style.flexDirection = 'column';
+                                card.style.gap = '0.25rem';
+
+                                const dateRow = document.createElement('div');
+                                dateRow.style.color = 'var(--text-primary)';
+                                dateRow.style.fontWeight = 'bold';
+                                dateRow.style.fontSize = '0.9rem';
+                                dateRow.innerText = sch.dateString;
+                                card.appendChild(dateRow);
+
+                                 const timesRow = document.createElement('div');
+                                timesRow.style.color = 'var(--text-secondary)';
+                                timesRow.style.fontSize = '0.8rem';
+                                timesRow.innerText = 'Imsak: ' + sch.imsak + ' | Subuh: ' + sch.subuh + ' | Dzuhur: ' + sch.dzuhur + ' | Ashar: ' + sch.ashar + ' | Maghrib: ' + sch.maghrib + ' | Isya: ' + sch.isya;
+                                card.appendChild(timesRow);
+
+                                container.appendChild(card);
+                            });
                         });
                     } else {
-                        tbody.innerHTML = '<tr><td colspan="7" style="padding: 1.5rem; text-align: center; color: var(--text-muted);">' + 
+                        container.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted);">' + 
                             (currentLang === 'id' ? 'Belum ada jadwal yang diunduh.' : 'No schedules downloaded yet.') + 
-                            '</td></tr>';
+                            '</div>';
                     }
                 }
             }
