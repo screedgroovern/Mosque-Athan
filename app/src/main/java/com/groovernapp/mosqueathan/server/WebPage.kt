@@ -1043,7 +1043,7 @@ object WebPage {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18.5M7 7l-4 4 4 4"></path>
             </svg>
             <div class="overlay-title" style="margin-bottom: 0.5rem; color: var(--accent);" data-lang-key="dialog_sync_title">Sinkronisasi Perubahan Offline</div>
-            <div class="overlay-desc" style="margin-bottom: 2rem;" data-lang-key="dialog_sync_desc">Terdapat perubahan yang Anda buat selama offline. Apakah Anda ingin mengunggah perubahan ini ke TV?</div>
+            <div class="overlay-desc" id="sync-dialog-desc" style="margin-bottom: 2rem;" data-lang-key="dialog_sync_desc">Terdapat perubahan yang Anda buat selama offline. Apakah Anda ingin mengunggah perubahan ini ke TV?</div>
             
             <div style="display: flex; gap: 1rem; justify-content: center;">
                 <button class="btn btn-secondary" onclick="discardOfflineChanges()" style="flex: 1; justify-content: center; padding: 0.8rem;" data-lang-key="btn_discard">Abaikan</button>
@@ -2602,7 +2602,68 @@ object WebPage {
                             const hasOfflineChanges = offlineActionsQueue.length > 0 || offlineFilesQueue.length > 0;
                             if (hasOfflineChanges) {
                                 pendingTvState = data;
+                                
+                                // Check for conflicts
+                                let hasConflict = false;
+                                let conflictMsg = "";
+                                
+                                const lastKnown = localStorage.getItem('last_known_tv_state');
+                                if (lastKnown) {
+                                    try {
+                                        const parsedLastKnown = JSON.parse(lastKnown);
+                                        
+                                        // 1. Check if running text has conflict
+                                        const hasLocalAnnounceEdit = offlineActionsQueue.some(a => 
+                                            ['add_announcement', 'delete_announcement', 'update_announcement', 'reorder_announcements'].includes(a.action)
+                                        );
+                                        if (hasLocalAnnounceEdit) {
+                                            const tvAnnouncements = data.announcements || [];
+                                            const lastKnownAnnouncements = parsedLastKnown.announcements || [];
+                                            
+                                            // Compare announcements lists
+                                            const tvAnnStrings = tvAnnouncements.map(a => a.id + ":" + a.content).join('|');
+                                            const lkAnnStrings = lastKnownAnnouncements.map(a => a.id + ":" + a.content).join('|');
+                                            if (tvAnnStrings !== lkAnnStrings) {
+                                                hasConflict = true;
+                                                conflictMsg = currentLang === 'id' 
+                                                    ? "Running Text baru saja diubah oleh Takmir lain di TV. Yakin mau menimpanya dengan data lokal Anda?" 
+                                                    : "Running Text was recently changed by another Takmir on the TV. Are you sure you want to overwrite it with your local data?";
+                                            }
+                                        }
+                                        
+                                        // 2. Check if configuration/other settings have conflict
+                                        const hasLocalConfigEdit = offlineActionsQueue.some(a => 
+                                            ['update_config', 'update_theme', 'update_standby', 'update_show_settings_on_tv', 'add_slideshow_schedule', 'delete_slideshow_schedule', 'upload_background', 'clear_background', 'upload_media', 'delete_media'].includes(a.action)
+                                        );
+                                        if (!hasConflict && hasLocalConfigEdit) {
+                                            const tvConfig = data.config || {};
+                                            const lkConfig = parsedLastKnown.config || {};
+                                            // Compare key fields
+                                            const fieldsToCompare = ['latitude', 'longitude', 'iqomahSubuh', 'iqomahDzuhur', 'iqomahAshar', 'iqomahMaghrib', 'iqomahIsya', 'calculationMethodName', 'adzanLeadMinutes', 'standbyModeEnabled', 'standbyStartTime', 'standbyEndTime', 'transitionType', 'slideIntervalSeconds', 'videoWaitUntilEnd', 'includeDefaultImage', 'showSettingsOnTv'];
+                                            const isConfigDifferent = fieldsToCompare.some(f => tvConfig[f] !== lkConfig[f]);
+                                            if (isConfigDifferent) {
+                                                hasConflict = true;
+                                                conflictMsg = currentLang === 'id'
+                                                    ? "Pengaturan TV baru saja diubah oleh Takmir lain. Yakin mau menimpanya dengan data lokal Anda?"
+                                                    : "TV settings were recently changed by another Takmir. Are you sure you want to overwrite them with your local data?";
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.error("Error parsing last_known_tv_state for conflict check", e);
+                                    }
+                                }
+                                
                                 mergeIncomingState(data);
+                                
+                                const dialogDesc = document.getElementById('sync-dialog-desc');
+                                if (dialogDesc) {
+                                    if (hasConflict) {
+                                        dialogDesc.innerHTML = `<span style="color: var(--danger); font-weight: 700; display: block; margin-bottom: 1rem;">⚠️ KONFLIK TERDETEKSI:</span>` + conflictMsg;
+                                    } else {
+                                        dialogDesc.innerText = translations[currentLang].dialog_sync_desc;
+                                    }
+                                }
+                                
                                 document.getElementById('sync-dialog-overlay').style.display = 'flex';
                             } else {
                                 appConfig = data.config;
