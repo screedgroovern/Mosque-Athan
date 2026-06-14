@@ -26,6 +26,9 @@ class SettingsViewModel : ViewModel() {
     private val _devicesState = MutableStateFlow<List<ConnectedDeviceEntity>>(emptyList())
     val devicesState = _devicesState.asStateFlow()
 
+    private val _mediaListState = MutableStateFlow<List<MediaEntity>>(emptyList())
+    val mediaListState = _mediaListState.asStateFlow()
+
     private val _kemenagSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.KemenagScheduleEntity>>(emptyList())
     val kemenagSchedulesState = _kemenagSchedulesState.asStateFlow()
 
@@ -50,6 +53,11 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             repository.getConnectedDevicesFlow().collect {
                 _devicesState.value = it
+            }
+        }
+        viewModelScope.launch {
+            repository.getMediaListFlow().collect {
+                _mediaListState.value = it
             }
         }
     }
@@ -112,6 +120,21 @@ class SettingsViewModel : ViewModel() {
             } finally {
                 _isSearchingCities.value = false
             }
+        }
+    }
+
+    fun updateConfig(config: MosqueConfigEntity) {
+        viewModelScope.launch {
+            repository.updateConfig(
+                config.latitude, config.longitude,
+                config.iqomahSubuh, config.iqomahDzuhur, config.iqomahAshar, config.iqomahMaghrib, config.iqomahIsya,
+                config.calculationMethodName, config.adzanLeadMinutes,
+                config.offsetImsak, config.offsetSubuh, config.offsetSyuruq, config.offsetDzuhur, config.offsetAshar, config.offsetMaghrib, config.offsetIsya,
+                config.kemenagCityId, config.kemenagCityName, config.kemenagDuration, config.kemenagTargetDate,
+                triggerFetch = true,
+                adzanFooterText = config.adzanFooterText,
+                iqomahFooterText = config.iqomahFooterText
+            )
         }
     }
 

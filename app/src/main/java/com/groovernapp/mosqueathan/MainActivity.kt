@@ -19,6 +19,7 @@ import com.groovernapp.mosqueathan.ui.navigation.AppViewModel
 import com.groovernapp.mosqueathan.ui.settings.SettingsScreen
 import com.groovernapp.mosqueathan.ui.settings.SettingsViewModel
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
+import com.groovernapp.mosqueathan.data.copy
 import android.view.KeyEvent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
@@ -82,6 +83,14 @@ class MainActivity : ComponentActivity() {
                     window.attributes = params
                 }
 
+                LaunchedEffect(appState) {
+                    if (appState is AppUiState.Settings) {
+                        this@MainActivity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    } else {
+                        this@MainActivity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    }
+                }
+
                 Box(modifier = Modifier.fillMaxSize()) {
                     when (val state = appState) {
                         is AppUiState.Dashboard -> {
@@ -132,99 +141,8 @@ class MainActivity : ComponentActivity() {
                             BackHandler {
                                 appViewModel.transitionToDashboard()
                             }
-                            val devices by settingsViewModel.devicesState.collectAsState()
-                            val citySearchResults by settingsViewModel.citySearchResults.collectAsState()
-                            val isSearchingCities by settingsViewModel.isSearchingCities.collectAsState()
-                            val kemenagSchedules by settingsViewModel.kemenagSchedulesState.collectAsState()
-                            val slideshowSchedules by settingsViewModel.slideshowSchedulesState.collectAsState()
-                            val standbySchedules by settingsViewModel.standbySchedulesState.collectAsState()
                             SettingsScreen(
-                                config = state.config,
-                                announcements = state.announcements,
-                                devices = devices,
-                                citySearchResults = citySearchResults,
-                                isSearchingCities = isSearchingCities,
-                                kemenagSchedules = kemenagSchedules,
-                                onSearchKemenagCities = { query ->
-                                    settingsViewModel.searchKemenagCities(
-                                        query
-                                    )
-                                },
-                                onSaveConfig = { latitude, longitude, iqomahSubuh, iqomahDzuhur, iqomahAshar, iqomahMaghrib, iqomahIsya, calculationMethodName, adzanLeadMinutes, offsetImsak, offsetSubuh, offsetSyuruq, offsetDzuhur, offsetAshar, offsetMaghrib, offsetIsya, kemenagCityId, kemenagCityName, kemenagDuration, kemenagTargetDate ->
-                                    settingsViewModel.updateConfig(
-                                        latitude,
-                                        longitude,
-                                        iqomahSubuh,
-                                        iqomahDzuhur,
-                                        iqomahAshar,
-                                        iqomahMaghrib,
-                                        iqomahIsya,
-                                        calculationMethodName,
-                                        adzanLeadMinutes,
-                                        offsetImsak,
-                                        offsetSubuh,
-                                        offsetSyuruq,
-                                        offsetDzuhur,
-                                        offsetAshar,
-                                        offsetMaghrib,
-                                        offsetIsya,
-                                        kemenagCityId,
-                                        kemenagCityName,
-                                        kemenagDuration,
-                                        kemenagTargetDate
-                                    )
-                                },
-                                onAddAnnouncement = { content ->
-                                    settingsViewModel.addAnnouncement(content)
-                                },
-                                onDeleteAnnouncement = { id ->
-                                    settingsViewModel.deleteAnnouncement(id)
-                                },
-                                onEditAnnouncement = { id, content ->
-                                    settingsViewModel.editAnnouncement(id, content)
-                                },
-                                onReorderAnnouncements = { ids ->
-                                    settingsViewModel.reorderAnnouncements(ids)
-                                },
-                                onResetToDefaults = {
-                                    settingsViewModel.resetToDefaults(this@MainActivity)
-                                },
-                                onSelectCustomBackground = { uri ->
-                                    settingsViewModel.updateCustomBackground(uri, this@MainActivity)
-                                },
-                                onClearCustomBackground = {
-                                    settingsViewModel.clearCustomBackground(this@MainActivity)
-                                },
-                                mediaList = state.mediaList,
-                                onAddMediaItems = { uris ->
-                                    settingsViewModel.addMediaItems(uris, this@MainActivity)
-                                },
-                                onDeleteMediaItem = { item ->
-                                    settingsViewModel.deleteMediaItem(item)
-                                },
-                                onUpdateThemeSettings = { transitionType, intervalSeconds, videoWaitUntilEnd, includeDefaultImage ->
-                                    settingsViewModel.updateThemeSettings(
-                                        transitionType,
-                                        intervalSeconds,
-                                        videoWaitUntilEnd,
-                                        includeDefaultImage
-                                    )
-                                },
-                                onUpdateShowSettingsOnTv = { show ->
-                                    settingsViewModel.updateShowSettingsOnTv(show)
-                                },
-                                onSetDeviceMaster = { deviceId ->
-                                    settingsViewModel.setDeviceMaster(deviceId)
-                                },
-                                onUpdatePinCode = { newPin ->
-                                    settingsViewModel.updatePinCode(newPin)
-                                },
-                                onDeleteDevice = { deviceId ->
-                                    settingsViewModel.deleteDevice(deviceId)
-                                },
-                                onUpdateFooters = { adzan, iqomah ->
-                                    settingsViewModel.updateFooters(adzan, iqomah)
-                                },
+                                viewModel = settingsViewModel,
                                 onPreviewAdzan = {
                                     appViewModel.previewAdzan()
                                 },
@@ -234,51 +152,6 @@ class MainActivity : ComponentActivity() {
                                 onPreviewSlideshow = {
                                     appViewModel.previewSlideshow()
                                 },
-                                onDownloadKemenagSchedules = { cityId, cityName, duration, targetDate ->
-                                    settingsViewModel.updateConfig(
-                                        latitude = state.config.latitude,
-                                        longitude = state.config.longitude,
-                                        iqomahSubuh = state.config.iqomahSubuh,
-                                        iqomahDzuhur = state.config.iqomahDzuhur,
-                                        iqomahAshar = state.config.iqomahAshar,
-                                        iqomahMaghrib = state.config.iqomahMaghrib,
-                                        iqomahIsya = state.config.iqomahIsya,
-                                        calculationMethodName = "KEMENAG",
-                                        adzanLeadMinutes = state.config.adzanLeadMinutes,
-                                        offsetImsak = state.config.offsetImsak,
-                                        offsetSubuh = state.config.offsetSubuh,
-                                        offsetSyuruq = state.config.offsetSyuruq,
-                                        offsetDzuhur = state.config.offsetDzuhur,
-                                        offsetAshar = state.config.offsetAshar,
-                                        offsetMaghrib = state.config.offsetMaghrib,
-                                        offsetIsya = state.config.offsetIsya,
-                                        kemenagCityId = cityId,
-                                        kemenagCityName = cityName,
-                                        kemenagDuration = duration,
-                                        kemenagTargetDate = targetDate
-                                    )
-                                },
-                                slideshowSchedules = slideshowSchedules,
-                                onAddSlideshowSchedule = { day, isSpecificDate, startTime, endTime ->
-                                     settingsViewModel.addSlideshowSchedule(day, isSpecificDate, startTime, endTime)
-                                 },
-                                 onDeleteSlideshowSchedule = { id ->
-                                     settingsViewModel.deleteSlideshowSchedule(id)
-                                 },
-                                 standbySchedules = standbySchedules,
-                                 onAddStandbySchedule = { day, isSpecificDate, startTime, endTime ->
-                                     settingsViewModel.addStandbySchedule(day, isSpecificDate, startTime, endTime)
-                                 },
-                                 onDeleteStandbySchedule = { id ->
-                                     settingsViewModel.deleteStandbySchedule(id)
-                                 },
-                                 onSaveStandby = { enabled, startTime, endTime ->
-                                     settingsViewModel.updateStandbySettings(
-                                         enabled,
-                                         startTime,
-                                         endTime
-                                     )
-                                 },
                                 onBack = {
                                     appViewModel.transitionToDashboard()
                                 }

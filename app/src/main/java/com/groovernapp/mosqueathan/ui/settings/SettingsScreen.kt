@@ -20,6 +20,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -32,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.R
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
+import com.groovernapp.mosqueathan.data.copy
 import com.groovernapp.mosqueathan.data.AnnouncementEntity
 import com.groovernapp.mosqueathan.data.MediaEntity
 import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
@@ -39,7 +47,7 @@ import com.groovernapp.mosqueathan.server.SettingsServer
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Campaign
@@ -47,81 +55,34 @@ import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Restore
-
-
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Close
+import com.groovernapp.mosqueathan.util.Lang
 
 @Composable
 fun SettingsScreen(
-    config: MosqueConfigEntity,
-    announcements: List<AnnouncementEntity>,
-    onSaveConfig: (
-        latitude: Double,
-        longitude: Double,
-        iqomahSubuh: Int,
-        iqomahDzuhur: Int,
-        iqomahAshar: Int,
-        iqomahMaghrib: Int,
-        iqomahIsya: Int,
-        calculationMethodName: String,
-        adzanLeadMinutes: Int,
-        offsetImsak: Int,
-        offsetSubuh: Int,
-        offsetSyuruq: Int,
-        offsetDzuhur: Int,
-        offsetAshar: Int,
-        offsetMaghrib: Int,
-        offsetIsya: Int,
-        kemenagCityId: String,
-        kemenagCityName: String,
-        kemenagDuration: String,
-        kemenagTargetDate: String
-    ) -> Unit,
-    onAddAnnouncement: (String) -> Unit,
-    onDeleteAnnouncement: (String) -> Unit,
-    onEditAnnouncement: (String, String) -> Unit,
-    onReorderAnnouncements: (List<String>) -> Unit,
-    onResetToDefaults: () -> Unit,
-    onSelectCustomBackground: (android.net.Uri) -> Unit,
-    onClearCustomBackground: () -> Unit,
-    mediaList: List<MediaEntity>,
-    onAddMediaItems: (List<android.net.Uri>) -> Unit,
-    onDeleteMediaItem: (MediaEntity) -> Unit,
-    onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit,
-    onUpdateShowSettingsOnTv: (Boolean) -> Unit,
-    devices: List<ConnectedDeviceEntity>,
-    citySearchResults: List<Pair<String, String>> = emptyList(),
-    isSearchingCities: Boolean = false,
-    kemenagSchedules: List<com.groovernapp.mosqueathan.data.KemenagScheduleEntity> = emptyList(),
-    onSearchKemenagCities: (String) -> Unit = {},
-    onSetDeviceMaster: (String) -> Unit,
-    onUpdatePinCode: (String) -> Unit,
-    onDeleteDevice: (String) -> Unit,
-    onUpdateFooters: (String, String) -> Unit = { _, _ -> },
+    viewModel: SettingsViewModel,
     onPreviewAdzan: () -> Unit = {},
     onPreviewIqomah: () -> Unit = {},
     onPreviewSlideshow: () -> Unit = {},
-    onDownloadKemenagSchedules: (cityId: String, cityName: String, duration: String, targetDate: String) -> Unit = { _, _, _, _ -> },
-    slideshowSchedules: List<com.groovernapp.mosqueathan.data.SlideshowScheduleEntity> = emptyList(),
-    onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit = { _, _, _, _ -> },
-    onDeleteSlideshowSchedule: (String) -> Unit = {},
-    standbySchedules: List<com.groovernapp.mosqueathan.data.StandbyScheduleEntity> = emptyList(),
-    onAddStandbySchedule: (String, Boolean, String, String) -> Unit = { _, _, _, _ -> },
-    onDeleteStandbySchedule: (String) -> Unit = {},
-    onSaveStandby: (Boolean, String, String) -> Unit = { _, _, _ -> },
     onBack: () -> Unit
 ) {
-    val mediaPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
-    ) { uris: List<android.net.Uri> ->
-        if (uris.isNotEmpty()) {
-            onAddMediaItems(uris)
-        }
-    }
 
-    val showAllSettings = true // Set to true so settings can be accessed directly on TV devices
+    val config by viewModel.configState.collectAsState()
+    val announcements by viewModel.announcementsState.collectAsState()
+    val mediaList by viewModel.mediaListState.collectAsState()
+    val devices by viewModel.devicesState.collectAsState()
+    val citySearchResults by viewModel.citySearchResults.collectAsState()
+    val isSearchingCities by viewModel.isSearchingCities.collectAsState()
+    val kemenagSchedules by viewModel.kemenagSchedulesState.collectAsState()
+    val slideshowSchedules by viewModel.slideshowSchedulesState.collectAsState()
+    val standbySchedules by viewModel.standbySchedulesState.collectAsState()
 
-    var selectedCategory by remember(showAllSettings) { 
-        mutableStateOf(if (showAllSettings) SettingsCategory.PRAYER_SCHEDULE else SettingsCategory.REMOTE_DEVICES) 
+    val showAllSettings = true
+
+    var selectedCategory by remember(showAllSettings) {
+        mutableStateOf(if (showAllSettings) SettingsCategory.PRAYER_SCHEDULE else SettingsCategory.REMOTE_DEVICES)
     }
     val context = androidx.compose.ui.platform.LocalContext.current
     val isTv = remember(context) {
@@ -178,10 +139,30 @@ fun SettingsScreen(
     val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
     val screenWidthDp = with(density) { containerSize.width.toDp() }
     val isCompact = screenWidthDp < 600.dp && !isTv
-    var showCategoryDetail by remember { mutableStateOf(false) }
 
-    androidx.activity.compose.BackHandler(enabled = isCompact && showCategoryDetail) {
-        showCategoryDetail = false
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
+    var isSideSheetExpanded by remember { mutableStateOf(!isCompact) }
+
+    androidx.activity.compose.BackHandler(enabled = isCompact && drawerState.isOpen) {
+        coroutineScope.launch { drawerState.close() }
+    }
+
+    val displayedCategories = remember(showAllSettings) {
+        if (showAllSettings) {
+            SettingsCategory.values()
+        } else {
+            arrayOf(SettingsCategory.REMOTE_DEVICES)
+        }
+    }
+
+    val versionName = remember(context) {
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            packageInfo.versionName ?: "Unknown"
+        } catch (e: Exception) {
+            "Unknown"
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -215,478 +196,574 @@ fun SettingsScreen(
                 )
         )
 
-        val paddingHorizontal = if (isCompact) 16.dp else 48.dp
-        val paddingVertical = if (isCompact) 16.dp else 32.dp
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
-        ) {
-            // Sidebar Navigation
-            if (!isCompact || !showCategoryDetail) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .then(if (isCompact) Modifier.fillMaxWidth() else Modifier.fillMaxWidth(0.3f).padding(end = 32.dp)),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = com.groovernapp.mosqueathan.util.Lang.get("SETTINGS", "PENGATURAN"),
-                        color = Color(0xFFFFD54F),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp, start = 12.dp)
-                    )
-
-                    val displayedCategories = if (showAllSettings) {
-                        SettingsCategory.values()
-                    } else {
-                        arrayOf(SettingsCategory.REMOTE_DEVICES)
-                    }
-
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            gesturesEnabled = isCompact,
+            drawerContent = {
+                if (isCompact) {
+                    ModalDrawerSheet(
+                        drawerContainerColor = Color(0xFF121212),
+                        modifier = Modifier.width(280.dp)
                     ) {
-                        displayedCategories.forEach { category ->
-                            val isSelected = selectedCategory == category
-                            val interactionSource = remember { MutableInteractionSource() }
-                            val isFocused by interactionSource.collectIsFocusedAsState()
-                            val isHovered by interactionSource.collectIsHoveredAsState()
-                            val isFocusedOrHovered = isFocused || isHovered
+                        SideSheetContent(
+                            width = 280.dp,
+                            isCollapsed = false,
+                            selectedCategory = selectedCategory,
+                            onCategorySelect = { category ->
+                                selectedCategory = category
+                                coroutineScope.launch { drawerState.close() }
+                            },
+                            isSideSheetExpanded = drawerState.isOpen,
+                            onToggleExpand = { coroutineScope.launch { drawerState.close() } },
+                            isTv = false,
+                            onBack = onBack,
+                            versionName = versionName,
+                            showAllSettings = showAllSettings,
+                            displayedCategories = displayedCategories,
+                            modifier = Modifier.safeDrawingPadding()
+                        )
+                    }
+                }
+            }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .safeDrawingPadding()
+            ) {
+            // 1. Persistent Side Sheet (only for TV / Tablet)
+            if (!isCompact) {
+                val sideSheetWidth by animateDpAsState(
+                    targetValue = if (isTv) 280.dp else if (isSideSheetExpanded) 280.dp else 72.dp,
+                    label = "SideSheetWidth"
+                )
+                SideSheetContent(
+                    width = sideSheetWidth,
+                    isCollapsed = !isTv && (sideSheetWidth < 200.dp),
+                    selectedCategory = selectedCategory,
+                    onCategorySelect = { selectedCategory = it },
+                    isSideSheetExpanded = isSideSheetExpanded,
+                    onToggleExpand = { isSideSheetExpanded = !isSideSheetExpanded },
+                    isTv = isTv,
+                    onBack = onBack,
+                    versionName = versionName,
+                    showAllSettings = showAllSettings,
+                    displayedCategories = displayedCategories
+                )
+            }
 
-                            val borderColor = when {
-                                isSelected -> Color(0xFFFFD54F)
-                                isFocusedOrHovered -> Color(0xFFFFD54F).copy(alpha = 0.8f)
-                                else -> Color.White.copy(alpha = 0.15f)
-                            }
-                            val borderWidth = if (isSelected || isFocusedOrHovered) 2.dp else 1.dp
-                            val backgroundColor = when {
-                                isSelected && isFocusedOrHovered -> Color(0xFFFFD54F).copy(alpha = 0.25f)
-                                isSelected -> Color(0xFFFFD54F).copy(alpha = 0.15f)
-                                isFocusedOrHovered -> Color.White.copy(alpha = 0.12f)
-                                else -> Color.Transparent
-                            }
-                            val textColor = if (isSelected || isFocusedOrHovered) Color(0xFFFFD54F) else Color.White
-                            val textWeight = if (isSelected || isFocusedOrHovered) FontWeight.Bold else FontWeight.Medium
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .border(
-                                        width = borderWidth,
-                                        color = borderColor,
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .background(
-                                        backgroundColor,
-                                        RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable(
-                                        interactionSource = interactionSource,
-                                        indication = androidx.compose.foundation.LocalIndication.current
-                                    ) {
-                                        selectedCategory = category
-                                        if (isCompact) showCategoryDetail = true
-                                    }
-                                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                                contentAlignment = Alignment.CenterStart
+            // 2. Main Detail Content Area
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(
+                        start = if (isCompact) 16.dp else 32.dp,
+                        end = if (isCompact) 16.dp else 48.dp,
+                        top = if (isCompact) 16.dp else 32.dp,
+                        bottom = if (isCompact) 16.dp else 32.dp
+                    )
+            ) {
+                // Details Header
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Hamburger Menu Button (only on phone)
+                        if (isCompact) {
+                            IconButton(
+                                onClick = { coroutineScope.launch { drawerState.open() } },
+                                modifier = Modifier.padding(end = 8.dp)
                             ) {
-                                Text(
-                                    text = category.getDisplayName(),
-                                    color = textColor,
-                                    fontSize = 18.sp,
-                                    fontWeight = textWeight
+                                Icon(
+                                    imageVector = Icons.Default.Menu,
+                                    contentDescription = "Open Menu",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
                                 )
                             }
+                        }
+                        Text(
+                            text = selectedCategory.getDisplayName(),
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Back button on top right of detail area (phone)
+                    if (isCompact) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
                         }
                     }
                 }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                // Description of the category
+                if (!isCompact) {
+                    Text(
+                        text = selectedCategory.getDescription(),
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 15.sp,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
+                }
+
+                // Category specific UI Card
+                Card(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
                 ) {
-                    val ipAddress = remember { SettingsServer.getIpAddress() }
-                    val versionName = remember(context) {
-                        try {
-                            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                            packageInfo.versionName ?: "Unknown"
-                        } catch (e: Exception) {
-                            "Unknown"
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(if (isCompact) 16.dp else 32.dp),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .then(
+                                    if (selectedCategory in listOf(SettingsCategory.PRAYER_SCHEDULE, SettingsCategory.ADZAN_IQOMAH, SettingsCategory.SYSTEM_MAINTENANCE)) {
+                                        Modifier.padding(bottom = 16.dp)
+                                    } else {
+                                        Modifier
+                                    }
+                                )
+                        ) {
+                            // Category specific UI — each segment is in its own file
+                            when (selectedCategory) {
+                                SettingsCategory.PRAYER_SCHEDULE -> {
+                                    PrayerScheduleSettingsSegment(
+                                        latText = latText,
+                                        onLatTextChange = { latText = it },
+                                        lngText = lngText,
+                                        onLngTextChange = { lngText = it },
+                                        calculationMethodName = calculationMethodName,
+                                        kemenagCityId = kemenagCityId,
+                                        kemenagCityName = kemenagCityName,
+                                        kemenagDuration = kemenagDuration,
+                                        kemenagTargetDate = kemenagTargetDate,
+                                        citySearchResults = citySearchResults,
+                                        isSearchingCities = isSearchingCities,
+                                        kemenagSchedules = kemenagSchedules,
+                                        onMethodChange = { calculationMethodName = it },
+                                        onKemenagCitySelected = { id, name ->
+                                            kemenagCityId = id
+                                            kemenagCityName = name
+                                        },
+                                        onKemenagDurationChange = { kemenagDuration = it },
+                                        onKemenagTargetDateChange = { kemenagTargetDate = it },
+                                        onSearchKemenagCities = { query -> viewModel.searchKemenagCities(query) },
+                                        onDownloadKemenagSchedules = {
+                                            viewModel.updateConfig(
+                                                config.copy(
+                                                    calculationMethodName = "KEMENAG",
+                                                    kemenagCityId = kemenagCityId,
+                                                    kemenagCityName = kemenagCityName,
+                                                    kemenagDuration = kemenagDuration,
+                                                    kemenagTargetDate = kemenagTargetDate
+                                                )
+                                            )
+                                        },
+                                        offsetImsak = offsetImsak,
+                                        offsetSubuh = offsetSubuh,
+                                        offsetSyuruq = offsetSyuruq,
+                                        offsetDzuhur = offsetDzuhur,
+                                        offsetAshar = offsetAshar,
+                                        offsetMaghrib = offsetMaghrib,
+                                        offsetIsya = offsetIsya,
+                                        onOffsetImsakChange = { offsetImsak = it },
+                                        onOffsetSubuhChange = { offsetSubuh = it },
+                                        onOffsetSyuruqChange = { offsetSyuruq = it },
+                                        onOffsetDzuhurChange = { offsetDzuhur = it },
+                                        onOffsetAsharChange = { offsetAshar = it },
+                                        onOffsetMaghribChange = { offsetMaghrib = it },
+                                        onOffsetIsyaChange = { offsetIsya = it }
+                                    )
+                                }
+
+                                SettingsCategory.ADZAN_IQOMAH -> {
+                                     AdzanIqomahSettingsPane(
+                                         adzanLeadMinutes = adzanLeadMinutes,
+                                         onAdzanLeadMinutesChange = { adzanLeadMinutes = it },
+                                         iqomahSubuh = iqomahSubuh,
+                                         onIqomahSubuhChange = { iqomahSubuh = it },
+                                         iqomahDzuhur = iqomahDzuhur,
+                                         onIqomahDzuhurChange = { iqomahDzuhur = it },
+                                         iqomahAshar = iqomahAshar,
+                                         onIqomahAsharChange = { iqomahAshar = it },
+                                         iqomahMaghrib = iqomahMaghrib,
+                                         onIqomahMaghribChange = { iqomahMaghrib = it },
+                                         iqomahIsya = iqomahIsya,
+                                         onIqomahIsyaChange = { iqomahIsya = it },
+                                         config = config,
+                                         onUpdateFooters = { adzan, iqomah -> viewModel.updateFooters(adzan, iqomah) },
+                                         onPreviewAdzan = onPreviewAdzan,
+                                         onPreviewIqomah = onPreviewIqomah,
+                                         isCompact = isCompact
+                                     )
+                                 }
+
+                                 SettingsCategory.DISPLAY_MEDIA -> {
+                                     DisplayMediaSettingsPane(
+                                         config = config,
+                                         mediaList = mediaList,
+                                         slideshowSchedules = slideshowSchedules,
+                                         announcements = announcements,
+                                         onUpdateThemeSettings = { type, interval, videoWait, defaultImg -> 
+                                             viewModel.updateThemeSettings(type, interval, videoWait, defaultImg) 
+                                         },
+                                         onAddMediaItems = { uris -> viewModel.addMediaItems(uris, context) },
+                                         onDeleteMediaItem = { item -> viewModel.deleteMediaItem(item) },
+                                         onSelectCustomBackground = { uri -> viewModel.updateCustomBackground(uri, context) },
+                                         onClearCustomBackground = { viewModel.clearCustomBackground(context) },
+                                         onAddSlideshowSchedule = { day, isSpecific, start, end -> 
+                                             viewModel.addSlideshowSchedule(day, isSpecific, start, end) 
+                                         },
+                                         onDeleteSlideshowSchedule = { id -> viewModel.deleteSlideshowSchedule(id) },
+                                         onPreviewSlideshow = onPreviewSlideshow,
+                                         onAddAnnouncement = { content -> viewModel.addAnnouncement(content) },
+                                         onDeleteAnnouncement = { id -> viewModel.deleteAnnouncement(id) },
+                                         onEditAnnouncement = { id, content -> viewModel.editAnnouncement(id, content) },
+                                         onReorderAnnouncements = { ids -> viewModel.reorderAnnouncements(ids) },
+                                         isCompact = isCompact
+                                     )
+                                 }
+
+                                 SettingsCategory.REMOTE_DEVICES -> {
+                                     RemoteDevicesSettingsPane(
+                                         config = config,
+                                         isTv = isTv,
+                                         onUpdateShowSettingsOnTv = { show -> viewModel.updateShowSettingsOnTv(show) },
+                                         devices = devices,
+                                         onSetDeviceMaster = { deviceId -> viewModel.setDeviceMaster(deviceId) },
+                                         onDeleteDevice = { deviceId -> viewModel.deleteDevice(deviceId) }
+                                     )
+                                 }
+
+                                 SettingsCategory.SYSTEM_MAINTENANCE -> {
+                                     SystemMaintenanceSettingsPane(
+                                         standbyModeEnabled = standbyModeEnabled,
+                                         onStandbyModeEnabledChange = { standbyModeEnabled = it },
+                                         standbySchedules = standbySchedules,
+                                         onAddStandbySchedule = { day, isSpecific, start, end -> 
+                                             viewModel.addStandbySchedule(day, isSpecific, start, end) 
+                                         },
+                                         onDeleteStandbySchedule = { id -> viewModel.deleteStandbySchedule(id) },
+                                         onResetToDefaults = { viewModel.resetToDefaults(context) }
+                                     )
+                                 }
+                            }
+                        }
+
+                        // Save / Apply Button (only for config-saving categories)
+                        if (selectedCategory in listOf(SettingsCategory.PRAYER_SCHEDULE, SettingsCategory.ADZAN_IQOMAH, SettingsCategory.SYSTEM_MAINTENANCE)) {
+                            var isSaving by remember { mutableStateOf(false) }
+                            val coroutineScope = rememberCoroutineScope()
+
+                            TvFocusablePrimaryButton(
+                                onClick = {
+                                    if (isSaving) return@TvFocusablePrimaryButton
+                                    isSaving = true
+                                    coroutineScope.launch {
+                                        if (selectedCategory == SettingsCategory.SYSTEM_MAINTENANCE) {
+                                            viewModel.updateStandbySettings(standbyModeEnabled, standbyStartTime, standbyEndTime)
+                                        } else {
+                                            val lat = latText.toDoubleOrNull() ?: config.latitude
+                                            val lng = lngText.toDoubleOrNull() ?: config.longitude
+                                            viewModel.updateConfig(
+                                                config.copy(
+                                                    latitude = lat,
+                                                    longitude = lng,
+                                                    iqomahSubuh = iqomahSubuh,
+                                                    iqomahDzuhur = iqomahDzuhur,
+                                                    iqomahAshar = iqomahAshar,
+                                                    iqomahMaghrib = iqomahMaghrib,
+                                                    iqomahIsya = iqomahIsya,
+                                                    calculationMethodName = calculationMethodName,
+                                                    adzanLeadMinutes = adzanLeadMinutes,
+                                                    offsetImsak = offsetImsak,
+                                                    offsetSubuh = offsetSubuh,
+                                                    offsetSyuruq = offsetSyuruq,
+                                                    offsetDzuhur = offsetDzuhur,
+                                                    offsetAshar = offsetAshar,
+                                                    offsetMaghrib = offsetMaghrib,
+                                                    offsetIsya = offsetIsya,
+                                                    kemenagCityId = kemenagCityId,
+                                                    kemenagCityName = kemenagCityName,
+                                                    kemenagDuration = kemenagDuration,
+                                                    kemenagTargetDate = kemenagTargetDate
+                                                )
+                                            )
+                                        }
+                                        delay(600)
+                                        isSaving = false
+                                    }
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                            ) {
+                                if (isSaving) {
+                                    CircularProgressIndicator(
+                                        color = Color.Black,
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text(
+                                        text = Lang.get("Save Settings", "Simpan Pengaturan"),
+                                        color = Color.Black,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
+                }
+            }
+        }
+        }
+    }
+}
 
-                    Column(
-                        modifier = Modifier.padding(start = 12.dp, bottom = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-
-                        Text(
-                            text = com.groovernapp.mosqueathan.util.Lang.get("App Version: v$versionName", "Versi Aplikasi: v$versionName"),
-                            color = Color.White.copy(alpha = 0.5f),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium
+@Composable
+fun SideSheetContent(
+    width: androidx.compose.ui.unit.Dp,
+    isCollapsed: Boolean,
+    selectedCategory: SettingsCategory,
+    onCategorySelect: (SettingsCategory) -> Unit,
+    isSideSheetExpanded: Boolean,
+    onToggleExpand: () -> Unit,
+    isTv: Boolean,
+    onBack: () -> Unit,
+    versionName: String,
+    showAllSettings: Boolean,
+    displayedCategories: Array<SettingsCategory>,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .width(width)
+            .background(Color.Black.copy(alpha = 0.4f))
+            .padding(vertical = 24.dp, horizontal = if (isCollapsed) 8.dp else 16.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
+        ) {
+            // Header Settings with Gear Icon
+            if (isCollapsed) {
+                IconButton(
+                    onClick = onToggleExpand,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = Lang.get("Settings", "Pengaturan"),
+                        tint = Color(0xFFFFD54F),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp, start = 8.dp, end = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = null,
+                            tint = Color(0xFFFFD54F),
+                            modifier = Modifier.size(24.dp)
                         )
-                    }
-
-                    TvFocusableButton(
-                        onClick = {
-                            if (isCompact && showCategoryDetail) {
-                                showCategoryDetail = false
-                            } else {
-                                onBack()
-                            }
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth().height(48.dp)
-                    ) {
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            com.groovernapp.mosqueathan.util.Lang.get("Back", "Kembali"),
-                            color = Color.White,
-                            fontSize = 16.sp,
+                            text = Lang.get("Settings", "Pengaturan"),
+                            color = Color(0xFFFFD54F),
+                            fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
 
-            // Right Pane Settings Editor
-            if (!isCompact || showCategoryDetail) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .then(if (isCompact) Modifier.fillMaxWidth() else Modifier.fillMaxWidth(0.7f).align(Alignment.CenterEnd)),
-                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.4f)),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
-                ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(if (isCompact) 16.dp else 32.dp),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        if (isCompact) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
-                                androidx.compose.material3.Icon(
-                                    imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Back",
-                                    tint = Color.White,
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clickable { showCategoryDetail = false }
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = selectedCategory.getDisplayName(),
-                                    color = Color.White,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        } else {
-                            Text(
-                                text = selectedCategory.getDisplayName(),
-                                color = Color.White,
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = selectedCategory.getDescription(),
-                                color = Color.White.copy(alpha = 0.6f),
-                                fontSize = 15.sp
-                            )
-                            Spacer(modifier = Modifier.height(28.dp))
-                        }
+            // Categories items list
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
+            ) {
+                displayedCategories.forEach { category ->
+                    val isSelected = selectedCategory == category
+                    val interactionSource = remember { MutableInteractionSource() }
+                    val isFocused by interactionSource.collectIsFocusedAsState()
+                    val isHovered by interactionSource.collectIsHoveredAsState()
+                    val isFocusedOrHovered = isFocused || isHovered
 
-                        // Category specific UI — each segment is in its own file
-                        when (selectedCategory) {
-                            SettingsCategory.PRAYER_SCHEDULE -> {
-                                PrayerScheduleSettingsSegment(
-                                    latText = latText,
-                                    onLatTextChange = { latText = it },
-                                    lngText = lngText,
-                                    onLngTextChange = { lngText = it },
-                                    calculationMethodName = calculationMethodName,
-                                    kemenagCityId = kemenagCityId,
-                                    kemenagCityName = kemenagCityName,
-                                    kemenagDuration = kemenagDuration,
-                                    kemenagTargetDate = kemenagTargetDate,
-                                    citySearchResults = citySearchResults,
-                                    isSearchingCities = isSearchingCities,
-                                    kemenagSchedules = kemenagSchedules,
-                                    onMethodChange = { calculationMethodName = it },
-                                    onKemenagCitySelected = { id, name ->
-                                        kemenagCityId = id
-                                        kemenagCityName = name
-                                    },
-                                    onKemenagDurationChange = { kemenagDuration = it },
-                                    onKemenagTargetDateChange = { kemenagTargetDate = it },
-                                    onSearchKemenagCities = onSearchKemenagCities,
-                                    onDownloadKemenagSchedules = {
-                                        onDownloadKemenagSchedules(kemenagCityId, kemenagCityName, kemenagDuration, kemenagTargetDate)
-                                    },
-                                    offsetImsak = offsetImsak,
-                                    offsetSubuh = offsetSubuh,
-                                    offsetSyuruq = offsetSyuruq,
-                                    offsetDzuhur = offsetDzuhur,
-                                    offsetAshar = offsetAshar,
-                                    offsetMaghrib = offsetMaghrib,
-                                    offsetIsya = offsetIsya,
-                                    onOffsetImsakChange = { offsetImsak = it },
-                                    onOffsetSubuhChange = { offsetSubuh = it },
-                                    onOffsetSyuruqChange = { offsetSyuruq = it },
-                                    onOffsetDzuhurChange = { offsetDzuhur = it },
-                                    onOffsetAsharChange = { offsetAshar = it },
-                                    onOffsetMaghribChange = { offsetMaghrib = it },
-                                    onOffsetIsyaChange = { offsetIsya = it }
-                                )
-                            }
-
-                            SettingsCategory.ADZAN_IQOMAH -> {
-                                SettingsCard(
-                                    title = com.groovernapp.mosqueathan.util.Lang.get("Adzan & Iqomah", "Adzan & Iqomah"),
-                                    icon = Icons.Default.AccessTime
-                                ) {
-                                    IqomahSettingsSegment(
-                                        adzanLeadMinutes = adzanLeadMinutes,
-                                        onAdzanLeadMinutesChange = { adzanLeadMinutes = it },
-                                        iqomahSubuh = iqomahSubuh,
-                                        onIqomahSubuhChange = { iqomahSubuh = it },
-                                        iqomahDzuhur = iqomahDzuhur,
-                                        onIqomahDzuhurChange = { iqomahDzuhur = it },
-                                        iqomahAshar = iqomahAshar,
-                                        onIqomahAsharChange = { iqomahAshar = it },
-                                        iqomahMaghrib = iqomahMaghrib,
-                                        onIqomahMaghribChange = { iqomahMaghrib = it },
-                                        iqomahIsya = iqomahIsya,
-                                        onIqomahIsyaChange = { iqomahIsya = it }
-                                    )
-                                }
-                            }
-
-                            SettingsCategory.DISPLAY_MEDIA -> {
-                                val backgroundPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-                                    contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
-                                ) { uri: android.net.Uri? ->
-                                    if (uri != null) {
-                                        onSelectCustomBackground(uri)
-                                    }
-                                }
-                                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                                    SettingsCard(
-                                        title = com.groovernapp.mosqueathan.util.Lang.get("Background Theme", "Latar Belakang & Media"),
-                                        icon = Icons.Default.Image
-                                    ) {
-                                        ThemeSettingsSegment(
-                                            config = config,
-                                            transitionType = config.transitionType,
-                                            slideIntervalSeconds = config.slideIntervalSeconds,
-                                            videoWaitUntilEnd = config.videoWaitUntilEnd,
-                                            includeDefaultImage = config.includeDefaultImage,
-                                            mediaList = mediaList,
-                                            slideshowSchedules = slideshowSchedules,
-                                            onUpdateThemeSettings = onUpdateThemeSettings,
-                                            onAddMediaItem = {
-                                                mediaPickerLauncher.launch(
-                                                    androidx.activity.result.PickVisualMediaRequest(
-                                                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                                                    )
-                                                )
-                                            },
-                                            onDeleteMediaItem = onDeleteMediaItem,
-                                            onSelectCustomBackground = {
-                                                backgroundPickerLauncher.launch(
-                                                    androidx.activity.result.PickVisualMediaRequest(
-                                                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
-                                                    )
-                                                )
-                                            },
-                                            onClearCustomBackground = onClearCustomBackground,
-                                            onAddSlideshowSchedule = onAddSlideshowSchedule,
-                                            onDeleteSlideshowSchedule = onDeleteSlideshowSchedule,
-                                            onPreviewSlideshow = onPreviewSlideshow
-                                        )
-                                    }
-                                    SettingsCard(
-                                        title = com.groovernapp.mosqueathan.util.Lang.get("Announcements", "Teks Pengumuman"),
-                                        icon = Icons.Default.Campaign
-                                    ) {
-                                        AnnouncementsSettingsSegment(
-                                            config = config,
-                                            announcements = announcements,
-                                            onAddAnnouncement = onAddAnnouncement,
-                                            onDeleteAnnouncement = onDeleteAnnouncement,
-                                            onEditAnnouncement = onEditAnnouncement,
-                                            onUpdateFooters = onUpdateFooters,
-                                            onPreviewAdzan = onPreviewAdzan,
-                                            onPreviewIqomah = onPreviewIqomah
-                                        )
-                                    }
-                                }
-                            }
-
-                            SettingsCategory.REMOTE_DEVICES -> {
-                                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                                    SettingsCard(
-                                        title = com.groovernapp.mosqueathan.util.Lang.get("Web Control Server", "Server Web Remote"),
-                                        icon = Icons.Default.Dns
-                                    ) {
-                                        WebControlSettingsSegment(
-                                            showSettingsOnTv = config.showSettingsOnTv,
-                                            isTv = isTv,
-                                            onUpdateShowSettingsOnTv = onUpdateShowSettingsOnTv
-                                        )
-                                    }
-                                    SettingsCard(
-                                        title = com.groovernapp.mosqueathan.util.Lang.get("Connected Devices", "Perangkat Terhubung"),
-                                        icon = Icons.Default.Devices
-                                    ) {
-                                        DevicesSettingsSegment(
-                                            config = config,
-                                            devices = devices,
-                                            onSetDeviceMaster = onSetDeviceMaster,
-                                            onDeleteDevice = onDeleteDevice
-                                        )
-                                    }
-                                }
-                            }
-
-                            SettingsCategory.SYSTEM_MAINTENANCE -> {
-                                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                                    SettingsCard(
-                                        title = com.groovernapp.mosqueathan.util.Lang.get("Standby & Display", "Standby & Tampilan"),
-                                        icon = Icons.Default.Tv
-                                    ) {
-                                        StandbySettingsSegment(
-                                            standbyModeEnabled = standbyModeEnabled,
-                                            onStandbyModeEnabledChange = { standbyModeEnabled = it },
-                                            standbySchedules = standbySchedules,
-                                            onAddStandbySchedule = onAddStandbySchedule,
-                                            onDeleteStandbySchedule = onDeleteStandbySchedule
-                                        )
-                                    }
-                                    SettingsCard(
-                                        title = com.groovernapp.mosqueathan.util.Lang.get("Reset Configurations", "Reset Konfigurasi"),
-                                        icon = Icons.Default.Restore
-                                    ) {
-                                        ResetSettingsSegment(onResetToDefaults = onResetToDefaults)
-                                    }
-                                }
-                            }
-                        }
+                    val borderColor = when {
+                        isSelected -> Color(0xFFFFD54F)
+                        isFocusedOrHovered -> Color(0xFFFFD54F).copy(alpha = 0.8f)
+                        else -> Color.White.copy(alpha = 0.15f)
                     }
+                    val borderWidth = if (isSelected || isFocusedOrHovered) 2.dp else 1.dp
+                    val backgroundColor = when {
+                        isSelected && isFocusedOrHovered -> Color(0xFFFFD54F).copy(alpha = 0.25f)
+                        isSelected -> Color(0xFFFFD54F).copy(alpha = 0.15f)
+                        isFocusedOrHovered -> Color.White.copy(alpha = 0.12f)
+                        else -> Color.Transparent
+                    }
+                    val tintColor = if (isSelected || isFocusedOrHovered) Color(0xFFFFD54F) else Color.White
 
-                    // Save / Apply Button (only for config-saving categories)
-                    if (selectedCategory in listOf(
-                            SettingsCategory.PRAYER_SCHEDULE,
-                            SettingsCategory.ADZAN_IQOMAH,
-                            SettingsCategory.SYSTEM_MAINTENANCE
-                        )
-                    ) {
-                        var isSaving by remember { mutableStateOf(false) }
-                        val coroutineScope = rememberCoroutineScope()
-
-                        TvFocusablePrimaryButton(
-                            onClick = {
-                                if (isSaving) return@TvFocusablePrimaryButton
-                                isSaving = true
-                                coroutineScope.launch {
-                                    if (selectedCategory == SettingsCategory.SYSTEM_MAINTENANCE) {
-                                        onSaveStandby(standbyModeEnabled, standbyStartTime, standbyEndTime)
-                                    } else {
-                                        val lat = latText.toDoubleOrNull() ?: config.latitude
-                                        val lng = lngText.toDoubleOrNull() ?: config.longitude
-                                        onSaveConfig(
-                                            lat,
-                                            lng,
-                                            iqomahSubuh,
-                                            iqomahDzuhur,
-                                            iqomahAshar,
-                                            iqomahMaghrib,
-                                            iqomahIsya,
-                                            calculationMethodName,
-                                            adzanLeadMinutes,
-                                            offsetImsak,
-                                            offsetSubuh,
-                                            offsetSyuruq,
-                                            offsetDzuhur,
-                                            offsetAshar,
-                                            offsetMaghrib,
-                                            offsetIsya,
-                                            kemenagCityId,
-                                            kemenagCityName,
-                                            kemenagDuration,
-                                            kemenagTargetDate
-                                        )
-                                    }
-                                    delay(600)
-                                    isSaving = false
-                                }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .border(
+                                width = borderWidth,
+                                color = borderColor,
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .background(
+                                backgroundColor,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = androidx.compose.foundation.LocalIndication.current
+                            ) {
+                                onCategorySelect(category)
                             },
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp)
-                        ) {
-                            if (isSaving) {
-                                CircularProgressIndicator(
-                                    color = Color.Black,
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.dp
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isCollapsed) {
+                            Icon(
+                                imageVector = category.icon,
+                                contentDescription = category.getDisplayName(),
+                                tint = tintColor,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        } else {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = category.icon,
+                                    contentDescription = null,
+                                    tint = tintColor,
+                                    modifier = Modifier.size(24.dp)
                                 )
-                            } else {
+                                Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = com.groovernapp.mosqueathan.util.Lang.get("Save Settings", "Simpan Pengaturan"),
-                                    color = Color.Black,
+                                    text = category.getDisplayName(),
+                                    color = tintColor,
                                     fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = if (isSelected || isFocusedOrHovered) FontWeight.Bold else FontWeight.Medium
                                 )
                             }
                         }
                     }
                 }
             }
-            } // end if (!isCompact || showCategoryDetail)
+        }
+
+        // Bottom area
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
+        ) {
+            if (!isCollapsed) {
+                Text(
+                    text = Lang.get("Version: v$versionName", "Versi: v$versionName"),
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)
+                )
+            }
+
+            TvFocusableButton(
+                onClick = onBack,
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                if (isCollapsed) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = Lang.get("Back", "Kembali"),
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = Lang.get("Back", "Kembali"),
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     }
 }
-}
-
-
 
 enum class SettingsCategory(
     val getDisplayName: @Composable () -> String,
-    val getDescription: @Composable () -> String
+    val getDescription: @Composable () -> String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
 ) {
     PRAYER_SCHEDULE(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Prayer Schedule", "Jadwal Shalat") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Manage coordinates, calculation methods, and manual time corrections.", "Atur koordinat GPS, metode perhitungan, dan penyesuaian waktu (offset) tiap shalat.") }
+        getDisplayName = { Lang.get("Prayer Schedule", "Jadwal Shalat") },
+        getDescription = { Lang.get("Manage coordinates, calculation methods, and manual time corrections.", "Atur koordinat GPS, metode perhitungan, dan penyesuaian waktu (offset) tiap shalat.") },
+        icon = Icons.Default.AccessTime
     ),
     ADZAN_IQOMAH(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Adzan & Iqomah", "Adzan & Iqomah") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Set the adzan preparation duration and the iqomah wait time for each prayer.", "Atur durasi persiapan adzan dan jeda waktu iqomah untuk masing-masing waktu shalat.") }
+        getDisplayName = { Lang.get("Adzan & Iqomah", "Adzan & Iqomah") },
+        getDescription = { Lang.get("Set the adzan preparation duration and the iqomah wait time for each prayer.", "Atur durasi persiapan adzan dan jeda waktu iqomah untuk masing-masing waktu shalat.") },
+        icon = Icons.Default.Campaign
     ),
     DISPLAY_MEDIA(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Display & Media", "Tampilan & Media") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Configure background wallpapers, slideshows, and scrolling announcements.", "Atur gambar latar belakang, interval slideshow, dan pengumuman teks berjalan.") }
+        getDisplayName = { Lang.get("Display & Media", "Tampilan & Media") },
+        getDescription = { Lang.get("Configure background wallpapers, slideshows, and scrolling running texts.", "Atur gambar latar belakang, interval slideshow, dan running text.") },
+        icon = Icons.Default.Image
     ),
     REMOTE_DEVICES(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Connectivity & Remote", "Konektivitas & Remote") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Manage web control server access, connected devices, and PIN security.", "Kelola akses server kontrol web, perangkat yang terhubung, PIN, dan otoritas master.") }
+        getDisplayName = { Lang.get("Connectivity & Remote", "Konektivitas & Remote") },
+        getDescription = { Lang.get("Manage web control server access, connected devices, and PIN security.", "Kelola akses server kontrol web, perangkat yang terhubung, PIN, dan otoritas master.") },
+        icon = Icons.Default.Devices
     ),
     SYSTEM_MAINTENANCE(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("System & Reset", "Sistem & Reset") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Configure TV standby hours and restore application settings to defaults.", "Atur jadwal layar hitam (standby) otomatis dan kembalikan pengaturan ke setelan pabrik.") }
+        getDisplayName = { Lang.get("System & Reset", "Sistem & Reset") },
+        getDescription = { Lang.get("Configure TV standby hours and restore application settings to defaults.", "Atur jadwal layar hitam (standby) otomatis dan kembalikan pengaturan ke setelan pabrik.") },
+        icon = Icons.Default.Restore
     )
 }

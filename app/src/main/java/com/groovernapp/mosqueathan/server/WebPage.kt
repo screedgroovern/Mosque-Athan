@@ -126,6 +126,11 @@ object WebPage {
 
     <!-- App Header (Always Visible) -->
     <header class="app-header">
+        <button id="menu-toggle-btn" class="menu-toggle-btn" onclick="toggleSidebar()" title="Toggle Menu">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
         <div class="header-logo" onclick="goBackToMenu()">
             <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="color: var(--accent); width: 32px; height: 32px;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -153,10 +158,21 @@ object WebPage {
     </header>
 
     <div class="app-container">
+        <!-- Sidebar Back Scrim (For mobile overlay side sheet) -->
+        <div id="sidebar-scrim" class="sidebar-scrim" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar Navigation -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="app-sidebar">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <svg class="sidebar-header-gear" width="24" height="24" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                </svg>
+                <span class="sidebar-header-text" data-lang-key="nav_settings">Pengaturan</span>
+            </div>
+
             <!-- Language Selector -->
-            <div style="display: flex; background-color: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 8px; padding: 3px; gap: 4px; margin-bottom: 1rem;">
+            <div class="lang-selector-container" style="display: flex; background-color: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 8px; padding: 3px; gap: 4px; margin-bottom: 1rem;">
                 <button class="lang-toggle-btn" data-lang="id" onclick="setLanguage('id')" style="flex: 1; background: none; border: none; padding: 6px; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: var(--text-secondary); transition: all 0.2s ease;">
                     Indonesia
                 </button>

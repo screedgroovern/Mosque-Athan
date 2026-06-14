@@ -7,7 +7,7 @@ object DisplayMediaWebSegment {
             <section id="section-display-media" class="content-section">
                 <div class="section-header">
                     <h2 class="section-title" data-lang-key="title_display_media">Tampilan & Media</h2>
-                    <p class="section-desc" data-lang-key="desc_display_media">Atur gambar latar belakang, interval slideshow, dan pengumuman teks berjalan.</p>
+                    <p class="section-desc" data-lang-key="desc_display_media">Atur gambar latar belakang, interval slideshow, dan running text.</p>
                 </div>
                 
                 <div class="card">
@@ -171,14 +171,19 @@ object DisplayMediaWebSegment {
 
                 <!-- Announcements Card -->
                 <div class="card" style="margin-top: 1.5rem;">
-                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-                        </svg>
-                        <span data-lang-key="title_announcements">Kelola Pengumuman (Running Text)</span>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--accent); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                            </svg>
+                            <span data-lang-key="title_announcements">Kelola Running Text</span>
+                        </div>
+                        <button id="btn-toggle-reorder" class="btn btn-secondary phone-only-btn" onclick="toggleAnnouncementReorder()" style="height: 32px; padding: 0 10px; font-size: 0.85rem; font-weight: bold; border-color: var(--accent); color: var(--accent);">
+                            Urutkan
+                        </button>
                     </h3>
                     <div class="announcement-input-group">
-                        <input type="text" id="announcement-input" data-lang-key="placeholder_announcement" placeholder="Masukkan teks pengumuman baru...">
+                        <input type="text" id="announcement-input" data-lang-key="placeholder_announcement" placeholder="Masukkan teks Running Text baru..." onkeydown="if(event.key === 'Enter') addAnnouncement()">
                         <button class="btn btn-primary" onclick="addAnnouncement()">
                             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                             <span data-lang-key="btn_add">Tambah</span>
@@ -196,7 +201,7 @@ object DisplayMediaWebSegment {
                         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
-                        <span data-lang-key="title_adzan_iqomah_footers">Teks Halaman Adzan & Iqomah (Teks Berjalan)</span>
+                        <span data-lang-key="title_adzan_iqomah_footers">Teks Footer Adzan & Iqomah (Teks Berjalan)</span>
                     </h3>
                     <div class="form-grid">
                         <div class="form-group">

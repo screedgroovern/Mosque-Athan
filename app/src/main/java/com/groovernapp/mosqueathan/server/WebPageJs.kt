@@ -26,6 +26,7 @@ object WebPageJs {
         let offlineFilesQueue = [];
         let pendingTvState = null;
         let isSyncing = false;
+        let isAnnouncementReorderMode = false;
 
         // Auto-sync custom_tv_ip with the current URL if loaded directly from a TV/emulator settings server
         const locHostname = window.location.hostname;
@@ -107,10 +108,11 @@ object WebPageJs {
 
         const translations = {
             id: {
+                nav_settings: "Pengaturan",
                 nav_location: "Koordinat Masjid",
                 nav_iqomah: "Durasi & Jeda Waktu",
                 nav_method: "Metode Perhitungan",
-                nav_announcements: "Kelola Pengumuman",
+                nav_announcements: "Kelola Running Text",
                 nav_theme: "Latar Belakang",
                 nav_devices: "Perangkat Terhubung",
                 nav_reset: "Reset Pengaturan",
@@ -159,9 +161,9 @@ object WebPageJs {
                 toast_coords_saved: "Koordinat lokasi disimpan!",
                 toast_iqomah_saved: "Jeda durasi iqomah & persiapan adzan disimpan!",
                 toast_method_saved: "Metode kalkulasi diperbarui!",
-                toast_announcement_added: "Pengumuman baru ditambahkan!",
-                toast_announcement_deleted: "Pengumuman dihapus.",
-                toast_announcements_reordered: "Urutan pengumuman diperbarui.",
+                toast_announcement_added: "Running Text baru ditambahkan!",
+                toast_announcement_deleted: "Running Text dihapus.",
+                toast_announcements_reordered: "Urutan Running Text diperbarui.",
                 toast_bg_uploaded: "Mengunggah gambar latar belakang...",
                 toast_bg_cleared: "Latar belakang dikembalikan ke default.",
                 toast_media_uploaded: "Mengunggah slide presentasi...",
@@ -182,26 +184,44 @@ object WebPageJs {
                 desc_offsets: "Tambahkan atau kurangi waktu sholat hasil kalkulasi otomatis (menit) untuk menyelaraskan dengan ketetapan setempat.",
                 btn_save_offsets: "Simpan Penyesuaian Waktu",
                 toast_offsets_saved: "Penyesuaian waktu sholat disimpan!",
-                title_iqomah: "Durasi & Jeda Waktu",
-                desc_iqomah: "Atur jeda waktu hitung mundur iqomah (menit) setelah adzan selesai berkumandang untuk masing-masing waktu sholat, serta durasi persiapan adzan.",
+                nav_adzan_iqomah: "Adzan & Iqomah",
+                desc_adzan_iqomah: "Atur durasi persiapan adzan, jeda iqomah, serta running text yang tampil saat layar adzan dan countdown iqomah.",
+                nav_adzan: "Adzan",
+                title_adzan: "Adzan",
+                desc_adzan: "Atur durasi persiapan adzan dan running text yang akan tampil saat layar adzan.",
+                title_adzan_duration: "Durasi Persiapan Adzan",
                 label_adzan_prep: "Persiapan Adzan (Lead Minutes)",
-                btn_save_iqomah: "Simpan Jeda Iqomah",
+                title_adzan_announcement: "Running Text (Teks Berjalan Adzan)",
+                desc_adzan_announcement: "Teks Running Text berjalan khusus saat layar adzan aktif.",
+                btn_preview_adzan: "Preview Layar Adzan",
+                btn_save_adzan: "Simpan Pengaturan Adzan",
+                nav_iqomah: "Iqomah",
+                title_iqomah: "Iqomah",
+                desc_iqomah: "Atur jeda waktu iqomah setelah adzan berkumandang dan running text saat countdown iqomah.",
+                title_iqomah_wait_time: "Iqomah wait time after adzan",
+                desc_iqomah_wait_time: "Jeda waktu iqomah setelah adzan selesai berkumandang.",
+                title_iqomah_announcement: "Running Text (Teks Berjalan Iqomah)",
+                desc_iqomah_announcement: "Teks Running Text berjalan khusus saat layar jeda iqomah aktif.",
+                btn_preview_iqomah: "Preview Layar Iqomah",
+                btn_save_iqomah: "Simpan Pengaturan Iqomah",
                 title_settings_on_tv: "Pengaturan di TV",
                 desc_settings_on_tv: "Tampilkan atau sembunyikan menu pengaturan langsung pada layar TV",
                 title_method: "Konvensi Metode Perhitungan",
                 desc_method: "Pilih parameter/institusi standar global yang akan digunakan sebagai dasar penentuan waktu sholat pada wilayah geografis Anda.",
                 btn_save_method: "Simpan Perubahan",
-                title_announcements: "Kelola Pengumuman (Running Text)",
-                desc_announcements: "Tambahkan pesan running text yang akan bergulir secara berkala di bagian bawah dashboard layar utama masjid.",
+                title_announcements: "Kelola Running Text",
+                desc_announcements: "Tambahkan pesan Running Text yang akan bergulir secara berkala di bagian bawah dashboard layar utama masjid.",
                 title_adzan_iqomah_footers: "Teks Footer Adzan & Iqomah (Teks Berjalan)",
                 label_adzan_footer: "Footer Layar Adzan",
                 label_iqomah_footer: "Footer Layar Iqomah",
                 btn_save_footers: "Simpan Teks Footer",
                 toast_footers_saved: "Teks footer berhasil disimpan!",
-                placeholder_announcement: "Masukkan teks pengumuman baru...",
+                placeholder_announcement: "Masukkan teks Running Text baru...",
                 btn_add: "Tambah",
                 label_announcement_list: "Daftar Running Text (Drag & Drop untuk mengatur urutan)",
                 btn_delete: "Hapus",
+                title_display_media: "Tampilan & Media",
+                desc_display_media: "Atur gambar latar belakang, interval slideshow, dan running text.",
                 title_theme: "Latar Belakang & Slideshow",
                 desc_theme: "Kelola serangkaian slideshow multi-gambar dan video beserta transisi tayangannya.",
                 label_include_default: "Sertakan Gambar Default (Masjidil Haram)",
@@ -238,11 +258,11 @@ object WebPageJs {
                 loading_devices: "Memuat daftar perangkat...",
                 no_devices: "Belum ada perangkat terhubung.",
                 title_reset: "Reset Konfigurasi",
-                desc_reset: "Hapus seluruh setelan kustomisasi, database jadwal, pengumuman, serta slideshow media dan kembalikan ke setelan bawaan.",
+                desc_reset: "Hapus seluruh setelan kustomisasi, database jadwal, running text, serta slideshow media dan kembalikan ke setelan bawaan.",
                 reset_warning: "Tindakan Berbahaya",
                 reset_warning_desc: "Proses ini akan mengembalikan lokasi masjid, durasi iqomah, metode, serta seluruh running text dan media slideshow ke setelan bawaan pabrik. Data yang dihapus tidak dapat dipulihkan.",
                 btn_reset: "Setel Ulang Semua Pengaturan",
-                confirm_reset: "Apakah Anda yakin ingin menyetel ulang seluruh pengaturan ke bawaan default? Semua media dan pengumuman kustom akan terhapus.",
+                confirm_reset: "Apakah Anda yakin ingin menyetel ulang seluruh pengaturan ke bawaan default? Semua media dan running text kustom akan terhapus.",
                 modal_master_title: "Pindahkan Hak Master?",
                 modal_master_warning: "PERINGATAN: Hak akses Master Anda akan dialihkan. Setelah dipindah tangankan, Anda tidak dapat lagi mengubah PIN atau menunjuk Master dari perangkat ini.",
                 modal_master_confirm_desc: "Tunjuk sebagai perangkat Master? Perangkat Master bertanggung jawab untuk mengelola PIN keamanan remote kontrol.",
@@ -288,10 +308,11 @@ object WebPageJs {
                 kemenag_date_label: "Pilih Tanggal Batas Akhir"
             },
             en: {
+                nav_settings: "Settings",
                 nav_location: "Mosque Coordinates",
                 nav_iqomah: "Duration & Interval",
                 nav_method: "Calculation Method",
-                nav_announcements: "Manage Announcements",
+                nav_announcements: "Manage Running Text",
                 nav_theme: "Background Theme",
                 nav_devices: "Connected Devices",
                 nav_reset: "Reset Settings",
@@ -340,9 +361,9 @@ object WebPageJs {
                 toast_coords_saved: "Coordinates saved!",
                 toast_iqomah_saved: "Iqomah countdown & adzan preparation saved!",
                 toast_method_saved: "Calculation method updated!",
-                toast_announcement_added: "New announcement added!",
-                toast_announcement_deleted: "Announcement deleted.",
-                toast_announcements_reordered: "Announcements reordered.",
+                toast_announcement_added: "New running text added!",
+                toast_announcement_deleted: "Running text deleted.",
+                toast_announcements_reordered: "Running texts reordered.",
                 toast_bg_uploaded: "Uploading background image...",
                 toast_bg_cleared: "Background returned to default.",
                 toast_media_uploaded: "Uploading presentation slide...",
@@ -363,26 +384,44 @@ object WebPageJs {
                 desc_offsets: "Add or subtract minutes from the automatically calculated prayer times to match local regulations.",
                 btn_save_offsets: "Save Time Adjustments",
                 toast_offsets_saved: "Prayer time adjustments saved!",
-                title_iqomah: "Duration & Interval",
-                desc_iqomah: "Set the countdown waiting time (minutes) before iqomah after adzan ends for each prayer time, as well as the adzan preparation duration.",
+                nav_adzan_iqomah: "Adzan & Iqomah",
+                desc_adzan_iqomah: "Configure adzan preparation duration, iqomah wait times, and running text announcements for both adzan and iqomah screens.",
+                nav_adzan: "Adzan",
+                title_adzan: "Adzan",
+                desc_adzan: "Set the adzan preparation duration and running text to show during the adzan screen.",
+                title_adzan_duration: "Adzan Preparation Duration",
                 label_adzan_prep: "Adzan Preparation (Lead Minutes)",
-                btn_save_iqomah: "Save Iqomah Waiting Time",
+                title_adzan_announcement: "Running Text (Adzan)",
+                desc_adzan_announcement: "Running text displayed specifically during the adzan screen.",
+                btn_preview_adzan: "Preview Adzan Screen",
+                btn_save_adzan: "Save Adzan Settings",
+                nav_iqomah: "Iqomah",
+                title_iqomah: "Iqomah",
+                desc_iqomah: "Set the iqomah countdown wait times after adzan and running text during the iqomah countdown.",
+                title_iqomah_wait_time: "Iqomah wait time after adzan",
+                desc_iqomah_wait_time: "The wait time interval for iqomah after adzan has finished.",
+                title_iqomah_announcement: "Running Text (Iqomah)",
+                desc_iqomah_announcement: "Running text displayed specifically during the iqomah countdown.",
+                btn_preview_iqomah: "Preview Iqomah Screen",
+                btn_save_iqomah: "Save Iqomah Settings",
                 title_settings_on_tv: "Settings on TV",
                 desc_settings_on_tv: "Show or hide settings menu directly on the TV screen",
                 title_method: "Calculation Method Convention",
                 desc_method: "Select the global standard prayer calculation method to apply to your geographical region.",
                 btn_save_method: "Save Method",
-                title_announcements: "Manage Announcements (Running Text)",
-                desc_announcements: "Add announcements to scroll at the bottom of the main mosque display dashboard.",
+                title_announcements: "Manage Running Text",
+                desc_announcements: "Add running texts to scroll at the bottom of the main mosque display dashboard.",
                 title_adzan_iqomah_footers: "Adzan & Iqomah Screen Footers (Running Text)",
                 label_adzan_footer: "Adzan Screen Footer",
                 label_iqomah_footer: "Iqomah Screen Footer",
                 btn_save_footers: "Save Footer Texts",
                 toast_footers_saved: "Footer texts saved successfully!",
-                placeholder_announcement: "Type new announcement / running text...",
+                placeholder_announcement: "Type new running text...",
                 btn_add: "Add",
                 label_announcement_list: "Running Text List (Drag & Drop to reorder)",
                 btn_delete: "Delete",
+                title_display_media: "Display & Media",
+                desc_display_media: "Configure background wallpapers, slideshows, and scrolling running texts.",
                 title_theme: "Background Theme & Slideshow",
                 desc_theme: "Manage slideshow media transition styles and items.",
                 label_include_default: "Include Default Image (Masjidil Haram)",
@@ -419,11 +458,11 @@ object WebPageJs {
                 loading_devices: "Loading devices list...",
                 no_devices: "No connected devices yet.",
                 title_reset: "Reset Configuration",
-                desc_reset: "Delete all customized settings, announcements, and slideshow media to restore the factory default settings.",
+                desc_reset: "Delete all customized settings, running texts, and slideshow media to restore the factory default settings.",
                 reset_warning: "Dangerous Action",
                 reset_warning_desc: "This process will restore the mosque coordinates, iqomah duration, method, as well as all running texts and slideshow media to defaults. Deleted data cannot be recovered.",
                 btn_reset: "Reset All Settings",
-                confirm_reset: "Are you sure you want to reset all settings to defaults? All custom media and announcements will be deleted.",
+                confirm_reset: "Are you sure you want to reset all settings to defaults? All custom media and running texts will be deleted.",
                 modal_master_title: "Transfer Master Privileges?",
                 modal_master_warning: "WARNING: Your Master access privileges will be transferred. Once transferred, you can no longer change the PIN or assign Master from this device.",
                 modal_master_confirm_desc: "Assign as Master device? The Master device is responsible for managing the security PIN for remote controls.",
@@ -545,7 +584,42 @@ object WebPageJs {
             if (container) {
                 container.classList.add('show-detail');
             }
+
+            // Close sidebar drawer on mobile after selection
+            const sidebar = document.getElementById('app-sidebar');
+            const scrim = document.getElementById('sidebar-scrim');
+            if (sidebar && window.innerWidth <= 600) {
+                sidebar.classList.remove('open');
+                if (scrim) scrim.classList.remove('visible');
+            }
         }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('app-sidebar');
+            const scrim = document.getElementById('sidebar-scrim');
+            if (!sidebar) return;
+            
+            if (window.innerWidth <= 600) {
+                // Mobile behavior: toggle drawer open/close
+                sidebar.classList.toggle('open');
+                if (scrim) scrim.classList.toggle('visible');
+            } else {
+                // Tablet/Desktop behavior: toggle collapse
+                sidebar.classList.toggle('collapsed');
+            }
+        }
+
+        // Initialize sidebar state on DOM load
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('app-sidebar');
+            if (sidebar) {
+                if (window.innerWidth > 600 && window.innerWidth <= 1024) {
+                    sidebar.classList.add('collapsed');
+                } else if (window.innerWidth <= 600) {
+                    sidebar.classList.add('collapsed');
+                }
+            }
+        });
 
         function goBackToMenu() {
             const container = document.querySelector('.app-container');
@@ -1696,26 +1770,53 @@ object WebPageJs {
             announceContainer.innerHTML = '';
             let draggedItem = null;
 
+            if (isAnnouncementReorderMode) {
+                announceContainer.classList.add('reorder-active');
+            } else {
+                announceContainer.classList.remove('reorder-active');
+            }
+
+            const toggleBtn = document.getElementById('btn-toggle-reorder');
+            if (toggleBtn) {
+                if (isAnnouncementReorderMode) {
+                    toggleBtn.innerText = currentLang === 'id' ? 'Selesai' : 'Done';
+                    toggleBtn.style.color = 'var(--text-primary)';
+                    toggleBtn.style.borderColor = 'var(--text-primary)';
+                } else {
+                    toggleBtn.innerText = currentLang === 'id' ? 'Urutkan' : 'Arrange';
+                    toggleBtn.style.color = 'var(--accent)';
+                    toggleBtn.style.borderColor = 'var(--accent)';
+                }
+            }
+
             announcements.forEach(ann => {
                 const item = document.createElement('div');
                 item.className = 'announcement-item';
-                item.setAttribute('draggable', 'true');
                 item.setAttribute('data-id', ann.id);
-                item.style.cursor = 'grab';
+
+                if (isAnnouncementReorderMode || window.innerWidth > 600) {
+                    item.setAttribute('draggable', 'true');
+                    item.style.cursor = 'grab';
+                } else {
+                    item.setAttribute('draggable', 'false');
+                    item.style.cursor = 'default';
+                }
 
                 item.innerHTML = 
-                    ' <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;">' +
-                    '   <svg style="color: var(--text-secondary); opacity: 0.5; flex-shrink: 0;" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+                    ' <div class="announcement-content-row" style="display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;">' +
+                    '   <svg class="drag-handle" style="color: var(--text-secondary); opacity: 0.5; flex-shrink: 0;" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
                     '     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>' +
                     '   </svg>' +
                     '   <span class="announcement-text" style="word-break: break-word;">' + escapeHtml(ann.content) + '</span>' +
                     ' </div>' +
-                    ' <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">' +
-                    '   <button class="action-btn" onclick="editAnnouncement(\'' + ann.id + '\', \'' + escapeHtml(ann.content).replace(/'/g, "\\'") + '\')" title="Edit">' +
+                    ' <div class="announcement-actions-row" style="display: flex; gap: 0.5rem; flex-shrink: 0;">' +
+                    '   <button class="action-btn edit-btn-web" onclick="editAnnouncement(\'' + ann.id + '\', \'' + escapeHtml(ann.content).replace(/'/g, "\\'") + '\')" title="Edit">' +
                     '     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>' +
+                    '     <span class="btn-text" style="margin-left: 4px; font-size: 13px; font-weight: 500;">Edit</span>' +
                     '   </button>' +
-                    '   <button class="action-btn delete-btn-icon" onclick="deleteAnnouncement(\'' + ann.id + '\')" title="Hapus">' +
+                    '   <button class="action-btn delete-btn-web" onclick="deleteAnnouncement(\'' + ann.id + '\')" title="Hapus">' +
                     '     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>' +
+                    '     <span class="btn-text" style="margin-left: 4px; font-size: 13px; font-weight: 500;">' + (currentLang === 'id' ? 'Hapus' : 'Delete') + '</span>' +
                     '   </button>' +
                     ' </div>';
 
@@ -2017,6 +2118,38 @@ object WebPageJs {
             }
         }
 
+        async function saveAdzanSettings(btn) {
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = (currentLang === 'id' ? 'Menyimpan...' : 'Saving...');
+            btn.disabled = true;
+            try {
+                sendUpdate();
+                showToast(currentLang === 'id' ? "Pengaturan adzan disimpan!" : "Adzan settings saved!", "success");
+            } catch (e) {
+                console.error("Error saving adzan settings:", e);
+                showToast(currentLang === 'id' ? "Gagal menyimpan pengaturan adzan." : "Failed to save adzan settings.", "error");
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }
+
+        async function saveIqomahSettings(btn) {
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = (currentLang === 'id' ? 'Menyimpan...' : 'Saving...');
+            btn.disabled = true;
+            try {
+                sendUpdate();
+                showToast(currentLang === 'id' ? "Pengaturan iqomah disimpan!" : "Iqomah settings saved!", "success");
+            } catch (e) {
+                console.error("Error saving iqomah settings:", e);
+                showToast(currentLang === 'id' ? "Gagal menyimpan pengaturan iqomah." : "Failed to save iqomah settings.", "error");
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }
+
         function adjustValue(prop, diff) {
             let val = appConfig[prop] || 0;
             val = Math.max(0, val + diff);
@@ -2301,9 +2434,34 @@ object WebPageJs {
             }
         }
 
+        function toggleAnnouncementReorder() {
+            isAnnouncementReorderMode = !isAnnouncementReorderMode;
+            const container = document.getElementById('announcements-container');
+            const btn = document.getElementById('btn-toggle-reorder');
+            if (isAnnouncementReorderMode) {
+                container.classList.add('reorder-active');
+                btn.innerText = currentLang === 'id' ? 'Selesai' : 'Done';
+                btn.style.color = 'var(--text-primary)';
+                btn.style.borderColor = 'var(--text-primary)';
+                container.querySelectorAll('.announcement-item').forEach(item => {
+                    item.setAttribute('draggable', 'true');
+                    item.style.cursor = 'grab';
+                });
+            } else {
+                container.classList.remove('reorder-active');
+                btn.innerText = currentLang === 'id' ? 'Urutkan' : 'Arrange';
+                btn.style.color = 'var(--accent)';
+                btn.style.borderColor = 'var(--accent)';
+                container.querySelectorAll('.announcement-item').forEach(item => {
+                    item.setAttribute('draggable', 'false');
+                    item.style.cursor = 'default';
+                });
+            }
+        }
+
         function addAnnouncement() {
             const input = document.getElementById('announcement-input');
-            const content = input.value.trim();
+            const content = input.value.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
             if (!content) return;
             
             safeSend({
@@ -2316,9 +2474,9 @@ object WebPageJs {
         }
 
         function editAnnouncement(id, oldContent) {
-            const newContent = prompt(currentLang === 'id' ? 'Edit teks pengumuman:' : 'Edit announcement text:', oldContent);
+            const newContent = prompt(currentLang === 'id' ? 'Edit teks berjalan:' : 'Edit running text:', oldContent);
             if (newContent !== null) {
-                const trimmed = newContent.trim();
+                const trimmed = newContent.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
                 if (trimmed) {
                     safeSend({
                         action: 'update_announcement',
@@ -2326,7 +2484,7 @@ object WebPageJs {
                         content: trimmed,
                         isActive: true
                     });
-                    showToast(currentLang === 'id' ? 'Pengumuman diperbarui.' : 'Announcement updated.');
+                    showToast(currentLang === 'id' ? 'Running Text diperbarui.' : 'Running text updated.');
                 }
             }
         }
@@ -2421,7 +2579,7 @@ object WebPageJs {
         function addFooterText(type) {
             const input = document.getElementById(type + '-footer-input');
             if (!input) return;
-            const content = input.value.trim();
+            const content = input.value.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
             if (!content) return;
             
             const list = type === 'adzan' ? adzanFooters : iqomahFooters;
@@ -2435,7 +2593,7 @@ object WebPageJs {
             const list = type === 'adzan' ? adzanFooters : iqomahFooters;
             const newContent = prompt(currentLang === 'id' ? 'Edit teks footer:' : 'Edit footer text:', oldContent);
             if (newContent !== null) {
-                const trimmed = newContent.trim();
+                const trimmed = newContent.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
                 if (trimmed) {
                     list[index] = trimmed;
                     saveFooterData(type);

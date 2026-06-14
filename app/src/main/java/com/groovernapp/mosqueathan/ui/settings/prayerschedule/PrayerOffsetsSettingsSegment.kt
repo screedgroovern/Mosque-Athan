@@ -31,13 +31,13 @@ fun PrayerOffsetsSettingsSegment(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        OffsetAdjustmentRow(Lang.get("Imsak", "Imsyak"), offsetImsak) { onOffsetImsakChange(it) }
-        OffsetAdjustmentRow(Lang.get("Fajr", "Subuh"), offsetSubuh) { onOffsetSubuhChange(it) }
-        OffsetAdjustmentRow(Lang.get("Sunrise", "Syuruq"), offsetSyuruq) { onOffsetSyuruqChange(it) }
-        OffsetAdjustmentRow(Lang.get("Dhuhr", "Dzuhur"), offsetDzuhur) { onOffsetDzuhurChange(it) }
-        OffsetAdjustmentRow(Lang.get("Asr", "Ashar"), offsetAshar) { onOffsetAsharChange(it) }
-        OffsetAdjustmentRow(Lang.get("Maghrib", "Maghrib"), offsetMaghrib) { onOffsetMaghribChange(it) }
-        OffsetAdjustmentRow(Lang.get("Isha", "Isya"), offsetIsya) { onOffsetIsyaChange(it) }
+        AdjustmentRow(Lang.get("Imsak", "Imsyak"), offsetImsak, minValue = -60, maxValue = 60, showSign = true) { onOffsetImsakChange(it) }
+        AdjustmentRow(Lang.get("Fajr", "Subuh"), offsetSubuh, minValue = -60, maxValue = 60, showSign = true) { onOffsetSubuhChange(it) }
+        AdjustmentRow(Lang.get("Sunrise", "Syuruq"), offsetSyuruq, minValue = -60, maxValue = 60, showSign = true) { onOffsetSyuruqChange(it) }
+        AdjustmentRow(Lang.get("Dhuhr", "Dzuhur"), offsetDzuhur, minValue = -60, maxValue = 60, showSign = true) { onOffsetDzuhurChange(it) }
+        AdjustmentRow(Lang.get("Asr", "Ashar"), offsetAshar, minValue = -60, maxValue = 60, showSign = true) { onOffsetAsharChange(it) }
+        AdjustmentRow(Lang.get("Maghrib", "Maghrib"), offsetMaghrib, minValue = -60, maxValue = 60, showSign = true) { onOffsetMaghribChange(it) }
+        AdjustmentRow(Lang.get("Isha", "Isya"), offsetIsya, minValue = -60, maxValue = 60, showSign = true) { onOffsetIsyaChange(it) }
     }
 }
 
