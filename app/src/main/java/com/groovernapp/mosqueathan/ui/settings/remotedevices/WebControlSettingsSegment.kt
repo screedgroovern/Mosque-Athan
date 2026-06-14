@@ -1,4 +1,6 @@
-package com.groovernapp.mosqueathan.ui.settings
+package com.groovernapp.mosqueathan.ui.settings.remotedevices
+
+import com.groovernapp.mosqueathan.ui.settings.*
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image

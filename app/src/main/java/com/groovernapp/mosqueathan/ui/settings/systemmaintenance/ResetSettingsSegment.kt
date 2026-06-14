@@ -1,4 +1,6 @@
-package com.groovernapp.mosqueathan.ui.settings
+package com.groovernapp.mosqueathan.ui.settings.systemmaintenance
+
+import com.groovernapp.mosqueathan.ui.settings.*
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

@@ -1,4 +1,6 @@
-package com.groovernapp.mosqueathan.ui.settings
+package com.groovernapp.mosqueathan.ui.settings.prayerschedule
+
+import com.groovernapp.mosqueathan.ui.settings.*
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -49,11 +51,11 @@ fun MethodSettingsSegment(
     var showSchedulesDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
-    LazyColumn(
+    Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.fillMaxHeight(0.8f)
+        modifier = Modifier.fillMaxWidth()
     ) {
-        items(calculationMethods) { method ->
+        calculationMethods.forEach { method ->
             val isSelected = calculationMethodName == method
             Row(
                 modifier = Modifier
@@ -85,7 +87,7 @@ fun MethodSettingsSegment(
         }
 
         if (calculationMethodName == "KEMENAG") {
-            item {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = com.groovernapp.mosqueathan.util.Lang.get("Selected City: ", "Kota Terpilih: ") + kemenagCityName,
@@ -193,10 +195,9 @@ fun MethodSettingsSegment(
                         singleLine = true
                     )
                 }
-            }
 
-            item {
                 var isDownloading by remember { mutableStateOf(false) }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
                 TvFocusablePrimaryButton(

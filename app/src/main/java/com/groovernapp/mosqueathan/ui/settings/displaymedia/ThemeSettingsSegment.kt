@@ -1,4 +1,10 @@
-package com.groovernapp.mosqueathan.ui.settings
+package com.groovernapp.mosqueathan.ui.settings.displaymedia
+
+import com.groovernapp.mosqueathan.ui.settings.systemmaintenance.TimePickerField
+
+import com.groovernapp.mosqueathan.ui.settings.prayerschedule.DatePickerField
+
+import com.groovernapp.mosqueathan.ui.settings.*
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

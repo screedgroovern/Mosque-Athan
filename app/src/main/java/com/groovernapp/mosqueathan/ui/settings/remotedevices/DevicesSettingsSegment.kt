@@ -1,4 +1,6 @@
-package com.groovernapp.mosqueathan.ui.settings
+package com.groovernapp.mosqueathan.ui.settings.remotedevices
+
+import com.groovernapp.mosqueathan.ui.settings.*
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

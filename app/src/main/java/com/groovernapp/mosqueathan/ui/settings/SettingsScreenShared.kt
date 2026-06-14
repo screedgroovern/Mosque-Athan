@@ -28,7 +28,12 @@ fun textFieldColors() = OutlinedTextFieldDefaults.colors(
     unfocusedBorderColor = Color.White.copy(alpha = 0.25f),
     focusedLabelColor = Color(0xFFFFD54F),
     unfocusedLabelColor = Color.White.copy(alpha = 0.6f),
-    cursorColor = Color(0xFFFFD54F)
+    cursorColor = Color(0xFFFFD54F),
+    disabledTextColor = Color.White.copy(alpha = 0.38f),
+    disabledBorderColor = Color.White.copy(alpha = 0.12f),
+    disabledLabelColor = Color.White.copy(alpha = 0.38f),
+    disabledLeadingIconColor = Color.White.copy(alpha = 0.38f),
+    disabledTrailingIconColor = Color.White.copy(alpha = 0.38f)
 )
 
 /**

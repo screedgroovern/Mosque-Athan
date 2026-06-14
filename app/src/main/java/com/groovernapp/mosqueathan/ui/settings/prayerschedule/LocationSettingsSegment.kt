@@ -1,4 +1,6 @@
-package com.groovernapp.mosqueathan.ui.settings
+package com.groovernapp.mosqueathan.ui.settings.prayerschedule
+
+import com.groovernapp.mosqueathan.ui.settings.*
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,12 +25,14 @@ fun LocationSettingsSegment(
     calculationMethodName: String,
     kemenagCityName: String
 ) {
+    val isEnabled = calculationMethodName != "KEMENAG"
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         OutlinedTextField(
             value = latText,
             onValueChange = onLatTextChange,
             label = { Text("Latitude") },
             colors = textFieldColors(),
+            enabled = isEnabled,
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
@@ -36,6 +40,7 @@ fun LocationSettingsSegment(
             onValueChange = onLngTextChange,
             label = { Text("Longitude") },
             colors = textFieldColors(),
+            enabled = isEnabled,
             modifier = Modifier.fillMaxWidth()
         )
         if (calculationMethodName == "KEMENAG") {

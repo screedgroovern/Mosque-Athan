@@ -1,5 +1,11 @@
 package com.groovernapp.mosqueathan.ui.settings
 
+import com.groovernapp.mosqueathan.ui.settings.prayerschedule.*
+import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.*
+import com.groovernapp.mosqueathan.ui.settings.displaymedia.*
+import com.groovernapp.mosqueathan.ui.settings.remotedevices.*
+import com.groovernapp.mosqueathan.ui.settings.systemmaintenance.*
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -32,6 +38,16 @@ import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
 import com.groovernapp.mosqueathan.server.SettingsServer
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Tv
+import androidx.compose.material.icons.filled.Restore
+
 
 
 @Composable
@@ -105,7 +121,7 @@ fun SettingsScreen(
     val showAllSettings = true // Set to true so settings can be accessed directly on TV devices
 
     var selectedCategory by remember(showAllSettings) { 
-        mutableStateOf(if (showAllSettings) SettingsCategory.LOCATION else SettingsCategory.WEB_CONTROL) 
+        mutableStateOf(if (showAllSettings) SettingsCategory.PRAYER_SCHEDULE else SettingsCategory.REMOTE_DEVICES) 
     }
     val context = androidx.compose.ui.platform.LocalContext.current
     val isTv = remember(context) {
@@ -158,6 +174,16 @@ fun SettingsScreen(
         }
     }
 
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+    val screenWidthDp = with(density) { containerSize.width.toDp() }
+    val isCompact = screenWidthDp < 600.dp && !isTv
+    var showCategoryDetail by remember { mutableStateOf(false) }
+
+    androidx.activity.compose.BackHandler(enabled = isCompact && showCategoryDetail) {
+        showCategoryDetail = false
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         if (customBgBitmap != null) {
             Image(
@@ -189,19 +215,22 @@ fun SettingsScreen(
                 )
         )
 
-        Row(
+        val paddingHorizontal = if (isCompact) 16.dp else 48.dp
+        val paddingVertical = if (isCompact) 16.dp else 32.dp
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 48.dp, vertical = 32.dp)
+                .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
         ) {
             // Sidebar Navigation
-            Column(
-                modifier = Modifier
-                    .weight(0.3f)
-                    .fillMaxHeight()
-                    .padding(end = 32.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
+            if (!isCompact || !showCategoryDetail) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .then(if (isCompact) Modifier.fillMaxWidth() else Modifier.fillMaxWidth(0.3f).padding(end = 32.dp)),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -217,7 +246,7 @@ fun SettingsScreen(
                     val displayedCategories = if (showAllSettings) {
                         SettingsCategory.values()
                     } else {
-                        arrayOf(SettingsCategory.WEB_CONTROL)
+                        arrayOf(SettingsCategory.REMOTE_DEVICES)
                     }
 
                     Column(
@@ -265,6 +294,7 @@ fun SettingsScreen(
                                         indication = androidx.compose.foundation.LocalIndication.current
                                     ) {
                                         selectedCategory = category
+                                        if (isCompact) showCategoryDetail = true
                                     }
                                     .padding(horizontal = 20.dp, vertical = 16.dp),
                                 contentAlignment = Alignment.CenterStart
@@ -308,7 +338,13 @@ fun SettingsScreen(
                     }
 
                     TvFocusableButton(
-                        onClick = onBack,
+                        onClick = {
+                            if (isCompact && showCategoryDetail) {
+                                showCategoryDetail = false
+                            } else {
+                                onBack()
+                            }
+                        },
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth().height(48.dp)
                     ) {
@@ -323,86 +359,64 @@ fun SettingsScreen(
             }
 
             // Right Pane Settings Editor
-            Card(
-                modifier = Modifier
-                    .weight(0.7f)
-                    .fillMaxHeight(),
-                colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.4f)),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
-            ) {
+            if (!isCompact || showCategoryDetail) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .then(if (isCompact) Modifier.fillMaxWidth() else Modifier.fillMaxWidth(0.7f).align(Alignment.CenterEnd)),
+                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(32.dp),
+                        .padding(if (isCompact) 16.dp else 32.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = selectedCategory.getDisplayName(),
-                            color = Color.White,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = selectedCategory.getDescription(),
-                            color = Color.White.copy(alpha = 0.6f),
-                            fontSize = 15.sp
-                        )
-                        Spacer(modifier = Modifier.height(28.dp))
+                        if (isCompact) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 16.dp)) {
+                                androidx.compose.material3.Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clickable { showCategoryDetail = false }
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = selectedCategory.getDisplayName(),
+                                    color = Color.White,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = selectedCategory.getDisplayName(),
+                                color = Color.White,
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = selectedCategory.getDescription(),
+                                color = Color.White.copy(alpha = 0.6f),
+                                fontSize = 15.sp
+                            )
+                            Spacer(modifier = Modifier.height(28.dp))
+                        }
 
                         // Category specific UI — each segment is in its own file
                         when (selectedCategory) {
-                            SettingsCategory.LOCATION -> {
-                                LocationSettingsSegment(
+                            SettingsCategory.PRAYER_SCHEDULE -> {
+                                PrayerScheduleSettingsSegment(
                                     latText = latText,
                                     onLatTextChange = { latText = it },
                                     lngText = lngText,
                                     onLngTextChange = { lngText = it },
-                                    calculationMethodName = calculationMethodName,
-                                    kemenagCityName = kemenagCityName
-                                )
-                            }
-
-                            SettingsCategory.IQOMAH -> {
-                                IqomahSettingsSegment(
-                                    adzanLeadMinutes = adzanLeadMinutes,
-                                    onAdzanLeadMinutesChange = { adzanLeadMinutes = it },
-                                    iqomahSubuh = iqomahSubuh,
-                                    onIqomahSubuhChange = { iqomahSubuh = it },
-                                    iqomahDzuhur = iqomahDzuhur,
-                                    onIqomahDzuhurChange = { iqomahDzuhur = it },
-                                    iqomahAshar = iqomahAshar,
-                                    onIqomahAsharChange = { iqomahAshar = it },
-                                    iqomahMaghrib = iqomahMaghrib,
-                                    onIqomahMaghribChange = { iqomahMaghrib = it },
-                                    iqomahIsya = iqomahIsya,
-                                    onIqomahIsyaChange = { iqomahIsya = it }
-                                )
-                            }
-
-                            SettingsCategory.PRAYER_OFFSETS -> {
-                                PrayerOffsetsSettingsSegment(
-                                    offsetImsak = offsetImsak,
-                                    offsetSubuh = offsetSubuh,
-                                    offsetSyuruq = offsetSyuruq,
-                                    offsetDzuhur = offsetDzuhur,
-                                    offsetAshar = offsetAshar,
-                                    offsetMaghrib = offsetMaghrib,
-                                    offsetIsya = offsetIsya,
-                                    onOffsetImsakChange = { offsetImsak = it },
-                                    onOffsetSubuhChange = { offsetSubuh = it },
-                                    onOffsetSyuruqChange = { offsetSyuruq = it },
-                                    onOffsetDzuhurChange = { offsetDzuhur = it },
-                                    onOffsetAsharChange = { offsetAshar = it },
-                                    onOffsetMaghribChange = { offsetMaghrib = it },
-                                    onOffsetIsyaChange = { offsetIsya = it }
-                                )
-                            }
-
-                            SettingsCategory.METHOD -> {
-                                MethodSettingsSegment(
                                     calculationMethodName = calculationMethodName,
                                     kemenagCityId = kemenagCityId,
                                     kemenagCityName = kemenagCityName,
@@ -421,24 +435,47 @@ fun SettingsScreen(
                                     onSearchKemenagCities = onSearchKemenagCities,
                                     onDownloadKemenagSchedules = {
                                         onDownloadKemenagSchedules(kemenagCityId, kemenagCityName, kemenagDuration, kemenagTargetDate)
-                                    }
+                                    },
+                                    offsetImsak = offsetImsak,
+                                    offsetSubuh = offsetSubuh,
+                                    offsetSyuruq = offsetSyuruq,
+                                    offsetDzuhur = offsetDzuhur,
+                                    offsetAshar = offsetAshar,
+                                    offsetMaghrib = offsetMaghrib,
+                                    offsetIsya = offsetIsya,
+                                    onOffsetImsakChange = { offsetImsak = it },
+                                    onOffsetSubuhChange = { offsetSubuh = it },
+                                    onOffsetSyuruqChange = { offsetSyuruq = it },
+                                    onOffsetDzuhurChange = { offsetDzuhur = it },
+                                    onOffsetAsharChange = { offsetAshar = it },
+                                    onOffsetMaghribChange = { offsetMaghrib = it },
+                                    onOffsetIsyaChange = { offsetIsya = it }
                                 )
                             }
 
-                            SettingsCategory.ANNOUNCEMENTS -> {
-                                  AnnouncementsSettingsSegment(
-                                      config = config,
-                                      announcements = announcements,
-                                      onAddAnnouncement = onAddAnnouncement,
-                                      onDeleteAnnouncement = onDeleteAnnouncement,
-                                      onEditAnnouncement = onEditAnnouncement,
-                                      onUpdateFooters = onUpdateFooters,
-                                      onPreviewAdzan = onPreviewAdzan,
-                                      onPreviewIqomah = onPreviewIqomah
-                                  )
-                             }
+                            SettingsCategory.ADZAN_IQOMAH -> {
+                                SettingsCard(
+                                    title = com.groovernapp.mosqueathan.util.Lang.get("Adzan & Iqomah", "Adzan & Iqomah"),
+                                    icon = Icons.Default.AccessTime
+                                ) {
+                                    IqomahSettingsSegment(
+                                        adzanLeadMinutes = adzanLeadMinutes,
+                                        onAdzanLeadMinutesChange = { adzanLeadMinutes = it },
+                                        iqomahSubuh = iqomahSubuh,
+                                        onIqomahSubuhChange = { iqomahSubuh = it },
+                                        iqomahDzuhur = iqomahDzuhur,
+                                        onIqomahDzuhurChange = { iqomahDzuhur = it },
+                                        iqomahAshar = iqomahAshar,
+                                        onIqomahAsharChange = { iqomahAshar = it },
+                                        iqomahMaghrib = iqomahMaghrib,
+                                        onIqomahMaghribChange = { iqomahMaghrib = it },
+                                        iqomahIsya = iqomahIsya,
+                                        onIqomahIsyaChange = { iqomahIsya = it }
+                                    )
+                                }
+                            }
 
-                            SettingsCategory.THEME -> {
+                            SettingsCategory.DISPLAY_MEDIA -> {
                                 val backgroundPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
                                     contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
                                 ) { uri: android.net.Uri? ->
@@ -446,77 +483,115 @@ fun SettingsScreen(
                                         onSelectCustomBackground(uri)
                                     }
                                 }
-                                ThemeSettingsSegment(
-                                    config = config,
-                                    transitionType = config.transitionType,
-                                    slideIntervalSeconds = config.slideIntervalSeconds,
-                                    videoWaitUntilEnd = config.videoWaitUntilEnd,
-                                    includeDefaultImage = config.includeDefaultImage,
-                                    mediaList = mediaList,
-                                    slideshowSchedules = slideshowSchedules,
-                                    onUpdateThemeSettings = onUpdateThemeSettings,
-                                    onAddMediaItem = {
-                                        mediaPickerLauncher.launch(
-                                            androidx.activity.result.PickVisualMediaRequest(
-                                                androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                                            )
+                                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                                    SettingsCard(
+                                        title = com.groovernapp.mosqueathan.util.Lang.get("Background Theme", "Latar Belakang & Media"),
+                                        icon = Icons.Default.Image
+                                    ) {
+                                        ThemeSettingsSegment(
+                                            config = config,
+                                            transitionType = config.transitionType,
+                                            slideIntervalSeconds = config.slideIntervalSeconds,
+                                            videoWaitUntilEnd = config.videoWaitUntilEnd,
+                                            includeDefaultImage = config.includeDefaultImage,
+                                            mediaList = mediaList,
+                                            slideshowSchedules = slideshowSchedules,
+                                            onUpdateThemeSettings = onUpdateThemeSettings,
+                                            onAddMediaItem = {
+                                                mediaPickerLauncher.launch(
+                                                    androidx.activity.result.PickVisualMediaRequest(
+                                                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                                                    )
+                                                )
+                                            },
+                                            onDeleteMediaItem = onDeleteMediaItem,
+                                            onSelectCustomBackground = {
+                                                backgroundPickerLauncher.launch(
+                                                    androidx.activity.result.PickVisualMediaRequest(
+                                                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                                                    )
+                                                )
+                                            },
+                                            onClearCustomBackground = onClearCustomBackground,
+                                            onAddSlideshowSchedule = onAddSlideshowSchedule,
+                                            onDeleteSlideshowSchedule = onDeleteSlideshowSchedule,
+                                            onPreviewSlideshow = onPreviewSlideshow
                                         )
-                                    },
-                                    onDeleteMediaItem = onDeleteMediaItem,
-                                    onSelectCustomBackground = {
-                                        backgroundPickerLauncher.launch(
-                                            androidx.activity.result.PickVisualMediaRequest(
-                                                androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
-                                            )
+                                    }
+                                    SettingsCard(
+                                        title = com.groovernapp.mosqueathan.util.Lang.get("Announcements", "Teks Pengumuman"),
+                                        icon = Icons.Default.Campaign
+                                    ) {
+                                        AnnouncementsSettingsSegment(
+                                            config = config,
+                                            announcements = announcements,
+                                            onAddAnnouncement = onAddAnnouncement,
+                                            onDeleteAnnouncement = onDeleteAnnouncement,
+                                            onEditAnnouncement = onEditAnnouncement,
+                                            onUpdateFooters = onUpdateFooters,
+                                            onPreviewAdzan = onPreviewAdzan,
+                                            onPreviewIqomah = onPreviewIqomah
                                         )
-                                    },
-                                    onClearCustomBackground = onClearCustomBackground,
-                                    onAddSlideshowSchedule = onAddSlideshowSchedule,
-                                    onDeleteSlideshowSchedule = onDeleteSlideshowSchedule,
-                                    onPreviewSlideshow = onPreviewSlideshow
-                                )
+                                    }
+                                }
                             }
 
-                            SettingsCategory.WEB_CONTROL -> {
-                                WebControlSettingsSegment(
-                                    showSettingsOnTv = config.showSettingsOnTv,
-                                    isTv = isTv,
-                                    onUpdateShowSettingsOnTv = onUpdateShowSettingsOnTv
-                                )
+                            SettingsCategory.REMOTE_DEVICES -> {
+                                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                                    SettingsCard(
+                                        title = com.groovernapp.mosqueathan.util.Lang.get("Web Control Server", "Server Web Remote"),
+                                        icon = Icons.Default.Dns
+                                    ) {
+                                        WebControlSettingsSegment(
+                                            showSettingsOnTv = config.showSettingsOnTv,
+                                            isTv = isTv,
+                                            onUpdateShowSettingsOnTv = onUpdateShowSettingsOnTv
+                                        )
+                                    }
+                                    SettingsCard(
+                                        title = com.groovernapp.mosqueathan.util.Lang.get("Connected Devices", "Perangkat Terhubung"),
+                                        icon = Icons.Default.Devices
+                                    ) {
+                                        DevicesSettingsSegment(
+                                            config = config,
+                                            devices = devices,
+                                            onSetDeviceMaster = onSetDeviceMaster,
+                                            onDeleteDevice = onDeleteDevice
+                                        )
+                                    }
+                                }
                             }
 
-                            SettingsCategory.DEVICES -> {
-                                DevicesSettingsSegment(
-                                    config = config,
-                                    devices = devices,
-                                    onSetDeviceMaster = onSetDeviceMaster,
-                                    onDeleteDevice = onDeleteDevice
-                                )
-                            }
-
-                            SettingsCategory.STANDBY -> {
-                                StandbySettingsSegment(
-                                    standbyModeEnabled = standbyModeEnabled,
-                                    onStandbyModeEnabledChange = { standbyModeEnabled = it },
-                                    standbySchedules = standbySchedules,
-                                    onAddStandbySchedule = onAddStandbySchedule,
-                                    onDeleteStandbySchedule = onDeleteStandbySchedule
-                                )
-                            }
-
-                            SettingsCategory.RESET -> {
-                                ResetSettingsSegment(onResetToDefaults = onResetToDefaults)
+                            SettingsCategory.SYSTEM_MAINTENANCE -> {
+                                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                                    SettingsCard(
+                                        title = com.groovernapp.mosqueathan.util.Lang.get("Standby & Display", "Standby & Tampilan"),
+                                        icon = Icons.Default.Tv
+                                    ) {
+                                        StandbySettingsSegment(
+                                            standbyModeEnabled = standbyModeEnabled,
+                                            onStandbyModeEnabledChange = { standbyModeEnabled = it },
+                                            standbySchedules = standbySchedules,
+                                            onAddStandbySchedule = onAddStandbySchedule,
+                                            onDeleteStandbySchedule = onDeleteStandbySchedule
+                                        )
+                                    }
+                                    SettingsCard(
+                                        title = com.groovernapp.mosqueathan.util.Lang.get("Reset Configurations", "Reset Konfigurasi"),
+                                        icon = Icons.Default.Restore
+                                    ) {
+                                        ResetSettingsSegment(onResetToDefaults = onResetToDefaults)
+                                    }
+                                }
                             }
                         }
                     }
 
                     // Save / Apply Button (only for config-saving categories)
                     if (selectedCategory in listOf(
-                            SettingsCategory.LOCATION,
-                            SettingsCategory.IQOMAH,
-                            SettingsCategory.PRAYER_OFFSETS,
-                            SettingsCategory.METHOD,
-                            SettingsCategory.STANDBY
+                            SettingsCategory.PRAYER_SCHEDULE,
+                            SettingsCategory.ADZAN_IQOMAH,
+                            SettingsCategory.SYSTEM_MAINTENANCE
                         )
                     ) {
                         var isSaving by remember { mutableStateOf(false) }
@@ -527,7 +602,7 @@ fun SettingsScreen(
                                 if (isSaving) return@TvFocusablePrimaryButton
                                 isSaving = true
                                 coroutineScope.launch {
-                                    if (selectedCategory == SettingsCategory.STANDBY) {
+                                    if (selectedCategory == SettingsCategory.SYSTEM_MAINTENANCE) {
                                         onSaveStandby(standbyModeEnabled, standbyStartTime, standbyEndTime)
                                     } else {
                                         val lat = latText.toDoubleOrNull() ?: config.latitude
@@ -582,53 +657,36 @@ fun SettingsScreen(
                     }
                 }
             }
+            } // end if (!isCompact || showCategoryDetail)
         }
     }
 }
+}
+
 
 
 enum class SettingsCategory(
     val getDisplayName: @Composable () -> String,
     val getDescription: @Composable () -> String
 ) {
-    LOCATION(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Mosque Coordinates", "Koordinat Masjid") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Adjust the latitude and longitude coordinates of the mosque to calculate prayer times accurately.", "Sesuaikan koordinat lintang (latitude) dan bujur (longitude) masjid untuk menghitung jadwal sholat dengan akurat.") }
+    PRAYER_SCHEDULE(
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Prayer Schedule", "Jadwal Shalat") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Manage coordinates, calculation methods, and manual time corrections.", "Atur koordinat GPS, metode perhitungan, dan penyesuaian waktu (offset) tiap shalat.") }
     ),
-    IQOMAH(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Duration & Interval", "Durasi & Jeda Waktu") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Set the countdown waiting time (minutes) before iqomah for each prayer, as well as the adzan preparation duration.", "Atur jeda waktu tunggu (menit) sebelum iqomah untuk setiap waktu sholat berjamaah, serta durasi tampilan persiapan adzan sebelum waktu sholat tiba.") }
+    ADZAN_IQOMAH(
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Adzan & Iqomah", "Adzan & Iqomah") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Set the adzan preparation duration and the iqomah wait time for each prayer.", "Atur durasi persiapan adzan dan jeda waktu iqomah untuk masing-masing waktu shalat.") }
     ),
-    PRAYER_OFFSETS(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Prayer Time Adjustments", "Penyesuaian Waktu Sholat") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Adjust each prayer time to be a few minutes earlier or later relative to calculations.", "Sesuaikan masing-masing waktu sholat agar beberapa menit lebih cepat atau lebih lambat dari hasil perhitungan.") }
+    DISPLAY_MEDIA(
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Display & Media", "Tampilan & Media") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Configure background wallpapers, slideshows, and scrolling announcements.", "Atur gambar latar belakang, interval slideshow, dan pengumuman teks berjalan.") }
     ),
-    METHOD(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Calculation Method", "Metode Perhitungan") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Select the standard prayer calculation convention to apply in your area.", "Pilih standar konvensi perhitungan waktu sholat yang ingin diterapkan di wilayah masjid Anda.") }
+    REMOTE_DEVICES(
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Connectivity & Remote", "Konektivitas & Remote") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Manage web control server access, connected devices, and PIN security.", "Kelola akses server kontrol web, perangkat yang terhubung, PIN, dan otoritas master.") }
     ),
-    ANNOUNCEMENTS(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Manage Announcements", "Kelola Pengumuman") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Add, manage, or delete scrolling running text shown at the bottom of the main dashboard.", "Tambahkan, kelola, atau hapus teks berjalan yang akan ditampilkan di bagian bawah layar utama.") }
-    ),
-    THEME(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Background Theme", "Latar Belakang") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Choose a custom background image or slideshow media from your device.", "Pilih gambar latar belakang layar utama dari penyimpanan perangkat Anda.") }
-    ),
-    STANDBY(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Standby & Screen", "Standby & Layar") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Configure automatic standby hours (black screen) and keep the TV screen always active outside those hours.", "Atur jam operasional standby otomatis (layar hitam) dan jaga agar layar TV selalu aktif di luar jam tersebut.") }
-    ),
-    WEB_CONTROL(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Web Control (Remote)", "Kontrol Web (Remote)") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Access and configure all application settings from a phone/laptop browser on the same network.", "Akses dan atur seluruh konfigurasi aplikasi dari browser HP atau Laptop Anda melalui koneksi lokal.") }
-    ),
-    DEVICES(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Connected Devices", "Perangkat Terhubung") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Manage devices connected to the remote web control, assign Master, and set security PIN.", "Kelola perangkat/HP yang terhubung ke kontrol web remote, tentukan Master, dan atur keamanan PIN.") }
-    ),
-    RESET(
-        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("Reset Settings", "Reset Pengaturan") },
-        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Restore all coordinates, iqomah durations, calculation method, and announcements to factory defaults.", "Mengembalikan seluruh nilai koordinat, durasi iqomah, metode, serta running text ke konfigurasi bawaan (default).") }
+    SYSTEM_MAINTENANCE(
+        getDisplayName = { com.groovernapp.mosqueathan.util.Lang.get("System & Reset", "Sistem & Reset") },
+        getDescription = { com.groovernapp.mosqueathan.util.Lang.get("Configure TV standby hours and restore application settings to defaults.", "Atur jadwal layar hitam (standby) otomatis dan kembalikan pengaturan ke setelan pabrik.") }
     )
 }
