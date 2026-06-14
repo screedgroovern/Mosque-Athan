@@ -468,6 +468,28 @@ class SettingsServer(private val context: Context) {
                     outputStream.write(response.toByteArray(Charsets.UTF_8))
                     outputStream.write(htmlBytes)
                     outputStream.flush()
+                } else if (path == "/manifest.json") {
+                    val manifest = PwaAssets.getManifest()
+                    val bytes = manifest.toByteArray(Charsets.UTF_8)
+                    val response = "HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: application/manifest+json; charset=UTF-8\r\n" +
+                            "Content-Length: ${bytes.size}\r\n" +
+                            "Cache-Control: no-cache\r\n" +
+                            "Connection: close\r\n\r\n"
+                    outputStream.write(response.toByteArray(Charsets.UTF_8))
+                    outputStream.write(bytes)
+                    outputStream.flush()
+                } else if (path == "/sw.js") {
+                    val sw = PwaAssets.getServiceWorker()
+                    val bytes = sw.toByteArray(Charsets.UTF_8)
+                    val response = "HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: application/javascript; charset=UTF-8\r\n" +
+                            "Content-Length: ${bytes.size}\r\n" +
+                            "Cache-Control: no-cache\r\n" +
+                            "Connection: close\r\n\r\n"
+                    outputStream.write(response.toByteArray(Charsets.UTF_8))
+                    outputStream.write(bytes)
+                    outputStream.flush()
                 } else if (path.startsWith("/media")) {
                     val fileParam = uri.getQueryParameter("path")
                     if (fileParam != null) {
