@@ -1008,8 +1008,8 @@ object WebPage {
 </head>
 <body>
 
-    <!-- Connection Modal Overlay -->
-    <div id="connection-overlay" class="connection-overlay">
+    <!-- Connection Modal Overlay (only for manual settings / fallbacks, hidden by default) -->
+    <div id="connection-overlay" class="connection-overlay" style="display: none;">
         <div class="spinner"></div>
         <div class="overlay-title" data-lang-key="overlay_connecting">Menghubungkan ke Aplikasi...</div>
         <div class="overlay-desc" data-lang-key="overlay_connecting_desc">Pastikan perangkat Android Anda tetap menyala dan menjalankan aplikasi.</div>
@@ -1206,14 +1206,56 @@ object WebPage {
                 </ul>
             </nav>
 
-            <div class="status-widget">
-                <div class="status-header">
-                    <span data-lang-key="status_app">Aplikasi Android:</span>
-                    <span id="status-badge" class="status-indicator">
-                        <div id="status-dot" class="status-dot"></div>
-                        <span id="status-text">Terputus</span>
-                    </span>
+            <div class="status-widget" style="margin-top: auto;">
+                <div style="display: flex; justify-content: space-around; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);">
+                    <!-- Cloud Icon (Connection Status) -->
+                    <div id="status-cloud-container" style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem; cursor: pointer;" onclick="toggleTvConnectionPanel()" title="Status Koneksi TV (Klik untuk Setel IP)">
+                        <svg id="status-cloud-icon" width="28" height="28" fill="currentColor" viewBox="0 0 24 24" style="color: var(--danger); transition: all 0.3s ease;">
+                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+                        </svg>
+                        <span id="status-cloud-text" style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">Offline</span>
+                    </div>
+
+                    <!-- Floppy Disk Icon (Draft Status) -->
+                    <div id="status-disk-container" style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;" title="Status Sinkronisasi Data">
+                        <svg id="status-disk-icon" width="28" height="28" fill="currentColor" viewBox="0 0 24 24" style="color: var(--text-muted); transition: all 0.3s ease;">
+                            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm2 16H5V5h11.17L19 7.83V19zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zM6 6h9v4H6V6z"/>
+                        </svg>
+                        <span id="status-disk-text" style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary);">Sinkron</span>
+                    </div>
                 </div>
+
+                <!-- Sync actions panel (shows when offline draft exists) -->
+                <div id="sync-actions-panel" style="display: none; flex-direction: column; gap: 0.5rem; background: rgba(255, 213, 79, 0.05); padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255, 213, 79, 0.2);">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent); text-align: center;" data-lang-key="sidebar_sync_needed">Perubahan Offline!</div>
+                    <button class="btn btn-primary" id="btn-sidebar-sync" onclick="syncOfflineChanges()" style="padding: 0.5rem; font-size: 0.85rem; width: 100%;" disabled>
+                        📤 Kirim ke TV
+                    </button>
+                    <button class="btn btn-secondary" onclick="discardOfflineChanges()" style="padding: 0.5rem; font-size: 0.85rem; width: 100%;">
+                        🗑️ Abaikan
+                    </button>
+                </div>
+
+                <!-- Force refresh / pull data from TV when clean and online -->
+                <div id="online-actions-panel" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button class="btn btn-secondary" id="btn-sidebar-pull" onclick="pullDataFromTv()" style="padding: 0.5rem; font-size: 0.85rem; width: 100%; display: none; align-items: center; justify-content: center; gap: 0.25rem;">
+                        📥 Tarik Data dari TV
+                    </button>
+                </div>
+
+                <!-- Collapsible TV Connection Settings -->
+                <div id="tv-connection-panel" style="display: none; flex-direction: column; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: 0.25rem;">
+                    <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);" data-lang-key="label_tv_ip">IP Address TV:</div>
+                    <input type="text" id="sidebar-tv-ip" placeholder="Contoh: 192.168.1.15" style="padding: 0.5rem; font-size: 0.85rem; text-align: center; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.3); color: var(--text-primary);">
+                    <div style="display: flex; gap: 0.4rem; width: 100%;">
+                        <button class="btn btn-primary" onclick="changeTvIpSidebar()" style="flex: 1; padding: 0.5rem; font-size: 0.85rem;" data-lang-key="btn_connect">Hubung</button>
+                        <button class="btn btn-secondary" onclick="startQrScanner()" style="padding: 0.5rem; font-size: 0.85rem;" title="Pindai QR TV">📷</button>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary" id="btn-toggle-tv-conn" onclick="toggleTvConnectionPanel()" style="padding: 0.4rem; font-size: 0.8rem; width: 100%; background: none; border: 1px dashed var(--border-color); color: var(--text-secondary);">
+                    ⚙️ Atur Koneksi TV
+                </button>
             </div>
         </aside>
 
@@ -2499,6 +2541,8 @@ object WebPage {
                 }
                 const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 const wsUrl = proto + '//' + host;
+                
+                updateTvConnectionStatus('connecting');
                 ws = new WebSocket(wsUrl);
 
                 ws.onopen = () => {
@@ -2507,10 +2551,16 @@ object WebPage {
                     if (errDetails) errDetails.style.display = 'none';
                     
                     const dot = document.getElementById('status-dot');
-                    dot.classList.add('online');
-                    document.getElementById('status-text').innerText = isOfflineMode 
-                        ? (translations[currentLang].status_connected + " (" + (translations[currentLang].status_offline_mode || "Draf") + ")")
-                        : translations[currentLang].status_connected;
+                    if (dot) dot.classList.add('online');
+                    const statusText = document.getElementById('status-text');
+                    if (statusText) {
+                        statusText.innerText = isOfflineMode 
+                            ? (translations[currentLang].status_connected + " (" + (translations[currentLang].status_offline_mode || "Draf") + ")")
+                            : translations[currentLang].status_connected;
+                    }
+                    
+                    updateTvConnectionStatus('online');
+                    updateOfflineSyncStatus();
                     showToast(translations[currentLang].toast_connected);
 
                     // Immediately register device
@@ -2626,17 +2676,18 @@ object WebPage {
                 };
 
                 ws.onclose = (event) => {
-                    document.getElementById('connection-overlay').style.display = 'flex';
-                    
                     const dot = document.getElementById('status-dot');
-                    dot.classList.remove('online');
-                    document.getElementById('status-text').innerText = translations[currentLang].status_disconnected;
+                    if (dot) dot.classList.remove('online');
+                    const statusText = document.getElementById('status-text');
+                    if (statusText) statusText.innerText = translations[currentLang].status_disconnected;
                     
                     const errDetails = document.getElementById('connection-error-details');
                     if (errDetails) {
                         errDetails.innerText = "WebSocket Closed. Code: " + event.code + (event.reason ? ", Reason: " + event.reason : "") + "\nTarget URL: " + wsUrl;
-                        errDetails.style.display = 'block';
                     }
+                    
+                    updateTvConnectionStatus('offline');
+                    enterOfflineMode(true); // silent transition
                     
                     // Reconnect after 3 seconds
                     setTimeout(connect, 3000);
@@ -2647,8 +2698,8 @@ object WebPage {
                     const errDetails = document.getElementById('connection-error-details');
                     if (errDetails) {
                         errDetails.innerText = "WebSocket Error: Connection failed.\nTarget URL: " + wsUrl;
-                        errDetails.style.display = 'block';
                     }
+                    updateTvConnectionStatus('offline');
                 };
             } catch (err) {
                 console.error("Connection setup error:", err);
@@ -2683,8 +2734,6 @@ object WebPage {
                     announcements = draft.announcements || announcements;
                     slideshowSchedules = draft.slideshowSchedules || slideshowSchedules;
                     kemenagSchedules = draft.kemenagSchedules || kemenagSchedules;
-                    // We don't restore mediaList from draft because it might contain huge base64
-                    // We will re-apply them from offlineFilesQueue below
                 } catch (e) {
                     console.error("Error parsing offline draft", e);
                 }
@@ -2704,6 +2753,10 @@ object WebPage {
             if (inputField && customIp) {
                 inputField.value = customIp;
             }
+            const sidebarInputField = document.getElementById('sidebar-tv-ip');
+            if (sidebarInputField && customIp) {
+                sidebarInputField.value = customIp;
+            }
             
             if (offlineActionsQueue.length > 0 || offlineFilesQueue.length > 0) {
                 for (const action of offlineActionsQueue) applyActionLocally(action);
@@ -2711,6 +2764,7 @@ object WebPage {
             }
 
             updateOfflineButtonText();
+            updateOfflineSyncStatus();
             updateUI();
         }
 
@@ -2722,7 +2776,6 @@ object WebPage {
                     announcements: announcements,
                     slideshowSchedules: slideshowSchedules,
                     kemenagSchedules: kemenagSchedules
-                    // Specifically exclude mediaList to avoid QuotaExceededError
                 };
                 localStorage.setItem('offline_settings_draft', JSON.stringify(draft));
                 localStorage.setItem('offline_actions', JSON.stringify(offlineActionsQueue));
@@ -2730,9 +2783,10 @@ object WebPage {
                 console.warn("Failed to save draft to localStorage", e);
             }
             updateOfflineButtonText();
+            updateOfflineSyncStatus();
         }
 
-        function enterOfflineMode() {
+        function enterOfflineMode(silent = false) {
             document.getElementById('connection-overlay').style.display = 'none';
             
             if (!isOfflineMode) {
@@ -2746,12 +2800,176 @@ object WebPage {
                 dot.className = 'status-dot';
                 dot.style.backgroundColor = 'var(--warning)';
             }
+            
             const statusText = document.getElementById('status-text');
             if (statusText) {
                 statusText.innerText = (translations[currentLang].status_offline_mode || "Mode Offline (Draf)");
             }
             
-            showToast(currentLang === 'id' ? "Masuk ke mode offline. Perubahan disimpan di browser." : "Entered offline mode. Changes saved in browser.", "warning");
+            updateTvConnectionStatus('offline');
+            updateOfflineSyncStatus();
+            
+            if (!silent) {
+                showToast(currentLang === 'id' ? "Masuk ke mode offline. Perubahan disimpan di browser." : "Entered offline mode. Changes saved in browser.", "warning");
+            }
+        }
+
+        // TV Connection and Offline Sync Status helpers
+        let isTvConnectionPanelExpanded = false;
+        function toggleTvConnectionPanel() {
+            const panel = document.getElementById('tv-connection-panel');
+            const btn = document.getElementById('btn-toggle-tv-conn');
+            isTvConnectionPanelExpanded = !isTvConnectionPanelExpanded;
+            if (panel) {
+                panel.style.display = isTvConnectionPanelExpanded ? 'flex' : 'none';
+            }
+            if (btn) {
+                btn.innerText = isTvConnectionPanelExpanded 
+                    ? (currentLang === 'id' ? 'Tutup Pengaturan Koneksi' : 'Close Connection Settings')
+                    : (currentLang === 'id' ? '⚙️ Atur Koneksi TV' : '⚙️ TV Connection Settings');
+            }
+        }
+
+        function changeTvIpSidebar() {
+            const sidebarIpInput = document.getElementById('sidebar-tv-ip');
+            const mainIpInput = document.getElementById('input-tv-ip');
+            if (sidebarIpInput) {
+                const ip = sidebarIpInput.value.trim();
+                if (mainIpInput) mainIpInput.value = ip;
+                changeTvIp();
+            }
+        }
+
+        function updateTvConnectionStatus(status) {
+            const cloudIcon = document.getElementById('status-cloud-icon');
+            const cloudText = document.getElementById('status-cloud-text');
+            const pullBtn = document.getElementById('btn-sidebar-pull');
+            const syncBtn = document.getElementById('btn-sidebar-sync');
+            
+            if (status === 'online') {
+                if (cloudIcon) {
+                    cloudIcon.style.color = 'var(--emerald)';
+                    cloudIcon.style.animation = 'none';
+                    cloudIcon.style.filter = 'drop-shadow(0 0 4px rgba(16, 185, 129, 0.5))';
+                }
+                if (cloudText) {
+                    cloudText.innerText = currentLang === 'id' ? 'Online' : 'Online';
+                    cloudText.style.color = 'var(--emerald)';
+                }
+                const hasOfflineChanges = (offlineActionsQueue && offlineActionsQueue.length > 0) || 
+                                          (offlineFilesQueue && offlineFilesQueue.length > 0);
+                if (pullBtn) {
+                    pullBtn.style.display = hasOfflineChanges ? 'none' : 'flex';
+                }
+                if (syncBtn) {
+                    syncBtn.disabled = false;
+                }
+            } else if (status === 'connecting') {
+                if (cloudIcon) {
+                    cloudIcon.style.color = '#fbbf24'; // Amber
+                    cloudIcon.style.animation = 'pulse 1.5s infinite';
+                    cloudIcon.style.filter = 'drop-shadow(0 0 4px rgba(251, 191, 36, 0.3))';
+                }
+                if (cloudText) {
+                    cloudText.innerText = currentLang === 'id' ? 'Menghubungkan...' : 'Connecting...';
+                    cloudText.style.color = '#fbbf24';
+                }
+                if (pullBtn) pullBtn.style.display = 'none';
+                if (syncBtn) syncBtn.disabled = true;
+            } else { // offline
+                if (cloudIcon) {
+                    cloudIcon.style.color = 'var(--danger)';
+                    cloudIcon.style.animation = 'none';
+                    cloudIcon.style.filter = 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))';
+                }
+                if (cloudText) {
+                    cloudText.innerText = currentLang === 'id' ? 'Offline' : 'Offline';
+                    cloudText.style.color = 'var(--danger)';
+                }
+                if (pullBtn) pullBtn.style.display = 'none';
+                if (syncBtn) syncBtn.disabled = true;
+            }
+        }
+
+        function updateOfflineSyncStatus() {
+            const hasOfflineChanges = (offlineActionsQueue && offlineActionsQueue.length > 0) || 
+                                      (offlineFilesQueue && offlineFilesQueue.length > 0);
+            const diskIcon = document.getElementById('status-disk-icon');
+            const diskText = document.getElementById('status-disk-text');
+            const syncPanel = document.getElementById('sync-actions-panel');
+            const syncBtn = document.getElementById('btn-sidebar-sync');
+            const pullBtn = document.getElementById('btn-sidebar-pull');
+            
+            if (hasOfflineChanges) {
+                if (diskIcon) {
+                    diskIcon.style.color = '#fbbf24'; // Amber/Yellow
+                    diskIcon.style.filter = 'drop-shadow(0 0 4px rgba(251, 191, 36, 0.5))';
+                    diskIcon.style.animation = 'pulse 2s infinite';
+                }
+                if (diskText) {
+                    diskText.innerText = currentLang === 'id' ? 'Belum Sinkron' : 'Unsynced';
+                    diskText.style.color = '#fbbf24';
+                }
+                if (syncPanel) {
+                    syncPanel.style.display = 'flex';
+                }
+                if (syncBtn) {
+                    syncBtn.disabled = isOfflineMode || !ws || ws.readyState !== WebSocket.OPEN;
+                }
+                if (pullBtn) {
+                    pullBtn.style.display = 'none';
+                }
+            } else {
+                if (diskIcon) {
+                    diskIcon.style.color = 'var(--emerald)'; // Green
+                    diskIcon.style.filter = 'none';
+                    diskIcon.style.animation = 'none';
+                }
+                if (diskText) {
+                    diskText.innerText = currentLang === 'id' ? 'Sinkron' : 'Synced';
+                    diskText.style.color = 'var(--emerald)';
+                }
+                if (syncPanel) {
+                    syncPanel.style.display = 'none';
+                }
+                if (pullBtn && ws && ws.readyState === WebSocket.OPEN) {
+                    pullBtn.style.display = 'flex';
+                }
+            }
+        }
+
+        async function pullDataFromTv() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                showToast(currentLang === 'id' ? "Tidak dapat menarik data. Anda sedang offline." : "Cannot pull data. You are offline.", "error");
+                return;
+            }
+            
+            const hasOfflineChanges = (offlineActionsQueue && offlineActionsQueue.length > 0) || 
+                                      (offlineFilesQueue && offlineFilesQueue.length > 0);
+                                       
+            if (hasOfflineChanges) {
+                const confirmMsg = currentLang === 'id' 
+                    ? "Peringatan: Terdapat perubahan offline yang belum disimpan. Menarik data dari TV akan menghapus seluruh perubahan lokal tersebut. Lanjutkan?" 
+                    : "Warning: There are unsaved offline changes. Pulling data from the TV will discard all local changes. Proceed?";
+                if (!confirm(confirmMsg)) {
+                    return;
+                }
+            }
+            
+            offlineActionsQueue = [];
+            offlineFilesQueue = [];
+            localStorage.removeItem('offline_settings_draft');
+            localStorage.removeItem('offline_actions');
+            await clearFilesFromDB();
+            
+            ws.send(JSON.stringify({
+                action: 'register',
+                deviceId: myDeviceId,
+                deviceName: myDeviceName
+            }));
+            
+            updateOfflineSyncStatus();
+            showToast(currentLang === 'id' ? "Menarik data terbaru dari TV..." : "Pulling latest data from TV...", "info");
         }
 
         function changeTvIp() {
@@ -2815,6 +3033,8 @@ object WebPage {
                                 let ip = parsedHost.split(':')[0];
                                 const inputIp = document.getElementById('input-tv-ip');
                                 if (inputIp) inputIp.value = ip;
+                                const sidebarIp = document.getElementById('sidebar-tv-ip');
+                                if (sidebarIp) sidebarIp.value = ip;
                                 
                                 stopQrScanner();
                                 changeTvIp();
@@ -3196,6 +3416,7 @@ object WebPage {
                 localStorage.removeItem('offline_actions');
                 await clearFilesFromDB();
                 isOfflineMode = false;
+                updateOfflineSyncStatus();
                 
                 showToast(translations[currentLang].toast_sync_success || "Sinkronisasi berhasil!", "success");
             } catch (e) {
@@ -3234,6 +3455,7 @@ object WebPage {
             localStorage.removeItem('offline_actions');
             await clearFilesFromDB();
             isOfflineMode = false;
+            updateOfflineSyncStatus();
             
             if (pendingTvState) {
                 appConfig = pendingTvState.config;
@@ -3515,6 +3737,7 @@ object WebPage {
             if (standbyModeCheckbox) {
                 standbyModeCheckbox.checked = !!appConfig.standbyModeEnabled;
             }
+            updateOfflineSyncStatus();
         }
 
         // Actions
