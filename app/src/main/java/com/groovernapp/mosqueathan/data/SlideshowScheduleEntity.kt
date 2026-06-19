@@ -3,11 +3,16 @@ package com.groovernapp.mosqueathan.data
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 
-class SlideshowScheduleEntity : RealmObject {
+class SlideshowScheduleEntity : RealmObject, ScheduleItem {
     @PrimaryKey
-    var id: String = ""
-    var day: String = "" // Day of week (e.g., Monday) or Specific Date (YYYY-MM-DD)
+    override var id: String = ""
+    override var startTime: String = "" // HH:mm
+    override var endTime: String = "" // HH:mm
+    override var activeDays: String = "" // Comma-separated weekly days
+    override var specificDates: String = "" // Comma-separated dates
+    override var createdAt: Long = 0L
+
+    // Legacy fields for backward compatibility
+    var day: String = ""
     var isSpecificDate: Boolean = false
-    var startTime: String = "" // HH:mm
-    var endTime: String = "" // HH:mm
 }

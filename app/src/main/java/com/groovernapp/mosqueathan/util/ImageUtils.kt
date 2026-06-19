@@ -1,4 +1,4 @@
-package com.groovernapp.mosqueathan.utils
+package com.groovernapp.mosqueathan.util
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -35,7 +35,7 @@ object ImageUtils {
 
                 options.inSampleSize = inSampleSize
                 options.inJustDecodeBounds = false
-                
+
                 val decodedBitmap = BitmapFactory.decodeFile(file.absolutePath, options)
                 if (decodedBitmap != null) {
                     FileOutputStream(file).use { out ->

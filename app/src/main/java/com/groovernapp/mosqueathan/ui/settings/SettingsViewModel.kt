@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
-import com.groovernapp.mosqueathan.utils.ImageUtils
+import com.groovernapp.mosqueathan.util.ImageUtils
 
 class SettingsViewModel : ViewModel() {
 
@@ -329,6 +329,9 @@ class SettingsViewModel : ViewModel() {
     private val _slideshowSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.SlideshowScheduleEntity>>(emptyList())
     val slideshowSchedulesState = _slideshowSchedulesState.asStateFlow()
 
+    private val _dashboardBackgroundsState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.DashboardBackgroundEntity>>(emptyList())
+    val dashboardBackgroundsState = _dashboardBackgroundsState.asStateFlow()
+
     private val _standbySchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.StandbyScheduleEntity>>(emptyList())
     val standbySchedulesState = _standbySchedulesState.asStateFlow()
 
@@ -336,6 +339,11 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             repository.getSlideshowSchedulesFlow().collect {
                 _slideshowSchedulesState.value = it
+            }
+        }
+        viewModelScope.launch {
+            repository.getDashboardBackgroundsFlow().collect {
+                _dashboardBackgroundsState.value = it
             }
         }
         viewModelScope.launch {
@@ -432,6 +440,257 @@ class SettingsViewModel : ViewModel() {
                 adzanFooterText = adzanFooter,
                 iqomahFooterText = iqomahFooter
             )
+        }
+    }
+
+    fun updateSlideshowScheduleTime(id: String, startTime: String, endTime: String) {
+        viewModelScope.launch {
+            repository.updateSlideshowScheduleTime(id, startTime, endTime)
+        }
+    }
+
+    fun updateSlideshowScheduleDays(id: String, activeDays: String) {
+        viewModelScope.launch {
+            repository.updateSlideshowScheduleDays(id, activeDays)
+        }
+    }
+
+    fun updateSlideshowScheduleDates(id: String, specificDates: String) {
+        viewModelScope.launch {
+            repository.updateSlideshowScheduleDates(id, specificDates)
+        }
+    }
+
+    fun updateSlideshowEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.updateSlideshowEnabled(enabled)
+        }
+    }
+
+    fun updateStandbyScheduleTime(id: String, startTime: String, endTime: String) {
+        viewModelScope.launch {
+            repository.updateStandbyScheduleTime(id, startTime, endTime)
+        }
+    }
+
+    fun updateStandbyScheduleDays(id: String, activeDays: String) {
+        viewModelScope.launch {
+            repository.updateStandbyScheduleDays(id, activeDays)
+        }
+    }
+
+    fun updateStandbyScheduleDates(id: String, specificDates: String) {
+        viewModelScope.launch {
+            repository.updateStandbyScheduleDates(id, specificDates)
+        }
+    }
+
+    fun updateStandbyEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.updateStandbyEnabled(enabled)
+        }
+    }
+
+    fun addDashboardBackgrounds(uris: List<android.net.Uri>, context: android.content.Context) {
+        viewModelScope.launch {
+            try {
+                var largeImageDetected = false
+                uris.forEach { uri ->
+                    val size = getUriSize(context, uri)
+                    if (size > 2 * 1024 * 1024) { // 2MB
+                        largeImageDetected = true
+                    }
+
+                    val filename = "dashboard_${System.currentTimeMillis()}_${java.util.UUID.randomUUID().toString().take(5)}.jpg"
+                    val dir = java.io.File(context.filesDir, "dashboard")
+                    if (!dir.exists()) {
+                        dir.mkdirs()
+                    }
+                    val file = java.io.File(dir, filename)
+
+                    val inputStream = context.contentResolver.openInputStream(uri) ?: return@forEach
+                    file.outputStream().use { outputStream ->
+                        inputStream.use { it.copyTo(outputStream) }
+                    }
+
+                    ImageUtils.downscaleImageInPlace(file)
+                    repository.addDashboardBackground(file.absolutePath)
+                }
+
+                if (largeImageDetected) {
+                    viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Gambar besar terdeteksi. Sistem akan mengoptimalkan ukuran gambar secara otomatis.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateDashboardBackgroundPath(id: String, uri: android.net.Uri, context: android.content.Context) {
+        viewModelScope.launch {
+            try {
+                val size = getUriSize(context, uri)
+                if (size > 2 * 1024 * 1024) { // 2MB
+                    viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Gambar besar terdeteksi. Sistem akan mengoptimalkan ukuran gambar secara otomatis.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+                val filename = "dashboard_${System.currentTimeMillis()}_${java.util.UUID.randomUUID().toString().take(5)}.jpg"
+                val dir = java.io.File(context.filesDir, "dashboard")
+                if (!dir.exists()) {
+                    dir.mkdirs()
+                }
+                val file = java.io.File(dir, filename)
+
+                val inputStream = context.contentResolver.openInputStream(uri) ?: return@launch
+                file.outputStream().use { outputStream ->
+                    inputStream.use { it.copyTo(outputStream) }
+                }
+
+                ImageUtils.downscaleImageInPlace(file)
+
+                // Delete old file
+                val item = _dashboardBackgroundsState.value.firstOrNull { it.id == id }
+                if (item != null) {
+                    val oldFile = java.io.File(item.filePath)
+                    if (oldFile.exists()) {
+                        oldFile.delete()
+                    }
+                }
+
+                repository.updateDashboardBackgroundPath(id, file.absolutePath)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun deleteDashboardBackground(id: String) {
+        viewModelScope.launch {
+            try {
+                val item = _dashboardBackgroundsState.value.firstOrNull { it.id == id }
+                if (item != null) {
+                    val file = java.io.File(item.filePath)
+                    if (file.exists()) {
+                        file.delete()
+                    }
+                }
+            } catch (_: Exception) {}
+            repository.deleteDashboardBackground(id)
+        }
+    }
+
+    fun updateDashboardBackgroundUsed(id: String, isUsed: Boolean) {
+        viewModelScope.launch {
+            repository.updateDashboardBackgroundUsed(id, isUsed)
+        }
+    }
+
+    fun updateDashboardBackgroundOrder(ids: List<String>) {
+        viewModelScope.launch {
+            repository.updateDashboardBackgroundOrder(ids)
+        }
+    }
+
+    fun updateDashboardSettings(randomize: Boolean, transitionType: String, intervalSeconds: Int) {
+        viewModelScope.launch {
+            val config = repository.getConfig()
+            repository.updateConfig(
+                latitude = config.latitude,
+                longitude = config.longitude,
+                iqomahSubuh = config.iqomahSubuh,
+                iqomahDzuhur = config.iqomahDzuhur,
+                iqomahAshar = config.iqomahAshar,
+                iqomahMaghrib = config.iqomahMaghrib,
+                iqomahIsya = config.iqomahIsya,
+                calculationMethodName = config.calculationMethodName,
+                adzanLeadMinutes = config.adzanLeadMinutes,
+                offsetImsak = config.offsetImsak,
+                offsetSubuh = config.offsetSubuh,
+                offsetSyuruq = config.offsetSyuruq,
+                offsetDzuhur = config.offsetDzuhur,
+                offsetAshar = config.offsetAshar,
+                offsetMaghrib = config.offsetMaghrib,
+                offsetIsya = config.offsetIsya,
+                kemenagCityId = config.kemenagCityId,
+                kemenagCityName = config.kemenagCityName,
+                kemenagDuration = config.kemenagDuration,
+                kemenagTargetDate = config.kemenagTargetDate,
+                adzanFooterText = config.adzanFooterText,
+                iqomahFooterText = config.iqomahFooterText,
+                dashboardRandomize = randomize,
+                dashboardTransitionType = transitionType,
+                dashboardTransitionInterval = intervalSeconds
+            )
+        }
+    }
+
+    fun updateMediaItemPath(id: String, uri: android.net.Uri, context: android.content.Context) {
+        viewModelScope.launch {
+            try {
+                val mimeType = context.contentResolver.getType(uri)
+                val isVideo = mimeType?.startsWith("video") == true
+
+                if (!isVideo) {
+                    val size = getUriSize(context, uri)
+                    if (size > 2 * 1024 * 1024) { // 2MB
+                        viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                            android.widget.Toast.makeText(
+                                context,
+                                "Gambar besar terdeteksi. Sistem akan mengoptimalkan ukuran gambar secara otomatis.",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+
+                val extension = if (isVideo) "mp4" else "jpg"
+                val filename = "presentation_${System.currentTimeMillis()}_${java.util.UUID.randomUUID().toString().take(5)}.$extension"
+                val dir = java.io.File(context.filesDir, "presentation")
+                if (!dir.exists()) {
+                    dir.mkdirs()
+                }
+                val file = java.io.File(dir, filename)
+
+                val inputStream = context.contentResolver.openInputStream(uri) ?: return@launch
+                file.outputStream().use { outputStream ->
+                    inputStream.use { it.copyTo(outputStream) }
+                }
+
+                if (!isVideo) {
+                    ImageUtils.downscaleImageInPlace(file)
+                }
+
+                // Delete old file
+                val item = _mediaListState.value.firstOrNull { it.id == id }
+                if (item != null) {
+                    val oldFile = java.io.File(item.filePath)
+                    if (oldFile.exists()) {
+                        oldFile.delete()
+                    }
+                }
+
+                repository.updateMediaItemPath(id, file.absolutePath)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateMediaListOrder(ids: List<String>) {
+        viewModelScope.launch {
+            repository.updateMediaListOrder(ids)
         }
     }
 }

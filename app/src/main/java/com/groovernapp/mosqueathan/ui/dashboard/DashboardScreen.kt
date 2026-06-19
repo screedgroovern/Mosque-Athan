@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import com.groovernapp.mosqueathan.R
+import com.groovernapp.mosqueathan.data.DashboardBackgroundEntity
 import com.groovernapp.mosqueathan.data.MediaEntity
 import kotlinx.coroutines.delay
 
@@ -21,12 +22,16 @@ fun DashboardScreen(
     state: DashboardUiState,
     customBackgroundPath: String,
     mediaList: List<MediaEntity>,
+    dashboardBackgrounds: List<DashboardBackgroundEntity> = emptyList(),
     transitionType: String,
     slideIntervalSeconds: Int,
     videoWaitUntilEnd: Boolean,
     includeDefaultImage: Boolean,
+    dashboardTransitionType: String = "FADE",
+    dashboardTransitionInterval: Int = 10,
     onNavigateToSettings: () -> Unit
 ) {
+    // --- Slideshow media list (for when isSlideshowActive) ---
     val slideshowList = remember(mediaList, includeDefaultImage) {
         val list = mediaList.toMutableList()
         if (includeDefaultImage) {
@@ -40,22 +45,37 @@ fun DashboardScreen(
         list
     }
 
-    var currentMediaIndex by remember(slideshowList) { mutableStateOf(0) }
+    var currentSlideshowIndex by remember(slideshowList) { mutableStateOf(0) }
 
     if (slideshowList.isNotEmpty()) {
-        val currentMedia = slideshowList.getOrNull(currentMediaIndex)
+        val currentMedia = slideshowList.getOrNull(currentSlideshowIndex)
         val isVideo = currentMedia?.isVideo == true
 
-        LaunchedEffect(currentMediaIndex, slideshowList, slideIntervalSeconds, videoWaitUntilEnd) {
+        LaunchedEffect(currentSlideshowIndex, slideshowList, slideIntervalSeconds, videoWaitUntilEnd) {
             if (isVideo && videoWaitUntilEnd) {
                 // Video completion listener will handle advancing the slide index.
             } else {
                 delay(slideIntervalSeconds * 1000L)
-                currentMediaIndex = (currentMediaIndex + 1) % slideshowList.size
+                currentSlideshowIndex = (currentSlideshowIndex + 1) % slideshowList.size
             }
         }
     }
 
+    // --- Dashboard backgrounds list (for when NOT isSlideshowActive) ---
+    val activeDashboardBgs = remember(dashboardBackgrounds) {
+        dashboardBackgrounds.filter { it.isUsed }
+    }
+
+    var currentDashboardBgIndex by remember(activeDashboardBgs) { mutableStateOf(0) }
+
+    if (activeDashboardBgs.size > 1) {
+        LaunchedEffect(currentDashboardBgIndex, activeDashboardBgs, dashboardTransitionInterval) {
+            delay(dashboardTransitionInterval * 1000L)
+            currentDashboardBgIndex = (currentDashboardBgIndex + 1) % activeDashboardBgs.size
+        }
+    }
+
+    // Single customBackgroundPath fallback bitmap
     val customBgBitmap = remember(customBackgroundPath) {
         if (customBackgroundPath.isNotEmpty() && java.io.File(customBackgroundPath).exists()) {
             try {
@@ -81,7 +101,7 @@ fun DashboardScreen(
             label = "BackgroundModeTransition"
         ) { isSlideshow ->
             if (isSlideshow && slideshowList.isNotEmpty()) {
-                val currentMedia = slideshowList.getOrNull(currentMediaIndex)
+                val currentMedia = slideshowList.getOrNull(currentSlideshowIndex)
                 if (currentMedia != null) {
                     AnimatedContent(
                         targetState = currentMedia,
@@ -112,13 +132,45 @@ fun DashboardScreen(
                             media = media,
                             videoWaitUntilEnd = videoWaitUntilEnd,
                             onVideoEnded = {
-                                currentMediaIndex = (currentMediaIndex + 1) % slideshowList.size
+                                currentSlideshowIndex = (currentSlideshowIndex + 1) % slideshowList.size
                             }
                         )
                     }
                 }
             } else {
-                if (customBgBitmap != null) {
+                // Dashboard background mode — cycle through dashboardBackgrounds list
+                if (activeDashboardBgs.isNotEmpty()) {
+                    val currentBg = activeDashboardBgs.getOrNull(currentDashboardBgIndex)
+                    if (currentBg != null) {
+                        AnimatedContent(
+                            targetState = currentBg,
+                            transitionSpec = {
+                                when (dashboardTransitionType) {
+                                    "SLIDE" -> {
+                                        (slideInHorizontally { width -> width } + fadeIn(animationSpec = tween(800))) togetherWith
+                                                (slideOutHorizontally { width -> -width } + fadeOut(animationSpec = tween(800)))
+                                    }
+                                    "ZOOM" -> {
+                                        (scaleIn(initialScale = 0.92f) + fadeIn(animationSpec = tween(800))) togetherWith
+                                                (scaleOut(targetScale = 1.08f) + fadeOut(animationSpec = tween(800)))
+                                    }
+                                    "INSTANT" -> {
+                                        ContentTransform(
+                                            initialContentExit = ExitTransition.None,
+                                            targetContentEnter = EnterTransition.None
+                                        )
+                                    }
+                                    else -> { // "FADE"
+                                        fadeIn(animationSpec = tween(800)) togetherWith fadeOut(animationSpec = tween(800))
+                                    }
+                                }
+                            },
+                            label = "DashboardBgTransition"
+                        ) { bg ->
+                            DashboardBgSlide(filePath = bg.filePath)
+                        }
+                    }
+                } else if (customBgBitmap != null) {
                     Image(
                         bitmap = customBgBitmap,
                         contentDescription = null,
@@ -153,6 +205,36 @@ fun DashboardScreen(
             is DashboardUiState.Adzan -> AdzanContent(state)
             is DashboardUiState.Iqomah -> IqomahContent(state)
         }
+    }
+}
+
+@Composable
+private fun DashboardBgSlide(filePath: String) {
+    val bitmap = remember(filePath) {
+        if (filePath.isNotEmpty() && java.io.File(filePath).exists()) {
+            try {
+                android.graphics.BitmapFactory.decodeFile(filePath)?.asImageBitmap()
+            } catch (e: Throwable) {
+                null
+            }
+        } else {
+            null
+        }
+    }
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+    } else {
+        Image(
+            painter = painterResource(R.drawable.main_bg_default),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 

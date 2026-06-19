@@ -66,4 +66,55 @@ object PrayerUtils {
             currentMinutes >= startMinutes || currentMinutes < endMinutes
         }
     }
+
+    /**
+     * New overload for multi-day schedules using activeDays (comma-separated day names)
+     * and specificDates (comma-separated date strings). If activeDays is non-empty, it checks
+     * day-of-week membership; if specificDates is non-empty, it checks date membership.
+     * Falls back to legacy isScheduleActive if both new fields are empty.
+     */
+    fun isScheduleActiveNew(
+        now: LocalDateTime,
+        activeDays: String,
+        specificDates: String,
+        startTime: String,
+        endTime: String,
+        // Legacy fallback fields
+        legacyDay: String = "",
+        legacyIsSpecificDate: Boolean = false
+    ): Boolean {
+        if (startTime.isEmpty() || endTime.isEmpty()) return false
+
+        val currentMinutes = now.hour * 60 + now.minute
+        val startMinutes = parseTimeToMinutes(startTime) ?: return false
+        val endMinutes = parseTimeToMinutes(endTime) ?: return false
+
+        val timeActive = if (startMinutes <= endMinutes) {
+            currentMinutes in startMinutes until endMinutes
+        } else {
+            currentMinutes >= startMinutes || currentMinutes < endMinutes
+        }
+        if (!timeActive) return false
+
+        // Check specificDates (comma-separated date strings like "2026-06-18")
+        if (specificDates.isNotEmpty()) {
+            val todayStr = "%04d-%02d-%02d".format(now.year, now.month.number, now.day)
+            val dates = specificDates.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            return dates.any { it == todayStr }
+        }
+
+        // Check activeDays (comma-separated day names like "MONDAY,WEDNESDAY")
+        if (activeDays.isNotEmpty()) {
+            val currentDayName = now.dayOfWeek.name
+            val days = activeDays.split(",").map { it.trim().uppercase() }.filter { it.isNotEmpty() }
+            return days.any { it == currentDayName }
+        }
+
+        // Fall back to legacy single-day field
+        if (legacyDay.isNotEmpty()) {
+            return isScheduleActive(now, legacyDay, legacyIsSpecificDate, startTime, endTime)
+        }
+
+        return false
+    }
 }

@@ -3,6 +3,8 @@ package com.groovernapp.mosqueathan.ui.settings.adzaniqomah
 import com.groovernapp.mosqueathan.ui.settings.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,7 +40,9 @@ fun AdzanSettingsSegment(
     }
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
@@ -57,7 +61,7 @@ fun AdzanSettingsSegment(
             onValueChange = onAdzanLeadMinutesChange
         )
 
-        Divider(color = Color.White.copy(alpha = 0.15f))
+        HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
 
         RunningTextListSettingsComponent(
             title = Lang.get("Running Text", "Teks Berjalan"),
@@ -70,7 +74,7 @@ fun AdzanSettingsSegment(
             isCompact = isCompact
         )
 
-        Divider(color = Color.White.copy(alpha = 0.15f))
+        HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
 
         // Preview Button
         TvFocusablePreviewButton(

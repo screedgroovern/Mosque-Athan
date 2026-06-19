@@ -103,10 +103,13 @@ class MainActivity : ComponentActivity() {
                                 state = state.state,
                                 customBackgroundPath = state.customBackgroundPath,
                                 mediaList = state.mediaList,
+                                dashboardBackgrounds = state.dashboardBackgrounds,
                                 transitionType = state.transitionType,
                                 slideIntervalSeconds = state.slideIntervalSeconds,
                                 videoWaitUntilEnd = state.videoWaitUntilEnd,
                                 includeDefaultImage = state.includeDefaultImage,
+                                dashboardTransitionType = state.dashboardTransitionType,
+                                dashboardTransitionInterval = state.dashboardTransitionInterval,
                                 onNavigateToSettings = {
                                     appViewModel.transitionToSettings()
                                 }

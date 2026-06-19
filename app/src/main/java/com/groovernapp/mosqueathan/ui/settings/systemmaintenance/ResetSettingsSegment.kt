@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.groovernapp.mosqueathan.util.Lang
 
 @Composable
 fun ResetSettingsSegment(onResetToDefaults: () -> Unit) {
@@ -27,7 +28,7 @@ fun ResetSettingsSegment(onResetToDefaults: () -> Unit) {
                 .padding(horizontal = 32.dp)
         ) {
             Text(
-                text = com.groovernapp.mosqueathan.util.Lang.get("RESET ALL SETTINGS TO DEFAULT", "RESET SEMUA PENGATURAN KE DEFAULT"),
+                text = Lang.get("Reset all Settings to default", "Reset semua Pengaturan ke default"),
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp

@@ -344,16 +344,20 @@ class AppViewModel : ViewModel() {
             kotlinx.coroutines.flow.combine(
                 dashboardViewModel.uiState,
                 repository.getConfigFlow(),
-                repository.getMediaListFlow()
-            ) { dashboardState, config, mediaList ->
+                repository.getMediaListFlow(),
+                repository.getDashboardBackgroundsFlow()
+            ) { dashboardState, config, mediaList, dashboardBackgrounds ->
                 AppUiState.Dashboard(
                     state = dashboardState,
                     customBackgroundPath = config.customBackgroundPath,
                     mediaList = mediaList,
+                    dashboardBackgrounds = dashboardBackgrounds,
                     transitionType = config.transitionType,
                     slideIntervalSeconds = config.slideIntervalSeconds,
                     videoWaitUntilEnd = config.videoWaitUntilEnd,
-                    includeDefaultImage = config.includeDefaultImage
+                    includeDefaultImage = config.includeDefaultImage,
+                    dashboardTransitionType = config.dashboardTransitionType,
+                    dashboardTransitionInterval = config.dashboardTransitionInterval
                 )
             }.collect { state ->
                 _appState.value = state
@@ -410,17 +414,21 @@ class AppViewModel : ViewModel() {
             kotlinx.coroutines.flow.combine(
                 dashboardViewModel.uiState,
                 repository.getConfigFlow(),
-                repository.getMediaListFlow()
-            ) { dashboardState, config, mediaList ->
+                repository.getMediaListFlow(),
+                repository.getDashboardBackgroundsFlow()
+            ) { dashboardState, config, mediaList, dashboardBackgrounds ->
                 AppUiState.Dashboard(
                     state = dashboardState.copy(isSlideshowActive = true),
                     customBackgroundPath = config.customBackgroundPath,
                     mediaList = mediaList,
+                    dashboardBackgrounds = dashboardBackgrounds,
                     transitionType = config.transitionType,
                     slideIntervalSeconds = config.slideIntervalSeconds,
                     videoWaitUntilEnd = config.videoWaitUntilEnd,
                     includeDefaultImage = config.includeDefaultImage,
-                    isPreviewMode = true
+                    isPreviewMode = true,
+                    dashboardTransitionType = config.dashboardTransitionType,
+                    dashboardTransitionInterval = config.dashboardTransitionInterval
                 )
             }.collect { state ->
                 _appState.value = state

@@ -5,9 +5,6 @@ import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
-import com.groovernapp.mosqueathan.data.AnnouncementEntity
-import com.groovernapp.mosqueathan.data.MediaEntity
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.data.KemenagScheduleEntity
 import kotlinx.coroutines.*
 import org.json.JSONArray
@@ -18,7 +15,7 @@ import java.net.Socket
 import java.net.URLDecoder
 import java.security.MessageDigest
 import java.util.concurrent.CopyOnWriteArrayList
-import com.groovernapp.mosqueathan.utils.ImageUtils
+import com.groovernapp.mosqueathan.util.ImageUtils
 
 class SettingsServer(private val context: Context) {
 

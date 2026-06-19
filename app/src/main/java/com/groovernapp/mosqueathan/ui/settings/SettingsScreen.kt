@@ -77,6 +77,7 @@ fun SettingsScreen(
     val isSearchingCities by viewModel.isSearchingCities.collectAsState()
     val kemenagSchedules by viewModel.kemenagSchedulesState.collectAsState()
     val slideshowSchedules by viewModel.slideshowSchedulesState.collectAsState()
+    val dashboardBackgrounds by viewModel.dashboardBackgroundsState.collectAsState()
     val standbySchedules by viewModel.standbySchedulesState.collectAsState()
 
     val showAllSettings = true
@@ -120,8 +121,6 @@ fun SettingsScreen(
 
     // Standby States
     var standbyModeEnabled by remember(config.standbyModeEnabled) { mutableStateOf(config.standbyModeEnabled) }
-    var standbyStartTime by remember(config.standbyStartTime) { mutableStateOf(config.standbyStartTime) }
-    var standbyEndTime by remember(config.standbyEndTime) { mutableStateOf(config.standbyEndTime) }
 
     val customBgBitmap = remember(config.customBackgroundPath) {
         if (config.customBackgroundPath.isNotEmpty() && java.io.File(config.customBackgroundPath).exists()) {
@@ -333,7 +332,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .then(
-                                    if (selectedCategory in listOf(SettingsCategory.PRAYER_SCHEDULE, SettingsCategory.ADZAN_IQOMAH, SettingsCategory.SYSTEM_MAINTENANCE)) {
+                                    if (selectedCategory in listOf(SettingsCategory.PRAYER_SCHEDULE, SettingsCategory.ADZAN_IQOMAH)) {
                                         Modifier.padding(bottom = 16.dp)
                                     } else {
                                         Modifier
@@ -419,23 +418,39 @@ fun SettingsScreen(
                                          config = config,
                                          mediaList = mediaList,
                                          slideshowSchedules = slideshowSchedules,
-                                         announcements = announcements,
-                                         onUpdateThemeSettings = { type, interval, videoWait, defaultImg -> 
-                                             viewModel.updateThemeSettings(type, interval, videoWait, defaultImg) 
+                                         dashboardBackgrounds = dashboardBackgrounds,
+                                         onUpdateThemeSettings = { type, interval, videoWait, defaultImg ->
+                                             viewModel.updateThemeSettings(type, interval, videoWait, defaultImg)
                                          },
                                          onAddMediaItems = { uris -> viewModel.addMediaItems(uris, context) },
+                                         onUpdateMediaItemPath = { id, uri -> viewModel.updateMediaItemPath(id, uri, context) },
                                          onDeleteMediaItem = { item -> viewModel.deleteMediaItem(item) },
+                                         onReorderMediaItems = { ids -> viewModel.updateMediaListOrder(ids) },
                                          onSelectCustomBackground = { uri -> viewModel.updateCustomBackground(uri, context) },
                                          onClearCustomBackground = { viewModel.clearCustomBackground(context) },
-                                         onAddSlideshowSchedule = { day, isSpecific, start, end -> 
-                                             viewModel.addSlideshowSchedule(day, isSpecific, start, end) 
+                                         onAddSlideshowSchedule = { day, isSpecific, start, end ->
+                                             viewModel.addSlideshowSchedule(day, isSpecific, start, end)
+                                         },
+                                         onUpdateSlideshowScheduleTime = { schedule, startTime, endTime ->
+                                             viewModel.updateSlideshowScheduleTime(schedule.id, startTime, endTime)
+                                         },
+                                         onUpdateSlideshowScheduleDays = { schedule, activeDays ->
+                                             viewModel.updateSlideshowScheduleDays(schedule.id, activeDays)
+                                         },
+                                         onUpdateSlideshowScheduleDates = { schedule, specificDates ->
+                                             viewModel.updateSlideshowScheduleDates(schedule.id, specificDates)
                                          },
                                          onDeleteSlideshowSchedule = { id -> viewModel.deleteSlideshowSchedule(id) },
+                                         onUpdateSlideshowEnabled = { enabled -> viewModel.updateSlideshowEnabled(enabled) },
                                          onPreviewSlideshow = onPreviewSlideshow,
-                                         onAddAnnouncement = { content -> viewModel.addAnnouncement(content) },
-                                         onDeleteAnnouncement = { id -> viewModel.deleteAnnouncement(id) },
-                                         onEditAnnouncement = { id, content -> viewModel.editAnnouncement(id, content) },
-                                         onReorderAnnouncements = { ids -> viewModel.reorderAnnouncements(ids) },
+                                         onAddDashboardBackground = { uris -> viewModel.addDashboardBackgrounds(uris, context) },
+                                         onUpdateDashboardBackgroundPath = { id, uri -> viewModel.updateDashboardBackgroundPath(id, uri, context) },
+                                         onDeleteDashboardBackground = { id -> viewModel.deleteDashboardBackground(id) },
+                                         onUpdateDashboardBackgroundUsed = { id, isUsed -> viewModel.updateDashboardBackgroundUsed(id, isUsed) },
+                                         onUpdateDashboardBackgroundOrder = { ids -> viewModel.updateDashboardBackgroundOrder(ids) },
+                                         onUpdateDashboardSettings = { randomize, transitionType, intervalSeconds ->
+                                             viewModel.updateDashboardSettings(randomize, transitionType, intervalSeconds)
+                                         },
                                          isCompact = isCompact
                                      )
                                  }
@@ -454,12 +469,24 @@ fun SettingsScreen(
                                  SettingsCategory.SYSTEM_MAINTENANCE -> {
                                      SystemMaintenanceSettingsPane(
                                          standbyModeEnabled = standbyModeEnabled,
-                                         onStandbyModeEnabledChange = { standbyModeEnabled = it },
+                                         onStandbyModeEnabledChange = {
+                                             standbyModeEnabled = it
+                                             viewModel.updateStandbyEnabled(it)
+                                         },
                                          standbySchedules = standbySchedules,
-                                         onAddStandbySchedule = { day, isSpecific, start, end -> 
-                                             viewModel.addStandbySchedule(day, isSpecific, start, end) 
+                                         onAddStandbySchedule = { day, isSpecific, start, end ->
+                                             viewModel.addStandbySchedule(day, isSpecific, start, end)
                                          },
                                          onDeleteStandbySchedule = { id -> viewModel.deleteStandbySchedule(id) },
+                                         onUpdateStandbyScheduleTime = { schedule, start, end ->
+                                             viewModel.updateStandbyScheduleTime(schedule.id, start, end)
+                                         },
+                                         onUpdateStandbyScheduleDays = { schedule, days ->
+                                             viewModel.updateStandbyScheduleDays(schedule.id, days)
+                                         },
+                                         onUpdateStandbyScheduleDates = { schedule, dates ->
+                                             viewModel.updateStandbyScheduleDates(schedule.id, dates)
+                                         },
                                          onResetToDefaults = { viewModel.resetToDefaults(context) }
                                      )
                                  }
@@ -467,7 +494,7 @@ fun SettingsScreen(
                         }
 
                         // Save / Apply Button (only for config-saving categories)
-                        if (selectedCategory in listOf(SettingsCategory.PRAYER_SCHEDULE, SettingsCategory.ADZAN_IQOMAH, SettingsCategory.SYSTEM_MAINTENANCE)) {
+                        if (selectedCategory in listOf(SettingsCategory.PRAYER_SCHEDULE, SettingsCategory.ADZAN_IQOMAH)) {
                             var isSaving by remember { mutableStateOf(false) }
                             val coroutineScope = rememberCoroutineScope()
 
@@ -476,36 +503,32 @@ fun SettingsScreen(
                                     if (isSaving) return@TvFocusablePrimaryButton
                                     isSaving = true
                                     coroutineScope.launch {
-                                        if (selectedCategory == SettingsCategory.SYSTEM_MAINTENANCE) {
-                                            viewModel.updateStandbySettings(standbyModeEnabled, standbyStartTime, standbyEndTime)
-                                        } else {
-                                            val lat = latText.toDoubleOrNull() ?: config.latitude
-                                            val lng = lngText.toDoubleOrNull() ?: config.longitude
-                                            viewModel.updateConfig(
-                                                config.copy(
-                                                    latitude = lat,
-                                                    longitude = lng,
-                                                    iqomahSubuh = iqomahSubuh,
-                                                    iqomahDzuhur = iqomahDzuhur,
-                                                    iqomahAshar = iqomahAshar,
-                                                    iqomahMaghrib = iqomahMaghrib,
-                                                    iqomahIsya = iqomahIsya,
-                                                    calculationMethodName = calculationMethodName,
-                                                    adzanLeadMinutes = adzanLeadMinutes,
-                                                    offsetImsak = offsetImsak,
-                                                    offsetSubuh = offsetSubuh,
-                                                    offsetSyuruq = offsetSyuruq,
-                                                    offsetDzuhur = offsetDzuhur,
-                                                    offsetAshar = offsetAshar,
-                                                    offsetMaghrib = offsetMaghrib,
-                                                    offsetIsya = offsetIsya,
-                                                    kemenagCityId = kemenagCityId,
-                                                    kemenagCityName = kemenagCityName,
-                                                    kemenagDuration = kemenagDuration,
-                                                    kemenagTargetDate = kemenagTargetDate
-                                                )
+                                        val lat = latText.toDoubleOrNull() ?: config.latitude
+                                        val lng = lngText.toDoubleOrNull() ?: config.longitude
+                                        viewModel.updateConfig(
+                                            config.copy(
+                                                latitude = lat,
+                                                longitude = lng,
+                                                iqomahSubuh = iqomahSubuh,
+                                                iqomahDzuhur = iqomahDzuhur,
+                                                iqomahAshar = iqomahAshar,
+                                                iqomahMaghrib = iqomahMaghrib,
+                                                iqomahIsya = iqomahIsya,
+                                                calculationMethodName = calculationMethodName,
+                                                adzanLeadMinutes = adzanLeadMinutes,
+                                                offsetImsak = offsetImsak,
+                                                offsetSubuh = offsetSubuh,
+                                                offsetSyuruq = offsetSyuruq,
+                                                offsetDzuhur = offsetDzuhur,
+                                                offsetAshar = offsetAshar,
+                                                offsetMaghrib = offsetMaghrib,
+                                                offsetIsya = offsetIsya,
+                                                kemenagCityId = kemenagCityId,
+                                                kemenagCityName = kemenagCityName,
+                                                kemenagDuration = kemenagDuration,
+                                                kemenagTargetDate = kemenagTargetDate
                                             )
-                                        }
+                                        )
                                         delay(600)
                                         isSaving = false
                                     }

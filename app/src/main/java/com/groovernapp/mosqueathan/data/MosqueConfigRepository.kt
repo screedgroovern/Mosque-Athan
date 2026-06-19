@@ -19,10 +19,9 @@ import kotlinx.datetime.plus
 import kotlin.time.Clock
 
 class MosqueConfigRepository private constructor() {
-
-    private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class))
+    private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class, DashboardBackgroundEntity::class))
         .name("mosque_athan.realm")
-        .schemaVersion(12)
+        .schemaVersion(14)
         .deleteRealmIfMigrationNeeded()
         .build()
 
@@ -96,7 +95,10 @@ class MosqueConfigRepository private constructor() {
         kemenagTargetDate: String = "",
         triggerFetch: Boolean = false,
         adzanFooterText: String? = null,
-        iqomahFooterText: String? = null
+        iqomahFooterText: String? = null,
+        dashboardRandomize: Boolean? = null,
+        dashboardTransitionType: String? = null,
+        dashboardTransitionInterval: Int? = null
     ) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
@@ -126,6 +128,15 @@ class MosqueConfigRepository private constructor() {
                 }
                 if (iqomahFooterText != null) {
                     entity.iqomahFooterText = iqomahFooterText
+                }
+                if (dashboardRandomize != null) {
+                    entity.dashboardRandomize = dashboardRandomize
+                }
+                if (dashboardTransitionType != null) {
+                    entity.dashboardTransitionType = dashboardTransitionType
+                }
+                if (dashboardTransitionInterval != null) {
+                    entity.dashboardTransitionInterval = dashboardTransitionInterval
                 }
             }
         }
@@ -331,6 +342,26 @@ class MosqueConfigRepository private constructor() {
         }
     }
 
+    suspend fun updateMediaItemPath(id: String, filePath: String) {
+        realm.write {
+            val item = query<MediaEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.filePath = filePath
+            }
+        }
+    }
+
+    suspend fun updateMediaListOrder(ids: List<String>) {
+        realm.write {
+            ids.forEachIndexed { index, id ->
+                val item = query<MediaEntity>("id == $0", id).first().find()
+                if (item != null) {
+                    item.sortOrder = index
+                }
+            }
+        }
+    }
+
     suspend fun updateThemeSettings(transitionType: String, intervalSeconds: Int, videoWaitUntilEnd: Boolean, includeDefaultImage: Boolean) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
@@ -363,6 +394,16 @@ class MosqueConfigRepository private constructor() {
         }
     }
 
+    suspend fun updateStandbyEnabled(enabled: Boolean) {
+        realm.write {
+            val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
+            if (entity != null) {
+                entity.standbyModeEnabled = enabled
+            }
+        }
+    }
+
+
     fun getSlideshowSchedulesFlow(): Flow<List<SlideshowScheduleEntity>> {
         return realm.query<SlideshowScheduleEntity>()
             .asFlow()
@@ -381,7 +422,51 @@ class MosqueConfigRepository private constructor() {
                 this.isSpecificDate = isSpecificDate
                 this.startTime = startTime
                 this.endTime = endTime
+                this.createdAt = System.currentTimeMillis()
+                if (isSpecificDate) {
+                    this.specificDates = day
+                } else {
+                    this.activeDays = day
+                }
             })
+        }
+    }
+
+    suspend fun updateSlideshowScheduleTime(id: String, startTime: String, endTime: String) {
+        realm.write {
+            val item = query<SlideshowScheduleEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.startTime = startTime
+                item.endTime = endTime
+            }
+        }
+    }
+
+    suspend fun updateSlideshowScheduleDays(id: String, activeDays: String) {
+        realm.write {
+            val item = query<SlideshowScheduleEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.activeDays = activeDays
+                val firstDay = activeDays.split(",").firstOrNull { it.isNotEmpty() } ?: ""
+                if (firstDay.isNotEmpty()) {
+                    item.day = firstDay
+                    item.isSpecificDate = false
+                }
+            }
+        }
+    }
+
+    suspend fun updateSlideshowScheduleDates(id: String, specificDates: String) {
+        realm.write {
+            val item = query<SlideshowScheduleEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.specificDates = specificDates
+                val firstDate = specificDates.split(",").firstOrNull { it.isNotEmpty() } ?: ""
+                if (firstDate.isNotEmpty()) {
+                    item.day = firstDate
+                    item.isSpecificDate = true
+                }
+            }
         }
     }
 
@@ -390,6 +475,15 @@ class MosqueConfigRepository private constructor() {
             val item = query<SlideshowScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
                 delete(item)
+            }
+        }
+    }
+
+    suspend fun updateSlideshowEnabled(enabled: Boolean) {
+        realm.write {
+            val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
+            if (entity != null) {
+                entity.slideshowEnabled = enabled
             }
         }
     }
@@ -412,7 +506,51 @@ class MosqueConfigRepository private constructor() {
                 this.isSpecificDate = isSpecificDate
                 this.startTime = startTime
                 this.endTime = endTime
+                this.createdAt = System.currentTimeMillis()
+                if (isSpecificDate) {
+                    this.specificDates = day
+                } else {
+                    this.activeDays = day
+                }
             })
+        }
+    }
+
+    suspend fun updateStandbyScheduleTime(id: String, startTime: String, endTime: String) {
+        realm.write {
+            val item = query<StandbyScheduleEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.startTime = startTime
+                item.endTime = endTime
+            }
+        }
+    }
+
+    suspend fun updateStandbyScheduleDays(id: String, activeDays: String) {
+        realm.write {
+            val item = query<StandbyScheduleEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.activeDays = activeDays
+                val firstDay = activeDays.split(",").firstOrNull { it.isNotEmpty() } ?: ""
+                if (firstDay.isNotEmpty()) {
+                    item.day = firstDay
+                    item.isSpecificDate = false
+                }
+            }
+        }
+    }
+
+    suspend fun updateStandbyScheduleDates(id: String, specificDates: String) {
+        realm.write {
+            val item = query<StandbyScheduleEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.specificDates = specificDates
+                val firstDate = specificDates.split(",").firstOrNull { it.isNotEmpty() } ?: ""
+                if (firstDate.isNotEmpty()) {
+                    item.day = firstDate
+                    item.isSpecificDate = true
+                }
+            }
         }
     }
 
@@ -732,6 +870,64 @@ class MosqueConfigRepository private constructor() {
     fun getKemenagSchedules(cityId: String): List<KemenagScheduleEntity> {
         val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
         return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString >= $1", cityId, todayStr).find().sortedBy { it.dateString }
+    }
+
+    fun getDashboardBackgrounds(): List<DashboardBackgroundEntity> {
+        return realm.query<DashboardBackgroundEntity>().find().sortedBy { it.sortOrder }
+    }
+
+    fun getDashboardBackgroundsFlow(): Flow<List<DashboardBackgroundEntity>> {
+        return realm.query<DashboardBackgroundEntity>().asFlow().map { it.list.sortedBy { s -> s.sortOrder } }
+    }
+
+    suspend fun addDashboardBackground(filePath: String, customId: String = "") {
+        realm.write {
+            val maxOrder = query<DashboardBackgroundEntity>().find().maxOfOrNull { it.sortOrder } ?: -1
+            copyToRealm(DashboardBackgroundEntity().apply {
+                this.id = if (customId.isNotEmpty()) customId else java.util.UUID.randomUUID().toString()
+                this.filePath = filePath
+                this.isUsed = true
+                this.sortOrder = maxOrder + 1
+            })
+        }
+    }
+
+    suspend fun deleteDashboardBackground(id: String) {
+        realm.write {
+            val item = query<DashboardBackgroundEntity>("id == $0", id).first().find()
+            if (item != null) {
+                delete(item)
+            }
+        }
+    }
+
+    suspend fun updateDashboardBackgroundPath(id: String, filePath: String) {
+        realm.write {
+            val item = query<DashboardBackgroundEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.filePath = filePath
+            }
+        }
+    }
+
+    suspend fun updateDashboardBackgroundUsed(id: String, isUsed: Boolean) {
+        realm.write {
+            val item = query<DashboardBackgroundEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.isUsed = isUsed
+            }
+        }
+    }
+
+    suspend fun updateDashboardBackgroundOrder(ids: List<String>) {
+        realm.write {
+            ids.forEachIndexed { index, id ->
+                val item = query<DashboardBackgroundEntity>("id == $0", id).first().find()
+                if (item != null) {
+                    item.sortOrder = index
+                }
+            }
+        }
     }
 
     companion object {

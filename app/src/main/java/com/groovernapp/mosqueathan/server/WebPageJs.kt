@@ -610,16 +610,63 @@ object WebPageJs {
         }
 
         // Initialize sidebar state on DOM load
-        document.addEventListener('DOMContentLoaded', () => {
+        function initSidebarState() {
             const sidebar = document.getElementById('app-sidebar');
-            if (sidebar) {
-                if (window.innerWidth > 600 && window.innerWidth <= 1024) {
-                    sidebar.classList.add('collapsed');
-                } else if (window.innerWidth <= 600) {
-                    sidebar.classList.add('collapsed');
-                }
+            const scrim = document.getElementById('sidebar-scrim');
+            if (!sidebar) return;
+            
+            if (window.innerWidth > 1024) {
+                // Desktop: Expanded by default
+                sidebar.classList.remove('collapsed');
+                sidebar.classList.remove('open');
+                if (scrim) scrim.classList.remove('visible');
+            } else if (window.innerWidth > 600 && window.innerWidth <= 1024) {
+                // Tablet: Collapsed by default (icon only)
+                sidebar.classList.add('collapsed');
+                sidebar.classList.remove('open');
+                if (scrim) scrim.classList.remove('visible');
+            } else {
+                // Phone: Hidden drawer by default
+                sidebar.classList.remove('collapsed'); // Use expanded content structure inside drawer
+                sidebar.classList.remove('open');
+                if (scrim) scrim.classList.remove('visible');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSidebarState();
+            
+            // Swipe gestures for phone drawer
+            const sidebarEl = document.getElementById('app-sidebar');
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            if (sidebarEl) {
+                sidebarEl.addEventListener('touchstart', e => {
+                    touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+                
+                sidebarEl.addEventListener('touchend', e => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    if (window.innerWidth <= 600 && (touchStartX - touchEndX > 50)) {
+                        // Swipe left to close drawer
+                        const scrim = document.getElementById('sidebar-scrim');
+                        sidebarEl.classList.remove('open');
+                        if (scrim) scrim.classList.remove('visible');
+                    }
+                }, { passive: true });
             }
         });
+
+        let lastWidth = window.innerWidth;
+        window.addEventListener('resize', () => {
+            const currentWidth = window.innerWidth;
+            if ((lastWidth > 1024 && currentWidth <= 1024) || (lastWidth <= 600 && currentWidth > 600) || (lastWidth > 600 && currentWidth <= 600)) {
+                initSidebarState();
+            }
+            lastWidth = currentWidth;
+        });
+
 
         function goBackToMenu() {
             const container = document.querySelector('.app-container');

@@ -31,15 +31,19 @@ object WebPageCss {
             padding: 0;
         }
 
+        html, body {
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
         body {
             font-family: var(--font-family);
             background-color: var(--bg-base);
             background-image: radial-gradient(circle at 10% 20%, rgba(16, 25, 21, 0.4) 0%, rgba(6, 9, 7, 0) 90%);
             color: var(--text-primary);
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
         }
 
         /* Header Styling */
@@ -64,7 +68,7 @@ object WebPageCss {
             color: var(--text-primary);
             cursor: pointer;
             padding: 0.5rem;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             border-radius: 8px;
@@ -134,10 +138,12 @@ object WebPageCss {
         .app-container {
             display: flex;
             flex: 1;
+            height: calc(100vh - 70px);
             max-width: 1440px;
             width: 100%;
             margin: 0 auto;
             position: relative;
+            overflow: hidden;
         }
 
         /* Sidebar Styling */
@@ -150,42 +156,50 @@ object WebPageCss {
             flex-direction: column;
             gap: 1.5rem;
             flex-shrink: 0;
-            height: calc(100vh - 70px);
+            height: 100%;
             overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             z-index: 1000;
         }
 
-        .sidebar.collapsed {
-            width: 72px !important;
-            padding: 1.5rem 0.5rem !important;
-            align-items: center;
-        }
-
-        .sidebar.collapsed .sidebar-header {
-            justify-content: center;
-            padding: 0 0 1rem 0;
-            width: 100%;
-        }
-
-        .sidebar.collapsed .sidebar-header-text {
+        .sidebar::-webkit-scrollbar {
             display: none;
         }
 
-        .sidebar.collapsed .lang-selector-container {
-            display: none !important;
-        }
+        @media (min-width: 601px) {
+            .sidebar.collapsed {
+                width: 72px !important;
+                padding: 1.5rem 0.5rem !important;
+                align-items: center;
+            }
 
-        .sidebar.collapsed .nav-item span {
-            display: none;
-        }
+            .sidebar.collapsed .sidebar-header {
+                justify-content: center;
+                padding: 0 0 1rem 0;
+                width: 100%;
+            }
 
-        .sidebar.collapsed .nav-item {
-            justify-content: center;
-            padding: 0.75rem 0;
-            width: 100%;
-            gap: 0;
+            .sidebar.collapsed .sidebar-header-text {
+                display: none;
+            }
+
+            .sidebar.collapsed .lang-selector-container {
+                display: none !important;
+            }
+
+            .sidebar.collapsed .nav-item span {
+                display: none;
+            }
+
+            .sidebar.collapsed .nav-item {
+                justify-content: center;
+                padding: 0.75rem 0;
+                width: 100%;
+                gap: 0;
+            }
         }
 
         /* Sidebar Header (Settings Gear) */
@@ -200,6 +214,13 @@ object WebPageCss {
             width: 100%;
             box-sizing: border-box;
             padding-left: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+        .sidebar-header:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
         }
 
         .sidebar-header-gear {
@@ -347,7 +368,7 @@ object WebPageCss {
             flex: 1;
             padding: 3rem 4rem;
             overflow-y: auto;
-            max-height: 100vh;
+            height: 100%;
         }
 
         .content-section {

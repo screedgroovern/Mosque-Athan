@@ -63,9 +63,9 @@ fun DashboardContent(
                         modifier = Modifier
                             .background(
                                 color = Color.Black.copy(alpha = 0.6f),
-                                shape = RoundedCornerShape(percent = 50)
+                                shape = RoundedCornerShape(8.dp)
                             )
-                            .padding(horizontal = 24.dp, vertical = 12.dp)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
@@ -77,12 +77,51 @@ fun DashboardContent(
                                 }
                             }
                     ) {
-                        Text(
-                            text = state.currentTime,
-                            color = Color.White,
-                            fontSize = 30.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            // First Line: HH:mm with blinking colon
+                            val timeParts = state.currentTime.split(":")
+                            val hours = timeParts.getOrNull(0) ?: "00"
+                            val minutes = timeParts.getOrNull(1) ?: "00"
+                            val secondsStr = timeParts.getOrNull(2) ?: "00"
+                            val secondsVal = secondsStr.toIntOrNull() ?: 0
+                            val isColonVisible = secondsVal % 2 == 0
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = hours,
+                                    color = Color.White,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = ":",
+                                    color = if (isColonVisible) Color.White else Color.Transparent,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = minutes,
+                                    color = Color.White,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(2.dp))
+
+                            // Second Line: Next_prayer · countdown
+                            val nextPrayerName = state.nextPrayer.prayerType.name.lowercase().replaceFirstChar { it.uppercase() }
+                            Text(
+                                text = "$nextPrayerName · ${state.nextPrayer.countdown}",
+                                color = Color(0xFFFFD54F),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             } else {
@@ -90,7 +129,9 @@ fun DashboardContent(
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        if (!state.isSlideshowActive) {
+            Spacer(modifier = Modifier.weight(1f))
+        }
 
         AnimatedContent(
             targetState = state.isSlideshowActive,
@@ -101,17 +142,19 @@ fun DashboardContent(
         ) { isSlideshow ->
             if (!isSlideshow) {
                 ClockSection(state = state)
-            } else {
-                Spacer(modifier = Modifier.fillMaxWidth().height(1.dp))
             }
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        if (!state.isSlideshowActive) {
+            Spacer(modifier = Modifier.weight(1f))
+        }
         
-        PrayerTimesPanel(
-            prayerTimes = state.prayerTimes,
-            isSlideshowActive = state.isSlideshowActive
-        )
-        RunningTextBar(text = state.runningText)
+        if (!state.isSlideshowActive) {
+            PrayerTimesPanel(
+                prayerTimes = state.prayerTimes,
+                isSlideshowActive = state.isSlideshowActive
+            )
+            RunningTextBar(text = state.runningText)
+        }
     }
 }

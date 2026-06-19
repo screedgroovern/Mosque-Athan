@@ -134,10 +134,20 @@ class DashboardViewModel : ViewModel() {
         )
 
         val slideshowSchedules = repository.getSlideshowSchedules()
+        val slideshowEnabled = config.slideshowEnabled
         var slideshowActive = false
-        if (slideshowSchedules.isNotEmpty()) {
+        if (slideshowEnabled && slideshowSchedules.isNotEmpty()) {
             for (sched in slideshowSchedules) {
-                if (com.groovernapp.mosqueathan.util.PrayerUtils.isScheduleActive(now, sched.day, sched.isSpecificDate, sched.startTime, sched.endTime)) {
+                if (com.groovernapp.mosqueathan.util.PrayerUtils.isScheduleActiveNew(
+                        now = now,
+                        activeDays = sched.activeDays,
+                        specificDates = sched.specificDates,
+                        startTime = sched.startTime,
+                        endTime = sched.endTime,
+                        legacyDay = sched.day,
+                        legacyIsSpecificDate = sched.isSpecificDate
+                    )
+                ) {
                     slideshowActive = true
                     break
                 }

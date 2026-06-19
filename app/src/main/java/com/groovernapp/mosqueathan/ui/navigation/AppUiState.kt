@@ -10,11 +10,14 @@ sealed interface AppUiState {
         val state: DashboardUiState.Dashboard,
         val customBackgroundPath: String,
         val mediaList: List<com.groovernapp.mosqueathan.data.MediaEntity>,
+        val dashboardBackgrounds: List<com.groovernapp.mosqueathan.data.DashboardBackgroundEntity> = emptyList(),
         val transitionType: String,
         val slideIntervalSeconds: Int,
         val videoWaitUntilEnd: Boolean,
         val includeDefaultImage: Boolean,
-        val isPreviewMode: Boolean = false
+        val isPreviewMode: Boolean = false,
+        val dashboardTransitionType: String = "FADE",
+        val dashboardTransitionInterval: Int = 10
     ) : AppUiState
 
     data class Adzan(
