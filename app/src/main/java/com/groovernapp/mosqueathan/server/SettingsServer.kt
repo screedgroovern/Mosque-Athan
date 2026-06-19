@@ -6,6 +6,7 @@ import android.util.Base64
 import android.util.Log
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
 import com.groovernapp.mosqueathan.data.KemenagScheduleEntity
+import com.groovernapp.mosqueathan.data.DashboardBackgroundEntity
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -117,6 +118,11 @@ class SettingsServer(private val context: Context) {
             }
             launch {
                 repository.getSlideshowSchedulesFlow().collect {
+                    broadcastState()
+                }
+            }
+            launch {
+                repository.getDashboardBackgroundsFlow().collect {
                     broadcastState()
                 }
             }
@@ -339,9 +345,10 @@ class SettingsServer(private val context: Context) {
                 if (method == "POST" && path == "/upload") {
                     val isVideo = uri.getQueryParameter("isVideo") == "true"
                     val isBackground = uri.getQueryParameter("isBackground") == "true"
+                    val isDashboardBg = uri.getQueryParameter("isDashboardBg") == "true"
                     val filename = uri.getQueryParameter("filename") ?: "upload_${System.currentTimeMillis()}"
                     val contentLength = headers["content-length"]?.toLongOrNull() ?: -1L
-                    logDebug("Starting upload: $filename, size: $contentLength, isVideo: $isVideo")
+                    logDebug("Starting upload: $filename, size: $contentLength, isVideo: $isVideo, isDashboardBg: $isDashboardBg")
 
                     // Set a longer timeout for the upload process
                     try { socket.soTimeout = 60000 } catch (_: Exception) {}
@@ -354,6 +361,11 @@ class SettingsServer(private val context: Context) {
                             }
                             val extension = if (filename.contains(".")) filename.substring(filename.lastIndexOf(".")) else ".jpg"
                             File(context.filesDir, "custom_background_${System.currentTimeMillis()}$extension")
+                        } else if (isDashboardBg) {
+                            val dir = File(context.filesDir, "dashboard")
+                            if (!dir.exists()) dir.mkdirs()
+                            val extension = if (filename.contains(".")) filename.substring(filename.lastIndexOf(".")) else ".jpg"
+                            File(dir, "dashboard_bg_${System.currentTimeMillis()}$extension")
                         } else {
                             val dir = File(context.filesDir, "presentation")
                             if (!dir.exists()) dir.mkdirs()
@@ -401,6 +413,9 @@ class SettingsServer(private val context: Context) {
                             if (isBackground) {
                                 ImageUtils.downscaleImageInPlace(targetFile)
                                 repository.updateCustomBackground(targetFile.absolutePath)
+                            } else if (isDashboardBg) {
+                                ImageUtils.downscaleImageInPlace(targetFile)
+                                repository.addDashboardBackground(targetFile.absolutePath)
                             } else {
                                 if (!isVideo) {
                                     ImageUtils.downscaleImageInPlace(targetFile)
@@ -487,6 +502,35 @@ class SettingsServer(private val context: Context) {
                     outputStream.write(response.toByteArray(Charsets.UTF_8))
                     outputStream.write(bytes)
                     outputStream.flush()
+                } else if (path == "/background") {
+                    try {
+                        val config = repository.getConfig()
+                        val customBgPath = config.customBackgroundPath
+                        var fileBytes: ByteArray? = null
+                        var mimeType = "image/png"
+                        if (customBgPath.isNotEmpty()) {
+                            val file = File(customBgPath)
+                            if (file.exists() && file.canonicalPath.startsWith(context.filesDir.canonicalPath)) {
+                                fileBytes = file.readBytes()
+                                mimeType = "image/jpeg"
+                            }
+                        }
+                        if (fileBytes == null) {
+                            val inputStream = context.resources.openRawResource(com.groovernapp.mosqueathan.R.drawable.main_bg_default)
+                            fileBytes = inputStream.readBytes()
+                            mimeType = "image/png"
+                        }
+                        val response = "HTTP/1.1 200 OK\r\n" +
+                                "Content-Type: $mimeType\r\n" +
+                                "Content-Length: ${fileBytes.size}\r\n" +
+                                "Cache-Control: no-cache, no-store, must-revalidate\r\n" +
+                                "Connection: close\r\n\r\n"
+                        outputStream.write(response.toByteArray(Charsets.UTF_8))
+                        outputStream.write(fileBytes)
+                        outputStream.flush()
+                    } catch (e: Exception) {
+                        serve404(outputStream)
+                    }
                 } else if (path.startsWith("/media")) {
                     val fileParam = uri.getQueryParameter("path")
                     if (fileParam != null) {
@@ -665,6 +709,9 @@ class SettingsServer(private val context: Context) {
             put("offsetIsya", config.offsetIsya)
             put("adzanFooterText", config.adzanFooterText)
             put("iqomahFooterText", config.iqomahFooterText)
+            put("dashboardRandomize", config.dashboardRandomize)
+            put("dashboardTransitionType", config.dashboardTransitionType)
+            put("dashboardTransitionInterval", config.dashboardTransitionInterval)
             put("standbyModeEnabled", config.standbyModeEnabled)
             put("standbyStartTime", config.standbyStartTime)
             put("standbyEndTime", config.standbyEndTime)
@@ -691,6 +738,19 @@ class SettingsServer(private val context: Context) {
             })
         }
         json.put("mediaList", mediaArray)
+
+        // Serialize dashboard backgrounds
+        val dashboardBackgrounds = repository.getDashboardBackgrounds()
+        val dashboardBgArray = JSONArray()
+        for (bg in dashboardBackgrounds) {
+            dashboardBgArray.put(JSONObject().apply {
+                put("id", bg.id)
+                put("filePath", bg.filePath)
+                put("isUsed", bg.isUsed)
+                put("sortOrder", bg.sortOrder)
+            })
+        }
+        json.put("dashboardBackgrounds", dashboardBgArray)
 
         // Serialize connected devices
         val devices = repository.getConnectedDevices()
@@ -965,6 +1025,24 @@ class SettingsServer(private val context: Context) {
                     val includeDefaultImage = if (json.has("includeDefaultImage") && !json.isNull("includeDefaultImage")) json.optBoolean("includeDefaultImage") else config.includeDefaultImage
                     repository.updateThemeSettings(transitionType, slideIntervalSeconds, videoWaitUntilEnd, includeDefaultImage)
                 }
+                "update_dashboard_settings" -> {
+                    val config = repository.getConfig()
+                    val randomize = if (json.has("dashboardRandomize") && !json.isNull("dashboardRandomize")) json.optBoolean("dashboardRandomize") else config.dashboardRandomize
+                    val transitionType = if (json.has("dashboardTransitionType") && !json.isNull("dashboardTransitionType")) json.optString("dashboardTransitionType") else config.dashboardTransitionType
+                    val interval = if (json.has("dashboardTransitionInterval") && !json.isNull("dashboardTransitionInterval")) json.optInt("dashboardTransitionInterval") else config.dashboardTransitionInterval
+                    repository.updateConfig(
+                        config.latitude, config.longitude,
+                        config.iqomahSubuh, config.iqomahDzuhur, config.iqomahAshar, config.iqomahMaghrib, config.iqomahIsya,
+                        config.calculationMethodName, config.adzanLeadMinutes,
+                        config.offsetImsak, config.offsetSubuh, config.offsetSyuruq, config.offsetDzuhur, config.offsetAshar, config.offsetMaghrib, config.offsetIsya,
+                        config.kemenagCityId, config.kemenagCityName, config.kemenagDuration, config.kemenagTargetDate,
+                        triggerFetch = false,
+                        dashboardRandomize = randomize,
+                        dashboardTransitionType = transitionType,
+                        dashboardTransitionInterval = interval
+                    )
+                    broadcastState()
+                }
                 "update_show_settings_on_tv" -> {
                     val show = json.optBoolean("show")
                     repository.updateShowSettingsOnTv(show)
@@ -1214,6 +1292,63 @@ class SettingsServer(private val context: Context) {
                         repository.deleteStandbySchedule(id)
                         broadcastState()
                     }
+                }
+                "upload_dashboard_background" -> {
+                    val filename = json.optString("filename") ?: "dashboard_${System.currentTimeMillis()}.jpg"
+                    val base64Data = json.optString("base64") ?: return
+                    val customId = json.optString("id", "")
+                    try {
+                        val dir = File(context.filesDir, "dashboard")
+                        if (!dir.exists()) {
+                            dir.mkdirs()
+                        }
+                        val safeName = "${System.currentTimeMillis()}_${File(filename).name}"
+                        val targetFile = File(dir, safeName)
+                        val cleanBase64 = if (base64Data.contains(",")) {
+                            base64Data.substring(base64Data.indexOf(",") + 1)
+                        } else {
+                            base64Data
+                        }
+                        val bytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+                        FileOutputStream(targetFile).use { fos ->
+                            fos.write(bytes)
+                        }
+                        ImageUtils.downscaleImageInPlace(targetFile)
+                        repository.addDashboardBackground(targetFile.absolutePath, customId)
+                        broadcastState()
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "Dashboard background upload failure", e)
+                    }
+                }
+                "delete_dashboard_background" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val bgList = repository.getDashboardBackgrounds()
+                    val targetBg = bgList.find { it.id == id }
+                    if (targetBg != null) {
+                        try {
+                            val file = File(targetBg.filePath)
+                            if (file.exists()) {
+                                file.delete()
+                            }
+                        } catch (_: Exception) {}
+                        repository.deleteDashboardBackground(id)
+                        broadcastState()
+                    }
+                }
+                "update_dashboard_background_used" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val isUsed = json.optBoolean("isUsed", true)
+                    repository.updateDashboardBackgroundUsed(id, isUsed)
+                    broadcastState()
+                }
+                "reorder_dashboard_backgrounds" -> {
+                    val idsJson = json.optJSONArray("ids") ?: return
+                    val ids = mutableListOf<String>()
+                    for (i in 0 until idsJson.length()) {
+                        ids.add(idsJson.getString(i))
+                    }
+                    repository.updateDashboardBackgroundOrder(ids)
+                    broadcastState()
                 }
                 "reset" -> {
                     try {
