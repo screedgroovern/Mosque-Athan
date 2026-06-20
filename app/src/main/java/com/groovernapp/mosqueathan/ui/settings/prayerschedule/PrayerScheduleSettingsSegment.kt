@@ -25,6 +25,12 @@ import com.groovernapp.mosqueathan.util.Lang
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.SecondaryTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun PrayerScheduleSettingsSegment(
@@ -59,76 +65,161 @@ fun PrayerScheduleSettingsSegment(
     onOffsetDzuhurChange: (Int) -> Unit,
     onOffsetAsharChange: (Int) -> Unit,
     onOffsetMaghribChange: (Int) -> Unit,
-    onOffsetIsyaChange: (Int) -> Unit
+    onOffsetIsyaChange: (Int) -> Unit,
+    isCompact: Boolean = false
 ) {
+    val pagerState = rememberPagerState(initialPage = 0) { 2 }
+    val coroutineScope = rememberCoroutineScope()
+    val tabHeight = if (isCompact) 72.dp else 48.dp
+
     Column(
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        modifier = Modifier.fillMaxSize()
     ) {
-        // CARD 1: Metode Perhitungan
-        SettingsCard(
-            title = Lang.get("Calculation Method", "Metode Perhitungan"),
-            icon = Icons.Default.Calculate
+        SecondaryTabRow(
+            selectedTabIndex = pagerState.currentPage,
+            containerColor = Color.Transparent,
+            contentColor = Color(0xFFFFD54F),
+            divider = {}
         ) {
-            MethodSettingsSegment(
-                calculationMethodName = calculationMethodName,
-                kemenagCityId = kemenagCityId,
-                kemenagCityName = kemenagCityName,
-                kemenagDuration = kemenagDuration,
-                kemenagTargetDate = kemenagTargetDate,
-                citySearchResults = citySearchResults,
-                isSearchingCities = isSearchingCities,
-                kemenagSchedules = kemenagSchedules,
-                onMethodChange = onMethodChange,
-                onKemenagCitySelected = onKemenagCitySelected,
-                onKemenagDurationChange = onKemenagDurationChange,
-                onKemenagTargetDateChange = onKemenagTargetDateChange,
-                onSearchKemenagCities = onSearchKemenagCities,
-                onDownloadKemenagSchedules = onDownloadKemenagSchedules
+            Tab(
+                selected = pagerState.currentPage == 0,
+                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
+                modifier = Modifier.height(tabHeight),
+                text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Calculate,
+                            contentDescription = "Method",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = Lang.get("Calculation Method", "Metode Perhitungan"),
+                            fontSize = if (isCompact) 13.sp else 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        )
+                    }
+                },
+                selectedContentColor = Color(0xFFFFD54F),
+                unselectedContentColor = Color.White.copy(alpha = 0.6f)
+            )
+            Tab(
+                selected = pagerState.currentPage == 1,
+                onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
+                modifier = Modifier.height(tabHeight),
+                text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Adjustments",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = Lang.get("Prayer Time Adjustments", "Koreksi Waktu Shalat"),
+                            fontSize = if (isCompact) 13.sp else 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        )
+                    }
+                },
+                selectedContentColor = Color(0xFFFFD54F),
+                unselectedContentColor = Color.White.copy(alpha = 0.6f)
             )
         }
 
-        // CARD 2: Lokasi GPS
-        SettingsCard(
-            title = Lang.get("Mosque Coordinates", "Titik Lokasi Masjid"),
-            icon = Icons.Default.LocationOn,
-            dimmed = calculationMethodName == "KEMENAG"
-        ) {
-            LocationSettingsSegment(
-                latText = latText,
-                onLatTextChange = onLatTextChange,
-                lngText = lngText,
-                onLngTextChange = onLngTextChange,
-                calculationMethodName = calculationMethodName,
-                kemenagCityName = kemenagCityName
-            )
-        }
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth().weight(1f)
+        ) { page ->
+            if (page == 0) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    // CARD 1: Metode Perhitungan
+                    SettingsCard(
+                        title = Lang.get("Calculation Method", "Metode Perhitungan"),
+                        icon = Icons.Default.Calculate
+                    ) {
+                        MethodSettingsSegment(
+                            calculationMethodName = calculationMethodName,
+                            kemenagCityId = kemenagCityId,
+                            kemenagCityName = kemenagCityName,
+                            kemenagDuration = kemenagDuration,
+                            kemenagTargetDate = kemenagTargetDate,
+                            citySearchResults = citySearchResults,
+                            isSearchingCities = isSearchingCities,
+                            kemenagSchedules = kemenagSchedules,
+                            onMethodChange = onMethodChange,
+                            onKemenagCitySelected = onKemenagCitySelected,
+                            onKemenagDurationChange = onKemenagDurationChange,
+                            onKemenagTargetDateChange = onKemenagTargetDateChange,
+                            onSearchKemenagCities = onSearchKemenagCities,
+                            onDownloadKemenagSchedules = onDownloadKemenagSchedules,
+                            isCompact = isCompact
+                        )
+                    }
 
-        // CARD 3: Koreksi Waktu (Offsets)
-        SettingsCard(
-            title = Lang.get("Prayer Time Adjustments", "Koreksi Waktu Shalat"),
-            icon = Icons.Default.Tune
-        ) {
-            PrayerOffsetsSettingsSegment(
-                offsetImsak = offsetImsak,
-                offsetSubuh = offsetSubuh,
-                offsetSyuruq = offsetSyuruq,
-                offsetDzuhur = offsetDzuhur,
-                offsetAshar = offsetAshar,
-                offsetMaghrib = offsetMaghrib,
-                offsetIsya = offsetIsya,
-                onOffsetImsakChange = onOffsetImsakChange,
-                onOffsetSubuhChange = onOffsetSubuhChange,
-                onOffsetSyuruqChange = onOffsetSyuruqChange,
-                onOffsetDzuhurChange = onOffsetDzuhurChange,
-                onOffsetAsharChange = onOffsetAsharChange,
-                onOffsetMaghribChange = onOffsetMaghribChange,
-                onOffsetIsyaChange = onOffsetIsyaChange
-            )
+                    // CARD 2: Lokasi GPS
+                    SettingsCard(
+                        title = Lang.get("Mosque Coordinates", "Titik Lokasi Masjid"),
+                        icon = Icons.Default.LocationOn,
+                        dimmed = calculationMethodName == "KEMENAG"
+                    ) {
+                        LocationSettingsSegment(
+                            latText = latText,
+                            onLatTextChange = onLatTextChange,
+                            lngText = lngText,
+                            onLngTextChange = onLngTextChange,
+                            calculationMethodName = calculationMethodName,
+                            kemenagCityName = kemenagCityName
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    // CARD 3: Koreksi Waktu (Offsets)
+                    SettingsCard(
+                        title = Lang.get("Prayer Time Adjustments", "Koreksi Waktu Shalat"),
+                        icon = Icons.Default.Tune
+                    ) {
+                        PrayerOffsetsSettingsSegment(
+                            offsetImsak = offsetImsak,
+                            offsetSubuh = offsetSubuh,
+                            offsetSyuruq = offsetSyuruq,
+                            offsetDzuhur = offsetDzuhur,
+                            offsetAshar = offsetAshar,
+                            offsetMaghrib = offsetMaghrib,
+                            offsetIsya = offsetIsya,
+                            onOffsetImsakChange = onOffsetImsakChange,
+                            onOffsetSubuhChange = onOffsetSubuhChange,
+                            onOffsetSyuruqChange = onOffsetSyuruqChange,
+                            onOffsetDzuhurChange = onOffsetDzuhurChange,
+                            onOffsetAsharChange = onOffsetAsharChange,
+                            onOffsetMaghribChange = onOffsetMaghribChange,
+                            onOffsetIsyaChange = onOffsetIsyaChange
+                        )
+                    }
+                }
+            }
         }
     }
 }
+
 
 

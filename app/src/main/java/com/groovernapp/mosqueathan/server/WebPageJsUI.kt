@@ -97,7 +97,11 @@ object WebPageJsUI {
                                    '</td>';
 
                 const isMe = dev.deviceId === myDeviceId;
-                const nameText = escapeHtml(dev.deviceName) + (isMe ? ' <span style="color: var(--accent); font-size: 0.8rem; font-weight: 700;">' + translations[currentLang].label_you + '</span>' : '');
+                let nameText = escapeHtml(dev.deviceName);
+                if (isMe) {
+                    nameText += ' <span style="color: var(--accent); font-size: 0.8rem; font-weight: 700;">' + translations[currentLang].label_you + '</span>';
+                    nameText += ' <button onclick="renameMyDevice()" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.9rem; padding:0 4px;" title="Ubah Nama">✏️</button>';
+                }
                 const nameHtml = '<td style="padding: 1rem 0.5rem; font-weight: 600;">' + nameText + '</td>';
 
                 const idHtml = '<td style="padding: 1rem 0.5rem; font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);" title="' + dev.deviceId + '">' + 
@@ -162,52 +166,96 @@ object WebPageJsUI {
 
         // Initialize Flatpickr instances if library is loaded
         if (typeof flatpickr !== 'undefined') {
-            kemenagDatePicker = flatpickr("#kemenag-date-picker-wrapper", {
+            const safeFlatpickr = (selector, config) => {
+                const el = document.querySelector(selector);
+                if (!el) return null;
+                try {
+                    return flatpickr(el, config);
+                } catch (e) {
+                    console.warn("Flatpickr initialization failed for " + selector, e);
+                    return null;
+                }
+            };
+
+            kemenagDatePicker = safeFlatpickr("#kemenag-date-picker-wrapper", {
+                wrap: true,
+                dateFormat: "Y-m-d",
+                disableMobile: "true",
+                onChange: function(selectedDates, dateStr, instance) {
+                    appConfig.kemenagTargetDate = dateStr;
+                    sendUpdate();
+                    downloadKemenagSchedulesAuto();
+                }
+            });
+            schedStartTimePicker = safeFlatpickr("#sched-start-time-wrapper", {
+                wrap: true,
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                disableMobile: "true"
+            });
+            schedEndTimePicker = safeFlatpickr("#sched-end-time-wrapper", {
+                wrap: true,
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                disableMobile: "true"
+            });
+            standbyStartTimePicker = safeFlatpickr("#standby-start-wrapper", {
+                wrap: true,
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                disableMobile: "true"
+            });
+            standbyEndTimePicker = safeFlatpickr("#standby-end-wrapper", {
+                wrap: true,
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                disableMobile: "true"
+            });
+            standbyDatePicker = safeFlatpickr("#standby-date-wrapper", {
                 wrap: true,
                 dateFormat: "Y-m-d",
                 disableMobile: "true"
             });
-            schedStartTimePicker = flatpickr("#sched-start-time-wrapper", {
-                wrap: true,
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: "H:i",
-                time_24hr: true,
-                disableMobile: "true"
-            });
-            schedEndTimePicker = flatpickr("#sched-end-time-wrapper", {
-                wrap: true,
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: "H:i",
-                time_24hr: true,
-                disableMobile: "true"
-            });
-            standbyStartTimePicker = flatpickr("#standby-start-wrapper", {
-                wrap: true,
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: "H:i",
-                time_24hr: true,
-                disableMobile: "true"
-            });
-            standbyEndTimePicker = flatpickr("#standby-end-wrapper", {
-                wrap: true,
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: "H:i",
-                time_24hr: true,
-                disableMobile: "true"
-            });
-            standbyDatePicker = flatpickr("#standby-date-wrapper", {
+            slideshowDatePicker = safeFlatpickr("#slideshow-date-wrapper", {
                 wrap: true,
                 dateFormat: "Y-m-d",
                 disableMobile: "true"
             });
-            slideshowDatePicker = flatpickr("#slideshow-date-wrapper", {
+            timeEditStartPicker = safeFlatpickr("#time-edit-start-wrapper", {
                 wrap: true,
-                dateFormat: "Y-m-d",
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
                 disableMobile: "true"
+            });
+            timeEditEndPicker = safeFlatpickr("#time-edit-end-wrapper", {
+                wrap: true,
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i",
+                time_24hr: true,
+                disableMobile: "true"
+            });
+            scheduleMultiDatePicker = safeFlatpickr("#schedule-multi-date-picker-input", {
+                mode: "multiple",
+                dateFormat: "Y-m-d",
+                disableMobile: "true",
+                onChange: function(selectedDates, dateStr, instance) {
+                    const schedId = instance.element.getAttribute('data-sched-id');
+                    const type = instance.element.getAttribute('data-sched-type');
+                    if (schedId && type) {
+                        saveScheduleDates(type, schedId, dateStr);
+                    }
+                }
             });
         } else {
             console.warn("Flatpickr is not loaded. Time pickers will fall back to native/standard inputs.");

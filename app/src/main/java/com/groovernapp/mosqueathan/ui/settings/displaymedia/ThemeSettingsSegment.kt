@@ -40,6 +40,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.draw.scale
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,6 +73,7 @@ import com.groovernapp.mosqueathan.data.SlideshowScheduleEntity
 import com.groovernapp.mosqueathan.ui.component.Schedule
 import com.groovernapp.mosqueathan.ui.settings.TvFocusableButton
 import com.groovernapp.mosqueathan.ui.settings.TvFocusablePrimaryButton
+import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
@@ -251,6 +256,7 @@ fun DashboardTabContent(
                     fontSize = 14.sp
                 )
                 Switch(
+                    modifier = Modifier.scale(0.8f),
                     checked = config.dashboardRandomize,
                     onCheckedChange = { checked ->
                         onUpdateDashboardSettings(
@@ -526,6 +532,7 @@ fun DashboardTabContent(
         TransitionAnimationRow(
             title = Lang.get("Transition Animation", "Animasi Transisi"),
             selectedType = config.dashboardTransitionType,
+            isCompact = isCompact,
             onTypeSelected = { type ->
                 onUpdateDashboardSettings(
                     config.dashboardRandomize,
@@ -535,18 +542,60 @@ fun DashboardTabContent(
             }
         )
 
-        // Responsive Transition Interval Counter
-        TransitionIntervalRow(
+        val (displayValue, unitIndex) = remember(config.dashboardTransitionInterval) {
+            val interval = config.dashboardTransitionInterval
+            when {
+                interval % 86400 == 0 -> Pair(interval / 86400, 3) // Hari
+                interval % 3600 == 0 -> Pair(interval / 3600, 2)  // Jam
+                interval % 60 == 0 -> Pair(interval / 60, 1)    // Menit
+                else -> Pair(interval, 0)                      // Detik
+            }
+        }
+
+        val unitLabels = listOf(
+            Lang.get("seconds", "detik"),
+            Lang.get("minutes", "menit"),
+            Lang.get("hours", "jam"),
+            Lang.get("days", "hari")
+        )
+
+        val multipliers = listOf(1, 60, 3600, 86400)
+        val maxValForUnit = when (unitIndex) {
+            0 -> 60 // detik
+            1 -> 60 // menit
+            2 -> 24 // jam
+            3 -> 30 // hari
+            else -> 60
+        }
+
+        DropdownAdjustmentRow(
             title = Lang.get("Transition interval", "Interval transisi"),
-            intervalSeconds = config.dashboardTransitionInterval,
-            onIntervalChange = { interval ->
+            value = displayValue,
+            minValue = 1,
+            maxValue = maxValForUnit,
+            unitLabels = unitLabels,
+            selectedUnitIndex = unitIndex,
+            onValueChange = { newVal ->
                 onUpdateDashboardSettings(
                     config.dashboardRandomize,
                     config.dashboardTransitionType,
-                    interval
+                    newVal * multipliers[unitIndex]
                 )
             },
-            isCompact = isCompact
+            onUnitChange = { index ->
+                val clampedVal = displayValue.coerceIn(1, when (index) {
+                    0 -> 60
+                    1 -> 60
+                    2 -> 24
+                    3 -> 30
+                    else -> 60
+                })
+                onUpdateDashboardSettings(
+                    config.dashboardRandomize,
+                    config.dashboardTransitionType,
+                    clampedVal * multipliers[index]
+                )
+            }
         )
     }
 }
@@ -819,10 +868,10 @@ fun SlideshowTabContent(
             }
         }
 
-        // Transition Animation selector
         TransitionAnimationRow(
             title = Lang.get("Transition Animation", "Animasi Transisi"),
             selectedType = transitionType,
+            isCompact = isCompact,
             onTypeSelected = { type ->
                 onUpdateThemeSettings(
                     type,
@@ -834,31 +883,33 @@ fun SlideshowTabContent(
         )
 
         // Responsive Transition Interval Counter
-        TransitionIntervalRow(
+        AdjustmentRow(
             title = Lang.get("Transition interval", "Interval transisi"),
-            intervalSeconds = slideIntervalSeconds,
-            onIntervalChange = { interval ->
+            value = slideIntervalSeconds,
+            minValue = 5,
+            maxValue = 120,
+            showSign = false,
+            unitSuffix = Lang.get("seconds", "detik"),
+            onValueChange = { interval ->
                 onUpdateThemeSettings(
                     transitionType,
                     interval,
                     videoWaitUntilEnd,
                     includeDefaultImage
                 )
-            },
-            isCompact = isCompact
+            }
         )
 
         // Video Playback behavior duration options (Wait for video / Follow interval)
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
                 .background(Color.White.copy(alpha = 0.05f))
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = Lang.get("Video Playback Duration", "Durasi Putar Video"),
                     color = Color.White,
@@ -875,7 +926,6 @@ fun SlideshowTabContent(
                     fontSize = 12.sp
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(false, true).forEach { waitEnd ->
                     val isSelected = videoWaitUntilEnd == waitEnd
@@ -1046,112 +1096,57 @@ fun SlideshowTabContent(
 fun TransitionAnimationRow(
     title: String,
     selectedType: String,
+    isCompact: Boolean,
     onTypeSelected: (String) -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(Color.White.copy(alpha = 0.05f))
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            color = Color.White,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("FADE", "SLIDE", "ZOOM", "INSTANT").forEach { type ->
-                val isSelected = selectedType == type
-                TvFocusableButton(
-                    onClick = { onTypeSelected(type) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.1f)
-                    ),
-                    shape = RoundedCornerShape(6.dp),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Text(
-                        type,
-                        color = if (isSelected) Color.Black else Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun TransitionIntervalRow(
-    title: String,
-    intervalSeconds: Int,
-    onIntervalChange: (Int) -> Unit,
-    isCompact: Boolean
-) {
-    val counterContent = @Composable {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            TvFocusableButton(
-                onClick = {
-                    if (intervalSeconds > 5) {
-                        onIntervalChange(intervalSeconds - 5)
-                    }
-                },
-                shape = RoundedCornerShape(6.dp),
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier.size(32.dp)
-            ) {
-                Text("-", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-            Text(
-                text = "$intervalSeconds " + Lang.get("seconds", "detik"),
-                color = Color.White,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
-            )
-            TvFocusableButton(
-                onClick = {
-                    if (intervalSeconds < 120) {
-                        onIntervalChange(intervalSeconds + 5)
-                    }
-                },
-                shape = RoundedCornerShape(6.dp),
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier.size(32.dp)
-            ) {
-                Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-
     if (isCompact) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White.copy(alpha = 0.05f))
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
                 text = title,
                 color = Color.White,
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
-            counterContent()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                listOf("FADE", "SLIDE", "ZOOM", "INSTANT").forEach { type ->
+                    val isSelected = selectedType == type
+                    TvFocusableButton(
+                        onClick = { onTypeSelected(type) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.1f)
+                        ),
+                        shape = RoundedCornerShape(6.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Text(
+                            type,
+                            color = if (isSelected) Color.Black else Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     } else {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp),
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White.copy(alpha = 0.05f))
+                .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1161,10 +1156,253 @@ fun TransitionIntervalRow(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold
             )
-            counterContent()
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("FADE", "SLIDE", "ZOOM", "INSTANT").forEach { type ->
+                    val isSelected = selectedType == type
+                    TvFocusableButton(
+                        onClick = { onTypeSelected(type) },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.1f)
+                        ),
+                        shape = RoundedCornerShape(6.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Text(
+                            type,
+                            color = if (isSelected) Color.Black else Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     }
 }
+
+@Composable
+fun DropdownAdjustmentRow(
+    title: String,
+    value: Int,
+    minValue: Int,
+    maxValue: Int,
+    unitLabels: List<String>,
+    selectedUnitIndex: Int,
+    onValueChange: (Int) -> Unit,
+    onUnitChange: (Int) -> Unit
+) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+    val screenWidthDp = with(density) { containerSize.width.toDp() }
+    val isCompact = screenWidthDp < 600.dp
+    var expanded by remember { mutableStateOf(false) }
+
+    if (isCompact) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White.copy(alpha = 0.05f))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+     
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                TvFocusableButton(
+                    onClick = { if (value > minValue) onValueChange(value - 1) },
+                    shape = RoundedCornerShape(6.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+     
+                Text(
+                    text = value.toString(),
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.width(36.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+     
+                TvFocusableButton(
+                    onClick = { if (value < maxValue) onValueChange(value + 1) },
+                    shape = RoundedCornerShape(6.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+                
+                Box {
+                    TvFocusableButton(
+                        onClick = { expanded = true },
+                        shape = RoundedCornerShape(6.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White.copy(alpha = 0.08f)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.height(32.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = unitLabels[selectedUnitIndex],
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Dropdown",
+                                tint = Color.White,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                    
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(Color(0xFF1E1E1E))
+                    ) {
+                        unitLabels.forEachIndexed { index, label ->
+                            DropdownMenuItem(
+                                text = { 
+                                    Text(
+                                        text = label, 
+                                        color = if (selectedUnitIndex == index) Color(0xFFFFD54F) else Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    ) 
+                                },
+                                onClick = {
+                                    onUnitChange(index)
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.White.copy(alpha = 0.05f))
+                .padding(horizontal = 20.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+     
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                TvFocusableButton(
+                    onClick = { if (value > minValue) onValueChange(value - 1) },
+                    shape = RoundedCornerShape(6.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+     
+                Text(
+                    text = value.toString(),
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.width(36.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+     
+                TvFocusableButton(
+                    onClick = { if (value < maxValue) onValueChange(value + 1) },
+                    shape = RoundedCornerShape(6.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+                
+                Box {
+                    TvFocusableButton(
+                        onClick = { expanded = true },
+                        shape = RoundedCornerShape(6.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White.copy(alpha = 0.08f)
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = unitLabels[selectedUnitIndex],
+                                color = Color.White,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Dropdown",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                    
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(Color(0xFF1E1E1E))
+                    ) {
+                        unitLabels.forEachIndexed { index, label ->
+                            DropdownMenuItem(
+                                text = { 
+                                    Text(
+                                        text = label, 
+                                        color = if (selectedUnitIndex == index) Color(0xFFFFD54F) else Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    ) 
+                                },
+                                onClick = {
+                                    onUnitChange(index)
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
@@ -1176,7 +1414,7 @@ fun ThemeSettingsSegmentPreview() {
         includeDefaultImage = true
         dashboardRandomize = false
         dashboardTransitionType = "FADE"
-        dashboardTransitionInterval = 10
+        dashboardTransitionInterval = 86400
     }
 
     val mockMediaList = listOf(

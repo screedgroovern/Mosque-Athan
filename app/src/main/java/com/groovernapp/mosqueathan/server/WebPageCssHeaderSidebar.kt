@@ -25,7 +25,7 @@ object WebPageCssHeaderSidebar {
             color: var(--text-primary);
             cursor: pointer;
             padding: 0.5rem;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 8px;

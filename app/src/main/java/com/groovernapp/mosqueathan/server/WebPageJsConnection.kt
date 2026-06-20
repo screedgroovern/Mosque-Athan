@@ -3,6 +3,11 @@ package com.groovernapp.mosqueathan.server
 object WebPageJsConnection {
     fun getJs(): String {
         return """
+        let heartbeatInterval = null;
+        let lastPongReceived = Date.now();
+        let reconnectTimer = null;
+        let connectionTimeout = null;
+
         function openSyncServerDialog() {
             const overlay = document.getElementById('sync-server-dialog-overlay');
             if (overlay) overlay.style.display = 'flex';
@@ -37,6 +42,18 @@ object WebPageJsConnection {
 
         // Connect WebSocket
         function connect() {
+            if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
+                console.log("WebSocket already active or connecting, skipping connect()");
+                return;
+            }
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            if (connectionTimeout) {
+                clearTimeout(connectionTimeout);
+                connectionTimeout = null;
+            }
             try {
                 let host = localStorage.getItem('custom_tv_ip') || window.location.host;
                 if (!host.includes(':')) {
@@ -48,13 +65,31 @@ object WebPageJsConnection {
                 updateTvConnectionStatus('connecting');
                 ws = new WebSocket(wsUrl);
 
+                connectionTimeout = setTimeout(() => {
+                    if (ws && ws.readyState === WebSocket.CONNECTING) {
+                        console.warn("Connection attempt timed out. Retrying...");
+                        ws.close();
+                    }
+                }, 5000);
+
                 ws.onopen = () => {
+                    if (connectionTimeout) {
+                        clearTimeout(connectionTimeout);
+                        connectionTimeout = null;
+                    }
                     document.getElementById('connection-overlay').style.display = 'none';
                     const errDetails = document.getElementById('connection-error-details');
                     if (errDetails) errDetails.style.display = 'none';
                     
                     const dot = document.getElementById('status-dot');
                     if (dot) dot.classList.add('online');
+                    
+                    const hasOfflineChanges = (offlineActionsQueue && offlineActionsQueue.length > 0) || 
+                                              (offlineFilesQueue && offlineFilesQueue.length > 0);
+                    if (!hasOfflineChanges) {
+                        isOfflineMode = false;
+                    }
+
                     const statusText = document.getElementById('status-text');
                     if (statusText) {
                         statusText.innerText = isOfflineMode 
@@ -72,11 +107,33 @@ object WebPageJsConnection {
                         deviceId: myDeviceId,
                         deviceName: myDeviceName
                     }));
+
+                    // Start Heartbeat Check
+                    lastPongReceived = Date.now();
+                    if (heartbeatInterval) clearInterval(heartbeatInterval);
+                    heartbeatInterval = setInterval(() => {
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                            ws.send(JSON.stringify({ action: 'ping' }));
+                            if (Date.now() - lastPongReceived > 15000) {
+                                console.warn("No heartbeat received for 15 seconds. Reconnecting...");
+                                ws.close();
+                            }
+                        } else {
+                            if (heartbeatInterval) {
+                                clearInterval(heartbeatInterval);
+                                heartbeatInterval = null;
+                            }
+                        }
+                    }, 5000);
                 };
 
                 ws.onmessage = (event) => {
+                    lastPongReceived = Date.now();
                     try {
                         const data = JSON.parse(event.data);
+                        if (data.type === 'pong') {
+                            return;
+                        }
                         if (data.type === 'registration_result') {
                             myIsMaster = data.isMaster;
                             myIsAllowed = data.isAllowed;
@@ -136,7 +193,7 @@ object WebPageJsConnection {
                                         
                                         // 2. Check if configuration/other settings have conflict
                                         const hasLocalConfigEdit = offlineActionsQueue.some(a => 
-                                            ['update_config', 'update_theme', 'update_standby', 'update_show_settings_on_tv', 'add_slideshow_schedule', 'delete_slideshow_schedule', 'upload_background', 'clear_background', 'upload_media', 'delete_media'].includes(a.action)
+                                            ['update_config', 'update_theme', 'update_standby', 'update_show_settings_on_tv', 'add_slideshow_schedule', 'delete_slideshow_schedule', 'update_slideshow_enabled', 'update_slideshow_schedule_time', 'update_slideshow_schedule_days', 'update_slideshow_schedule_dates', 'add_standby_schedule', 'delete_standby_schedule', 'update_standby_schedule_time', 'update_standby_schedule_days', 'update_standby_schedule_dates', 'upload_background', 'clear_background', 'upload_media', 'delete_media'].includes(a.action)
                                         );
                                         if (!hasConflict && hasLocalConfigEdit) {
                                             const tvConfig = data.config || {};
@@ -169,6 +226,7 @@ object WebPageJsConnection {
                                 
                                 document.getElementById('sync-dialog-overlay').style.display = 'flex';
                             } else {
+                                isOfflineMode = false;
                                 appConfig = data.config;
                                 appConfig.standbySchedules = data.standbySchedules || [];
                                 announcements = data.announcements;
@@ -242,6 +300,14 @@ object WebPageJsConnection {
                 };
 
                 ws.onclose = (event) => {
+                    if (connectionTimeout) {
+                        clearTimeout(connectionTimeout);
+                        connectionTimeout = null;
+                    }
+                    if (heartbeatInterval) {
+                        clearInterval(heartbeatInterval);
+                        heartbeatInterval = null;
+                    }
                     const dot = document.getElementById('status-dot');
                     if (dot) dot.classList.remove('online');
                     const statusText = document.getElementById('status-text');
@@ -255,24 +321,40 @@ object WebPageJsConnection {
                     updateTvConnectionStatus('offline');
                     enterOfflineMode(true); // silent transition
                     
-                    // Reconnect after 3 seconds
-                    setTimeout(connect, 3000);
+                    if (!reconnectTimer) {
+                        reconnectTimer = setTimeout(connect, 3000);
+                    }
                 };
 
                 ws.onerror = (error) => {
+                    if (connectionTimeout) {
+                        clearTimeout(connectionTimeout);
+                        connectionTimeout = null;
+                    }
                     console.error("WebSocket error:", error);
                     const errDetails = document.getElementById('connection-error-details');
                     if (errDetails) {
                         errDetails.innerText = "WebSocket Error: Connection failed.\nTarget URL: " + wsUrl;
                     }
                     updateTvConnectionStatus('offline');
+                    
+                    if (!reconnectTimer) {
+                        reconnectTimer = setTimeout(connect, 3000);
+                    }
                 };
             } catch (err) {
+                if (connectionTimeout) {
+                    clearTimeout(connectionTimeout);
+                    connectionTimeout = null;
+                }
                 console.error("Connection setup error:", err);
                 const errDetails = document.getElementById('connection-error-details');
                 if (errDetails) {
                     errDetails.innerText = "Setup Error: " + err.message + (err.stack ? "\n" + err.stack : "");
                     errDetails.style.display = 'block';
+                }
+                if (!reconnectTimer) {
+                    reconnectTimer = setTimeout(connect, 3000);
                 }
             }
         }
@@ -554,7 +636,7 @@ object WebPageJsConnection {
                     return;
                 }
                 
-                if ((payload.action === 'add_announcement' || payload.action === 'add_slideshow_schedule' || payload.action === 'upload_media') && !payload.id) {
+                if ((payload.action === 'add_announcement' || payload.action === 'add_slideshow_schedule' || payload.action === 'add_standby_schedule' || payload.action === 'upload_media') && !payload.id) {
                     payload.id = 'uuid_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
                 }
                 
@@ -567,7 +649,7 @@ object WebPageJsConnection {
                     saveOfflineDraft();
                     showToast(translations[currentLang].offline_media_warning || "File media baru akan diunggah setelah tersambung kembali ke TV.", "info");
                 } else {
-                    if (payload.action === 'update_config' || payload.action === 'update_theme' || payload.action === 'update_standby' || payload.action === 'update_show_settings_on_tv') {
+                    if (payload.action === 'update_config' || payload.action === 'update_theme' || payload.action === 'update_standby' || payload.action === 'update_show_settings_on_tv' || payload.action === 'update_slideshow_enabled') {
                         offlineActionsQueue = offlineActionsQueue.filter(a => a.action !== payload.action);
                     }
                     offlineActionsQueue.push(payload);

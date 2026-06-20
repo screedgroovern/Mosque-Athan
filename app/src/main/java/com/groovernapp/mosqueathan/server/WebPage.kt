@@ -29,8 +29,8 @@ object WebPage {
 </head>
 <body>
 
-    <!-- Connection Modal Overlay (only for manual settings / fallbacks, hidden by default) -->
-    <div id="connection-overlay" class="connection-overlay" style="display: none;">
+    <!-- Connection Modal Overlay -->
+    <div id="connection-overlay" class="connection-overlay">
         <div class="spinner"></div>
         <div class="overlay-title" data-lang-key="overlay_connecting">Menghubungkan ke Aplikasi...</div>
         <div class="overlay-desc" data-lang-key="overlay_connecting_desc">Pastikan perangkat Android Anda tetap menyala dan menjalankan aplikasi.</div>
@@ -298,6 +298,32 @@ object WebPage {
             </div>
         </div>
     </div>
+
+    <!-- Schedule Time Edit Dialog Modal -->
+    <div id="schedule-time-edit-overlay" class="connection-overlay" style="display: none; background-color: rgba(12, 18, 15, 0.9); backdrop-filter: blur(8px); z-index: 1700;">
+        <div style="max-width: 400px; width: 90%; background-color: rgba(20, 30, 25, 0.98); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 1.5rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary);" id="time-edit-dialog-title">Edit Jam Jadwal</h3>
+            <div class="form-group">
+                <label style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">Mulai (HH:MM)</label>
+                <div class="flatpickr-wrapper" id="time-edit-start-wrapper">
+                    <input type="text" id="time-edit-start-input" data-input placeholder="00:00">
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; display: block;">Selesai (HH:MM)</label>
+                <div class="flatpickr-wrapper" id="time-edit-end-wrapper">
+                    <input type="text" id="time-edit-end-input" data-input placeholder="00:00">
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 0.5rem;">
+                <button class="btn btn-secondary" onclick="closeScheduleTimeEditDialog()">Batal</button>
+                <button class="btn btn-primary" id="btn-save-schedule-time">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Multi Date Picker Input Helper -->
+    <input type="text" id="schedule-multi-date-picker-input" style="display:none;">
 
     <!-- Toast Notifications Container -->
     <div class="toast-container" id="toast-container"></div>

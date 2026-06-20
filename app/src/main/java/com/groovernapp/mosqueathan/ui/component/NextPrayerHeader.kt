@@ -40,7 +40,7 @@ fun NextPrayerHeader(
     ) {
 
         Text(
-            text = nextPrayer.prayerType.name,
+            text = nextPrayer.prayerType.displayName,
             color = Color(0xFFFFD54F),
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,

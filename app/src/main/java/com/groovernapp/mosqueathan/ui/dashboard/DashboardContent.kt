@@ -114,7 +114,7 @@ fun DashboardContent(
                             Spacer(modifier = Modifier.height(2.dp))
 
                             // Second Line: Next_prayer · countdown
-                            val nextPrayerName = state.nextPrayer.prayerType.name.lowercase().replaceFirstChar { it.uppercase() }
+                            val nextPrayerName = state.nextPrayer.prayerType.displayName.lowercase().replaceFirstChar { it.uppercase() }
                             Text(
                                 text = "$nextPrayerName · ${state.nextPrayer.countdown}",
                                 color = Color(0xFFFFD54F),

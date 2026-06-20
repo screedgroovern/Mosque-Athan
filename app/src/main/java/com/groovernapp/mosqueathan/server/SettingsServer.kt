@@ -715,6 +715,7 @@ class SettingsServer(private val context: Context) {
             put("standbyModeEnabled", config.standbyModeEnabled)
             put("standbyStartTime", config.standbyStartTime)
             put("standbyEndTime", config.standbyEndTime)
+            put("slideshowEnabled", config.slideshowEnabled)
         }
         json.put("config", configJson)
 
@@ -801,6 +802,9 @@ class SettingsServer(private val context: Context) {
                 put("isSpecificDate", sched.isSpecificDate)
                 put("startTime", sched.startTime)
                 put("endTime", sched.endTime)
+                put("activeDays", sched.activeDays)
+                put("specificDates", sched.specificDates)
+                put("createdAt", sched.createdAt)
             })
         }
         json.put("slideshowSchedules", slideshowArray)
@@ -815,6 +819,9 @@ class SettingsServer(private val context: Context) {
                 put("isSpecificDate", sched.isSpecificDate)
                 put("startTime", sched.startTime)
                 put("endTime", sched.endTime)
+                put("activeDays", sched.activeDays)
+                put("specificDates", sched.specificDates)
+                put("createdAt", sched.createdAt)
             })
         }
         json.put("standbySchedules", standbyArray)
@@ -846,7 +853,7 @@ class SettingsServer(private val context: Context) {
             val action = json.optString("action").takeIf { it.isNotEmpty() } ?: return
 
             // Authorization check for non-registration/verification actions
-            if (action != "register" && action != "verify_pin") {
+            if (action != "register" && action != "verify_pin" && action != "ping") {
                 val deviceId = connectionDeviceMap[connection]
                 val config = repository.getConfig()
                 val devices = repository.getConnectedDevices()
@@ -861,6 +868,11 @@ class SettingsServer(private val context: Context) {
             }
 
             when (action) {
+                "ping" -> {
+                    connection.send(JSONObject().apply {
+                        put("type", "pong")
+                    }.toString())
+                }
                 "update_config" -> {
                     val config = repository.getConfig()
                     val lat = if (json.has("latitude") && !json.isNull("latitude")) json.optDouble("latitude") else config.latitude
@@ -1242,6 +1254,47 @@ class SettingsServer(private val context: Context) {
                         Log.e(TAG, "Media upload failure", e)
                     }
                 }
+                "update_media_item_path" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val filename = json.optString("filename") ?: "slide_${System.currentTimeMillis()}.jpg"
+                    val base64Data = json.optString("base64") ?: return
+                    val isVideo = json.optBoolean("isVideo")
+
+                    try {
+                        val dir = File(context.filesDir, "presentation")
+                        if (!dir.exists()) {
+                            dir.mkdirs()
+                        }
+
+                        val safeName = "${System.currentTimeMillis()}_${File(filename).name}"
+                        val targetFile = File(dir, safeName)
+
+                        val cleanBase64 = if (base64Data.contains(",")) {
+                            base64Data.substring(base64Data.indexOf(",") + 1)
+                        } else {
+                            base64Data
+                        }
+                        val bytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+                        FileOutputStream(targetFile).use { fos ->
+                            fos.write(bytes)
+                        }
+                        if (!isVideo) {
+                            ImageUtils.downscaleImageInPlace(targetFile)
+                        }
+                        val mediaList = repository.getMediaList()
+                        val oldMedia = mediaList.find { it.id == id }
+                        if (oldMedia != null) {
+                            try {
+                                val oldFile = File(oldMedia.filePath)
+                                if (oldFile.exists()) oldFile.delete()
+                            } catch (_: Exception) {}
+                        }
+                        repository.updateMediaItemPath(id, targetFile.absolutePath)
+                        broadcastState()
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "Media item path update failure", e)
+                    }
+                }
                 "delete_media" -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val mediaList = repository.getMediaList()
@@ -1268,12 +1321,36 @@ class SettingsServer(private val context: Context) {
                         broadcastState()
                     }
                 }
+                "update_slideshow_schedule_time" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val startTime = json.optString("startTime").takeIf { it.isNotEmpty() } ?: return
+                    val endTime = json.optString("endTime").takeIf { it.isNotEmpty() } ?: return
+                    repository.updateSlideshowScheduleTime(id, startTime, endTime)
+                    broadcastState()
+                }
+                "update_slideshow_schedule_days" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val activeDays = json.optString("activeDays", "")
+                    repository.updateSlideshowScheduleDays(id, activeDays)
+                    broadcastState()
+                }
+                "update_slideshow_schedule_dates" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val specificDates = json.optString("specificDates", "")
+                    repository.updateSlideshowScheduleDates(id, specificDates)
+                    broadcastState()
+                }
                 "delete_slideshow_schedule" -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     if (id.isNotEmpty()) {
                         repository.deleteSlideshowSchedule(id)
                         broadcastState()
                     }
+                }
+                "update_slideshow_enabled" -> {
+                    val enabled = json.optBoolean("enabled")
+                    repository.updateSlideshowEnabled(enabled)
+                    broadcastState()
                 }
                 "add_standby_schedule" -> {
                     val day = json.optString("day", "Monday")
@@ -1285,6 +1362,25 @@ class SettingsServer(private val context: Context) {
                         repository.addStandbySchedule(day, isSpecificDate, startTime, endTime, customId)
                         broadcastState()
                     }
+                }
+                "update_standby_schedule_time" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val startTime = json.optString("startTime").takeIf { it.isNotEmpty() } ?: return
+                    val endTime = json.optString("endTime").takeIf { it.isNotEmpty() } ?: return
+                    repository.updateStandbyScheduleTime(id, startTime, endTime)
+                    broadcastState()
+                }
+                "update_standby_schedule_days" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val activeDays = json.optString("activeDays", "")
+                    repository.updateStandbyScheduleDays(id, activeDays)
+                    broadcastState()
+                }
+                "update_standby_schedule_dates" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val specificDates = json.optString("specificDates", "")
+                    repository.updateStandbyScheduleDates(id, specificDates)
+                    broadcastState()
                 }
                 "delete_standby_schedule" -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
@@ -1318,6 +1414,41 @@ class SettingsServer(private val context: Context) {
                         broadcastState()
                     } catch (e: Throwable) {
                         Log.e(TAG, "Dashboard background upload failure", e)
+                    }
+                }
+                "update_dashboard_background_path" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val filename = json.optString("filename") ?: "dashboard_${System.currentTimeMillis()}.jpg"
+                    val base64Data = json.optString("base64") ?: return
+                    try {
+                        val dir = File(context.filesDir, "dashboard")
+                        if (!dir.exists()) {
+                            dir.mkdirs()
+                        }
+                        val safeName = "${System.currentTimeMillis()}_${File(filename).name}"
+                        val targetFile = File(dir, safeName)
+                        val cleanBase64 = if (base64Data.contains(",")) {
+                            base64Data.substring(base64Data.indexOf(",") + 1)
+                        } else {
+                            base64Data
+                        }
+                        val bytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+                        FileOutputStream(targetFile).use { fos ->
+                            fos.write(bytes)
+                        }
+                        ImageUtils.downscaleImageInPlace(targetFile)
+                        val bgList = repository.getDashboardBackgrounds()
+                        val oldBg = bgList.find { it.id == id }
+                        if (oldBg != null) {
+                            try {
+                                val oldFile = File(oldBg.filePath)
+                                if (oldFile.exists()) oldFile.delete()
+                            } catch (_: Exception) {}
+                        }
+                        repository.updateDashboardBackgroundPath(id, targetFile.absolutePath)
+                        broadcastState()
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "Dashboard background path update failure", e)
                     }
                 }
                 "delete_dashboard_background" -> {

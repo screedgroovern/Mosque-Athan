@@ -374,15 +374,48 @@ object WebPageJsOffline {
                     appConfig.standbyStartTime = payload.standbyStartTime;
                     appConfig.standbyEndTime = payload.standbyEndTime;
                     break;
+                case 'update_slideshow_enabled':
+                    appConfig.slideshowEnabled = payload.enabled;
+                    break;
                 case 'add_slideshow_schedule':
                     slideshowSchedules.push({
                         id: payload.id,
                         day: payload.day,
                         isSpecificDate: payload.isSpecificDate,
                         startTime: payload.startTime,
-                        endTime: payload.endTime
+                        endTime: payload.endTime,
+                        activeDays: payload.activeDays || payload.day,
+                        specificDates: payload.specificDates || ''
                     });
                     break;
+                case 'update_slideshow_schedule_time': {
+                    const s = slideshowSchedules.find(x => x.id === payload.id);
+                    if (s) {
+                        s.startTime = payload.startTime;
+                        s.endTime = payload.endTime;
+                    }
+                    break;
+                }
+                case 'update_slideshow_schedule_days': {
+                    const s = slideshowSchedules.find(x => x.id === payload.id);
+                    if (s) {
+                        s.activeDays = payload.activeDays;
+                        s.isSpecificDate = false;
+                        const parts = payload.activeDays.split(',').filter(d => d.trim().length > 0);
+                        if (parts.length > 0) s.day = parts[0];
+                    }
+                    break;
+                }
+                case 'update_slideshow_schedule_dates': {
+                    const s = slideshowSchedules.find(x => x.id === payload.id);
+                    if (s) {
+                        s.specificDates = payload.specificDates;
+                        s.isSpecificDate = true;
+                        const parts = payload.specificDates.split(',').filter(d => d.trim().length > 0);
+                        if (parts.length > 0) s.day = parts[0];
+                    }
+                    break;
+                }
                 case 'delete_slideshow_schedule':
                     slideshowSchedules = slideshowSchedules.filter(s => s.id !== payload.id);
                     break;
@@ -393,9 +426,45 @@ object WebPageJsOffline {
                         day: payload.day,
                         isSpecificDate: payload.isSpecificDate,
                         startTime: payload.startTime,
-                        endTime: payload.endTime
+                        endTime: payload.endTime,
+                        activeDays: payload.activeDays || payload.day,
+                        specificDates: payload.specificDates || ''
                     });
                     break;
+                case 'update_standby_schedule_time': {
+                    if (appConfig.standbySchedules) {
+                        const s = appConfig.standbySchedules.find(x => x.id === payload.id);
+                        if (s) {
+                            s.startTime = payload.startTime;
+                            s.endTime = payload.endTime;
+                        }
+                    }
+                    break;
+                }
+                case 'update_standby_schedule_days': {
+                    if (appConfig.standbySchedules) {
+                        const s = appConfig.standbySchedules.find(x => x.id === payload.id);
+                        if (s) {
+                            s.activeDays = payload.activeDays;
+                            s.isSpecificDate = false;
+                            const parts = payload.activeDays.split(',').filter(d => d.trim().length > 0);
+                            if (parts.length > 0) s.day = parts[0];
+                        }
+                    }
+                    break;
+                }
+                case 'update_standby_schedule_dates': {
+                    if (appConfig.standbySchedules) {
+                        const s = appConfig.standbySchedules.find(x => x.id === payload.id);
+                        if (s) {
+                            s.specificDates = payload.specificDates;
+                            s.isSpecificDate = true;
+                            const parts = payload.specificDates.split(',').filter(d => d.trim().length > 0);
+                            if (parts.length > 0) s.day = parts[0];
+                        }
+                    }
+                    break;
+                }
                 case 'delete_standby_schedule':
                     if (appConfig.standbySchedules) {
                         appConfig.standbySchedules = appConfig.standbySchedules.filter(s => s.id !== payload.id);

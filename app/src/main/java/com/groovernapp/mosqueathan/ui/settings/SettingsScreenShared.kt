@@ -279,7 +279,7 @@ fun AdjustmentRow(
             Text(
                 text = title,
                 color = Color.White,
-                fontSize = 17.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
      
@@ -300,7 +300,7 @@ fun AdjustmentRow(
                 Text(
                     text = "$sign$value",
                     color = Color.White,
-                    fontSize = 18.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -319,7 +319,7 @@ fun AdjustmentRow(
                     Text(
                         text = unitSuffix,
                         color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 15.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                     )
                 }
@@ -511,7 +511,7 @@ fun RunningTextListSettingsComponent(
             Text(
                 text = title,
                 color = Color(0xFFFFD54F),
-                fontSize = 18.sp,
+                fontSize = if (isCompact) 15.sp else 18.sp,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -520,7 +520,7 @@ fun RunningTextListSettingsComponent(
             Text(
                 text = subtitle,
                 color = Color.White.copy(alpha = 0.8f),
-                fontSize = 15.sp,
+                fontSize = if (isCompact) 13.sp else 15.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -698,7 +698,7 @@ fun RunningTextListSettingsComponent(
                                 Text(
                                     text = itemText,
                                     color = Color.White,
-                                    fontSize = 15.sp,
+                                    fontSize = if (isCompact) 13.sp else 15.sp,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -707,7 +707,7 @@ fun RunningTextListSettingsComponent(
                                 Text(
                                     text = itemText,
                                     color = Color.White,
-                                    fontSize = 15.sp,
+                                    fontSize = if (isCompact) 13.sp else 15.sp,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))

@@ -48,7 +48,7 @@ fun AdzanSettingsSegment(
         Text(
             text = Lang.get("Adzan Preparation", "Persiapan Adzan"),
             color = Color(0xFFFFD54F),
-            fontSize = 18.sp,
+            fontSize = if (isCompact) 15.sp else 18.sp,
             fontWeight = FontWeight.Bold
         )
 
@@ -85,7 +85,8 @@ fun AdzanSettingsSegment(
             Text(
                 text = Lang.get("Preview Adzan Screen", "Preview Layar Adzan"),
                 color = Color(0xFFFFD54F),
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = if (isCompact) 13.sp else 14.sp
             )
         }
     }

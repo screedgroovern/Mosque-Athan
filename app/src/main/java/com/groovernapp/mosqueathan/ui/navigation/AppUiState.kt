@@ -17,7 +17,7 @@ sealed interface AppUiState {
         val includeDefaultImage: Boolean,
         val isPreviewMode: Boolean = false,
         val dashboardTransitionType: String = "FADE",
-        val dashboardTransitionInterval: Int = 10
+        val dashboardTransitionInterval: Int = 86400
     ) : AppUiState
 
     data class Adzan(

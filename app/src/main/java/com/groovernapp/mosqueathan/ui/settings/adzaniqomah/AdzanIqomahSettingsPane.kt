@@ -84,7 +84,7 @@ fun AdzanIqomahSettingsPane(
                         )
                         Text(
                             text = Lang.get("Adzan", "Adzan"),
-                            fontSize = 15.sp,
+                            fontSize = if (isCompact) 13.sp else 15.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -107,7 +107,7 @@ fun AdzanIqomahSettingsPane(
                         )
                         Text(
                             text = Lang.get("Iqomah", "Iqomah"),
-                            fontSize = 15.sp,
+                            fontSize = if (isCompact) 13.sp else 15.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }

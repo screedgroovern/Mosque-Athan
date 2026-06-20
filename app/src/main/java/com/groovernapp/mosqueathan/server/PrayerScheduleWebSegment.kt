@@ -66,7 +66,7 @@ object PrayerScheduleWebSegment {
                         <!-- Duration Selector -->
                         <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
                             <label style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);" data-lang-key="kemenag_duration_label">Periode Waktu Jadwal yang Diunduh</label>
-                            <select id="kemenag-duration" onchange="toggleKemenagDateInput()">
+                            <select id="kemenag-duration" onchange="onKemenagDurationChange(this)">
                                 <option value="1_WEEK" data-lang-key="kemenag_dur_1w">1 Minggu ke Depan</option>
                                 <option value="2_WEEKS" data-lang-key="kemenag_dur_2w">2 Minggu ke Depan</option>
                                 <option value="3_WEEKS" data-lang-key="kemenag_dur_3w">3 Minggu ke Depan</option>
@@ -79,41 +79,13 @@ object PrayerScheduleWebSegment {
                             </select>
                         </div>
 
-                        <!-- Date Picker & Search Side-by-Side -->
-                        <div style="display: flex; gap: 1rem; align-items: flex-start; width: 100%; margin-bottom: 0.5rem;">
-                            <!-- Date Container -->
-                            <div id="kemenag-specific-date-container" style="display: none; flex: 1; flex-direction: column; gap: 0.5rem;">
-                                <label style="font-weight: 600; font-size: 0.9rem; color: var(--text-secondary);" data-lang-key="kemenag_date_label">Pilih Tanggal Batas Akhir</label>
-                                <div class="flatpickr-wrapper" id="kemenag-date-picker-wrapper">
-                                    <input type="text" id="kemenag-specific-date" data-input placeholder="Pilih tanggal...">
-                                    <button type="button" class="picker-btn" data-toggle title="Pilih Tanggal">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <!-- Search Container -->
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 0.5rem;">
-                                <label style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);" data-lang-key="kemenag_city_label">Pilih Kota Kemenag (Indonesia)</label>
-                                <div style="display: flex; gap: 0.75rem; position: relative;">
-                                    <input type="text" id="kemenag-search-query" placeholder="Ketik lalu Enter..." style="flex: 1; padding-right: 2.5rem;" onkeypress="handleKemenagSearchKeyPress(event)">
-                                    <div id="kemenag-search-loading" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none;">
-                                        <div class="spinner-border spinner-border-sm text-warning" role="status" style="width: 1rem; height: 1rem; border-width: 0.15em;"></div>
-                                    </div>
-                                </div>
+                        <!-- Specific Date Picker -->
+                        <div id="kemenag-specific-date-container" style="display: none; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
+                            <label style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary);" data-lang-key="kemenag_date_label">Pilih Tanggal Batas Akhir</label>
+                            <div class="flatpickr-wrapper" id="kemenag-date-picker-wrapper" style="width: 100%;">
+                                <input type="text" id="kemenag-specific-date" data-input placeholder="Pilih tanggal..." style="width: 100%;">
                             </div>
                         </div>
-
-                        <!-- Suggestions List -->
-                        <div id="kemenag-search-results" style="display: flex; flex-direction: column; max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background-color: rgba(255, 255, 255, 0.02);">
-                            <!-- Results will be loaded here -->
-                        </div>
-                        
-                        <button type="button" class="btn btn-secondary" onclick="openSchedulesDialog()" style="width: 100%; margin-top: 1.25rem; justify-content: center; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem;">
-                            📅 <span data-lang-key="btn_view_schedules">Lihat Jadwal Terunduh</span>
-                        </button>
                     </div>
                 </div>
                 
@@ -129,11 +101,11 @@ object PrayerScheduleWebSegment {
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="latitude" data-lang-key="label_latitude">Latitude (Garis Lintang)</label>
-                            <input type="number" step="any" id="latitude" data-lang-key="placeholder_latitude" placeholder="Contoh: -6.2088">
+                            <input type="number" step="any" id="latitude" data-lang-key="placeholder_latitude" placeholder="Contoh: -6.2088" onchange="onCoordinateChange()">
                         </div>
                         <div class="form-group">
                             <label for="longitude" data-lang-key="label_longitude">Longitude (Garis Bujur)</label>
-                            <input type="number" step="any" id="longitude" data-lang-key="placeholder_longitude" placeholder="Contoh: 106.8456">
+                            <input type="number" step="any" id="longitude" data-lang-key="placeholder_longitude" placeholder="Contoh: 106.8456" onchange="onCoordinateChange()">
                         </div>
                         
                         <div class="form-group full-width" style="display: flex; flex-direction: row; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap;">
@@ -242,7 +214,7 @@ object PrayerScheduleWebSegment {
                             </div>
                         </div>
                         <div class="adjustment-row">
-                            <span class="adjustment-label">Isya</span>
+                            <span class="adjustment-label">Isya'</span>
                             <div class="adjustment-controls">
                                 <button class="adjust-btn" onclick="adjustOffset('offsetIsya', -1)">-</button>
                                 <span id="offsetIsya" class="adjust-value" style="width: 40px; text-align: center;">0</span>
@@ -252,11 +224,6 @@ object PrayerScheduleWebSegment {
                         </div>
                     </div>
                 </div>
-
-                <button class="btn btn-primary" onclick="handleSaveClick(this, () => savePrayerScheduleSettings(this))" style="align-self: flex-end; margin-top: 1.5rem; width: 100%; max-width: 320px; justify-content: center; display: flex; align-items: center; gap: 0.5rem;" id="btn-save-settings">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    <span data-lang-key="btn_save_settings">Simpan Pengaturan</span>
-                </button>
             </section>
         """
     }

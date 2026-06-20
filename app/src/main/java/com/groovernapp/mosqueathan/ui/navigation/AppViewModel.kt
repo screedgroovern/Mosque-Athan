@@ -473,7 +473,16 @@ class AppViewModel : ViewModel() {
         val standbySchedules = repository.getStandbySchedules()
         var shouldBeActive = false
         for (sched in standbySchedules) {
-            if (com.groovernapp.mosqueathan.util.PrayerUtils.isScheduleActive(now, sched.day, sched.isSpecificDate, sched.startTime, sched.endTime)) {
+            if (com.groovernapp.mosqueathan.util.PrayerUtils.isScheduleActiveNew(
+                    now = now,
+                    activeDays = sched.activeDays,
+                    specificDates = sched.specificDates,
+                    startTime = sched.startTime,
+                    endTime = sched.endTime,
+                    legacyDay = sched.day,
+                    legacyIsSpecificDate = sched.isSpecificDate
+                )
+            ) {
                 shouldBeActive = true
                 break
             }

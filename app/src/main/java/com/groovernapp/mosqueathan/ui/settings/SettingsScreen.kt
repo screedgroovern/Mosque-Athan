@@ -48,6 +48,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Campaign
@@ -318,7 +319,7 @@ fun SettingsScreen(
                 // Category specific UI Card
                 Card(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.4f)),
+                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.0f)),
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
                 ) {
@@ -344,9 +345,21 @@ fun SettingsScreen(
                                 SettingsCategory.PRAYER_SCHEDULE -> {
                                     PrayerScheduleSettingsSegment(
                                         latText = latText,
-                                        onLatTextChange = { latText = it },
+                                        onLatTextChange = {
+                                            latText = it
+                                            val d = it.toDoubleOrNull()
+                                            if (d != null && d != config.latitude) {
+                                                viewModel.updateConfig(config.copy(latitude = d))
+                                            }
+                                        },
                                         lngText = lngText,
-                                        onLngTextChange = { lngText = it },
+                                        onLngTextChange = {
+                                            lngText = it
+                                            val d = it.toDoubleOrNull()
+                                            if (d != null && d != config.longitude) {
+                                                viewModel.updateConfig(config.copy(longitude = d))
+                                            }
+                                        },
                                         calculationMethodName = calculationMethodName,
                                         kemenagCityId = kemenagCityId,
                                         kemenagCityName = kemenagCityName,
@@ -355,13 +368,23 @@ fun SettingsScreen(
                                         citySearchResults = citySearchResults,
                                         isSearchingCities = isSearchingCities,
                                         kemenagSchedules = kemenagSchedules,
-                                        onMethodChange = { calculationMethodName = it },
+                                        onMethodChange = {
+                                            calculationMethodName = it
+                                            viewModel.updateConfig(config.copy(calculationMethodName = it))
+                                        },
                                         onKemenagCitySelected = { id, name ->
                                             kemenagCityId = id
                                             kemenagCityName = name
+                                            viewModel.updateConfig(config.copy(kemenagCityId = id, kemenagCityName = name))
                                         },
-                                        onKemenagDurationChange = { kemenagDuration = it },
-                                        onKemenagTargetDateChange = { kemenagTargetDate = it },
+                                        onKemenagDurationChange = {
+                                            kemenagDuration = it
+                                            viewModel.updateConfig(config.copy(kemenagDuration = it))
+                                        },
+                                        onKemenagTargetDateChange = {
+                                            kemenagTargetDate = it
+                                            viewModel.updateConfig(config.copy(kemenagTargetDate = it))
+                                        },
                                         onSearchKemenagCities = { query -> viewModel.searchKemenagCities(query) },
                                         onDownloadKemenagSchedules = {
                                             viewModel.updateConfig(
@@ -381,30 +404,70 @@ fun SettingsScreen(
                                         offsetAshar = offsetAshar,
                                         offsetMaghrib = offsetMaghrib,
                                         offsetIsya = offsetIsya,
-                                        onOffsetImsakChange = { offsetImsak = it },
-                                        onOffsetSubuhChange = { offsetSubuh = it },
-                                        onOffsetSyuruqChange = { offsetSyuruq = it },
-                                        onOffsetDzuhurChange = { offsetDzuhur = it },
-                                        onOffsetAsharChange = { offsetAshar = it },
-                                        onOffsetMaghribChange = { offsetMaghrib = it },
-                                        onOffsetIsyaChange = { offsetIsya = it }
+                                        onOffsetImsakChange = {
+                                            offsetImsak = it
+                                            viewModel.updateConfig(config.copy(offsetImsak = it))
+                                        },
+                                        onOffsetSubuhChange = {
+                                            offsetSubuh = it
+                                            viewModel.updateConfig(config.copy(offsetSubuh = it))
+                                        },
+                                        onOffsetSyuruqChange = {
+                                            offsetSyuruq = it
+                                            viewModel.updateConfig(config.copy(offsetSyuruq = it))
+                                        },
+                                        onOffsetDzuhurChange = {
+                                            offsetDzuhur = it
+                                            viewModel.updateConfig(config.copy(offsetDzuhur = it))
+                                        },
+                                        onOffsetAsharChange = {
+                                            offsetAshar = it
+                                            viewModel.updateConfig(config.copy(offsetAshar = it))
+                                        },
+                                        onOffsetMaghribChange = {
+                                            offsetMaghrib = it
+                                            viewModel.updateConfig(config.copy(offsetMaghrib = it))
+                                        },
+                                        onOffsetIsyaChange = {
+                                            offsetIsya = it
+                                            viewModel.updateConfig(config.copy(offsetIsya = it))
+                                        },
+                                        isCompact = isCompact
                                     )
                                 }
 
                                 SettingsCategory.ADZAN_IQOMAH -> {
                                      AdzanIqomahSettingsPane(
                                          adzanLeadMinutes = adzanLeadMinutes,
-                                         onAdzanLeadMinutesChange = { adzanLeadMinutes = it },
+                                         onAdzanLeadMinutesChange = {
+                                             adzanLeadMinutes = it
+                                             viewModel.updateConfig(config.copy(adzanLeadMinutes = it))
+                                         },
                                          iqomahSubuh = iqomahSubuh,
-                                         onIqomahSubuhChange = { iqomahSubuh = it },
+                                         onIqomahSubuhChange = {
+                                             iqomahSubuh = it
+                                             viewModel.updateConfig(config.copy(iqomahSubuh = it))
+                                         },
                                          iqomahDzuhur = iqomahDzuhur,
-                                         onIqomahDzuhurChange = { iqomahDzuhur = it },
+                                         onIqomahDzuhurChange = {
+                                             iqomahDzuhur = it
+                                             viewModel.updateConfig(config.copy(iqomahDzuhur = it))
+                                         },
                                          iqomahAshar = iqomahAshar,
-                                         onIqomahAsharChange = { iqomahAshar = it },
+                                         onIqomahAsharChange = {
+                                             iqomahAshar = it
+                                             viewModel.updateConfig(config.copy(iqomahAshar = it))
+                                         },
                                          iqomahMaghrib = iqomahMaghrib,
-                                         onIqomahMaghribChange = { iqomahMaghrib = it },
+                                         onIqomahMaghribChange = {
+                                             iqomahMaghrib = it
+                                             viewModel.updateConfig(config.copy(iqomahMaghrib = it))
+                                         },
                                          iqomahIsya = iqomahIsya,
-                                         onIqomahIsyaChange = { iqomahIsya = it },
+                                         onIqomahIsyaChange = {
+                                             iqomahIsya = it
+                                             viewModel.updateConfig(config.copy(iqomahIsya = it))
+                                         },
                                          config = config,
                                          onUpdateFooters = { adzan, iqomah -> viewModel.updateFooters(adzan, iqomah) },
                                          onPreviewAdzan = onPreviewAdzan,
@@ -462,7 +525,8 @@ fun SettingsScreen(
                                          onUpdateShowSettingsOnTv = { show -> viewModel.updateShowSettingsOnTv(show) },
                                          devices = devices,
                                          onSetDeviceMaster = { deviceId -> viewModel.setDeviceMaster(deviceId) },
-                                         onDeleteDevice = { deviceId -> viewModel.deleteDevice(deviceId) }
+                                         onDeleteDevice = { deviceId -> viewModel.deleteDevice(deviceId) },
+                                         isCompact = isCompact
                                      )
                                  }
 
@@ -493,67 +557,7 @@ fun SettingsScreen(
                             }
                         }
 
-                        // Save / Apply Button (only for config-saving categories)
-                        if (selectedCategory in listOf(SettingsCategory.PRAYER_SCHEDULE, SettingsCategory.ADZAN_IQOMAH)) {
-                            var isSaving by remember { mutableStateOf(false) }
-                            val coroutineScope = rememberCoroutineScope()
 
-                            TvFocusablePrimaryButton(
-                                onClick = {
-                                    if (isSaving) return@TvFocusablePrimaryButton
-                                    isSaving = true
-                                    coroutineScope.launch {
-                                        val lat = latText.toDoubleOrNull() ?: config.latitude
-                                        val lng = lngText.toDoubleOrNull() ?: config.longitude
-                                        viewModel.updateConfig(
-                                            config.copy(
-                                                latitude = lat,
-                                                longitude = lng,
-                                                iqomahSubuh = iqomahSubuh,
-                                                iqomahDzuhur = iqomahDzuhur,
-                                                iqomahAshar = iqomahAshar,
-                                                iqomahMaghrib = iqomahMaghrib,
-                                                iqomahIsya = iqomahIsya,
-                                                calculationMethodName = calculationMethodName,
-                                                adzanLeadMinutes = adzanLeadMinutes,
-                                                offsetImsak = offsetImsak,
-                                                offsetSubuh = offsetSubuh,
-                                                offsetSyuruq = offsetSyuruq,
-                                                offsetDzuhur = offsetDzuhur,
-                                                offsetAshar = offsetAshar,
-                                                offsetMaghrib = offsetMaghrib,
-                                                offsetIsya = offsetIsya,
-                                                kemenagCityId = kemenagCityId,
-                                                kemenagCityName = kemenagCityName,
-                                                kemenagDuration = kemenagDuration,
-                                                kemenagTargetDate = kemenagTargetDate
-                                            )
-                                        )
-                                        delay(600)
-                                        isSaving = false
-                                    }
-                                },
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp)
-                            ) {
-                                if (isSaving) {
-                                    CircularProgressIndicator(
-                                        color = Color.Black,
-                                        modifier = Modifier.size(24.dp),
-                                        strokeWidth = 2.dp
-                                    )
-                                } else {
-                                    Text(
-                                        text = Lang.get("Save Settings", "Simpan Pengaturan"),
-                                        color = Color.Black,
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -612,7 +616,10 @@ fun SideSheetContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = if (!isTv) Modifier.clickable { onToggleExpand() } else Modifier
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = null,
@@ -626,6 +633,17 @@ fun SideSheetContent(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+
+                    if (!isTv) {
+                        IconButton(onClick = onToggleExpand) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.MenuOpen,
+                                contentDescription = "Collapse Menu",
+                                tint = Color(0xFFFFD54F),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
             }

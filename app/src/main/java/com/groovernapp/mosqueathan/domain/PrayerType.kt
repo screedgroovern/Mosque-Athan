@@ -9,6 +9,12 @@ enum class PrayerType {
     MAGHRIB,
     ISYA;
 
+    val displayName: String
+        get() = when (this) {
+            ISYA -> "ISYA'"
+            else -> name
+        }
+
 
     val iqomahMinutes: Int
         get() = when (this) {

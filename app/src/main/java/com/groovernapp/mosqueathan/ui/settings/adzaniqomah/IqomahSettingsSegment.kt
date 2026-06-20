@@ -83,7 +83,7 @@ fun IqomahSettingsSegment(
         Text(
             text = Lang.get("Iqomah wait time after adzan", "Jeda waktu iqomah setelah adzan"),
             color = Color(0xFFFFD54F),
-            fontSize = 18.sp,
+            fontSize = if (isCompact) 15.sp else 18.sp,
             fontWeight = FontWeight.Bold
         )
 
@@ -92,7 +92,7 @@ fun IqomahSettingsSegment(
             AdjustmentRow(Lang.get("Dhuhr", "Dzuhur"), iqomahDzuhur, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahDzuhurChange)
             AdjustmentRow(Lang.get("Asr", "Ashar"), iqomahAshar, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahAsharChange)
             AdjustmentRow(Lang.get("Maghrib", "Maghrib"), iqomahMaghrib, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahMaghribChange)
-            AdjustmentRow(Lang.get("Isha", "Isya"), iqomahIsya, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahIsyaChange)
+            AdjustmentRow(Lang.get("Isha", "Isya'"), iqomahIsya, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahIsyaChange)
         }
 
         HorizontalDivider(
@@ -127,7 +127,8 @@ fun IqomahSettingsSegment(
             Text(
                 text = Lang.get("Preview Iqomah Screen", "Preview Layar Iqomah"),
                 color = Color(0xFFFFD54F),
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = if (isCompact) 13.sp else 14.sp
             )
         }
     }

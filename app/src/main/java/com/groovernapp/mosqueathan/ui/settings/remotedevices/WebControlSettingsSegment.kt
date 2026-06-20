@@ -29,7 +29,8 @@ import androidx.core.graphics.createBitmap
 fun WebControlSettingsSegment(
     showSettingsOnTv: Boolean,
     isTv: Boolean,
-    onUpdateShowSettingsOnTv: (Boolean) -> Unit
+    onUpdateShowSettingsOnTv: (Boolean) -> Unit,
+    isCompact: Boolean
 ) {
     val ipAddress = remember { SettingsServer.getIpAddress() }
     val serverUrl = if (ipAddress != null) "http://$ipAddress:8080" else null
@@ -59,110 +60,219 @@ fun WebControlSettingsSegment(
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(32.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Left Column: QR Code + Server URL
+            if (isCompact) {
                 Column(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    if (qrCodeBitmap != null) {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .size(180.dp)
-                                .padding(4.dp)
-                        ) {
-                            Image(
-                                bitmap = qrCodeBitmap,
-                                contentDescription = "QR Code",
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    }
-
-                    Text(
-                        text = serverUrl,
-                        color = Color(0xFFFFD54F),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                // Right Column: Switch & Instructions/Notes
-                Column(
-                    modifier = Modifier.weight(1.2f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    horizontalAlignment = Alignment.Start
-                ) {
-                    if (!isTv) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color.White.copy(alpha = 0.05f))
-                                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Pengaturan di TV",
-                                    color = Color.White,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "Tampilkan/sembunyikan menu pengaturan di TV",
-                                    color = Color.White.copy(alpha = 0.6f),
-                                    fontSize = 11.sp
+                    // Top Section: QR Code + Server URL
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (qrCodeBitmap != null) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .size(160.dp)
+                                    .padding(4.dp)
+                            ) {
+                                Image(
+                                    bitmap = qrCodeBitmap,
+                                    contentDescription = "QR Code",
+                                    modifier = Modifier.fillMaxSize()
                                 )
                             }
-                            Switch(
-                                checked = showSettingsOnTv,
-                                onCheckedChange = { onUpdateShowSettingsOnTv(it) },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color(0xFFFFD54F),
-                                    checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f)
+                        }
+
+                        Text(
+                            text = serverUrl,
+                            color = Color(0xFFFFD54F),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    // Bottom Section: Switch & Instructions/Notes
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        if (!isTv) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White.copy(alpha = 0.05f))
+                                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Pengaturan di TV",
+                                        color = Color.White,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Tampilkan/sembunyikan menu pengaturan di TV",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                                Switch(
+                                    checked = showSettingsOnTv,
+                                    onCheckedChange = { onUpdateShowSettingsOnTv(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = Color(0xFFFFD54F),
+                                        checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f)
+                                    )
                                 )
+                            }
+                        }
+
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Petunjuk Koneksi:",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "1. Hubungkan HP atau Laptop ke Wi-Fi / jaringan lokal yang sama.",
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = "2. Scan kode QR di samping atau ketik alamat URL di browser.",
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 12.sp
+                            )
+                            Text(
+                                text = "3. Simpan perubahan pada browser, setelan aplikasi akan ter-update otomatis.",
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 12.sp
                             )
                         }
                     }
-
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Left Column: QR Code + Server URL
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        if (qrCodeBitmap != null) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .size(180.dp)
+                                    .padding(4.dp)
+                            ) {
+                                Image(
+                                    bitmap = qrCodeBitmap,
+                                    contentDescription = "QR Code",
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
+
                         Text(
-                            text = "Petunjuk Koneksi:",
-                            color = Color.White,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            text = serverUrl,
+                            color = Color(0xFFFFD54F),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
                         )
-                        Text(
-                            text = "1. Hubungkan HP atau Laptop ke Wi-Fi / jaringan lokal yang sama.",
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 13.sp
-                        )
-                        Text(
-                            text = "2. Scan kode QR di samping atau ketik alamat URL di browser.",
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 13.sp
-                        )
-                        Text(
-                            text = "3. Simpan perubahan pada browser, setelan aplikasi akan ter-update otomatis.",
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontSize = 13.sp
-                        )
+                    }
+
+                    // Right Column: Switch & Instructions/Notes
+                    Column(
+                        modifier = Modifier.weight(1.2f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        if (!isTv) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.White.copy(alpha = 0.05f))
+                                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Pengaturan di TV",
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Tampilkan/sembunyikan menu pengaturan di TV",
+                                        color = Color.White.copy(alpha = 0.6f),
+                                        fontSize = 11.sp
+                                    )
+                                }
+                                Switch(
+                                    checked = showSettingsOnTv,
+                                    onCheckedChange = { onUpdateShowSettingsOnTv(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = Color(0xFFFFD54F),
+                                        checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f)
+                                    )
+                                )
+                            }
+                        }
+
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Petunjuk Koneksi:",
+                                color = Color.White,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "1. Hubungkan HP atau Laptop ke Wi-Fi / jaringan lokal yang sama.",
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = "2. Scan kode QR di samping atau ketik alamat URL di browser.",
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = "3. Simpan perubahan pada browser, setelan aplikasi akan ter-update otomatis.",
+                                color = Color.White.copy(alpha = 0.7f),
+                                fontSize = 13.sp
+                            )
+                        }
                     }
                 }
             }

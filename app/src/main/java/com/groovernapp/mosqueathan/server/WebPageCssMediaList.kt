@@ -290,8 +290,8 @@ object WebPageCssMediaList {
         .switch {
             position: relative;
             display: inline-block;
-            width: 48px;
-            height: 26px;
+            width: 40px;
+            height: 22px;
             flex-shrink: 0;
         }
 
@@ -317,8 +317,8 @@ object WebPageCssMediaList {
         .slider:before {
             position: absolute;
             content: "";
-            height: 18px;
-            width: 18px;
+            height: 14px;
+            width: 14px;
             left: 3px;
             bottom: 3px;
             background-color: var(--text-secondary);
@@ -331,7 +331,7 @@ object WebPageCssMediaList {
         }
 
         input:checked + .slider:before {
-            transform: translateX(22px);
+            transform: translateX(20px);
             background-color: var(--accent-contrast);
         }
 
@@ -395,8 +395,36 @@ object WebPageCssMediaList {
                 padding: 1rem 1.25rem;
             }
 
-            .methods-grid, .form-grid {
+            .methods-grid {
                 grid-template-columns: 1fr;
+                gap: 0.5rem !important;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .method-card {
+                padding: 0.5rem 0.75rem !important;
+                gap: 0.5rem !important;
+                border-radius: 8px !important;
+            }
+
+            .method-name {
+                font-size: 0.85rem !important;
+            }
+
+            .radio-dot {
+                width: 16px !important;
+                height: 16px !important;
+                border-width: 1.5px !important;
+            }
+
+            .method-card.active .radio-dot::after {
+                top: 3px !important;
+                left: 3px !important;
+                width: 7px !important;
+                height: 7px !important;
             }
 
             .form-group.full-width {

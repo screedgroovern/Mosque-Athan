@@ -29,6 +29,8 @@ object WebPageJsCore {
         let pendingTvState = null;
         let isSyncing = false;
         let isAnnouncementReorderMode = false;
+        let currentDbBgIndex = 0;
+        let currentSlideIndex = 0;
 
         // Auto-sync custom_tv_ip with the current URL if loaded directly from a TV/emulator settings server
         const locHostname = window.location.hostname;
@@ -47,6 +49,9 @@ object WebPageJsCore {
         let standbyEndTimePicker;
         let standbyDatePicker;
         let slideshowDatePicker;
+        let timeEditStartPicker;
+        let timeEditEndPicker;
+        let scheduleMultiDatePicker;
 
         // IndexedDB Helper for Large Offline Files
         const dbName = "MosqueAthanRemoteDB";
@@ -119,9 +124,16 @@ object WebPageJsCore {
                 nav_devices: "Perangkat Terhubung",
                 nav_reset: "Reset Pengaturan",
                 nav_standby: "Waktu Standby",
-                title_standby: "Pengaturan Mode Standby & Layar",
+                nav_system_maintenance: "Sistem & Reset",
+                title_system_maintenance: "Sistem & Reset",
+                desc_system_maintenance: "Atur jadwal layar hitam (standby) otomatis dan kembalikan pengaturan ke setelan pabrik.",
+                title_standby: "Standby & Tampilan",
                 desc_standby: "Atur agar TV otomatis masuk ke mode standby (layar hitam) dan bangun kembali pada jam yang ditentukan.",
-                label_standby_enabled: "Aktifkan Mode Standby Otomatis",
+                label_standby_enabled: "Mode Standby Otomatis",
+                desc_standby_enabled: "Masuk ke mode standby (layar hitam) di luar jam operasional.",
+                btn_add_standby: "Tambah Standby",
+                btn_standby_schedules: "Jadwal Standby",
+                desc_standby_footer: "Anda sekarang dapat mengatur beberapa jadwal standby untuk hari yang berbeda atau tanggal spesifik. TV akan mati selama periode standby aktif.",
                 label_standby_start: "Waktu Standby (Mulai)",
                 label_standby_end: "Waktu Bangun (Selesai)",
                 status_app: "Aplikasi Android:",
@@ -191,21 +203,31 @@ object WebPageJsCore {
                 nav_adzan: "Adzan",
                 title_adzan: "Adzan",
                 desc_adzan: "Atur durasi persiapan adzan dan running text yang akan tampil saat layar adzan.",
+                title_adzan_preparation: "Persiapan Adzan",
                 title_adzan_duration: "Durasi Persiapan Adzan",
                 label_adzan_prep: "Persiapan Adzan (Lead Minutes)",
-                title_adzan_announcement: "Running Text (Teks Berjalan Adzan)",
+                title_adzan_announcement: "Footer Layar Adzan (Teks Berjalan)",
                 desc_adzan_announcement: "Teks Running Text berjalan khusus saat layar adzan aktif.",
                 btn_preview_adzan: "Preview Layar Adzan",
                 btn_save_adzan: "Simpan Pengaturan Adzan",
                 nav_iqomah: "Iqomah",
                 title_iqomah: "Iqomah",
                 desc_iqomah: "Atur jeda waktu iqomah setelah adzan berkumandang dan running text saat countdown iqomah.",
-                title_iqomah_wait_time: "Iqomah wait time after adzan",
+                title_iqomah_wait_time: "Jeda waktu iqomah setelah adzan",
                 desc_iqomah_wait_time: "Jeda waktu iqomah setelah adzan selesai berkumandang.",
-                title_iqomah_announcement: "Running Text (Teks Berjalan Iqomah)",
+                title_iqomah_announcement: "Footer Layar Iqomah (Teks Berjalan)",
                 desc_iqomah_announcement: "Teks Running Text berjalan khusus saat layar jeda iqomah aktif.",
                 btn_preview_iqomah: "Preview Layar Iqomah",
                 btn_save_iqomah: "Simpan Pengaturan Iqomah",
+                minutes: "menit",
+                seconds: "detik",
+                hours: "jam",
+                days: "hari",
+                label_interval_unit: "Satuan Interval",
+                btn_arrange: "Urutkan",
+                btn_done: "Selesai",
+                placeholder_adzan_footer: "Ketik footer adzan...",
+                placeholder_iqomah_footer: "Ketik footer iqomah...",
                 title_settings_on_tv: "Pengaturan di TV",
                 desc_settings_on_tv: "Tampilkan atau sembunyikan menu pengaturan langsung pada layar TV",
                 title_method: "Konvensi Metode Perhitungan",
@@ -220,9 +242,31 @@ object WebPageJsCore {
                 toast_footers_saved: "Teks footer berhasil disimpan!",
                 placeholder_announcement: "Masukkan teks Running Text baru...",
                 btn_add: "Tambah",
+                btn_add_schedule: "Tambah Jadwal",
+                btn_slideshow_schedules: "Jadwal Slideshow",
                 label_announcement_list: "Daftar Running Text (Drag & Drop untuk mengatur urutan)",
                 btn_delete: "Hapus",
-                title_display_media: "Tampilan & Media",
+                 title_display_media: "Tampilan & Media",
+                tab_dashboard: "Dashboard",
+                tab_slideshow: "Slide Show",
+                label_dashboard_bg_list: "Daftar Latar Belakang Dashboard",
+                label_dashboard_randomize: "Tampilkan random",
+                label_dashboard_transition: "Animasi Transisi",
+                label_dashboard_interval: "Interval transisi",
+                label_use_dashboard_bg: "Gunakan",
+                btn_add_dashboard_bg: "Tambah Latar Belakang Dashboard",
+                label_slideshow_media_list: "Daftar Media Slideshow",
+                btn_add_slideshow_media: "Tambah Gambar / Video ke Slideshow",
+                label_slideshow_transition: "Animasi Transisi",
+                label_slideshow_interval: "Interval transisi",
+                label_video_playback_duration: "Durasi Putar Video",
+                label_video_playback_desc: "Tunggu video selesai diputar atau ikuti interval slide biasa",
+                btn_video_wait: "Selesai Video",
+                btn_video_follow: "Ikuti Interval",
+                label_slideshow_schedule: "Jadwal Slide Show",
+                btn_preview_slideshow: "Preview Slideshow",
+                label_include_default_title: "Sertakan Gambar Default (Masjidil Haram)",
+                label_include_default_desc: "Sertakan atau kecualikan gambar default dalam rotasi slideshow",
                 desc_display_media: "Atur gambar latar belakang, interval slideshow, dan running text.",
                 title_theme: "Latar Belakang & Slideshow",
                 desc_theme: "Kelola serangkaian slideshow multi-gambar dan video beserta transisi tayangannya.",
@@ -319,9 +363,16 @@ object WebPageJsCore {
                 nav_devices: "Connected Devices",
                 nav_reset: "Reset Settings",
                 nav_standby: "Standby Time",
-                title_standby: "Standby & Screen Settings",
+                nav_system_maintenance: "System & Reset",
+                title_system_maintenance: "System & Reset",
+                desc_system_maintenance: "Configure TV standby hours and restore application settings to defaults.",
+                title_standby: "Standby & Display",
                 desc_standby: "Set the TV to automatically go into standby (black screen) and wake up again at specified times.",
-                label_standby_enabled: "Enable Automatic Standby Mode",
+                label_standby_enabled: "Automatic Standby Mode",
+                desc_standby_enabled: "Put the TV in standby mode (black screen) outside operational hours.",
+                btn_add_standby: "Add Standby",
+                btn_standby_schedules: "Standby Schedules",
+                desc_standby_footer: "You can now set multiple standby schedules for different days or specific dates. TV will sleep during active standby periods.",
                 label_standby_start: "Standby Time (Start)",
                 label_standby_end: "Wakeup Time (End)",
                 status_app: "Android App:",
@@ -391,9 +442,10 @@ object WebPageJsCore {
                 nav_adzan: "Adzan",
                 title_adzan: "Adzan",
                 desc_adzan: "Set the adzan preparation duration and running text to show during the adzan screen.",
+                title_adzan_preparation: "Adzan Preparation",
                 title_adzan_duration: "Adzan Preparation Duration",
                 label_adzan_prep: "Adzan Preparation (Lead Minutes)",
-                title_adzan_announcement: "Running Text (Adzan)",
+                title_adzan_announcement: "Adzan Screen Footer (Running Text)",
                 desc_adzan_announcement: "Running text displayed specifically during the adzan screen.",
                 btn_preview_adzan: "Preview Adzan Screen",
                 btn_save_adzan: "Save Adzan Settings",
@@ -402,10 +454,19 @@ object WebPageJsCore {
                 desc_iqomah: "Set the iqomah countdown wait times after adzan and running text during the iqomah countdown.",
                 title_iqomah_wait_time: "Iqomah wait time after adzan",
                 desc_iqomah_wait_time: "The wait time interval for iqomah after adzan has finished.",
-                title_iqomah_announcement: "Running Text (Iqomah)",
+                title_iqomah_announcement: "Iqomah Screen Footer (Running Text)",
                 desc_iqomah_announcement: "Running text displayed specifically during the iqomah countdown.",
                 btn_preview_iqomah: "Preview Iqomah Screen",
                 btn_save_iqomah: "Save Iqomah Settings",
+                minutes: "minutes",
+                seconds: "seconds",
+                hours: "hours",
+                days: "days",
+                label_interval_unit: "Interval Unit",
+                btn_arrange: "Arrange",
+                btn_done: "Done",
+                placeholder_adzan_footer: "Type adzan footer...",
+                placeholder_iqomah_footer: "Type iqomah footer...",
                 title_settings_on_tv: "Settings on TV",
                 desc_settings_on_tv: "Show or hide settings menu directly on the TV screen",
                 title_method: "Calculation Method Convention",
@@ -420,9 +481,31 @@ object WebPageJsCore {
                 toast_footers_saved: "Footer texts saved successfully!",
                 placeholder_announcement: "Type new running text...",
                 btn_add: "Add",
+                btn_add_schedule: "Add Schedule",
+                btn_slideshow_schedules: "Slideshow Schedules",
                 label_announcement_list: "Running Text List (Drag & Drop to reorder)",
                 btn_delete: "Delete",
-                title_display_media: "Display & Media",
+                 title_display_media: "Display & Media",
+                tab_dashboard: "Dashboard",
+                tab_slideshow: "Slide Show",
+                label_dashboard_bg_list: "Dashboard Background List",
+                label_dashboard_randomize: "Randomize",
+                label_dashboard_transition: "Transition Animation",
+                label_dashboard_interval: "Transition interval",
+                label_use_dashboard_bg: "Use",
+                btn_add_dashboard_bg: "Add Dashboard Background",
+                label_slideshow_media_list: "Slideshow Media Items",
+                btn_add_slideshow_media: "Add Image / Video to Slideshow",
+                label_slideshow_transition: "Transition Animation",
+                label_slideshow_interval: "Transition interval",
+                label_video_playback_duration: "Video Playback Duration",
+                label_video_playback_desc: "Wait for video to finish playing or follow regular slide interval",
+                btn_video_wait: "Wait for Video",
+                btn_video_follow: "Follow Interval",
+                label_slideshow_schedule: "Slide Show Schedule",
+                btn_preview_slideshow: "Preview Slideshow",
+                label_include_default_title: "Include Default Image (Masjidil Haram)",
+                label_include_default_desc: "Include or exclude the default image in the slideshow rotation",
                 desc_display_media: "Configure background wallpapers, slideshows, and scrolling running texts.",
                 title_theme: "Background Theme & Slideshow",
                 desc_theme: "Manage slideshow media transition styles and items.",
@@ -558,15 +641,33 @@ object WebPageJsCore {
         }
 
         function getDeviceName() {
+            const customName = localStorage.getItem('remote_device_name');
+            if (customName) return customName;
+
             const ua = navigator.userAgent;
-            if (/android/i.test(ua)) return 'Android Device';
-            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return 'iOS Device';
+            if (/android/i.test(ua)) {
+                const androidMatch = ua.match(/Android\s+[^;]+;\s*([^;\/]+)/i);
+                if (androidMatch && androidMatch[1]) {
+                    let model = androidMatch[1].trim();
+                    model = model.split(/\s+Build\//i)[0].trim();
+                    model = model.replace(/\s+(wv|wv\s+Build|Mobile|Safari)\b/ig, '').trim();
+                    if (model.length > 0) {
+                        return 'Android (' + model + ')';
+                    }
+                }
+                return 'Android Device';
+            }
+            if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+                if (/iPhone/.test(ua)) return 'iPhone';
+                if (/iPad/.test(ua)) return 'iPad';
+                return 'iOS Device';
+            }
             if (/Macintosh/i.test(ua)) return 'Mac OS Device';
             if (/Windows/i.test(ua)) return 'Windows PC';
             if (/Linux/i.test(ua)) return 'Linux PC';
             return 'Browser Remote';
         }
-        const myDeviceName = getDeviceName();
+        let myDeviceName = getDeviceName();
         let myIsMaster = false;
         let myIsAllowed = false;
         let kemenagCityId = "";
@@ -665,6 +766,10 @@ object WebPageJsCore {
             const currentWidth = window.innerWidth;
             if ((lastWidth > 1024 && currentWidth <= 1024) || (lastWidth <= 600 && currentWidth > 600) || (lastWidth > 600 && currentWidth <= 600)) {
                 initSidebarState();
+                if (typeof renderFootersList === 'function') {
+                    renderFootersList('adzan');
+                    renderFootersList('iqomah');
+                }
             }
             lastWidth = currentWidth;
         });

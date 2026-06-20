@@ -12,84 +12,121 @@ object DisplayMediaWebSegment {
 
                 <div id="display-media-tab-container">
                     <!-- Tabs Navigation (ViewPager mimic) -->
-                    <div class="tabs-container">
-                        <button class="tab-btn active" onclick="switchSubTab('display-media-tab-container', 'tab-dashboard')">
-                            📱 <span data-lang-key="tab_dashboard">Dashboard</span>
+                    <div class="android-tab-row">
+                        <button class="tab-btn android-tab-btn active" onclick="switchSubTab('display-media-tab-container', 'tab-dashboard')">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                            </svg>
+                            <span data-lang-key="tab_dashboard">Dashboard</span>
                         </button>
-                        <button class="tab-btn" onclick="switchSubTab('display-media-tab-container', 'tab-slideshow')">
-                            🖼️ <span data-lang-key="tab_slideshow">Slideshow</span>
+                        <button class="tab-btn android-tab-btn" onclick="switchSubTab('display-media-tab-container', 'tab-slideshow')">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle; margin-right:4px;">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <span data-lang-key="tab_slideshow">Slide Show</span>
                         </button>
                     </div>
 
                     <!-- tab-pane: dashboard -->
                     <div id="tab-dashboard" class="tab-pane active">
-                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                            <!-- Card 1: Dashboard Settings -->
-                            <div class="card">
-                                <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-                                    ⚙️ <span data-lang-key="title_dashboard_settings">Pengaturan Slide Dashboard</span>
-                                </h3>
-                                <div class="form-grid">
-                                    <div class="form-group full-width" style="display:flex; flex-direction:row; justify-content:space-between; align-items:center; background-color: rgba(255,255,255,0.02); padding:1rem 1.25rem; border:1px solid var(--border-color); border-radius:12px;">
-                                        <div>
-                                            <div style="font-weight:700;" data-lang-key="label_dashboard_randomize">Acak Urutan Background</div>
-                                            <div style="font-size:0.825rem; color:var(--text-secondary); margin-top:0.25rem;" data-lang-key="desc_dashboard_randomize">Putar latar belakang secara acak (randomize).</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="dashboardRandomize" onchange="updateDashboardSettingsFromUI()">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label data-lang-key="label_dashboard_transition">Animasi Transisi Dashboard</label>
-                                        <div class="transition-picker">
-                                            <button class="transition-btn" id="db-trans-FADE" onclick="changeDashboardTransition('FADE')">FADE</button>
-                                            <button class="transition-btn" id="db-trans-SLIDE" onclick="changeDashboardTransition('SLIDE')">SLIDE</button>
-                                            <button class="transition-btn" id="db-trans-ZOOM" onclick="changeDashboardTransition('ZOOM')">ZOOM</button>
-                                            <button class="transition-btn" id="db-trans-INSTANT" onclick="changeDashboardTransition('INSTANT')">INSTANT</button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label data-lang-key="label_dashboard_interval">Interval Ganti Background</label>
-                                        <div class="adjustment-controls" style="justify-content: flex-start;">
-                                            <button class="adjust-btn" onclick="adjustDashboardInterval(-5)">-</button>
-                                            <span id="dashboardIntervalSeconds" class="adjust-value" style="width: auto; min-width: 80px;">-- detik</span>
-                                            <button class="adjust-btn" onclick="adjustDashboardInterval(5)">+</button>
-                                        </div>
-                                    </div>
+                        <div class="android-viewpager-card">
+                            <!-- Header Row with Title and Randomize Switch -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 0.75rem;">
+                                <span style="color: rgba(255,255,255,0.6); font-size: 0.8125rem; font-weight: 600;" data-lang-key="label_dashboard_bg_list">Daftar Latar Belakang Dashboard</span>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="color: #fff; font-size: 0.875rem;" data-lang-key="label_dashboard_randomize">Tampilkan random</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="dashboardRandomize" onchange="updateDashboardSettingsFromUI()">
+                                        <span class="slider"></span>
+                                    </label>
                                 </div>
                             </div>
-
-                            <!-- Card 2: Upload Dashboard Backgrounds -->
-                            <div class="card">
-                                <h3 style="font-size:1.15rem; font-weight:700; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;" data-lang-key="label_dashboard_bg_title">
-                                    🌄 Background Dashboard Kustom
-                                </h3>
-                                <p style="font-size:0.875rem; color:var(--text-secondary);" data-lang-key="desc_dashboard_bg">Unggah satu atau beberapa gambar latar belakang untuk dashboard utama. File default memakai main_bg_default.png.</p>
+                            
+                            <!-- Pager Area (16:9) -->
+                            <div style="position:relative; width:100%; max-width:600px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:1rem;">
+                                <div style="position:relative; width:100%; aspect-ratio:16/9; background-color:rgba(255,255,255,0.05); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center;" id="dashboard-bg-viewpager-container">
+                                    <!-- Preview Image -->
+                                    <img id="dashboard-bg-preview-image" style="width:100%; height:100%; object-fit:cover;" src="" alt="bg preview">
+                                    
+                                    <!-- Navigation Arrows overlaying the image -->
+                                    <button id="btn-nav-prev-dashboard-bg" onclick="navigateDashboardBg(-1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:40px; height:40px; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.5rem; transition: background 0.3s; z-index: 10;">&#10094;</button>
+                                    <button id="btn-nav-next-dashboard-bg" onclick="navigateDashboardBg(1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:40px; height:40px; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.5rem; transition: background 0.3s; z-index: 10;">&#10095;</button>
+                                    
+                                    <!-- Edit and Delete Overlays (top right) -->
+                                    <div id="dashboard-bg-actions" style="position:absolute; top:12px; right:12px; display:flex; gap:8px; z-index:10;">
+                                        <!-- Edit file trigger -->
+                                        <input type="file" id="edit-dashboard-bg-input" style="display:none;" accept="image/*" onchange="handleDashboardBgEdit(this)">
+                                        <button onclick="triggerDashboardBgEdit()" style="background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff;" title="Ubah Gambar">
+                                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                            </svg>
+                                        </button>
+                                        <button id="btn-delete-current-dashboard-bg" onclick="deleteCurrentDashboardBg()" style="background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--danger);" title="Hapus">
+                                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Dot indicators overlay at the bottom -->
+                                    <div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:10;" id="dashboard-bg-dots">
+                                        <!-- Dot indicators rendered dynamically -->
+                                    </div>
+                                </div>
                                 
+                                <!-- Use / Gunakan Checkbox below the pager -->
+                                <div style="display:flex; align-items:center; gap:0.5rem; justify-content:center; width:100%; margin-top:0.25rem;" id="dashboard-bg-use-container">
+                                    <label style="display:flex; align-items:center; gap:0.5rem; text-transform:none; font-size:0.95rem; font-weight:700; cursor:pointer; color:#fff;">
+                                        <input type="checkbox" id="use-current-dashboard-bg" onchange="toggleCurrentDashboardBgUsed(this.checked)" style="accent-color: var(--accent); width:18px; height:18px; cursor:pointer;">
+                                        <span data-lang-key="label_use_dashboard_bg">Gunakan</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Add Background Button (Filled style yellow button) -->
+                            <div style="width:100%;">
                                 <input type="file" id="dashboard-bg-upload-input" style="display:none;" accept="image/*" multiple onchange="handleDashboardBgUpload(this)">
-                                
-                                <div class="upload-zone" onclick="document.getElementById('dashboard-bg-upload-input').click()">
-                                    <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                                    </svg>
-                                    <span class="upload-text" data-lang-key="btn_upload_dashboard_bg">Klik untuk pilih gambar latar belakang</span>
-                                    <span class="upload-hint" data-lang-key="hint_upload_dashboard_bg">Dapat memilih lebih dari satu file gambar (JPG/PNG)</span>
-                                </div>
-                                <div id="offline-dashboard-bg-warning" style="display:none; color:var(--warning); font-size:0.85rem; font-weight:700; text-align:center; margin-top:0.75rem;" data-lang-key="offline_media_warning">File media baru akan diunggah setelah tersambung kembali ke TV.</div>
+                                <button class="btn btn-primary" onclick="document.getElementById('dashboard-bg-upload-input').click()" style="width:100%; height:48px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.5rem; background-color:var(--accent); color:var(--accent-contrast); border:none; border-radius:8px;">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="stroke-width:2.5;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                    <span data-lang-key="btn_add_dashboard_bg">Tambah Latar Belakang Dashboard</span>
+                                </button>
+                                <div id="offline-dashboard-bg-warning" style="display:none; color:var(--warning); font-size:0.85rem; font-weight:700; text-align:center; margin-top:0.5rem;" data-lang-key="offline_media_warning">File media baru akan diunggah setelah tersambung kembali to TV.</div>
                             </div>
-
-                            <!-- Card 3: Dashboard Backgrounds Playlist -->
-                            <div class="card">
-                                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1.5rem;">
-                                    <h3 style="font-size:1.15rem; font-weight:700; margin:0;" data-lang-key="label_active_dashboard_playlist">Daftar Background Dashboard</h3>
-                                    <span style="background:var(--accent); color:var(--accent-contrast); font-weight:800; font-size:0.8rem; padding:3px 10px; border-radius:12px;" id="dashboard-bg-count">0</span>
+                            
+                            <!-- Transition Selector Row -->
+                            <div class="android-row-card transition-row">
+                                <span class="android-row-title" data-lang-key="label_dashboard_transition">Animasi Transisi</span>
+                                <div class="transition-picker">
+                                    <button class="transition-btn" id="db-trans-FADE" onclick="changeDashboardTransition('FADE')">FADE</button>
+                                    <button class="transition-btn" id="db-trans-SLIDE" onclick="changeDashboardTransition('SLIDE')">SLIDE</button>
+                                    <button class="transition-btn" id="db-trans-ZOOM" onclick="changeDashboardTransition('ZOOM')">ZOOM</button>
+                                    <button class="transition-btn" id="db-trans-INSTANT" onclick="changeDashboardTransition('INSTANT')">INSTANT</button>
                                 </div>
-                                
-                                <div class="media-grid" id="dashboard-bg-container">
-                                    <!-- Dashboard background cards rendered dynamically -->
+                            </div>
+                            
+                            <!-- Transition Interval Row -->
+                            <div class="android-row-card">
+                                <span class="android-row-title" data-lang-key="label_dashboard_interval">Interval transisi</span>
+                                <div class="android-adjustment-controls" style="display:flex; align-items:center;">
+                                    <button class="android-adjust-btn" onclick="adjustDashboardInterval(-1)">-</button>
+                                    <span id="dashboardIntervalSeconds" class="android-adjust-value">--</span>
+                                    <button class="android-adjust-btn" onclick="adjustDashboardInterval(1)">+</button>
+                                    
+                                    <!-- Dropdown Unit Selector -->
+                                    <div class="dropdown-unit-container">
+                                        <button class="dropdown-unit-btn" onclick="toggleIntervalUnitDropdown(event)">
+                                            <span id="dashboardIntervalUnit" data-lang-key="minutes">menit</span>
+                                            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M7 10l5 5 5-5z"/>
+                                            </svg>
+                                        </button>
+                                        <div class="dropdown-unit-menu" id="db-interval-unit-dropdown">
+                                            <button onclick="selectIntervalUnit(0)" class="dropdown-item" data-lang-key="seconds">detik</button>
+                                            <button onclick="selectIntervalUnit(1)" class="dropdown-item" data-lang-key="minutes">menit</button>
+                                            <button onclick="selectIntervalUnit(2)" class="dropdown-item" data-lang-key="hours">jam</button>
+                                            <button onclick="selectIntervalUnit(3)" class="dropdown-item" data-lang-key="days">hari</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -97,229 +134,129 @@ object DisplayMediaWebSegment {
 
                     <!-- tab-pane: slideshow -->
                     <div id="tab-slideshow" class="tab-pane">
-                        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-                            <!-- Card 1: Slideshow Settings -->
-                            <div class="card">
-                                <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
-                                    <span data-lang-key="title_theme">Latar Belakang & Slideshow</span>
-                                </h3>
-                                <div class="theme-section">
-                                    <!-- Switch for include default image -->
-                                    <div class="form-group" style="display:flex; flex-direction:row; justify-content:space-between; align-items:center; background-color: rgba(255,255,255,0.02); padding:1rem 1.25rem; border:1px solid var(--border-color); border-radius:12px; margin-bottom: 1.25rem;">
-                                        <div>
-                                            <div style="font-weight:700;" data-lang-key="label_include_default">Sertakan Gambar Default (Masjidil Haram)</div>
-                                            <div style="font-size:0.825rem; color:var(--text-secondary); margin-top:0.25rem;" data-lang-key="desc_include_default">Sertakan atau kecualikan gambar default dalam rotasi slideshow.</div>
-                                        </div>
-                                        <label class="switch">
-                                            <input type="checkbox" id="includeDefaultImage" onchange="toggleIncludeDefaultImage(this.checked)">
-                                            <span class="slider"></span>
-                                        </label>
+                        <div class="android-viewpager-card">
+                            <!-- Header Title -->
+                            <div style="width: 100%;">
+                                <span style="color: rgba(255,255,255,0.6); font-size: 0.8125rem; font-weight: 600;" data-lang-key="label_slideshow_media_list">Daftar Media Slideshow</span>
+                            </div>
+                            
+                            <!-- Pager Area (16:9) -->
+                            <div style="position:relative; width:100%; max-width:600px; margin:0 auto; display:flex; flex-direction:column; align-items:center; gap:1rem;">
+                                <div style="position:relative; width:100%; aspect-ratio:16/9; background-color:rgba(255,255,255,0.05); border:1px solid var(--border-color); border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center;" id="slideshow-media-viewpager-container">
+                                    <!-- Preview Content Wrapper (for Image or Video) -->
+                                    <div id="slideshow-media-preview-content" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                                        <!-- Dynamically populated image or video tag -->
                                     </div>
                                     
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label data-lang-key="label_transition">Animasi Transisi</label>
-                                            <div class="transition-picker">
-                                                <button class="transition-btn" id="trans-FADE" onclick="changeThemeConfig('FADE')">FADE</button>
-                                                <button class="transition-btn" id="trans-SLIDE" onclick="changeThemeConfig('SLIDE')">SLIDE</button>
-                                                <button class="transition-btn" id="trans-ZOOM" onclick="changeThemeConfig('ZOOM')">ZOOM</button>
-                                                <button class="transition-btn" id="trans-INSTANT" onclick="changeThemeConfig('INSTANT')">INSTANT</button>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label data-lang-key="label_interval">Interval Slideshow</label>
-                                            <div class="adjustment-controls" style="justify-content: flex-start;">
-                                                <button class="adjust-btn" onclick="adjustSlideInterval(-5)">-</button>
-                                                <span id="slideIntervalSeconds" class="adjust-value" style="width: auto; min-width: 80px;">-- detik</span>
-                                                <button class="adjust-btn" onclick="adjustSlideInterval(5)">+</button>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group full-width" style="display:flex; flex-direction:row; justify-content:space-between; align-items:center; background-color: rgba(255,255,255,0.02); padding:1rem 1.25rem; border:1px solid var(--border-color); border-radius:12px;">
-                                            <div>
-                                                <div style="font-weight:700;" data-lang-key="label_video_duration">Durasi Putar Video Penuh</div>
-                                                <div style="font-size:0.825rem; color:var(--text-secondary); margin-top:0.25rem;" data-lang-key="label_video_wait">Tunggu video slideshow selesai diputar (abaikan interval waktu di atas).</div>
-                                            </div>
-                                            <label class="switch">
-                                                <input type="checkbox" id="videoWaitUntilEnd" onchange="toggleVideoWait(this.checked)">
-                                                <span class="slider"></span>
-                                            </label>
-                                        </div>
+                                    <!-- Navigation Arrows overlaying the media -->
+                                    <button id="btn-nav-prev-slideshow-media" onclick="navigateSlideshowMedia(-1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:40px; height:40px; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.5rem; transition: background 0.3s; z-index: 10;">&#10094;</button>
+                                    <button id="btn-nav-next-slideshow-media" onclick="navigateSlideshowMedia(1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:40px; height:40px; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.5rem; transition: background 0.3s; z-index: 10;">&#10095;</button>
+                                    
+                                    <!-- Edit and Delete Overlays (top right) -->
+                                    <div id="slideshow-media-actions" style="position:absolute; top:12px; right:12px; display:flex; gap:8px; z-index:10;">
+                                        <!-- Edit file trigger -->
+                                        <input type="file" id="edit-slideshow-media-input" style="display:none;" accept="image/*,video/mp4" onchange="handleSlideshowMediaEdit(this)">
+                                        <button onclick="triggerSlideshowMediaEdit()" style="background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff;" title="Ubah File">
+                                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                            </svg>
+                                        </button>
+                                        <button id="btn-delete-current-slideshow-media" onclick="deleteCurrentSlideshowMedia()" style="background:rgba(0,0,0,0.6); border:none; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--danger);" title="Hapus Slide">
+                                            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Dot indicators overlay at the bottom -->
+                                    <div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:10;" id="slideshow-media-dots">
+                                        <!-- Dot indicators rendered dynamically -->
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Card 2: Slideshow Scheduler -->
-                            <div class="card">
-                                <h3 style="font-size:1.15rem; font-weight:700; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;" data-lang-key="label_slideshow_sched_title">
-                                    🕒 Jadwal Sesi Slideshow
-                                </h3>
-                                <p style="font-size:0.875rem; color:var(--text-secondary);" data-lang-key="desc_slideshow_sched">Tentukan kapan mode slideshow ini berjalan. Selama masa aktif slideshow, ClockSection dan overlay hitam di-hide. Waktu di-set tidak boleh menabrak sesi menjelang adzan hingga iqomah selesai sholat.</p>
-                                
-                                <div class="form-group" style="display:flex; flex-direction:row; align-items:center; gap:0.5rem; margin-bottom: 1rem;">
-                                    <input type="checkbox" id="slideshowSpecificDate" onchange="toggleSlideshowDateInput(this.checked)" style="width: auto;">
-                                    <label for="slideshowSpecificDate" style="text-transform: none; margin: 0; font-size: 0.9rem;">Tanggal Spesifik</label>
+                            
+                            <!-- Add Media Button (Filled Style yellow button) -->
+                            <div style="width:100%;">
+                                <input type="file" id="media-upload-input" style="display:none;" accept="image/*,video/mp4" multiple onchange="handleSlideshowMediaUpload(this)">
+                                <button class="btn btn-primary" onclick="document.getElementById('media-upload-input').click()" style="width:100%; height:48px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.5rem; background-color:var(--accent); color:var(--accent-contrast); border:none; border-radius:8px;">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="stroke-width:2.5;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                                    <span data-lang-key="btn_add_slideshow_media">Tambah Gambar / Video ke Slideshow</span>
+                                </button>
+                                <div id="offline-media-warning" style="display:none; color:var(--warning); font-size:0.85rem; font-weight:700; text-align:center; margin-top:0.5rem;" data-lang-key="offline_media_warning">File media baru akan diunggah setelah tersambung kembali ke TV.</div>
+                            </div>
+                            
+                            <!-- Transition Selector Row -->
+                            <div class="android-row-card transition-row">
+                                <span class="android-row-title" data-lang-key="label_slideshow_transition">Animasi Transisi</span>
+                                <div class="transition-picker">
+                                    <button class="transition-btn" id="trans-FADE" onclick="changeThemeConfig('FADE')">FADE</button>
+                                    <button class="transition-btn" id="trans-SLIDE" onclick="changeThemeConfig('SLIDE')">SLIDE</button>
+                                    <button class="transition-btn" id="trans-ZOOM" onclick="changeThemeConfig('ZOOM')">ZOOM</button>
+                                    <button class="transition-btn" id="trans-INSTANT" onclick="changeThemeConfig('INSTANT')">INSTANT</button>
                                 </div>
-
-                                <div class="form-grid" style="max-width: 500px; margin-bottom: 1rem;">
-                                    <div id="slideshow-day-select-group" class="form-group">
-                                        <label>Hari</label>
-                                        <select id="slideshowDay">
-                                            <option value="Monday">Senin</option>
-                                            <option value="Tuesday">Selasa</option>
-                                            <option value="Wednesday">Rabu</option>
-                                            <option value="Thursday">Kamis</option>
-                                            <option value="Friday">Jumat</option>
-                                            <option value="Saturday">Sabtu</option>
-                                            <option value="Sunday">Minggu</option>
-                                        </select>
-                                    </div>
-                                    <div id="slideshow-date-input-group" class="form-group" style="display:none;">
-                                        <label>Tanggal</label>
-                                        <div class="flatpickr-wrapper" id="slideshow-date-wrapper">
-                                            <input type="text" id="slideshowDate" data-input placeholder="YYYY-MM-DD">
-                                            <button type="button" class="picker-btn" data-toggle title="Pilih Tanggal">
-                                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Mulai (HH:MM)</label>
-                                        <div class="flatpickr-wrapper" id="sched-start-time-wrapper">
-                                            <input type="text" id="sched-start-time" data-input placeholder="00:00">
-                                            <button type="button" class="picker-btn" data-toggle title="Pilih Jam">
-                                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Selesai (HH:MM)</label>
-                                        <div class="flatpickr-wrapper" id="sched-end-time-wrapper">
-                                            <input type="text" id="sched-end-time" data-input placeholder="00:00">
-                                            <button type="button" class="picker-btn" data-toggle title="Pilih Jam">
-                                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
+                            </div>
+                            
+                            <!-- Transition Interval Row -->
+                            <div class="android-row-card">
+                                <span class="android-row-title" data-lang-key="label_slideshow_interval">Interval transisi</span>
+                                <div class="android-adjustment-controls">
+                                    <button class="android-adjust-btn" onclick="adjustSlideInterval(-5)">-</button>
+                                    <span id="slideIntervalSeconds" class="android-adjust-value">--</span>
+                                    <button class="android-adjust-btn" onclick="adjustSlideInterval(5)">+</button>
+                                    <span class="android-adjust-unit" id="slideIntervalUnit" data-lang-key="seconds">detik</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Video Playback Duration Selection (Compose button group style) -->
+                            <div class="android-row-card">
+                                <div style="flex:1; min-width:200px; display:flex; flex-direction:column; gap:0.25rem;">
+                                    <span class="android-row-title" data-lang-key="label_video_playback_duration">Durasi Putar Video</span>
+                                    <span style="font-size:0.75rem; color:rgba(255,255,255,0.6);" data-lang-key="label_video_playback_desc">Tunggu video selesai diputar atau ikuti interval slide biasa</span>
+                                </div>
+                                <div class="transition-picker">
+                                    <button id="video-wait-false" onclick="toggleVideoWait(false)" class="transition-btn" data-lang-key="btn_video_follow">Ikuti Interval</button>
+                                    <button id="video-wait-true" onclick="toggleVideoWait(true)" class="transition-btn" data-lang-key="btn_video_wait">Selesai Video</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Slideshow Enable Switch and Scheduler -->
+                            <div style="width:100%; display:flex; flex-direction:column; gap:1rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-weight:600; font-size:1.0625rem; color:#fff;" data-lang-key="label_slideshow_schedule">Jadwal Slide Show</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="slideshowEnabled" onchange="toggleSlideshowEnabled(this.checked)">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                
+                                <p style="font-size:0.75rem; color:rgba(255,255,255,0.6); margin:0;" data-lang-key="desc_slideshow_sched">Tentukan kapan mode slideshow ini berjalan. Selama masa aktif slideshow, ClockSection and overlay hitam di-hide. Waktu di-set tidak boleh menabrak sesi menjelang adzan hingga iqomah selesai sholat.</p>
+                                
+                                <!-- Inline Schedules Container -->
+                                <div id="slideshow-schedules-inline-container" style="display: flex; flex-direction: column; gap: 1rem; width: 100%; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+                                    <!-- Dynamic items will load here -->
                                 </div>
                                 
                                 <div style="display:flex; gap:1rem; max-width:500px;">
-                                    <button class="btn btn-primary" onclick="addSlideshowSchedule()" style="flex:1;">Tambah</button>
-                                    <button class="btn btn-secondary" onclick="openSlideshowListDialog()" style="flex:1;">Jadwal Slideshow</button>
+                                    <button class="btn btn-primary" onclick="addNewSlideshowSchedule()" style="flex:1; background-color: var(--accent); color: var(--accent-contrast); border: none; border-radius: 8px; font-weight: bold; height: 40px;"><span data-lang-key="btn_add_schedule">Tambah Jadwal</span></button>
+                                    <button class="btn btn-secondary" onclick="openSlideshowListDialog()" style="flex:1; background-color: rgba(255,255,255,0.08); color: #fff; border: none; border-radius: 8px; font-weight: bold; height: 40px;"><span data-lang-key="btn_slideshow_schedules">Jadwal Slideshow</span></button>
                                 </div>
                             </div>
-
-                            <!-- Card 3: Upload Slideshow Media -->
-                            <div class="card">
-                                <h3 style="font-size:1.15rem; font-weight:700; color: var(--accent); display: flex; align-items: center; gap: 0.5rem;" data-lang-key="label_slideshow_media_title">
-                                    🎞️ Media Rotasi Slideshow
-                                </h3>
-                                <p style="font-size:0.875rem; color:var(--text-secondary);" data-lang-key="desc_slideshow_media">Unggah gambar (JPG/PNG) or video (MP4) untuk diputar sebagai slideshow.</p>
-                                
-                                <input type="file" id="media-upload-input" style="display:none;" accept="image/*,video/mp4" multiple onchange="handleSlideshowMediaUpload(this)">
-                                
-                                <div class="upload-zone" onclick="document.getElementById('media-upload-input').click()">
-                                    <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                                    </svg>
-                                    <span class="upload-text" data-lang-key="btn_upload_slide">Klik untuk pilih gambar atau video (MP4)</span>
-                                    <span class="upload-hint" data-lang-key="hint_upload_slide">File media akan disalin ke media display dan diputar bergantian</span>
-                                </div>
-                                <div id="offline-media-warning" style="display:none; color:var(--warning); font-size:0.85rem; font-weight:700; text-align:center; margin-top:0.75rem;" data-lang-key="offline_media_warning">File media baru akan diunggah setelah tersambung kembali ke TV.</div>
+                            
+                            <!-- Preview Slideshow Button -->
+                            <div style="width:100%;">
+                                <button class="btn btn-secondary" onclick="previewSlideshow()" style="width:100%; height:48px; font-weight:700; display:flex; align-items:center; justify-content:center; background-color: rgba(255,255,255,0.08); color: #fff; border: none; border-radius: 8px;" data-lang-key="btn_preview_slideshow">Preview Slideshow</button>
                             </div>
-
-                            <!-- Card 4: Slideshow Active Playlist -->
-                            <div class="card">
-                                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:1rem; margin-bottom:1.5rem;">
-                                    <h3 style="font-size:1.15rem; font-weight:700; margin:0;" data-lang-key="label_active_playlist">Playlist Slide Aktif</h3>
-                                    <span style="background:var(--accent); color:var(--accent-contrast); font-weight:800; font-size:0.8rem; padding:3px 10px; border-radius:12px;" id="playlist-count">0</span>
+                            
+                            <!-- Include Default Image Switch (at the very bottom) -->
+                            <div class="android-row-card">
+                                <div style="flex:1; min-width:200px; display:flex; flex-direction:column; gap:0.25rem;">
+                                    <span class="android-row-title" data-lang-key="label_include_default_title">Sertakan Gambar Default (Masjidil Haram)</span>
+                                    <span style="font-size:0.75rem; color:rgba(255,255,255,0.6);" data-lang-key="label_include_default_desc">Sertakan atau kecualikan gambar default dalam rotasi slideshow</span>
                                 </div>
-                                
-                                <div class="media-grid" id="media-container">
-                                    <!-- Slideshow media cards rendered dynamically -->
-                                </div>
-                            </div>
-
-                            <!-- Card 5: Running Text Announcements -->
-                            <div class="card">
-                                <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--accent); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
-                                        </svg>
-                                        <span data-lang-key="title_announcements">Kelola Running Text</span>
-                                    </div>
-                                    <button id="btn-toggle-reorder" class="btn btn-secondary phone-only-btn" onclick="toggleAnnouncementReorder()" style="height: 32px; padding: 0 10px; font-size: 0.85rem; font-weight: bold; border-color: var(--accent); color: var(--accent);">
-                                        Urutkan
-                                    </button>
-                                </h3>
-                                <div class="announcement-input-group">
-                                    <input type="text" id="announcement-input" data-lang-key="placeholder_announcement" placeholder="Masukkan teks Running Text baru..." onkeydown="if(event.key === 'Enter') addAnnouncement()">
-                                    <button class="btn btn-primary" onclick="addAnnouncement()">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                                        <span data-lang-key="btn_add">Tambah</span>
-                                    </button>
-                                </div>
-                                
-                                <div class="announcements-list" id="announcements-container">
-                                    <!-- Items rendered dynamically -->
-                                </div>
-                            </div>
-
-                            <!-- Card 6: Footer Texts (Adzan & Iqomah) -->
-                            <div class="card">
-                                <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
-                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                    <span data-lang-key="title_adzan_iqomah_footers">Teks Footer Adzan & Iqomah (Teks Berjalan)</span>
-                                </h3>
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label for="adzan-footer-input" data-lang-key="label_adzan_footer">Footer Layar Adzan</label>
-                                        <div class="announcement-input-group" style="margin-bottom: 0.75rem;">
-                                            <input type="text" id="adzan-footer-input" placeholder="Masukkan teks footer adzan baru..." onkeydown="if(event.key === 'Enter') addFooterText('adzan')">
-                                            <button class="btn btn-primary" onclick="addFooterText('adzan')" style="padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; height: 44px; border-radius: 8px;">
-                                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                                            </button>
-                                        </div>
-                                        <div class="announcements-list" id="adzan-footers-container" style="max-height: 250px; overflow-y: auto;">
-                                            <!-- Rendered dynamically -->
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="iqomah-footer-input" data-lang-key="label_iqomah_footer">Footer Layar Iqomah</label>
-                                        <div class="announcement-input-group" style="margin-bottom: 0.75rem;">
-                                            <input type="text" id="iqomah-footer-input" placeholder="Masukkan teks footer iqomah baru..." onkeydown="if(event.key === 'Enter') addFooterText('iqomah')">
-                                            <button class="btn btn-primary" onclick="addFooterText('iqomah')" style="padding: 0 0.75rem; display: flex; align-items: center; justify-content: center; height: 44px; border-radius: 8px;">
-                                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-                                            </button>
-                                        </div>
-                                        <div class="announcements-list" id="iqomah-footers-container" style="max-height: 250px; overflow-y: auto;">
-                                            <!-- Rendered dynamically -->
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style="display: flex; justify-content: flex-start; align-items: center; margin-top: 1rem; width: 100%; gap: 1rem; flex-wrap: wrap;">
-                                    <button class="btn btn-secondary" onclick="previewAdzan()" style="height: 40px; padding: 0 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                        <span data-lang-key="btn_preview_adzan">Preview Adzan</span>
-                                    </button>
-                                    <button class="btn btn-secondary" onclick="previewIqomah()" style="height: 40px; padding: 0 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
-                                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                        <span data-lang-key="btn_preview_iqomah">Preview Iqomah</span>
-                                    </button>
-                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="includeDefaultImage" onchange="toggleIncludeDefaultImage(this.checked)">
+                                    <span class="slider"></span>
+                                </label>
                             </div>
                         </div>
                     </div>

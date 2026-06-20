@@ -112,7 +112,7 @@ fun DevicesSettingsSegment(
         )
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Daftar Perangkat terdaftar / terhubung",
             color = Color(0xFFFFD54F),
@@ -123,7 +123,7 @@ fun DevicesSettingsSegment(
 
         if (devices.isEmpty()) {
             Box(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -138,11 +138,11 @@ fun DevicesSettingsSegment(
                         .thenByDescending { it.lastSeen }
                 )
             }
-            LazyColumn(
+            Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                items(sortedDevices) { device ->
+                sortedDevices.forEach { device ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

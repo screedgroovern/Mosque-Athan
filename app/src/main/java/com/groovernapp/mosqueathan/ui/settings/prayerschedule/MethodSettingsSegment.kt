@@ -40,7 +40,8 @@ fun MethodSettingsSegment(
     onKemenagDurationChange: (String) -> Unit,
     onKemenagTargetDateChange: (String) -> Unit,
     onSearchKemenagCities: (String) -> Unit,
-    onDownloadKemenagSchedules: () -> Unit = {}
+    onDownloadKemenagSchedules: () -> Unit = {},
+    isCompact: Boolean = false
 ) {
     val calculationMethods = listOf(
         "SINGAPORE", "UMM_AL_QURA", "MUSLIM_WORLD_LEAGUE", "EGYPTIAN",
@@ -55,34 +56,38 @@ fun MethodSettingsSegment(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        calculationMethods.forEach { method ->
-            val isSelected = calculationMethodName == method
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (isSelected) Color(0xFFFFD54F).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f))
-                    .border(
-                        width = 1.dp,
-                        color = if (isSelected) Color(0xFFFFD54F) else Color.Transparent,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .clickable { onMethodChange(method) }
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val columns = if (isCompact) {
+                1
+            } else {
+                val width = maxWidth
+                if (width >= 750.dp) 3 else if (width >= 450.dp) 2 else 1
+            }
+
+            val rows = calculationMethods.chunked(columns)
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                RadioButton(
-                    selected = isSelected,
-                    onClick = { onMethodChange(method) },
-                    colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFFD54F))
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = method,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                )
+                rows.forEach { rowItems ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        rowItems.forEach { method ->
+                            CalculationMethodItem(
+                                method = method,
+                                isSelected = calculationMethodName == method,
+                                onMethodChange = onMethodChange,
+                                isCompact = isCompact,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        if (rowItems.size < columns) {
+                            Spacer(modifier = Modifier.weight((columns - rowItems.size).toFloat()))
+                        }
+                    }
+                }
             }
         }
 
@@ -387,7 +392,7 @@ fun MethodSettingsSegment(
                                             fontSize = 12.sp
                                         )
                                         Text(
-                                            text = "Dzuhur: ${sch.dzuhur} | Ashar: ${sch.ashar} | Maghrib: ${sch.maghrib} | Isya: ${sch.isya}",
+                                            text = "Dzuhur: ${sch.dzuhur} | Ashar: ${sch.ashar} | Maghrib: ${sch.maghrib} | Isya': ${sch.isya}",
                                             color = Color.White.copy(alpha = 0.7f),
                                             fontSize = 12.sp
                                         )
@@ -511,5 +516,57 @@ fun DatePickerField(
                 )
             )
         }
+    }
+}
+
+@Composable
+private fun CalculationMethodItem(
+    method: String,
+    isSelected: Boolean,
+    onMethodChange: (String) -> Unit,
+    isCompact: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val horizontalPadding = if (isCompact) 10.dp else 12.dp
+    val verticalPadding = if (isCompact) 6.dp else 8.dp
+    val radioSize = if (isCompact) 18.dp else 20.dp
+    val radioInnerPadding = if (isCompact) 3.dp else 4.dp
+    val spacerWidth = if (isCompact) 8.dp else 10.dp
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (isSelected) Color(0xFFFFD54F).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f))
+            .border(
+                width = 1.dp,
+                color = if (isSelected) Color(0xFFFFD54F) else Color.Transparent,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .clickable { onMethodChange(method) }
+            .padding(horizontal = horizontalPadding, vertical = verticalPadding),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(radioSize)
+                .border(
+                    width = 2.dp,
+                    color = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.4f),
+                    shape = androidx.compose.foundation.shape.CircleShape
+                )
+                .padding(radioInnerPadding)
+                .background(
+                    color = if (isSelected) Color(0xFFFFD54F) else Color.Transparent,
+                    shape = androidx.compose.foundation.shape.CircleShape
+                )
+        )
+        Spacer(modifier = Modifier.width(spacerWidth))
+        Text(
+            text = method,
+            color = Color.White,
+            fontSize = if (isCompact) 13.sp else 14.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+        )
     }
 }

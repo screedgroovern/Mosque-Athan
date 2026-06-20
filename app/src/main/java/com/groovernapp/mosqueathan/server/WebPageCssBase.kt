@@ -81,6 +81,7 @@ object WebPageCssBase {
             flex-direction: column;
             gap: 2rem;
             animation: fadeIn 0.3s ease;
+            padding-bottom: 6rem;
         }
 
         .content-section.active {

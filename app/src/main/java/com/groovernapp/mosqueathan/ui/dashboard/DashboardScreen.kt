@@ -70,7 +70,8 @@ fun DashboardScreen(
 
     if (activeDashboardBgs.size > 1) {
         LaunchedEffect(currentDashboardBgIndex, activeDashboardBgs, dashboardTransitionInterval) {
-            delay(dashboardTransitionInterval * 1000L)
+            val delayMs = dashboardTransitionInterval.coerceAtLeast(1).toLong() * 1000L
+            delay(delayMs)
             currentDashboardBgIndex = (currentDashboardBgIndex + 1) % activeDashboardBgs.size
         }
     }

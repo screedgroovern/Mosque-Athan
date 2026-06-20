@@ -67,7 +67,7 @@ fun PrayerTimesPanel(
         )
 
         PrayerItem(
-            "ISYA",
+            "ISYA'",
             prayerTimes.isya,
             prayerTimes.highlightedPrayer == PrayerType.ISYA,
             isSlideshowActive

@@ -43,7 +43,7 @@ class MosqueConfigEntity : RealmObject {
     // Dashboard slideshow properties
     var dashboardRandomize: Boolean = false
     var dashboardTransitionType: String = "FADE"
-    var dashboardTransitionInterval: Int = 1440
+    var dashboardTransitionInterval: Int = 86400
 
     // Slideshow schedule toggle
     var slideshowEnabled: Boolean = false
