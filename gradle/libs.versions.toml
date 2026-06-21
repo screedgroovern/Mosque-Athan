@@ -20,6 +20,7 @@ realm = "3.2.9"
 adhan = "0.0.6"
 ummalqura = "2.0.2"
 zxing = "3.5.3"
+zxing-embedded = "4.3.0"
 uiToolingPreview = "1.11.2"
 uiTooling = "1.11.2"
 splashscreen = "1.0.1"
@@ -39,6 +40,7 @@ androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "j
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 ummalqura-calendar = { module = "com.github.msarhan:ummalqura-calendar", version.ref = "ummalqura" }
 zxing = { module = "com.google.zxing:core", version.ref = "zxing" }
+zxing-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxing-embedded" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "uiToolingPreview" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "uiTooling" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }

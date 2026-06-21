@@ -342,6 +342,81 @@ class SettingsServer(private val context: Context) {
                     return
                 }
 
+                if (path == "/api/get_config") {
+                    val state = getCurrentStateJson()
+                    val respBytes = state.toByteArray(Charsets.UTF_8)
+                    val response = "HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: application/json; charset=UTF-8\r\n" +
+                            "Access-Control-Allow-Origin: *\r\n" +
+                            "Content-Length: ${respBytes.size}\r\n" +
+                            "Connection: close\r\n\r\n"
+                    outputStream.write(response.toByteArray(Charsets.UTF_8))
+                    outputStream.write(respBytes)
+                    outputStream.flush()
+                    try { socket.close() } catch (_: Exception) {}
+                    return
+                }
+
+                if (method == "POST" && path == "/api/action") {
+                    val contentLength = headers["content-length"]?.toIntOrNull() ?: 0
+                    val body = if (contentLength > 0) {
+                        val buffer = ByteArray(contentLength)
+                        var read = 0
+                        while (read < contentLength) {
+                            val r = inputStream.read(buffer, read, contentLength - read)
+                            if (r == -1) break
+                            read += r
+                        }
+                        String(buffer, Charsets.UTF_8)
+                    } else {
+                        ""
+                    }
+
+                    logDebug("API action received: $body")
+                    var responseText = "{\"type\":\"success\"}"
+                    try {
+                        val json = JSONObject(body)
+                        val deviceId = json.optString("deviceId").takeIf { it.isNotEmpty() }
+                        val dummyConnection = object : WebSocketConnection(socket, inputStream, outputStream) {
+                            var lastSentMessage: String? = null
+                            override fun send(text: String) {
+                                lastSentMessage = text
+                            }
+                            override fun close() {
+                                // ignore
+                            }
+                        }
+                        if (deviceId != null) {
+                            connectionDeviceMap[dummyConnection] = deviceId
+                        }
+                        handleWebSocketMessage(body, dummyConnection)
+                        if (deviceId != null) {
+                            connectionDeviceMap.remove(dummyConnection)
+                        }
+                        if (dummyConnection.lastSentMessage != null) {
+                            responseText = dummyConnection.lastSentMessage!!
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "API action processing failed", e)
+                        responseText = JSONObject().apply {
+                            put("type", "error")
+                            put("message", e.message)
+                        }.toString()
+                    }
+
+                    val respBytes = responseText.toByteArray(Charsets.UTF_8)
+                    val response = "HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: application/json; charset=UTF-8\r\n" +
+                            "Access-Control-Allow-Origin: *\r\n" +
+                            "Content-Length: ${respBytes.size}\r\n" +
+                            "Connection: close\r\n\r\n"
+                    outputStream.write(response.toByteArray(Charsets.UTF_8))
+                    outputStream.write(respBytes)
+                    outputStream.flush()
+                    try { socket.close() } catch (_: Exception) {}
+                    return
+                }
+
                 if (method == "POST" && path == "/upload") {
                     val isVideo = uri.getQueryParameter("isVideo") == "true"
                     val isBackground = uri.getQueryParameter("isBackground") == "true"
@@ -921,6 +996,11 @@ class SettingsServer(private val context: Context) {
                         (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.previewIqomah()
                     }
                 }
+                "preview_slideshow" -> {
+                    withContext(Dispatchers.Main) {
+                        (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.previewSlideshow()
+                    }
+                }
                 "add_announcement" -> {
                     val content = json.optString("content").takeIf { it.isNotEmpty() } ?: return
                     val customId = json.optString("id", "")
@@ -1498,12 +1578,12 @@ class SettingsServer(private val context: Context) {
         }
     }
 
-    class WebSocketConnection(
+    open class WebSocketConnection(
         private val socket: Socket,
         private val inputStream: InputStream,
         private val outputStream: OutputStream
     ) {
-        fun send(text: String) {
+        open fun send(text: String) {
             synchronized(outputStream) {
                 try {
                     val bytes = text.toByteArray(Charsets.UTF_8)
@@ -1616,7 +1696,7 @@ class SettingsServer(private val context: Context) {
             }
         }
 
-        fun close() {
+        open fun close() {
             try { socket.close() } catch (_: Exception) {}
         }
     }

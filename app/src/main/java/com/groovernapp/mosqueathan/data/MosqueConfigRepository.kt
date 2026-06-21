@@ -21,7 +21,7 @@ import kotlin.time.Clock
 class MosqueConfigRepository private constructor() {
     private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class, DashboardBackgroundEntity::class))
         .name("mosque_athan.realm")
-        .schemaVersion(14)
+        .schemaVersion(15)
         .deleteRealmIfMigrationNeeded()
         .build()
 
@@ -403,6 +403,24 @@ class MosqueConfigRepository private constructor() {
         }
     }
 
+    suspend fun updateConnectivityMode(mode: String) {
+        realm.write {
+            val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
+            if (entity != null) {
+                entity.connectivityMode = mode
+            }
+        }
+    }
+
+    suspend fun updateRemoteTvIp(ip: String) {
+        realm.write {
+            val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
+            if (entity != null) {
+                entity.remoteTvIp = ip
+            }
+        }
+    }
+
 
     fun getSlideshowSchedulesFlow(): Flow<List<SlideshowScheduleEntity>> {
         return realm.query<SlideshowScheduleEntity>()
@@ -615,6 +633,13 @@ class MosqueConfigRepository private constructor() {
             if (announcement != null) {
                 delete(announcement)
             }
+        }
+    }
+
+    suspend fun clearAnnouncements() {
+        realm.write {
+            val list = query<AnnouncementEntity>().find()
+            delete(list)
         }
     }
 

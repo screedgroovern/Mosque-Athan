@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.adhan)
     implementation(libs.ummalqura.calendar)
     implementation(libs.zxing)
+    implementation(libs.zxing.embedded)
     implementation(libs.androidx.core.splashscreen)
     debugImplementation(libs.androidx.ui.tooling)
 }

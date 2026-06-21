@@ -10,6 +10,7 @@ import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import com.groovernapp.mosqueathan.util.ImageUtils
 
@@ -136,6 +137,30 @@ class SettingsViewModel : ViewModel() {
                 iqomahFooterText = config.iqomahFooterText
             )
         }
+        sendRemoteAction("update_config") {
+            put("latitude", config.latitude)
+            put("longitude", config.longitude)
+            put("iqomahSubuh", config.iqomahSubuh)
+            put("iqomahDzuhur", config.iqomahDzuhur)
+            put("iqomahAshar", config.iqomahAshar)
+            put("iqomahMaghrib", config.iqomahMaghrib)
+            put("iqomahIsya", config.iqomahIsya)
+            put("calculationMethodName", config.calculationMethodName)
+            put("adzanLeadMinutes", config.adzanLeadMinutes)
+            put("offsetImsak", config.offsetImsak)
+            put("offsetSubuh", config.offsetSubuh)
+            put("offsetSyuruq", config.offsetSyuruq)
+            put("offsetDzuhur", config.offsetDzuhur)
+            put("offsetAshar", config.offsetAshar)
+            put("offsetMaghrib", config.offsetMaghrib)
+            put("offsetIsya", config.offsetIsya)
+            put("kemenagCityId", config.kemenagCityId)
+            put("kemenagCityName", config.kemenagCityName)
+            put("kemenagDuration", config.kemenagDuration)
+            put("kemenagTargetDate", config.kemenagTargetDate)
+            put("adzanFooterText", config.adzanFooterText)
+            put("iqomahFooterText", config.iqomahFooterText)
+        }
     }
 
     fun updateConfig(
@@ -180,11 +205,17 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             repository.addAnnouncement(content)
         }
+        sendRemoteAction("add_announcement") {
+            put("content", content)
+        }
     }
 
     fun deleteAnnouncement(id: String) {
         viewModelScope.launch {
             repository.deleteAnnouncement(id)
+        }
+        sendRemoteAction("delete_announcement") {
+            put("id", id)
         }
     }
 
@@ -192,11 +223,21 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             repository.updateAnnouncement(id, content, true)
         }
+        sendRemoteAction("update_announcement") {
+            put("id", id)
+            put("content", content)
+            put("isActive", true)
+        }
     }
 
     fun reorderAnnouncements(ids: List<String>) {
         viewModelScope.launch {
             repository.updateAnnouncementsOrder(ids)
+        }
+        sendRemoteAction("update_announcements_order") {
+            val arr = org.json.JSONArray()
+            ids.forEach { arr.put(it) }
+            put("ids", arr)
         }
     }
 
@@ -381,11 +422,147 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             repository.updateThemeSettings(transitionType, intervalSeconds, videoWaitUntilEnd, includeDefaultImage)
         }
+        sendRemoteAction("update_theme") {
+            put("transitionType", transitionType)
+            put("slideIntervalSeconds", intervalSeconds)
+            put("videoWaitUntilEnd", videoWaitUntilEnd)
+            put("includeDefaultImage", includeDefaultImage)
+        }
+    }
+
+    fun sendRemoteAction(action: String, block: org.json.JSONObject.() -> Unit) {
+        val config = _configState.value
+        if (config.connectivityMode != "REMOTE" || config.remoteTvIp.isEmpty()) return
+        
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val json = org.json.JSONObject().apply {
+                    put("action", action)
+                    put("deviceId", "remote_${android.os.Build.MODEL.replace(" ", "_")}")
+                    block()
+                }
+                val url = java.net.URL("http://${config.remoteTvIp}:8080/api/action")
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.connectTimeout = 3000
+                conn.readTimeout = 3000
+                conn.doOutput = true
+                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+                
+                conn.outputStream.use { os ->
+                    os.write(json.toString().toByteArray(Charsets.UTF_8))
+                }
+                val responseCode = conn.responseCode
+                if (responseCode == 200) {
+                    val resp = conn.inputStream.bufferedReader().use { it.readText() }
+                    android.util.Log.d("RemoteSync", "Action sent successfully: $resp")
+                } else {
+                    android.util.Log.e("RemoteSync", "Failed to send action: $responseCode")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("RemoteSync", "Error sending action", e)
+            }
+        }
+    }
+
+    fun syncWithTvServer(context: android.content.Context) {
+        val config = _configState.value
+        if (config.connectivityMode != "REMOTE" || config.remoteTvIp.isEmpty()) return
+        
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val url = java.net.URL("http://${config.remoteTvIp}:8080/api/get_config")
+                val conn = url.openConnection() as java.net.HttpURLConnection
+                conn.requestMethod = "GET"
+                conn.connectTimeout = 5000
+                conn.readTimeout = 5000
+                conn.connect()
+                
+                if (conn.responseCode == 200) {
+                    val response = conn.inputStream.bufferedReader().use { it.readText() }
+                    val json = org.json.JSONObject(response)
+                    val configJson = json.optJSONObject("config")
+                    
+                    if (configJson != null) {
+                        repository.updateConfig(
+                            latitude = configJson.optDouble("latitude"),
+                            longitude = configJson.optDouble("longitude"),
+                            iqomahSubuh = configJson.optInt("iqomahSubuh"),
+                            iqomahDzuhur = configJson.optInt("iqomahDzuhur"),
+                            iqomahAshar = configJson.optInt("iqomahAshar"),
+                            iqomahMaghrib = configJson.optInt("iqomahMaghrib"),
+                            iqomahIsya = configJson.optInt("iqomahIsya"),
+                            calculationMethodName = configJson.optString("calculationMethodName"),
+                            adzanLeadMinutes = configJson.optInt("adzanLeadMinutes"),
+                            offsetImsak = configJson.optInt("offsetImsak"),
+                            offsetSubuh = configJson.optInt("offsetSubuh"),
+                            offsetSyuruq = configJson.optInt("offsetSyuruq"),
+                            offsetDzuhur = configJson.optInt("offsetDzuhur"),
+                            offsetAshar = configJson.optInt("offsetAshar"),
+                            offsetMaghrib = configJson.optInt("offsetMaghrib"),
+                            offsetIsya = configJson.optInt("offsetIsya"),
+                            kemenagCityId = configJson.optString("kemenagCityId"),
+                            kemenagCityName = configJson.optString("kemenagCityName"),
+                            kemenagDuration = configJson.optString("kemenagDuration"),
+                            kemenagTargetDate = configJson.optString("kemenagTargetDate"),
+                            triggerFetch = true,
+                            adzanFooterText = configJson.optString("adzanFooterText"),
+                            iqomahFooterText = configJson.optString("iqomahFooterText")
+                        )
+                        repository.updateStandbySettings(
+                            enabled = configJson.optBoolean("standbyModeEnabled"),
+                            startTime = configJson.optString("standbyStartTime"),
+                            endTime = configJson.optString("standbyEndTime")
+                        )
+                        repository.updateSlideshowEnabled(
+                            enabled = configJson.optBoolean("slideshowEnabled")
+                        )
+                        
+                        // Sync announcements
+                        val announcementsArray = json.optJSONArray("announcements")
+                        if (announcementsArray != null) {
+                            repository.clearAnnouncements()
+                            for (i in 0 until announcementsArray.length()) {
+                                val item = announcementsArray.getJSONObject(i)
+                                repository.addAnnouncement(
+                                    content = item.optString("content"),
+                                    customId = item.optString("id")
+                                )
+                            }
+                        }
+                        
+                        withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            android.widget.Toast.makeText(context, "Sinkronisasi berhasil!", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SettingsViewModel", "Failed to sync with TV", e)
+                withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    android.widget.Toast.makeText(context, "Sinkronisasi gagal: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    fun updateConnectivityMode(mode: String) {
+        viewModelScope.launch {
+            repository.updateConnectivityMode(mode)
+        }
+    }
+
+    fun updateRemoteTvIp(ip: String) {
+        viewModelScope.launch {
+            repository.updateRemoteTvIp(ip)
+        }
     }
 
     fun updateShowSettingsOnTv(show: Boolean) {
         viewModelScope.launch {
             repository.updateShowSettingsOnTv(show)
+        }
+        sendRemoteAction("update_config") {
+            put("showSettingsOnTv", show)
         }
     }
 
@@ -393,11 +570,19 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             repository.updateStandbySettings(enabled, startTime, endTime)
         }
+        sendRemoteAction("update_config") {
+            put("standbyModeEnabled", enabled)
+            put("standbyStartTime", startTime)
+            put("standbyEndTime", endTime)
+        }
     }
 
     fun setDeviceMaster(deviceId: String) {
         viewModelScope.launch {
             repository.setDeviceMaster(deviceId)
+        }
+        sendRemoteAction("set_master") {
+            put("deviceId", deviceId)
         }
     }
 
@@ -405,11 +590,17 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             repository.updatePinCode(newPin, null)
         }
+        sendRemoteAction("update_pin") {
+            put("pin", newPin)
+        }
     }
 
     fun deleteDevice(deviceId: String) {
         viewModelScope.launch {
             repository.deleteDevice(deviceId)
+        }
+        sendRemoteAction("delete_device") {
+            put("deviceId", deviceId)
         }
     }
 

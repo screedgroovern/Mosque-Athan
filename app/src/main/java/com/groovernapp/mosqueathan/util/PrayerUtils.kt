@@ -45,7 +45,7 @@ object PrayerUtils {
         if (day.isEmpty() || startTime.isEmpty() || endTime.isEmpty()) return false
 
         if (isSpecificDate) {
-            val todayStr = "%04d-%02d-%02d".format(now.year, now.month.number, now.day)
+            val todayStr = java.lang.String.format(java.util.Locale.US, "%04d-%02d-%02d", now.year, now.month.number, now.day)
             if (day.trim() != todayStr) {
                 return false
             }
@@ -98,7 +98,7 @@ object PrayerUtils {
 
         // Check specificDates (comma-separated date strings like "2026-06-18")
         if (specificDates.isNotEmpty()) {
-            val todayStr = "%04d-%02d-%02d".format(now.year, now.month.number, now.day)
+            val todayStr = java.lang.String.format(java.util.Locale.US, "%04d-%02d-%02d", now.year, now.month.number, now.day)
             val dates = specificDates.split(",").map { it.trim() }.filter { it.isNotEmpty() }
             return dates.any { it == todayStr }
         }

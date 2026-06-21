@@ -526,6 +526,10 @@ fun SettingsScreen(
                                          devices = devices,
                                          onSetDeviceMaster = { deviceId -> viewModel.setDeviceMaster(deviceId) },
                                          onDeleteDevice = { deviceId -> viewModel.deleteDevice(deviceId) },
+                                         onUpdateConnectivityMode = { mode -> viewModel.updateConnectivityMode(mode) },
+                                         onUpdateRemoteTvIp = { ip -> viewModel.updateRemoteTvIp(ip) },
+                                         onUpdatePinCode = { pin -> viewModel.updatePinCode(pin) },
+                                         onSyncWithTv = { viewModel.syncWithTvServer(context) },
                                          isCompact = isCompact
                                      )
                                  }
@@ -798,7 +802,7 @@ enum class SettingsCategory(
         icon = Icons.Default.Image
     ),
     REMOTE_DEVICES(
-        getDisplayName = { Lang.get("Connectivity & Remote", "Konektivitas & Remote") },
+        getDisplayName = { Lang.get("Connectivity", "Konektivitas") },
         getDescription = { Lang.get("Manage web control server access, connected devices, and PIN security.", "Kelola akses server kontrol web, perangkat yang terhubung, PIN, dan otoritas master.") },
         icon = Icons.Default.Devices
     ),

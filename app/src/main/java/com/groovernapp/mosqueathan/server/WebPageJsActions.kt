@@ -1300,6 +1300,13 @@ object WebPageJsActions {
             showToast(currentLang === 'id' ? 'Menampilkan preview layar Iqomah...' : 'Showing Iqomah screen preview...');
         }
 
+        function previewSlideshow() {
+            safeSend({
+                action: 'preview_slideshow'
+            });
+            showToast(currentLang === 'id' ? 'Menampilkan preview Slideshow...' : 'Showing Slideshow preview...');
+        }
+
         function changeThemeConfig(transitionType) {
             appConfig.transitionType = transitionType;
             sendThemeUpdate();

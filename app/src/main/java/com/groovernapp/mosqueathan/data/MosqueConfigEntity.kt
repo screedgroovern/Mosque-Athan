@@ -40,6 +40,10 @@ class MosqueConfigEntity : RealmObject {
     var standbyStartTime: String = MosqueConfig.DEFAULT_STANDBY_START_TIME
     var standbyEndTime: String = MosqueConfig.DEFAULT_STANDBY_END_TIME
 
+    // Connectivity & Remote settings
+    var connectivityMode: String = "SERVER" // "SERVER" or "REMOTE"
+    var remoteTvIp: String = ""
+
     // Dashboard slideshow properties
     var dashboardRandomize: Boolean = false
     var dashboardTransitionType: String = "FADE"
@@ -82,6 +86,8 @@ fun MosqueConfigEntity.copy(
     standbyModeEnabled: Boolean = this.standbyModeEnabled,
     standbyStartTime: String = this.standbyStartTime,
     standbyEndTime: String = this.standbyEndTime,
+    connectivityMode: String = this.connectivityMode,
+    remoteTvIp: String = this.remoteTvIp,
     dashboardRandomize: Boolean = this.dashboardRandomize,
     dashboardTransitionType: String = this.dashboardTransitionType,
     dashboardTransitionInterval: Int = this.dashboardTransitionInterval,
@@ -121,6 +127,8 @@ fun MosqueConfigEntity.copy(
     newEntity.standbyModeEnabled = standbyModeEnabled
     newEntity.standbyStartTime = standbyStartTime
     newEntity.standbyEndTime = standbyEndTime
+    newEntity.connectivityMode = connectivityMode
+    newEntity.remoteTvIp = remoteTvIp
     newEntity.dashboardRandomize = dashboardRandomize
     newEntity.dashboardTransitionType = dashboardTransitionType
     newEntity.dashboardTransitionInterval = dashboardTransitionInterval
