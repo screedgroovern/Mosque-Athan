@@ -25,49 +25,49 @@ fun PrayerTimesPanel(
     ) {
 
         PrayerItem(
-            "IMSAK",
+            PrayerType.IMSAK.displayName,
             prayerTimes.imsak,
             prayerTimes.highlightedPrayer == PrayerType.IMSAK,
             isSlideshowActive
         )
 
         PrayerItem(
-            "SUBUH",
+            PrayerType.SUBUH.displayName,
             prayerTimes.subuh,
             prayerTimes.highlightedPrayer == PrayerType.SUBUH,
             isSlideshowActive
         )
 
         PrayerItem(
-            "SYURUQ",
+            PrayerType.SYURUQ.displayName,
             prayerTimes.syuruq,
             prayerTimes.highlightedPrayer == PrayerType.SYURUQ,
             isSlideshowActive
         )
 
         PrayerItem(
-            "DZUHUR",
+            PrayerType.DZUHUR.displayName,
             prayerTimes.dzuhur,
             prayerTimes.highlightedPrayer == PrayerType.DZUHUR,
             isSlideshowActive
         )
 
         PrayerItem(
-            "ASHAR",
+            PrayerType.ASHAR.displayName,
             prayerTimes.ashar,
             prayerTimes.highlightedPrayer == PrayerType.ASHAR,
             isSlideshowActive
         )
 
         PrayerItem(
-            "MAGHRIB",
+            PrayerType.MAGHRIB.displayName,
             prayerTimes.maghrib,
             prayerTimes.highlightedPrayer == PrayerType.MAGHRIB,
             isSlideshowActive
         )
 
         PrayerItem(
-            "ISYA'",
+            PrayerType.ISYA.displayName,
             prayerTimes.isya,
             prayerTimes.highlightedPrayer == PrayerType.ISYA,
             isSlideshowActive

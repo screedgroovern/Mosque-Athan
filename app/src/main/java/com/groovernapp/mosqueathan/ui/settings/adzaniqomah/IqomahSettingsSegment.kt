@@ -92,7 +92,7 @@ fun IqomahSettingsSegment(
             AdjustmentRow(Lang.get("Dhuhr", "Dzuhur"), iqomahDzuhur, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahDzuhurChange)
             AdjustmentRow(Lang.get("Asr", "Ashar"), iqomahAshar, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahAsharChange)
             AdjustmentRow(Lang.get("Maghrib", "Maghrib"), iqomahMaghrib, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahMaghribChange)
-            AdjustmentRow(Lang.get("Isha", "Isya'"), iqomahIsya, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahIsyaChange)
+            AdjustmentRow(Lang.get("Isha'", "Isya'"), iqomahIsya, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahIsyaChange)
         }
 
         HorizontalDivider(

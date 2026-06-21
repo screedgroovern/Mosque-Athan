@@ -37,7 +37,7 @@ fun PrayerOffsetsSettingsSegment(
         AdjustmentRow(Lang.get("Dhuhr", "Dzuhur"), offsetDzuhur, minValue = -60, maxValue = 60, showSign = true) { onOffsetDzuhurChange(it) }
         AdjustmentRow(Lang.get("Asr", "Ashar"), offsetAshar, minValue = -60, maxValue = 60, showSign = true) { onOffsetAsharChange(it) }
         AdjustmentRow(Lang.get("Maghrib", "Maghrib"), offsetMaghrib, minValue = -60, maxValue = 60, showSign = true) { onOffsetMaghribChange(it) }
-        AdjustmentRow(Lang.get("Isha", "Isya'"), offsetIsya, minValue = -60, maxValue = 60, showSign = true) { onOffsetIsyaChange(it) }
+        AdjustmentRow(Lang.get("Isha'", "Isya'"), offsetIsya, minValue = -60, maxValue = 60, showSign = true) { onOffsetIsyaChange(it) }
     }
 }
 
