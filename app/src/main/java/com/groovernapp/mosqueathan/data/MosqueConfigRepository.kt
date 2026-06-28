@@ -19,9 +19,9 @@ import kotlinx.datetime.plus
 import kotlin.time.Clock
 
 class MosqueConfigRepository private constructor() {
-    private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class, DashboardBackgroundEntity::class))
+    private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, FridayMediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class, DashboardBackgroundEntity::class))
         .name("mosque_athan.realm")
-        .schemaVersion(15)
+        .schemaVersion(18)
         .deleteRealmIfMigrationNeeded()
         .build()
 
@@ -70,6 +70,66 @@ class MosqueConfigRepository private constructor() {
 
     fun getConfig(): MosqueConfigEntity {
         return realm.query<MosqueConfigEntity>("id == 'config'").first().find() ?: MosqueConfigEntity()
+    }
+
+    suspend fun updateConfig(config: MosqueConfigEntity) {
+        realm.write {
+            val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
+            if (entity != null) {
+                entity.latitude = config.latitude
+                entity.longitude = config.longitude
+                entity.iqomahSubuh = config.iqomahSubuh
+                entity.iqomahDzuhur = config.iqomahDzuhur
+                entity.iqomahAshar = config.iqomahAshar
+                entity.iqomahMaghrib = config.iqomahMaghrib
+                entity.iqomahIsya = config.iqomahIsya
+                entity.calculationMethodName = config.calculationMethodName
+                entity.adzanLeadMinutes = config.adzanLeadMinutes
+                entity.offsetImsak = config.offsetImsak
+                entity.offsetSubuh = config.offsetSubuh
+                entity.offsetSyuruq = config.offsetSyuruq
+                entity.offsetDzuhur = config.offsetDzuhur
+                entity.offsetAshar = config.offsetAshar
+                entity.offsetMaghrib = config.offsetMaghrib
+                entity.offsetIsya = config.offsetIsya
+                entity.kemenagCityId = config.kemenagCityId
+                entity.kemenagCityName = config.kemenagCityName
+                entity.kemenagDuration = config.kemenagDuration
+                entity.kemenagTargetDate = config.kemenagTargetDate
+                entity.adzanFooterText = config.adzanFooterText
+                entity.iqomahFooterText = config.iqomahFooterText
+                entity.standbyModeEnabled = config.standbyModeEnabled
+                entity.standbyStartTime = config.standbyStartTime
+                entity.standbyEndTime = config.standbyEndTime
+                entity.connectivityMode = config.connectivityMode
+                entity.remoteTvIp = config.remoteTvIp
+                entity.dashboardRandomize = config.dashboardRandomize
+                entity.dashboardTransitionType = config.dashboardTransitionType
+                entity.dashboardTransitionInterval = config.dashboardTransitionInterval
+                entity.slideshowEnabled = config.slideshowEnabled
+
+                // Friday settings
+                entity.jumatEnabled = config.jumatEnabled
+                entity.jumatStartTime = config.jumatStartTime
+                entity.jumatEndTime = config.jumatEndTime
+                entity.offsetJumat = config.offsetJumat
+                entity.jumatStandbyOnly = config.jumatStandbyOnly
+                entity.jumatWarningText = config.jumatWarningText
+                entity.murottalEnabled = config.murottalEnabled
+                entity.murottalStartDelay = config.murottalStartDelay
+                entity.murottalAudioPaths = config.murottalAudioPaths
+                entity.jumatSlideshowEnabled = config.jumatSlideshowEnabled
+                entity.includeGlobalSlideshow = config.includeGlobalSlideshow
+                entity.selectedGlobalSlideIds = config.selectedGlobalSlideIds
+                entity.jumatTransitionType = config.jumatTransitionType
+                entity.jumatSlideIntervalSeconds = config.jumatSlideIntervalSeconds
+                entity.jumatSlideIntervalUnit = config.jumatSlideIntervalUnit
+                entity.jumatVideoWaitUntilEnd = config.jumatVideoWaitUntilEnd
+            }
+        }
+        if (config.calculationMethodName == "KEMENAG" && config.kemenagCityId.isNotEmpty()) {
+            triggerKemenagFetchForDuration(config.kemenagCityId, config.kemenagDuration, config.kemenagTargetDate)
+        }
     }
 
     suspend fun updateConfig(
@@ -270,6 +330,24 @@ class MosqueConfigRepository private constructor() {
                 entity.standbyModeEnabled = MosqueConfig.DEFAULT_STANDBY_ENABLED
                 entity.standbyStartTime = MosqueConfig.DEFAULT_STANDBY_START_TIME
                 entity.standbyEndTime = MosqueConfig.DEFAULT_STANDBY_END_TIME
+
+                // Friday settings defaults
+                entity.jumatEnabled = false
+                entity.jumatStartTime = "11:00"
+                entity.jumatEndTime = "13:00"
+                entity.offsetJumat = 0
+                entity.jumatStandbyOnly = false
+                entity.jumatWarningText = "\"Di hari Jumat terdapat suatu waktu yang tidaklah seorang hamba muslim yang ia berdiri melaksanakan salat lantas ia memanjatkan suatu doa pada Allah bertepatan dengan waktu tersebut melainkan Allah akan memberi apa yang ia minta.\" (HR. Bukhari no. 935 dan Muslim no. 852)"
+                entity.murottalEnabled = false
+                entity.murottalStartDelay = 0
+                entity.murottalAudioPaths = ""
+                entity.jumatSlideshowEnabled = false
+                entity.includeGlobalSlideshow = false
+                entity.selectedGlobalSlideIds = ""
+                entity.jumatTransitionType = "FADE"
+                entity.jumatSlideIntervalSeconds = 10
+                entity.jumatSlideIntervalUnit = "SECONDS"
+                entity.jumatVideoWaitUntilEnd = true
             }
 
             val allSchedules = query<KemenagScheduleEntity>().find()
@@ -351,10 +429,70 @@ class MosqueConfigRepository private constructor() {
         }
     }
 
+    suspend fun updateMediaItemUsed(id: String, isUsed: Boolean) {
+        realm.write {
+            val item = query<MediaEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.isUsed = isUsed
+            }
+        }
+    }
+
     suspend fun updateMediaListOrder(ids: List<String>) {
         realm.write {
             ids.forEachIndexed { index, id ->
                 val item = query<MediaEntity>("id == $0", id).first().find()
+                if (item != null) {
+                    item.sortOrder = index
+                }
+            }
+        }
+    }
+
+    fun observeFridayMedia(): Flow<List<FridayMediaEntity>> {
+        return realm.query<FridayMediaEntity>()
+            .asFlow()
+            .map { it.list.sortedBy { media -> media.sortOrder } }
+    }
+
+    fun getFridayMedia(): List<FridayMediaEntity> {
+        return realm.query<FridayMediaEntity>().find().sortedBy { it.sortOrder }
+    }
+
+    suspend fun addFridayMedia(filePath: String, isVideo: Boolean) {
+        realm.write {
+            val maxOrder = query<FridayMediaEntity>().find().maxOfOrNull { it.sortOrder } ?: -1
+            copyToRealm(FridayMediaEntity().apply {
+                id = java.util.UUID.randomUUID().toString()
+                this.filePath = filePath
+                this.isVideo = isVideo
+                this.sortOrder = maxOrder + 1
+            })
+        }
+    }
+
+    suspend fun deleteFridayMedia(id: String) {
+        realm.write {
+            val item = query<FridayMediaEntity>("id == $0", id).first().find()
+            if (item != null) {
+                delete(item)
+            }
+        }
+    }
+
+    suspend fun updateFridayMediaItemPath(id: String, filePath: String) {
+        realm.write {
+            val item = query<FridayMediaEntity>("id == $0", id).first().find()
+            if (item != null) {
+                item.filePath = filePath
+            }
+        }
+    }
+
+    suspend fun updateFridayMediaOrder(ids: List<String>) {
+        realm.write {
+            ids.forEachIndexed { index, id ->
+                val item = query<FridayMediaEntity>("id == $0", id).first().find()
                 if (item != null) {
                     item.sortOrder = index
                 }

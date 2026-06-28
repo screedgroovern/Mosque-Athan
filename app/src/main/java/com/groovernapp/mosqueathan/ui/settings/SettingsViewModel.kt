@@ -7,6 +7,7 @@ import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.data.AnnouncementEntity
 import com.groovernapp.mosqueathan.data.MediaEntity
 import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
+import com.groovernapp.mosqueathan.data.FridayMediaEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -29,6 +30,9 @@ class SettingsViewModel : ViewModel() {
 
     private val _mediaListState = MutableStateFlow<List<MediaEntity>>(emptyList())
     val mediaListState = _mediaListState.asStateFlow()
+
+    private val _fridayMediaListState = MutableStateFlow<List<FridayMediaEntity>>(emptyList())
+    val fridayMediaListState = _fridayMediaListState.asStateFlow()
 
     private val _kemenagSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.KemenagScheduleEntity>>(emptyList())
     val kemenagSchedulesState = _kemenagSchedulesState.asStateFlow()
@@ -59,6 +63,11 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             repository.getMediaListFlow().collect {
                 _mediaListState.value = it
+            }
+        }
+        viewModelScope.launch {
+            repository.observeFridayMedia().collect {
+                _fridayMediaListState.value = it
             }
         }
     }
@@ -126,16 +135,7 @@ class SettingsViewModel : ViewModel() {
 
     fun updateConfig(config: MosqueConfigEntity) {
         viewModelScope.launch {
-            repository.updateConfig(
-                config.latitude, config.longitude,
-                config.iqomahSubuh, config.iqomahDzuhur, config.iqomahAshar, config.iqomahMaghrib, config.iqomahIsya,
-                config.calculationMethodName, config.adzanLeadMinutes,
-                config.offsetImsak, config.offsetSubuh, config.offsetSyuruq, config.offsetDzuhur, config.offsetAshar, config.offsetMaghrib, config.offsetIsya,
-                config.kemenagCityId, config.kemenagCityName, config.kemenagDuration, config.kemenagTargetDate,
-                triggerFetch = true,
-                adzanFooterText = config.adzanFooterText,
-                iqomahFooterText = config.iqomahFooterText
-            )
+            repository.updateConfig(config)
         }
         sendRemoteAction("update_config") {
             put("latitude", config.latitude)
@@ -160,6 +160,22 @@ class SettingsViewModel : ViewModel() {
             put("kemenagTargetDate", config.kemenagTargetDate)
             put("adzanFooterText", config.adzanFooterText)
             put("iqomahFooterText", config.iqomahFooterText)
+            put("jumatEnabled", config.jumatEnabled)
+            put("jumatStartTime", config.jumatStartTime)
+            put("jumatEndTime", config.jumatEndTime)
+            put("offsetJumat", config.offsetJumat)
+            put("jumatStandbyOnly", config.jumatStandbyOnly)
+            put("jumatWarningText", config.jumatWarningText)
+            put("murottalEnabled", config.murottalEnabled)
+            put("murottalStartDelay", config.murottalStartDelay)
+            put("murottalAudioPaths", config.murottalAudioPaths)
+            put("jumatSlideshowEnabled", config.jumatSlideshowEnabled)
+            put("includeGlobalSlideshow", config.includeGlobalSlideshow)
+            put("selectedGlobalSlideIds", config.selectedGlobalSlideIds)
+            put("jumatTransitionType", config.jumatTransitionType)
+            put("jumatSlideIntervalSeconds", config.jumatSlideIntervalSeconds)
+            put("jumatSlideIntervalUnit", config.jumatSlideIntervalUnit)
+            put("jumatVideoWaitUntilEnd", config.jumatVideoWaitUntilEnd)
         }
     }
 
@@ -879,9 +895,134 @@ class SettingsViewModel : ViewModel() {
         }
     }
 
+    fun updateMediaItemUsed(id: String, isUsed: Boolean) {
+        viewModelScope.launch {
+            repository.updateMediaItemUsed(id, isUsed)
+        }
+    }
     fun updateMediaListOrder(ids: List<String>) {
         viewModelScope.launch {
             repository.updateMediaListOrder(ids)
+        }
+    }
+
+    fun addFridayMediaItems(uris: List<android.net.Uri>, context: android.content.Context) {
+        viewModelScope.launch {
+            var largeImageDetected = false
+            uris.forEach { uri ->
+                try {
+                    val mimeType = context.contentResolver.getType(uri)
+                    val isVideo = mimeType?.startsWith("video") == true
+                    
+                    if (!isVideo) {
+                        val size = getUriSize(context, uri)
+                        if (size > 2 * 1024 * 1024) { // 2MB
+                            largeImageDetected = true
+                        }
+                    }
+
+                    val extension = if (isVideo) "mp4" else "jpg"
+                    val filename = "friday_${System.currentTimeMillis()}_${java.util.UUID.randomUUID().toString().take(5)}.$extension"
+                    val dir = java.io.File(context.filesDir, "friday_media")
+                    if (!dir.exists()) {
+                        dir.mkdirs()
+                    }
+                    val file = java.io.File(dir, filename)
+
+                    val inputStream = context.contentResolver.openInputStream(uri) ?: return@forEach
+                    file.outputStream().use { outputStream ->
+                        inputStream.use { it.copyTo(outputStream) }
+                    }
+
+                    if (!isVideo) {
+                        ImageUtils.downscaleImageInPlace(file)
+                    }
+
+                    repository.addFridayMedia(file.absolutePath, isVideo)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            if (largeImageDetected) {
+                viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Gambar besar terdeteksi. Sistem akan mengoptimalkan ukuran gambar secara otomatis.",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
+    fun deleteFridayMediaItem(item: FridayMediaEntity) {
+        viewModelScope.launch {
+            try {
+                val file = java.io.File(item.filePath)
+                if (file.exists()) {
+                    file.delete()
+                }
+            } catch (_: Exception) {}
+            repository.deleteFridayMedia(item.id)
+        }
+    }
+
+    fun updateFridayMediaItemPath(id: String, uri: android.net.Uri, context: android.content.Context) {
+        viewModelScope.launch {
+            try {
+                val mimeType = context.contentResolver.getType(uri)
+                val isVideo = mimeType?.startsWith("video") == true
+
+                if (!isVideo) {
+                    val size = getUriSize(context, uri)
+                    if (size > 2 * 1024 * 1024) { // 2MB
+                        viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                            android.widget.Toast.makeText(
+                                context,
+                                "Gambar besar terdeteksi. Sistem akan mengoptimalkan ukuran gambar secara otomatis.",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+
+                val extension = if (isVideo) "mp4" else "jpg"
+                val filename = "friday_${System.currentTimeMillis()}_${java.util.UUID.randomUUID().toString().take(5)}.$extension"
+                val dir = java.io.File(context.filesDir, "friday_media")
+                if (!dir.exists()) {
+                    dir.mkdirs()
+                }
+                val file = java.io.File(dir, filename)
+
+                val inputStream = context.contentResolver.openInputStream(uri) ?: return@launch
+                file.outputStream().use { outputStream ->
+                    inputStream.use { it.copyTo(outputStream) }
+                }
+
+                if (!isVideo) {
+                    ImageUtils.downscaleImageInPlace(file)
+                }
+
+                // Delete old file
+                val item = _fridayMediaListState.value.firstOrNull { it.id == id }
+                if (item != null) {
+                    val oldFile = java.io.File(item.filePath)
+                    if (oldFile.exists()) {
+                        oldFile.delete()
+                    }
+                }
+
+                repository.updateFridayMediaItemPath(id, file.absolutePath)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateFridayMediaOrder(ids: List<String>) {
+        viewModelScope.launch {
+            repository.updateFridayMediaOrder(ids)
         }
     }
 }

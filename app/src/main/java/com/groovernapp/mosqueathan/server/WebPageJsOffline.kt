@@ -11,6 +11,7 @@ object WebPageJsOffline {
                     appConfig = tv.config || appConfig;
                     announcements = tv.announcements || announcements;
                     mediaList = tv.mediaList || mediaList;
+                    fridayMediaList = tv.fridayMediaList || [];
                     dashboardBackgrounds = tv.dashboardBackgrounds || dashboardBackgrounds;
                     kemenagSchedules = tv.kemenagSchedules || kemenagSchedules;
                     slideshowSchedules = tv.slideshowSchedules || slideshowSchedules;
@@ -25,6 +26,7 @@ object WebPageJsOffline {
                     const draft = JSON.parse(savedDraft);
                     appConfig = draft.config || appConfig;
                     announcements = draft.announcements || announcements;
+                    fridayMediaList = draft.fridayMediaList || [];
                     slideshowSchedules = draft.slideshowSchedules || slideshowSchedules;
                     kemenagSchedules = draft.kemenagSchedules || kemenagSchedules;
                 } catch (e) {
@@ -66,6 +68,7 @@ object WebPageJsOffline {
                 const draft = {
                     config: appConfig,
                     announcements: announcements,
+                    fridayMediaList: fridayMediaList,
                     slideshowSchedules: slideshowSchedules,
                     kemenagSchedules: kemenagSchedules
                 };
@@ -79,7 +82,8 @@ object WebPageJsOffline {
         }
 
         function enterOfflineMode(silent = false) {
-            document.getElementById('connection-overlay').style.display = 'none';
+            const connOverlay = document.getElementById('connection-overlay');
+            if (connOverlay) connOverlay.style.display = 'none';
             
             if (!isOfflineMode) {
                 isOfflineMode = true;
@@ -234,6 +238,14 @@ object WebPageJsOffline {
                                 progressBar.style.width = overall + '%';
                                 progressText.innerText = overall + '%';
                             });
+                        } else if (fileAction.action === 'upload_friday_media') {
+                            await uploadBase64ViaPost(fileAction.base64, fileAction.filename, false, fileAction.isVideo, (p) => {
+                                const overall = basePercent + Math.round((p / 100) * (nextBasePercent - basePercent));
+                                progressBar.style.width = overall + '%';
+                                progressText.innerText = overall + '%';
+                            }, true);
+                        } else if (fileAction.action === 'update_friday_media_item_path') {
+                            ws.send(JSON.stringify(fileAction));
                         }
                     } catch (e) {
                         console.error("Sync file failed", e);
@@ -264,6 +276,7 @@ object WebPageJsOffline {
                     appConfig.standbySchedules = pendingTvState.standbySchedules || [];
                     announcements = pendingTvState.announcements;
                     mediaList = pendingTvState.mediaList;
+                    fridayMediaList = pendingTvState.fridayMediaList || [];
                     kemenagSchedules = pendingTvState.kemenagSchedules || [];
                     slideshowSchedules = pendingTvState.slideshowSchedules || [];
                     
@@ -271,6 +284,7 @@ object WebPageJsOffline {
                         config: appConfig,
                         announcements: announcements,
                         mediaList: mediaList,
+                        fridayMediaList: fridayMediaList,
                         kemenagSchedules: kemenagSchedules,
                         slideshowSchedules: slideshowSchedules
                     };
@@ -296,6 +310,7 @@ object WebPageJsOffline {
                 appConfig.standbySchedules = pendingTvState.standbySchedules || [];
                 announcements = pendingTvState.announcements;
                 mediaList = pendingTvState.mediaList;
+                fridayMediaList = pendingTvState.fridayMediaList || [];
                 kemenagSchedules = pendingTvState.kemenagSchedules || [];
                 slideshowSchedules = pendingTvState.slideshowSchedules || [];
                 
@@ -303,6 +318,7 @@ object WebPageJsOffline {
                     config: appConfig,
                     announcements: announcements,
                     mediaList: mediaList,
+                    fridayMediaList: fridayMediaList,
                     kemenagSchedules: kemenagSchedules,
                     slideshowSchedules: slideshowSchedules
                 };
@@ -338,6 +354,21 @@ object WebPageJsOffline {
                     appConfig.kemenagTargetDate = payload.kemenagTargetDate;
                     appConfig.adzanFooterText = payload.adzanFooterText;
                     appConfig.iqomahFooterText = payload.iqomahFooterText;
+                    
+                    if (payload.jumatEnabled !== undefined) appConfig.jumatEnabled = payload.jumatEnabled;
+                    if (payload.jumatStartTime !== undefined) appConfig.jumatStartTime = payload.jumatStartTime;
+                    if (payload.jumatEndTime !== undefined) appConfig.jumatEndTime = payload.jumatEndTime;
+                    if (payload.offsetJumat !== undefined) appConfig.offsetJumat = payload.offsetJumat;
+                    if (payload.jumatStandbyOnly !== undefined) appConfig.jumatStandbyOnly = payload.jumatStandbyOnly;
+                    if (payload.jumatWarningText !== undefined) appConfig.jumatWarningText = payload.jumatWarningText;
+                    if (payload.murottalEnabled !== undefined) appConfig.murottalEnabled = payload.murottalEnabled;
+                    if (payload.murottalStartDelay !== undefined) appConfig.murottalStartDelay = payload.murottalStartDelay;
+                    if (payload.murottalAudioPaths !== undefined) appConfig.murottalAudioPaths = payload.murottalAudioPaths;
+                    if (payload.jumatSlideshowEnabled !== undefined) appConfig.jumatSlideshowEnabled = payload.jumatSlideshowEnabled;
+                    if (payload.includeGlobalSlideshow !== undefined) appConfig.includeGlobalSlideshow = payload.includeGlobalSlideshow;
+                    if (payload.selectedGlobalSlideIds !== undefined) appConfig.selectedGlobalSlideIds = payload.selectedGlobalSlideIds;
+                    if (payload.jumatSlideIntervalSeconds !== undefined) appConfig.jumatSlideIntervalSeconds = payload.jumatSlideIntervalSeconds;
+                    if (payload.jumatSlideIntervalUnit !== undefined) appConfig.jumatSlideIntervalUnit = payload.jumatSlideIntervalUnit;
                     break;
                 case 'add_announcement':
                     announcements.push({
@@ -486,6 +517,31 @@ object WebPageJsOffline {
                 case 'delete_media':
                     mediaList = mediaList.filter(m => m.id !== payload.id);
                     break;
+                case 'upload_friday_media':
+                    fridayMediaList = fridayMediaList || [];
+                    fridayMediaList.push({
+                        id: payload.id,
+                        filePath: payload.base64,
+                        isVideo: payload.isVideo
+                    });
+                    break;
+                case 'delete_friday_media':
+                    fridayMediaList = fridayMediaList || [];
+                    fridayMediaList = fridayMediaList.filter(m => m.id !== payload.id);
+                    break;
+                case 'update_friday_media_item_path':
+                    fridayMediaList = fridayMediaList || [];
+                    const friItem = fridayMediaList.find(m => m.id === payload.id);
+                    if (friItem) {
+                        friItem.filePath = payload.base64;
+                        friItem.isVideo = payload.isVideo;
+                    }
+                    break;
+                case 'reorder_friday_media':
+                    fridayMediaList = fridayMediaList || [];
+                    const friIdMap = new Map(fridayMediaList.map(m => [m.id, m]));
+                    fridayMediaList = payload.ids.map(id => friIdMap.get(id)).filter(Boolean);
+                    break;
                 case 'save_kemenag_schedules':
                     kemenagSchedules = payload.schedules;
                     break;
@@ -508,6 +564,7 @@ object WebPageJsOffline {
                     announcements = [];
                     slideshowSchedules = [];
                     mediaList = [];
+                    fridayMediaList = [];
                     kemenagSchedules = [];
                     break;
             }
@@ -518,6 +575,7 @@ object WebPageJsOffline {
             appConfig = data.config;
             announcements = data.announcements;
             mediaList = data.mediaList;
+            fridayMediaList = data.fridayMediaList || [];
             dashboardBackgrounds = data.dashboardBackgrounds || [];
             kemenagSchedules = data.kemenagSchedules || [];
             slideshowSchedules = data.slideshowSchedules || [];
@@ -532,6 +590,10 @@ object WebPageJsOffline {
             }
 
             updateUI();
+        }
+
+        function saveFileOffline(payload) {
+            safeSend(payload);
         }
         """.trimIndent()
     }

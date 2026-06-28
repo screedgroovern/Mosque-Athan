@@ -55,10 +55,7 @@ object WebPageJsConnection {
                 connectionTimeout = null;
             }
             try {
-                let host = localStorage.getItem('custom_tv_ip') || window.location.host;
-                if (!host.includes(':')) {
-                    host = host + ':8080';
-                }
+                const host = window.location.host;
                 const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                 const wsUrl = proto + '//' + host;
                 
@@ -66,9 +63,16 @@ object WebPageJsConnection {
                 ws = new WebSocket(wsUrl);
 
                 connectionTimeout = setTimeout(() => {
-                    if (ws && ws.readyState === WebSocket.CONNECTING) {
+                    if (ws && ws.readyState !== WebSocket.OPEN) {
                         console.warn("Connection attempt timed out. Retrying...");
+                        ws.onclose = null;
+                        ws.onerror = null;
                         ws.close();
+                        updateTvConnectionStatus('offline');
+                        enterOfflineMode(true);
+                        if (!reconnectTimer) {
+                            reconnectTimer = setTimeout(connect, 3000);
+                        }
                     }
                 }, 5000);
 
@@ -77,7 +81,8 @@ object WebPageJsConnection {
                         clearTimeout(connectionTimeout);
                         connectionTimeout = null;
                     }
-                    document.getElementById('connection-overlay').style.display = 'none';
+                    const connOverlay = document.getElementById('connection-overlay');
+                    if (connOverlay) connOverlay.style.display = 'none';
                     const errDetails = document.getElementById('connection-error-details');
                     if (errDetails) errDetails.style.display = 'none';
                     
@@ -231,6 +236,7 @@ object WebPageJsConnection {
                                 appConfig.standbySchedules = data.standbySchedules || [];
                                 announcements = data.announcements;
                                 mediaList = data.mediaList;
+                                fridayMediaList = data.fridayMediaList || [];
                                 dashboardBackgrounds = data.dashboardBackgrounds || [];
                                 kemenagSchedules = data.kemenagSchedules || [];
                                 slideshowSchedules = data.slideshowSchedules || [];
@@ -239,6 +245,7 @@ object WebPageJsConnection {
                                     config: appConfig,
                                     announcements: announcements,
                                     mediaList: mediaList,
+                                    fridayMediaList: fridayMediaList,
                                     dashboardBackgrounds: dashboardBackgrounds,
                                     kemenagSchedules: kemenagSchedules,
                                     slideshowSchedules: slideshowSchedules
@@ -337,6 +344,7 @@ object WebPageJsConnection {
                         errDetails.innerText = "WebSocket Error: Connection failed.\nTarget URL: " + wsUrl;
                     }
                     updateTvConnectionStatus('offline');
+                    enterOfflineMode(true);
                     
                     if (!reconnectTimer) {
                         reconnectTimer = setTimeout(connect, 3000);
@@ -353,6 +361,7 @@ object WebPageJsConnection {
                     errDetails.innerText = "Setup Error: " + err.message + (err.stack ? "\n" + err.stack : "");
                     errDetails.style.display = 'block';
                 }
+                enterOfflineMode(true);
                 if (!reconnectTimer) {
                     reconnectTimer = setTimeout(connect, 3000);
                 }
@@ -375,15 +384,7 @@ object WebPageJsConnection {
             }
         }
 
-        function changeTvIpSidebar() {
-            const sidebarIpInput = document.getElementById('sidebar-tv-ip');
-            const mainIpInput = document.getElementById('input-tv-ip');
-            if (sidebarIpInput) {
-                const ip = sidebarIpInput.value.trim();
-                if (mainIpInput) mainIpInput.value = ip;
-                changeTvIp();
-            }
-        }
+        function changeTvIpSidebar() {}
 
         function updateTvConnectionStatus(status) {
             const cloudIcon = document.getElementById('status-cloud-icon');
@@ -436,23 +437,8 @@ object WebPageJsConnection {
             }
         }
 
-        function changeTvIp() {
-            let ip = document.getElementById('input-tv-ip').value.trim();
-            if (!ip) return;
-            ip = ip.replace(/^(https?:\/\/|wss?:\/\/)/, '').split('/')[0];
-            
-            localStorage.setItem('custom_tv_ip', ip);
-            
-            if (ws) {
-                try {
-                    ws.onclose = null;
-                    ws.close();
-                } catch(e){}
-            }
-            
-            showToast(currentLang === 'id' ? "Menghubungkan ke IP baru..." : "Connecting to new IP...", "info");
-            connect();
-        }
+        function changeTvIp() {}
+        function clearTvIp() {}
 
         let html5QrCode = null;
 
@@ -490,15 +476,13 @@ object WebPageJsConnection {
                             let parsedHost = decodedText.trim();
                             parsedHost = parsedHost.replace(/^(https?:\/\/|wss?:\/\/)/, '').split('/')[0];
                             
-                            if (parsedHost.match(/^[0-9a-zA-Z\.\-:]+${"$"}/)) {
+                            if (parsedHost.match(/^[0-9a-zA-Z\.\-:]+$/)) {
                                 let ip = parsedHost.split(':')[0];
-                                const inputIp = document.getElementById('input-tv-ip');
-                                if (inputIp) inputIp.value = ip;
                                 const sidebarIp = document.getElementById('sidebar-tv-ip');
                                 if (sidebarIp) sidebarIp.value = ip;
                                 
                                 stopQrScanner();
-                                changeTvIp();
+                                window.location.href = "http://" + ip + ":8080";
                             } else {
                                 showToast(translations[currentLang].toast_invalid_qr || "Kode QR tidak valid.", "error");
                             }
@@ -576,7 +560,7 @@ object WebPageJsConnection {
             });
         }
 
-        async function uploadBase64ViaPost(base64Data, filename, isBackground, isVideo, onProgress) {
+        async function uploadBase64ViaPost(base64Data, filename, isBackground, isVideo, onProgress, isFriday = false) {
             return new Promise((resolve, reject) => {
                 const parts = base64Data.split(',');
                 const byteString = atob(parts[1]);
@@ -591,7 +575,8 @@ object WebPageJsConnection {
                 
                 const url = getBaseUrl() + '/upload?filename=' + encodeURIComponent(filename) + 
                             '&isBackground=' + isBackground + 
-                            '&isVideo=' + isVideo;
+                            '&isVideo=' + isVideo +
+                            '&isFriday=' + isFriday;
                 
                 const xhr = new XMLHttpRequest();
                 xhr.open('POST', url, true);
@@ -636,13 +621,13 @@ object WebPageJsConnection {
                     return;
                 }
                 
-                if ((payload.action === 'add_announcement' || payload.action === 'add_slideshow_schedule' || payload.action === 'add_standby_schedule' || payload.action === 'upload_media') && !payload.id) {
+                if ((payload.action === 'add_announcement' || payload.action === 'add_slideshow_schedule' || payload.action === 'add_standby_schedule' || payload.action === 'upload_media' || payload.action === 'upload_friday_media') && !payload.id) {
                     payload.id = 'uuid_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
                 }
                 
                 applyActionLocally(payload);
                 
-                const isMediaUpload = payload.action === 'upload_background' || payload.action === 'upload_media';
+                const isMediaUpload = payload.action === 'upload_background' || payload.action === 'upload_media' || payload.action === 'upload_friday_media' || payload.action === 'update_friday_media_item_path';
                 if (isMediaUpload) {
                     offlineFilesQueue.push(payload);
                     await saveFileToDB(payload.id || 'bg_' + Date.now(), payload);

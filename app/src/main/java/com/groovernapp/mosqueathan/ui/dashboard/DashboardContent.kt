@@ -29,6 +29,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.awaitFirstDown
+import kotlinx.coroutines.withTimeoutOrNull
 import com.groovernapp.mosqueathan.ui.component.ClockSection
 import com.groovernapp.mosqueathan.ui.component.NextPrayerHeader
 import com.groovernapp.mosqueathan.ui.component.PrayerTimesPanel
@@ -38,123 +41,269 @@ import com.groovernapp.mosqueathan.ui.component.RunningTextBar
 fun DashboardContent(
     state: DashboardUiState.Dashboard,
     customBackgroundPath: String,
-    onNavigateToSettings: () -> Unit
+    isFridayStandby: Boolean = false,
+    jumatWarningText: String = "",
+    isFridayBeforeAdzan: Boolean = false,
+    isFridayAfterAdzan: Boolean = false,
+    onNavigateToSettings: () -> Unit,
+    onStartAdzanNow: () -> Unit = {},
+    onForceFridaySilence: () -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        AnimatedContent(
-            targetState = state.isSlideshowActive,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
-            },
-            label = "HeaderTransition"
-        ) { isSlideshow ->
-            if (isSlideshow) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = 32.dp,
-                            vertical = 20.dp
-                        ),
-                    verticalAlignment = Alignment.CenterVertically
+        if (isFridayBeforeAdzan) {
+            // Sebelum adzan: Only show SmallClockCard at top-left
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SmallClockCard(
+                    currentTime = state.currentTime,
+                    nextPrayer = state.nextPrayer,
+                    onNavigateToSettings = onNavigateToSettings,
+                    onStartAdzanNow = onStartAdzanNow,
+                    onForceFridaySilence = onForceFridaySilence,
+                    isFridayBeforeAdzan = isFridayBeforeAdzan
+                )
+            }
+            if (!state.isSlideshowActive) {
+                Spacer(modifier = Modifier.weight(1f))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    var clickCount by remember { mutableStateOf(0) }
-                    Box(
+                    Text(
+                        text = "Persiapan Ibadah Jum'at",
+                        color = Color.White,
+                        fontSize = 48.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        } else if (isFridayAfterAdzan) {
+            // Setelah adzan (Silence Mode): Centered large clock & info (like dashboard)
+            Spacer(modifier = Modifier.weight(1f))
+            ClockSection(state = state)
+            Spacer(modifier = Modifier.weight(1f))
+        } else if (isFridayStandby) {
+            // Fallback for previewing Friday Mode
+            AnimatedContent(
+                targetState = state.isSlideshowActive,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
+                },
+                label = "FridayHeaderTransition"
+            ) { isSlideshow ->
+                if (isSlideshow) {
+                    Row(
                         modifier = Modifier
-                            .background(
-                                color = Color.Black.copy(alpha = 0.6f),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                clickCount++
-                                if (clickCount >= 5) {
-                                    clickCount = 0
-                                    onNavigateToSettings()
+                            .fillMaxWidth()
+                            .padding(horizontal = 32.dp, vertical = 20.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SmallClockCard(
+                            currentTime = state.currentTime,
+                            nextPrayer = state.nextPrayer,
+                            onNavigateToSettings = onNavigateToSettings
+                        )
+                    }
+                } else {
+                    NextPrayerHeader(state.nextPrayer, onNavigateToSettings)
+                }
+            }
+
+            if (!state.isSlideshowActive) {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
+            AnimatedContent(
+                targetState = state.isSlideshowActive,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
+                },
+                label = "FridayMiddleTransition"
+            ) { isSlideshow ->
+                if (!isSlideshow) {
+                    ClockSection(state = state)
+                }
+            }
+
+            if (!state.isSlideshowActive) {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        } else {
+            AnimatedContent(
+                targetState = state.isSlideshowActive,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
+                },
+                label = "HeaderTransition"
+            ) { isSlideshow ->
+                if (isSlideshow) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(
+                                horizontal = 32.dp,
+                                vertical = 20.dp
+                            ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SmallClockCard(
+                            currentTime = state.currentTime,
+                            nextPrayer = state.nextPrayer,
+                            onNavigateToSettings = onNavigateToSettings
+                        )
+                    }
+                } else {
+                    NextPrayerHeader(state.nextPrayer, onNavigateToSettings)
+                }
+            }
+
+            if (!state.isSlideshowActive) {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
+            AnimatedContent(
+                targetState = state.isSlideshowActive,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
+                },
+                label = "MiddleTransition"
+            ) { isSlideshow ->
+                if (!isSlideshow) {
+                    ClockSection(state = state)
+                }
+            }
+
+            if (!state.isSlideshowActive) {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+            
+            if (!state.isSlideshowActive) {
+                PrayerTimesPanel(
+                    prayerTimes = state.prayerTimes,
+                    isSlideshowActive = state.isSlideshowActive
+                )
+                RunningTextBar(text = state.runningText)
+            }
+        }
+    }
+}
+
+@Composable
+fun SmallClockCard(
+    currentTime: String,
+    nextPrayer: NextPrayerUiModel,
+    onNavigateToSettings: () -> Unit,
+    onStartAdzanNow: (() -> Unit)? = null,
+    onForceFridaySilence: () -> Unit = {},
+    isFridayBeforeAdzan: Boolean = false
+) {
+    var clickCount by remember { mutableStateOf(0) }
+    Box(
+        modifier = Modifier
+            .background(
+                color = Color.Black.copy(alpha = 0.6f),
+                shape = RoundedCornerShape(8.dp)
+            )
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                clickCount++
+                if (clickCount >= 5) {
+                    clickCount = 0
+                    onNavigateToSettings()
+                }
+            }
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val timeParts = currentTime.split(":")
+            val hours = timeParts.getOrNull(0) ?: "00"
+            val minutes = timeParts.getOrNull(1) ?: "00"
+            val secondsStr = timeParts.getOrNull(2) ?: "00"
+            val secondsVal = secondsStr.toIntOrNull() ?: 0
+            val isColonVisible = secondsVal % 2 == 0
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = hours,
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = ":",
+                    color = if (isColonVisible) Color.White else Color.Transparent,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = minutes,
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            val nextPrayerName = nextPrayer.prayerType.displayName.lowercase().replaceFirstChar { it.uppercase() }
+            Text(
+                text = "$nextPrayerName · ${nextPrayer.countdown}",
+                color = Color(0xFFFFD54F),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (onStartAdzanNow != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                val cardModifier = if (isFridayBeforeAdzan) {
+                    Modifier
+                        .background(Color(0xFFFFD54F).copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
+                        .pointerInput(Unit) {
+                            awaitPointerEventScope {
+                                while (true) {
+                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                    var releasedBeforeTimeout = false
+                                    val result = withTimeoutOrNull(2000L) {
+                                        while (true) {
+                                            val event = awaitPointerEvent()
+                                            if (event.changes.any { !it.pressed }) {
+                                                releasedBeforeTimeout = true
+                                                break
+                                            }
+                                        }
+                                        true
+                                    }
+                                    if (result == null) {
+                                        onForceFridaySilence()
+                                    } else if (releasedBeforeTimeout) {
+                                        onStartAdzanNow()
+                                    }
                                 }
                             }
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            // First Line: HH:mm with blinking colon
-                            val timeParts = state.currentTime.split(":")
-                            val hours = timeParts.getOrNull(0) ?: "00"
-                            val minutes = timeParts.getOrNull(1) ?: "00"
-                            val secondsStr = timeParts.getOrNull(2) ?: "00"
-                            val secondsVal = secondsStr.toIntOrNull() ?: 0
-                            val isColonVisible = secondsVal % 2 == 0
-
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = hours,
-                                    color = Color.White,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = ":",
-                                    color = if (isColonVisible) Color.White else Color.Transparent,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = minutes,
-                                    color = Color.White,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(2.dp))
-
-                            // Second Line: Next_prayer · countdown
-                            val nextPrayerName = state.nextPrayer.prayerType.displayName.lowercase().replaceFirstChar { it.uppercase() }
-                            Text(
-                                text = "$nextPrayerName · ${state.nextPrayer.countdown}",
-                                color = Color(0xFFFFD54F),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold
-                            )
                         }
-                    }
+                } else {
+                    Modifier
+                        .background(Color(0xFFFFD54F).copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
+                        .clickable { onStartAdzanNow() }
                 }
-            } else {
-                NextPrayerHeader(state.nextPrayer, onNavigateToSettings)
+                Box(
+                    modifier = cardModifier
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text("Mulai Adzan Sekarang", color = Color(0xFFFFD54F), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
             }
-        }
-
-        if (!state.isSlideshowActive) {
-            Spacer(modifier = Modifier.weight(1f))
-        }
-
-        AnimatedContent(
-            targetState = state.isSlideshowActive,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(500)) togetherWith fadeOut(animationSpec = tween(500))
-            },
-            label = "MiddleTransition"
-        ) { isSlideshow ->
-            if (!isSlideshow) {
-                ClockSection(state = state)
-            }
-        }
-
-        if (!state.isSlideshowActive) {
-            Spacer(modifier = Modifier.weight(1f))
-        }
-        
-        if (!state.isSlideshowActive) {
-            PrayerTimesPanel(
-                prayerTimes = state.prayerTimes,
-                isSlideshowActive = state.isSlideshowActive
-            )
-            RunningTextBar(text = state.runningText)
         }
     }
 }

@@ -136,7 +136,10 @@ class DashboardViewModel : ViewModel() {
         val slideshowSchedules = repository.getSlideshowSchedules()
         val slideshowEnabled = config.slideshowEnabled
         var slideshowActive = false
-        if (slideshowEnabled && slideshowSchedules.isNotEmpty()) {
+        
+        if (isFridayBeforeAdzan(config, result, now) && config.jumatSlideshowEnabled) {
+            slideshowActive = true
+        } else if (slideshowEnabled && slideshowSchedules.isNotEmpty()) {
             for (sched in slideshowSchedules) {
                 if (com.groovernapp.mosqueathan.util.PrayerUtils.isScheduleActiveNew(
                         now = now,
@@ -209,8 +212,36 @@ class DashboardViewModel : ViewModel() {
             offsetAshar = config.offsetAshar,
             offsetMaghrib = config.offsetMaghrib,
             offsetIsya = config.offsetIsya,
-            kemenagCityId = config.kemenagCityId
+            kemenagCityId = config.kemenagCityId,
+            jumatEnabled = config.jumatEnabled,
+            offsetJumat = config.offsetJumat
         )
+    }
+
+    private fun parseTimeToMinutes(timeStr: String): Int? {
+        val parts = timeStr.trim().split(":")
+        if (parts.size != 2) return null
+        val hour = parts[0].trim().toIntOrNull() ?: return null
+        val minute = parts[1].trim().toIntOrNull() ?: return null
+        return hour * 60 + minute
+    }
+
+    private fun isFridayBeforeAdzan(config: com.groovernapp.mosqueathan.data.MosqueConfigEntity, result: PrayerResult, now: LocalDateTime): Boolean {
+        if (!config.jumatEnabled) return false
+        if (now.dayOfWeek != kotlinx.datetime.DayOfWeek.FRIDAY) return false
+        val currentMinutes = now.hour * 60 + now.minute
+        val startMins = parseTimeToMinutes(config.jumatStartTime) ?: return false
+        val adzanMins = result.dzuhur.hour * 60 + result.dzuhur.minute
+        return currentMinutes in startMins until adzanMins
+    }
+
+    private fun isFridayModeActive(config: com.groovernapp.mosqueathan.data.MosqueConfigEntity, now: LocalDateTime): Boolean {
+        if (!config.jumatEnabled) return false
+        if (now.dayOfWeek != kotlinx.datetime.DayOfWeek.FRIDAY) return false
+        val currentMinutes = now.hour * 60 + now.minute
+        val startMins = parseTimeToMinutes(config.jumatStartTime) ?: return false
+        val endMins = parseTimeToMinutes(config.jumatEndTime) ?: return false
+        return currentMinutes >= startMins && currentMinutes < endMins
     }
 
     override fun onCleared() {

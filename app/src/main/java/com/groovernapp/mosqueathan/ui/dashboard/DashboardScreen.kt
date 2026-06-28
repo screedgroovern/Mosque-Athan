@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.dashboard
 
+import android.graphics.BitmapFactory
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -12,10 +13,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.groovernapp.mosqueathan.R
 import com.groovernapp.mosqueathan.data.DashboardBackgroundEntity
 import com.groovernapp.mosqueathan.data.MediaEntity
+import com.groovernapp.mosqueathan.domain.PrayerType
+import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.awaitFirstDown
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
 
 @Composable
 fun DashboardScreen(
@@ -29,7 +37,13 @@ fun DashboardScreen(
     includeDefaultImage: Boolean,
     dashboardTransitionType: String = "FADE",
     dashboardTransitionInterval: Int = 10,
-    onNavigateToSettings: () -> Unit
+    isFridayStandby: Boolean = false,
+    jumatWarningText: String = "",
+    isFridayBeforeAdzan: Boolean = false,
+    isFridayAfterAdzan: Boolean = false,
+    onNavigateToSettings: () -> Unit,
+    onStartAdzanNow: () -> Unit = {},
+    onForceFridaySilence: () -> Unit = {}
 ) {
     // --- Slideshow media list (for when isSlideshowActive) ---
     val slideshowList = remember(mediaList, includeDefaultImage) {
@@ -78,9 +92,9 @@ fun DashboardScreen(
 
     // Single customBackgroundPath fallback bitmap
     val customBgBitmap = remember(customBackgroundPath) {
-        if (customBackgroundPath.isNotEmpty() && java.io.File(customBackgroundPath).exists()) {
+        if (customBackgroundPath.isNotEmpty() && File(customBackgroundPath).exists()) {
             try {
-                android.graphics.BitmapFactory.decodeFile(customBackgroundPath)?.asImageBitmap()
+                BitmapFactory.decodeFile(customBackgroundPath)?.asImageBitmap()
             } catch (e: Throwable) {
                 null
             }
@@ -194,15 +208,26 @@ fun DashboardScreen(
             enter = fadeIn(animationSpec = tween(600)),
             exit = fadeOut(animationSpec = tween(600))
         ) {
+            val alpha = if (isFridayAfterAdzan) 0.65f else if (isFridayStandby) 0.30f else 0.45f
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.45f))
+                    .background(Color.Black.copy(alpha = alpha))
             )
         }
 
         when (state) {
-            is DashboardUiState.Dashboard -> DashboardContent(state, customBackgroundPath, onNavigateToSettings)
+            is DashboardUiState.Dashboard -> DashboardContent(
+                state = state,
+                customBackgroundPath = customBackgroundPath,
+                isFridayStandby = isFridayStandby,
+                jumatWarningText = jumatWarningText,
+                isFridayBeforeAdzan = isFridayBeforeAdzan,
+                isFridayAfterAdzan = isFridayAfterAdzan,
+                onNavigateToSettings = onNavigateToSettings,
+                onStartAdzanNow = onStartAdzanNow,
+                onForceFridaySilence = onForceFridaySilence
+            )
             is DashboardUiState.Adzan -> AdzanContent(state)
             is DashboardUiState.Iqomah -> IqomahContent(state)
         }
@@ -212,9 +237,9 @@ fun DashboardScreen(
 @Composable
 private fun DashboardBgSlide(filePath: String) {
     val bitmap = remember(filePath) {
-        if (filePath.isNotEmpty() && java.io.File(filePath).exists()) {
+        if (filePath.isNotEmpty() && File(filePath).exists()) {
             try {
-                android.graphics.BitmapFactory.decodeFile(filePath)?.asImageBitmap()
+                BitmapFactory.decodeFile(filePath)?.asImageBitmap()
             } catch (e: Throwable) {
                 null
             }
@@ -274,9 +299,9 @@ private fun MediaSlide(
         }
     } else {
         val bitmap = remember(media.filePath) {
-            if (media.filePath.isNotEmpty() && java.io.File(media.filePath).exists()) {
+            if (media.filePath.isNotEmpty() && File(media.filePath).exists()) {
                 try {
-                    android.graphics.BitmapFactory.decodeFile(media.filePath)?.asImageBitmap()
+                    BitmapFactory.decodeFile(media.filePath)?.asImageBitmap()
                 } catch (e: Throwable) {
                     null
                 }
@@ -299,5 +324,55 @@ private fun MediaSlide(
                 modifier = Modifier.fillMaxSize()
             )
         }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 1280, heightDp = 720)
+@Composable
+fun DashboardScreenPreview() {
+    val samplePrayerTimes = PrayerTimesUiModel(
+        imsak = "04:15",
+        subuh = "04:25",
+        syuruq = "05:40",
+        dzuhur = "12:00",
+        ashar = "15:15",
+        maghrib = "18:10",
+        isya = "19:20",
+        highlightedPrayer = PrayerType.DZUHUR
+    )
+
+    val sampleNextPrayer = NextPrayerUiModel(
+        prayerType = PrayerType.ASHAR,
+        prayerTime = "15:15",
+        countdown = "02:45:10"
+    )
+
+    val sampleState = DashboardUiState.Dashboard(
+        currentTime = "12:30",
+        gregorianDate = "Senin, 1 Januari 2024",
+        hijriDate = "19 Jumadil Akhir 1445 H",
+        prayerTimes = samplePrayerTimes,
+        nextPrayer = sampleNextPrayer,
+        runningText = "Selamat datang di Masjid Agung. Mohon matikan handphone selama berada di dalam masjid.",
+        isSlideshowActive = false
+    )
+
+    MosqueAthanTheme {
+        DashboardScreen(
+            state = sampleState,
+            customBackgroundPath = "",
+            mediaList = emptyList(),
+            dashboardBackgrounds = emptyList(),
+            transitionType = "FADE",
+            slideIntervalSeconds = 10,
+            videoWaitUntilEnd = false,
+            includeDefaultImage = true,
+            isFridayStandby = false,
+            jumatWarningText = "",
+            isFridayBeforeAdzan = true,
+            isFridayAfterAdzan = true,
+            onNavigateToSettings = {},
+            onStartAdzanNow = {}
+        )
     }
 }

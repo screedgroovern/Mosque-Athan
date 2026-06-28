@@ -22,7 +22,7 @@ object PwaAssets {
 
     fun getServiceWorker(): String {
         return """
-const CACHE_NAME = 'mosqueathan-cache-v1';
+const CACHE_NAME = 'mosqueathan-cache-v4';
 const urlsToCache = [
     '/',
     '/manifest.json',
@@ -42,7 +42,54 @@ self.addEventListener('install', event => {
     );
 });
 
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
+});
+
 self.addEventListener('fetch', event => {
+    // Only apply caching to GET requests
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
+    const url = new URL(event.request.url);
+    
+    // Do not cache API endpoints or upload/media requests
+    if (url.pathname.startsWith('/api') || url.pathname.startsWith('/upload') || url.pathname.startsWith('/media')) {
+        return;
+    }
+
+    // Network-First for main control panel documents to ensure they are always up to date
+    if (url.pathname === '/' || url.pathname === '/index.html') {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    if (response && response.status === 200) {
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    }
+                    return response;
+                })
+                .catch(() => {
+                    return caches.match(event.request);
+                })
+        );
+        return;
+    }
+
+    // Cache-First (with network fallback) for other static assets
     event.respondWith(
         caches.match(event.request)
             .then(response => {
@@ -51,7 +98,6 @@ self.addEventListener('fetch', event => {
                 }
                 return fetch(event.request).then(
                     function(response) {
-                        // Check if we received a valid response
                         if(!response || response.status !== 200 || response.type !== 'basic') {
                             return response;
                         }

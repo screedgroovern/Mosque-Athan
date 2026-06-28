@@ -7,6 +7,7 @@ import android.util.Log
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
 import com.groovernapp.mosqueathan.data.KemenagScheduleEntity
 import com.groovernapp.mosqueathan.data.DashboardBackgroundEntity
+import com.groovernapp.mosqueathan.data.copy
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -123,6 +124,11 @@ class SettingsServer(private val context: Context) {
             }
             launch {
                 repository.getDashboardBackgroundsFlow().collect {
+                    broadcastState()
+                }
+            }
+            launch {
+                repository.observeFridayMedia().collect {
                     broadcastState()
                 }
             }
@@ -421,9 +427,10 @@ class SettingsServer(private val context: Context) {
                     val isVideo = uri.getQueryParameter("isVideo") == "true"
                     val isBackground = uri.getQueryParameter("isBackground") == "true"
                     val isDashboardBg = uri.getQueryParameter("isDashboardBg") == "true"
+                    val isFriday = uri.getQueryParameter("isFriday") == "true"
                     val filename = uri.getQueryParameter("filename") ?: "upload_${System.currentTimeMillis()}"
                     val contentLength = headers["content-length"]?.toLongOrNull() ?: -1L
-                    logDebug("Starting upload: $filename, size: $contentLength, isVideo: $isVideo, isDashboardBg: $isDashboardBg")
+                    logDebug("Starting upload: $filename, size: $contentLength, isVideo: $isVideo, isDashboardBg: $isDashboardBg, isFriday: $isFriday")
 
                     // Set a longer timeout for the upload process
                     try { socket.soTimeout = 60000 } catch (_: Exception) {}
@@ -491,6 +498,11 @@ class SettingsServer(private val context: Context) {
                             } else if (isDashboardBg) {
                                 ImageUtils.downscaleImageInPlace(targetFile)
                                 repository.addDashboardBackground(targetFile.absolutePath)
+                            } else if (isFriday) {
+                                if (!isVideo) {
+                                    ImageUtils.downscaleImageInPlace(targetFile)
+                                }
+                                repository.addFridayMedia(targetFile.absolutePath, isVideo)
                             } else {
                                 if (!isVideo) {
                                     ImageUtils.downscaleImageInPlace(targetFile)
@@ -791,6 +803,21 @@ class SettingsServer(private val context: Context) {
             put("standbyStartTime", config.standbyStartTime)
             put("standbyEndTime", config.standbyEndTime)
             put("slideshowEnabled", config.slideshowEnabled)
+            // Friday settings
+            put("jumatEnabled", config.jumatEnabled)
+            put("jumatStartTime", config.jumatStartTime)
+            put("jumatEndTime", config.jumatEndTime)
+            put("offsetJumat", config.offsetJumat)
+            put("jumatStandbyOnly", config.jumatStandbyOnly)
+            put("jumatWarningText", config.jumatWarningText)
+            put("murottalEnabled", config.murottalEnabled)
+            put("murottalStartDelay", config.murottalStartDelay)
+            put("murottalAudioPaths", config.murottalAudioPaths)
+            put("jumatSlideshowEnabled", config.jumatSlideshowEnabled)
+            put("includeGlobalSlideshow", config.includeGlobalSlideshow)
+            put("selectedGlobalSlideIds", config.selectedGlobalSlideIds)
+            put("jumatSlideIntervalSeconds", config.jumatSlideIntervalSeconds)
+            put("jumatSlideIntervalUnit", config.jumatSlideIntervalUnit)
         }
         json.put("config", configJson)
 
@@ -814,6 +841,19 @@ class SettingsServer(private val context: Context) {
             })
         }
         json.put("mediaList", mediaArray)
+
+        // Serialize Friday media list
+        val fridayMedia = repository.getFridayMedia()
+        val fridayMediaArray = JSONArray()
+        for (fm in fridayMedia) {
+            fridayMediaArray.put(JSONObject().apply {
+                put("id", fm.id)
+                put("filePath", fm.filePath)
+                put("isVideo", fm.isVideo)
+                put("sortOrder", fm.sortOrder)
+            })
+        }
+        json.put("fridayMediaList", fridayMediaArray)
 
         // Serialize dashboard backgrounds
         val dashboardBackgrounds = repository.getDashboardBackgrounds()
@@ -949,7 +989,7 @@ class SettingsServer(private val context: Context) {
                     }.toString())
                 }
                 "update_config" -> {
-                    val config = repository.getConfig()
+                    var config = repository.getConfig()
                     val lat = if (json.has("latitude") && !json.isNull("latitude")) json.optDouble("latitude") else config.latitude
                     val lng = if (json.has("longitude") && !json.isNull("longitude")) json.optDouble("longitude") else config.longitude
                     val iqomahSubuh = if (json.has("iqomahSubuh") && !json.isNull("iqomahSubuh")) json.optInt("iqomahSubuh") else config.iqomahSubuh
@@ -975,16 +1015,66 @@ class SettingsServer(private val context: Context) {
                     val adzanFooterText = if (json.has("adzanFooterText") && !json.isNull("adzanFooterText")) json.optString("adzanFooterText") else config.adzanFooterText
                     val iqomahFooterText = if (json.has("iqomahFooterText") && !json.isNull("iqomahFooterText")) json.optString("iqomahFooterText") else config.iqomahFooterText
 
-                    repository.updateConfig(
-                        lat, lng,
-                        iqomahSubuh, iqomahDzuhur, iqomahAshar, iqomahMaghrib, iqomahIsya,
-                        calculationMethodName, adzanLeadMinutes,
-                        offsetImsak, offsetSubuh, offsetSyuruq, offsetDzuhur, offsetAshar, offsetMaghrib, offsetIsya,
-                        kemenagCityId, kemenagCityName, kemenagDuration, kemenagTargetDate,
-                        triggerFetch = true,
-                        adzanFooterText = adzanFooterText,
-                        iqomahFooterText = iqomahFooterText
+                    config = config.copy(
+                        latitude = lat, longitude = lng,
+                        iqomahSubuh = iqomahSubuh, iqomahDzuhur = iqomahDzuhur, iqomahAshar = iqomahAshar, iqomahMaghrib = iqomahMaghrib, iqomahIsya = iqomahIsya,
+                        calculationMethodName = calculationMethodName, adzanLeadMinutes = adzanLeadMinutes,
+                        offsetImsak = offsetImsak, offsetSubuh = offsetSubuh, offsetSyuruq = offsetSyuruq, offsetDzuhur = offsetDzuhur, offsetAshar = offsetAshar, offsetMaghrib = offsetMaghrib, offsetIsya = offsetIsya,
+                        kemenagCityId = kemenagCityId, kemenagCityName = kemenagCityName, kemenagDuration = kemenagDuration, kemenagTargetDate = kemenagTargetDate,
+                        adzanFooterText = adzanFooterText, iqomahFooterText = iqomahFooterText
                     )
+
+                    // Friday config options if present in JSON
+                    if (json.has("jumatEnabled")) {
+                        config = config.copy(jumatEnabled = json.optBoolean("jumatEnabled"))
+                    }
+                    if (json.has("jumatStartTime")) {
+                        config = config.copy(jumatStartTime = json.optString("jumatStartTime"))
+                    }
+                    if (json.has("jumatEndTime")) {
+                        config = config.copy(jumatEndTime = json.optString("jumatEndTime"))
+                    }
+                    if (json.has("offsetJumat")) {
+                        config = config.copy(offsetJumat = json.optInt("offsetJumat"))
+                    }
+                    if (json.has("jumatStandbyOnly")) {
+                        config = config.copy(jumatStandbyOnly = json.optBoolean("jumatStandbyOnly"))
+                    }
+                    if (json.has("jumatWarningText")) {
+                        config = config.copy(jumatWarningText = json.optString("jumatWarningText"))
+                    }
+                    if (json.has("murottalEnabled")) {
+                        config = config.copy(murottalEnabled = json.optBoolean("murottalEnabled"))
+                    }
+                    if (json.has("murottalStartDelay")) {
+                        config = config.copy(murottalStartDelay = json.optInt("murottalStartDelay"))
+                    }
+                    if (json.has("murottalAudioPaths")) {
+                        config = config.copy(murottalAudioPaths = json.optString("murottalAudioPaths"))
+                    }
+                    if (json.has("jumatSlideshowEnabled")) {
+                        config = config.copy(jumatSlideshowEnabled = json.optBoolean("jumatSlideshowEnabled"))
+                    }
+                    if (json.has("includeGlobalSlideshow")) {
+                        config = config.copy(includeGlobalSlideshow = json.optBoolean("includeGlobalSlideshow"))
+                    }
+                    if (json.has("selectedGlobalSlideIds")) {
+                        config = config.copy(selectedGlobalSlideIds = json.optString("selectedGlobalSlideIds"))
+                    }
+                    if (json.has("jumatSlideIntervalSeconds")) {
+                        config = config.copy(jumatSlideIntervalSeconds = json.optInt("jumatSlideIntervalSeconds"))
+                    }
+                    if (json.has("jumatSlideIntervalUnit")) {
+                        config = config.copy(jumatSlideIntervalUnit = json.optString("jumatSlideIntervalUnit"))
+                    }
+                    if (json.has("jumatTransitionType")) {
+                        config = config.copy(jumatTransitionType = json.optString("jumatTransitionType"))
+                    }
+                    if (json.has("jumatVideoWaitUntilEnd")) {
+                        config = config.copy(jumatVideoWaitUntilEnd = json.optBoolean("jumatVideoWaitUntilEnd"))
+                    }
+
+                    repository.updateConfig(config)
                 }
                 "preview_adzan" -> {
                     withContext(Dispatchers.Main) {
@@ -999,6 +1089,11 @@ class SettingsServer(private val context: Context) {
                 "preview_slideshow" -> {
                     withContext(Dispatchers.Main) {
                         (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.previewSlideshow()
+                    }
+                }
+                "preview_friday_slideshow" -> {
+                    withContext(Dispatchers.Main) {
+                        (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.previewFridaySlideshow()
                     }
                 }
                 "add_announcement" -> {
@@ -1389,6 +1484,103 @@ class SettingsServer(private val context: Context) {
                         repository.deleteMediaItem(id)
                         broadcastState()
                     }
+                }
+                "upload_friday_media" -> {
+                    val filename = json.optString("filename") ?: "friday_slide_${System.currentTimeMillis()}.jpg"
+                    val base64Data = json.optString("base64") ?: return
+                    val isVideo = json.optBoolean("isVideo")
+
+                    try {
+                        val dir = File(context.filesDir, "presentation")
+                        if (!dir.exists()) {
+                            dir.mkdirs()
+                        }
+
+                        val safeName = "${System.currentTimeMillis()}_${File(filename).name}"
+                        val targetFile = File(dir, safeName)
+
+                        val cleanBase64 = if (base64Data.contains(",")) {
+                            base64Data.substring(base64Data.indexOf(",") + 1)
+                        } else {
+                            base64Data
+                        }
+                        val bytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+                        FileOutputStream(targetFile).use { fos ->
+                            fos.write(bytes)
+                        }
+                        if (!isVideo) {
+                            ImageUtils.downscaleImageInPlace(targetFile)
+                        }
+                        repository.addFridayMedia(targetFile.absolutePath, isVideo)
+                        broadcastState()
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "Friday media upload failure", e)
+                    }
+                }
+                "update_friday_media_item_path" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val filename = json.optString("filename") ?: "friday_slide_${System.currentTimeMillis()}.jpg"
+                    val base64Data = json.optString("base64") ?: return
+                    val isVideo = json.optBoolean("isVideo")
+
+                    try {
+                        val dir = File(context.filesDir, "presentation")
+                        if (!dir.exists()) {
+                            dir.mkdirs()
+                        }
+
+                        val safeName = "${System.currentTimeMillis()}_${File(filename).name}"
+                        val targetFile = File(dir, safeName)
+
+                        val cleanBase64 = if (base64Data.contains(",")) {
+                            base64Data.substring(base64Data.indexOf(",") + 1)
+                        } else {
+                            base64Data
+                        }
+                        val bytes = Base64.decode(cleanBase64, Base64.DEFAULT)
+                        FileOutputStream(targetFile).use { fos ->
+                            fos.write(bytes)
+                        }
+                        if (!isVideo) {
+                            ImageUtils.downscaleImageInPlace(targetFile)
+                        }
+                        val fridayMediaList = repository.getFridayMedia()
+                        val oldMedia = fridayMediaList.find { it.id == id }
+                        if (oldMedia != null) {
+                            try {
+                                val oldFile = File(oldMedia.filePath)
+                                if (oldFile.exists()) oldFile.delete()
+                            } catch (_: Exception) {}
+                        }
+                        repository.updateFridayMediaItemPath(id, targetFile.absolutePath)
+                        broadcastState()
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "Friday media item path update failure", e)
+                    }
+                }
+                "delete_friday_media" -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val fridayMediaList = repository.getFridayMedia()
+                    val targetMedia = fridayMediaList.find { it.id == id }
+                    if (targetMedia != null) {
+                        try {
+                            val file = File(targetMedia.filePath)
+                            if (file.exists()) {
+                                file.delete()
+                            }
+                        } catch (_: Exception) {}
+                        repository.deleteFridayMedia(id)
+                        broadcastState()
+                    }
+                }
+                "reorder_friday_media" -> {
+                    val idsArray = json.optJSONArray("ids") ?: return
+                    val ids = mutableListOf<String>()
+                    for (i in 0 until idsArray.length()) {
+                        ids.add(idsArray.getString(i))
+                    }
+                    repository.updateFridayMediaOrder(ids)
+                    broadcastState()
                 }
                 "add_slideshow_schedule" -> {
                     val day = json.optString("day", "Monday")

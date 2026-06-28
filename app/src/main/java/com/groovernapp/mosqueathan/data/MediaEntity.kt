@@ -8,5 +8,6 @@ class MediaEntity : RealmObject {
     var id: String = ""
     var filePath: String = ""
     var isVideo: Boolean = false
+    var isUsed: Boolean = true
     var sortOrder: Int = 0
 }

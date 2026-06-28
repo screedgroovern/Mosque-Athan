@@ -8,6 +8,53 @@ object WebPage {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MOSQUE ATHAN - Web Control Panel</title>
+    <!-- Visual Debug Logger for JS Errors -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'position: fixed; top: 10px; left: 10px; right: 10px; background: rgba(120, 10, 10, 0.95); border: 2px solid #ff5555; color: white; padding: 15px; font-family: monospace; font-size: 13px; z-index: 99999; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); white-space: pre-wrap; word-break: break-all;';
+            errorDiv.innerHTML = '<strong style="color:#ff8888;">[JS RUNTIME ERROR]</strong><br>' + 
+                                 'Msg: ' + message + '<br>' + 
+                                 'Source: ' + source + ' : ' + lineno + ':' + colno + 
+                                 (error && error.stack ? '<br><br>Stack:<br>' + error.stack : '');
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerText = '✕';
+            closeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: transparent; border: none; color: white; font-size: 16px; cursor: pointer;';
+            closeBtn.onclick = function() { errorDiv.remove(); };
+            errorDiv.appendChild(closeBtn);
+            
+            if (document.body) {
+                document.body.appendChild(errorDiv);
+            } else {
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.body.appendChild(errorDiv);
+                });
+            }
+            return false;
+        };
+        window.onunhandledrejection = function(event) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'position: fixed; top: 10px; left: 10px; right: 10px; background: rgba(120, 10, 10, 0.95); border: 2px solid #ff5555; color: white; padding: 15px; font-family: monospace; font-size: 13px; z-index: 99999; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); white-space: pre-wrap; word-break: break-all;';
+            errorDiv.innerHTML = '<strong style="color:#ff8888;">[UNHANDLED PROMISE REJECTION]</strong><br>' + 
+                                 'Reason: ' + (event.reason ? (event.reason.message || event.reason) : 'Unknown') + 
+                                 (event.reason && event.reason.stack ? '<br><br>Stack:<br>' + event.reason.stack : '');
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerText = '✕';
+            closeBtn.style.cssText = 'position: absolute; top: 5px; right: 5px; background: transparent; border: none; color: white; font-size: 16px; cursor: pointer;';
+            closeBtn.onclick = function() { errorDiv.remove(); };
+            errorDiv.appendChild(closeBtn);
+            
+            if (document.body) {
+                document.body.appendChild(errorDiv);
+            } else {
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.body.appendChild(errorDiv);
+                });
+            }
+        };
+    </script>
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#060907">
@@ -30,23 +77,7 @@ object WebPage {
 <body>
 
     <!-- Connection Modal Overlay -->
-    <div id="connection-overlay" class="connection-overlay">
-        <div class="spinner"></div>
-        <div class="overlay-title" data-lang-key="overlay_connecting">Menghubungkan ke Aplikasi...</div>
-        <div class="overlay-desc" data-lang-key="overlay_connecting_desc">Pastikan perangkat Android Anda tetap menyala dan menjalankan aplikasi.</div>
-        <div id="connection-error-details" style="color: var(--danger); font-size: 0.9rem; margin-top: 1.5rem; text-align: center; font-family: monospace; white-space: pre-wrap; display: none;"></div>
-        <button class="btn btn-secondary" id="btn-work-offline" style="margin-top: 1.5rem; padding: 0.8rem 1.5rem;" data-lang-key="btn_work_offline" onclick="enterOfflineMode()">Bekerja Offline</button>
-        <div id="ip-override-container" style="margin-top: 2rem; text-align: center; width: 90%; max-width: 320px; display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color);">
-            <label style="font-size: 0.85rem; color: var(--text-secondary);" data-lang-key="label_tv_ip">IP Address TV (Jika Berubah):</label>
-            <div class="tv-ip-wrapper">
-                <input type="text" id="input-tv-ip" placeholder="Contoh: 192.168.1.15" class="tv-ip-input">
-                <div class="tv-ip-buttons">
-                    <button class="btn btn-primary" onclick="changeTvIp()" data-lang-key="btn_connect">Hubungkan</button>
-                    <button class="btn btn-secondary" onclick="startQrScanner()" style="display: flex; align-items: center; justify-content: center; min-width: 44px;" title="Pindai QR TV">📷</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- QR Scanner Modal Overlay (hidden by default) -->
     <div id="qr-scanner-overlay" class="connection-overlay" style="display: none; background-color: rgba(12, 18, 15, 0.98); backdrop-filter: blur(12px); z-index: 2100;">
@@ -212,6 +243,14 @@ object WebPage {
                         </div>
                     </li>
                     <li>
+                        <div class="nav-item" onclick="switchSection('section-friday-settings', this)">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span data-lang-key="nav_friday_settings">Hari Jum'at</span>
+                        </div>
+                    </li>
+                    <li>
                         <div class="nav-item" onclick="switchSection('section-remote-devices', this)">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z M20 15h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2v8z M2 9h2v6H2z"></path>
@@ -236,6 +275,7 @@ object WebPage {
             ${PrayerScheduleWebSegment.getHtml()}
             ${AdzanIqomahWebSegment.getHtml()}
             ${DisplayMediaWebSegment.getHtml()}
+            ${FridayWebSegment.getHtml()}
             ${RemoteDevicesWebSegment.getHtml()}
             ${SystemMaintenanceWebSegment.getHtml()}
         </main>

@@ -23,7 +23,7 @@ object DisplayMediaWebSegment {
                             <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle; margin-right:4px;">
                                 <path d="M8 5v14l11-7z"/>
                             </svg>
-                            <span data-lang-key="tab_slideshow">Slide Show</span>
+                            <span data-lang-key="tab_slideshow">Slideshow</span>
                         </button>
                     </div>
 
@@ -130,6 +130,32 @@ object DisplayMediaWebSegment {
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Running Text / Announcements Card -->
+                        <div class="android-viewpager-card" style="margin-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                <div>
+                                    <span style="font-weight:600; font-size:1.0625rem; color:#fff;" data-lang-key="title_announcements">Kelola Running Text</span>
+                                    <p style="font-size:0.75rem; color:rgba(255,255,255,0.6); margin:0;" data-lang-key="desc_announcements">Tambahkan pesan running text yang akan bergulir secara berkala di bagian bawah dashboard layar utama masjid.</p>
+                                </div>
+                                <button class="btn btn-secondary" onclick="toggleAnnouncementReorder()" style="height: 36px; padding: 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; background-color: rgba(255,255,255,0.08); color: #fff; border: none; border-radius: 8px;">
+                                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+                                    <span>Reorder</span>
+                                </button>
+                            </div>
+                            
+                            <div class="announcement-input-group" style="width: 100%; display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                                <input type="text" id="announcement-input" data-lang-key="placeholder_announcement" placeholder="Masukkan teks running text baru..." style="flex: 1; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: #fff;" onkeydown="if(event.key === 'Enter') addAnnouncement()">
+                                <button class="btn btn-primary" onclick="addAnnouncement()" style="padding: 0 1rem; display: flex; align-items: center; justify-content: center; border-radius: 8px; background-color: var(--accent); color: var(--accent-contrast); border: none; font-weight: bold;">
+                                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                    <span data-lang-key="btn_add" style="margin-left: 0.5rem;">Tambah</span>
+                                </button>
+                            </div>
+                            
+                            <div class="announcements-list" id="announcements-container" style="width: 100%; display: flex; flex-direction: column; gap: 0.5rem; max-height: 300px; overflow-y: auto;">
+                                <!-- Items rendered dynamically by JS -->
+                            </div>
+                        </div>
                     </div>
 
                     <!-- tab-pane: slideshow -->
@@ -185,44 +211,12 @@ object DisplayMediaWebSegment {
                                 <div id="offline-media-warning" style="display:none; color:var(--warning); font-size:0.85rem; font-weight:700; text-align:center; margin-top:0.5rem;" data-lang-key="offline_media_warning">File media baru akan diunggah setelah tersambung kembali ke TV.</div>
                             </div>
                             
-                            <!-- Transition Selector Row -->
-                            <div class="android-row-card transition-row">
-                                <span class="android-row-title" data-lang-key="label_slideshow_transition">Animasi Transisi</span>
-                                <div class="transition-picker">
-                                    <button class="transition-btn" id="trans-FADE" onclick="changeThemeConfig('FADE')">FADE</button>
-                                    <button class="transition-btn" id="trans-SLIDE" onclick="changeThemeConfig('SLIDE')">SLIDE</button>
-                                    <button class="transition-btn" id="trans-ZOOM" onclick="changeThemeConfig('ZOOM')">ZOOM</button>
-                                    <button class="transition-btn" id="trans-INSTANT" onclick="changeThemeConfig('INSTANT')">INSTANT</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Transition Interval Row -->
-                            <div class="android-row-card">
-                                <span class="android-row-title" data-lang-key="label_slideshow_interval">Interval transisi</span>
-                                <div class="android-adjustment-controls">
-                                    <button class="android-adjust-btn" onclick="adjustSlideInterval(-5)">-</button>
-                                    <span id="slideIntervalSeconds" class="android-adjust-value">--</span>
-                                    <button class="android-adjust-btn" onclick="adjustSlideInterval(5)">+</button>
-                                    <span class="android-adjust-unit" id="slideIntervalUnit" data-lang-key="seconds">detik</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Video Playback Duration Selection (Compose button group style) -->
-                            <div class="android-row-card">
-                                <div style="flex:1; min-width:200px; display:flex; flex-direction:column; gap:0.25rem;">
-                                    <span class="android-row-title" data-lang-key="label_video_playback_duration">Durasi Putar Video</span>
-                                    <span style="font-size:0.75rem; color:rgba(255,255,255,0.6);" data-lang-key="label_video_playback_desc">Tunggu video selesai diputar atau ikuti interval slide biasa</span>
-                                </div>
-                                <div class="transition-picker">
-                                    <button id="video-wait-false" onclick="toggleVideoWait(false)" class="transition-btn" data-lang-key="btn_video_follow">Ikuti Interval</button>
-                                    <button id="video-wait-true" onclick="toggleVideoWait(true)" class="transition-btn" data-lang-key="btn_video_wait">Selesai Video</button>
-                                </div>
-                            </div>
+
                             
                             <!-- Slideshow Enable Switch and Scheduler -->
                             <div style="width:100%; display:flex; flex-direction:column; gap:1rem;">
                                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <span style="font-weight:600; font-size:1.0625rem; color:#fff;" data-lang-key="label_slideshow_schedule">Jadwal Slide Show</span>
+                                    <span style="font-weight:600; font-size:1.0625rem; color:#fff;" data-lang-key="label_slideshow_schedule">Jadwal Slideshow</span>
                                     <label class="switch">
                                         <input type="checkbox" id="slideshowEnabled" onchange="toggleSlideshowEnabled(this.checked)">
                                         <span class="slider"></span>

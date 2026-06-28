@@ -5,6 +5,7 @@ import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.*
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.*
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.*
 import com.groovernapp.mosqueathan.ui.settings.systemmaintenance.*
+import com.groovernapp.mosqueathan.ui.settings.fridaysettings.*
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -67,12 +68,14 @@ fun SettingsScreen(
     onPreviewAdzan: () -> Unit = {},
     onPreviewIqomah: () -> Unit = {},
     onPreviewSlideshow: () -> Unit = {},
+    onPreviewFridaySlideshow: () -> Unit = {},
     onBack: () -> Unit
 ) {
 
     val config by viewModel.configState.collectAsState()
     val announcements by viewModel.announcementsState.collectAsState()
     val mediaList by viewModel.mediaListState.collectAsState()
+    val fridayMediaList by viewModel.fridayMediaListState.collectAsState()
     val devices by viewModel.devicesState.collectAsState()
     val citySearchResults by viewModel.citySearchResults.collectAsState()
     val isSearchingCities by viewModel.isSearchingCities.collectAsState()
@@ -122,6 +125,24 @@ fun SettingsScreen(
 
     // Standby States
     var standbyModeEnabled by remember(config.standbyModeEnabled) { mutableStateOf(config.standbyModeEnabled) }
+
+    // Friday States
+    var jumatEnabled by remember(config.jumatEnabled) { mutableStateOf(config.jumatEnabled) }
+    var jumatStartTime by remember(config.jumatStartTime) { mutableStateOf(config.jumatStartTime) }
+    var jumatEndTime by remember(config.jumatEndTime) { mutableStateOf(config.jumatEndTime) }
+    var offsetJumat by remember(config.offsetJumat) { mutableStateOf(config.offsetJumat) }
+    var jumatStandbyOnly by remember(config.jumatStandbyOnly) { mutableStateOf(config.jumatStandbyOnly) }
+    var jumatWarningText by remember(config.jumatWarningText) { mutableStateOf(config.jumatWarningText) }
+    var murottalEnabled by remember(config.murottalEnabled) { mutableStateOf(config.murottalEnabled) }
+    var murottalStartDelay by remember(config.murottalStartDelay) { mutableStateOf(config.murottalStartDelay) }
+    var murottalAudioPaths by remember(config.murottalAudioPaths) { mutableStateOf(config.murottalAudioPaths) }
+    var jumatSlideshowEnabled by remember(config.jumatSlideshowEnabled) { mutableStateOf(config.jumatSlideshowEnabled) }
+    var includeGlobalSlideshow by remember(config.includeGlobalSlideshow) { mutableStateOf(config.includeGlobalSlideshow) }
+    var selectedGlobalSlideIds by remember(config.selectedGlobalSlideIds) { mutableStateOf(config.selectedGlobalSlideIds) }
+    var jumatTransitionType by remember(config.jumatTransitionType) { mutableStateOf(config.jumatTransitionType) }
+    var jumatSlideIntervalSeconds by remember(config.jumatSlideIntervalSeconds) { mutableStateOf(config.jumatSlideIntervalSeconds) }
+    var jumatSlideIntervalUnit by remember(config.jumatSlideIntervalUnit) { mutableStateOf(config.jumatSlideIntervalUnit) }
+    var jumatVideoWaitUntilEnd by remember(config.jumatVideoWaitUntilEnd) { mutableStateOf(config.jumatVideoWaitUntilEnd) }
 
     val customBgBitmap = remember(config.customBackgroundPath) {
         if (config.customBackgroundPath.isNotEmpty() && java.io.File(config.customBackgroundPath).exists()) {
@@ -479,6 +500,7 @@ fun SettingsScreen(
                                  SettingsCategory.DISPLAY_MEDIA -> {
                                      DisplayMediaSettingsPane(
                                          config = config,
+                                         announcements = announcements,
                                          mediaList = mediaList,
                                          slideshowSchedules = slideshowSchedules,
                                          dashboardBackgrounds = dashboardBackgrounds,
@@ -487,6 +509,7 @@ fun SettingsScreen(
                                          },
                                          onAddMediaItems = { uris -> viewModel.addMediaItems(uris, context) },
                                          onUpdateMediaItemPath = { id, uri -> viewModel.updateMediaItemPath(id, uri, context) },
+                                         onUpdateMediaItemUsed = { id, isUsed -> viewModel.updateMediaItemUsed(id, isUsed) },
                                          onDeleteMediaItem = { item -> viewModel.deleteMediaItem(item) },
                                          onReorderMediaItems = { ids -> viewModel.updateMediaListOrder(ids) },
                                          onSelectCustomBackground = { uri -> viewModel.updateCustomBackground(uri, context) },
@@ -514,6 +537,10 @@ fun SettingsScreen(
                                          onUpdateDashboardSettings = { randomize, transitionType, intervalSeconds ->
                                              viewModel.updateDashboardSettings(randomize, transitionType, intervalSeconds)
                                          },
+                                         onAddAnnouncement = { content -> viewModel.addAnnouncement(content) },
+                                         onUpdateAnnouncement = { id, content -> viewModel.editAnnouncement(id, content) },
+                                         onDeleteAnnouncement = { id -> viewModel.deleteAnnouncement(id) },
+                                         onReorderAnnouncements = { ids -> viewModel.reorderAnnouncements(ids) },
                                          isCompact = isCompact
                                      )
                                  }
@@ -530,6 +557,99 @@ fun SettingsScreen(
                                          onUpdateRemoteTvIp = { ip -> viewModel.updateRemoteTvIp(ip) },
                                          onUpdatePinCode = { pin -> viewModel.updatePinCode(pin) },
                                          onSyncWithTv = { viewModel.syncWithTvServer(context) },
+                                         isCompact = isCompact
+                                     )
+                                 }
+
+                                 SettingsCategory.FRIDAY_SETTINGS -> {
+                                     FridaySettingsPane(
+                                         jumatEnabled = jumatEnabled,
+                                         onJumatEnabledChange = {
+                                             jumatEnabled = it
+                                             viewModel.updateConfig(config.copy(jumatEnabled = it))
+                                         },
+                                         jumatStartTime = jumatStartTime,
+                                         onJumatStartTimeChange = {
+                                             jumatStartTime = it
+                                             viewModel.updateConfig(config.copy(jumatStartTime = it))
+                                         },
+                                         jumatEndTime = jumatEndTime,
+                                         onJumatEndTimeChange = {
+                                             jumatEndTime = it
+                                             viewModel.updateConfig(config.copy(jumatEndTime = it))
+                                         },
+                                         offsetJumat = offsetJumat,
+                                         onOffsetJumatChange = {
+                                             offsetJumat = it
+                                             viewModel.updateConfig(config.copy(offsetJumat = it))
+                                         },
+                                         jumatStandbyOnly = jumatStandbyOnly,
+                                         onJumatStandbyOnlyChange = {
+                                             jumatStandbyOnly = it
+                                             viewModel.updateConfig(config.copy(jumatStandbyOnly = it))
+                                         },
+                                         jumatWarningText = jumatWarningText,
+                                         onJumatWarningTextChange = {
+                                             jumatWarningText = it
+                                             viewModel.updateConfig(config.copy(jumatWarningText = it))
+                                         },
+                                         murottalEnabled = murottalEnabled,
+                                         onMurottalEnabledChange = {
+                                             murottalEnabled = it
+                                             viewModel.updateConfig(config.copy(murottalEnabled = it))
+                                         },
+                                         murottalStartDelay = murottalStartDelay,
+                                         onMurottalStartDelayChange = {
+                                             murottalStartDelay = it
+                                             viewModel.updateConfig(config.copy(murottalStartDelay = it))
+                                         },
+                                         murottalAudioPaths = murottalAudioPaths,
+                                         onMurottalAudioPathsChange = {
+                                             murottalAudioPaths = it
+                                             viewModel.updateConfig(config.copy(murottalAudioPaths = it))
+                                         },
+                                         jumatSlideshowEnabled = jumatSlideshowEnabled,
+                                         onJumatSlideshowEnabledChange = {
+                                             jumatSlideshowEnabled = it
+                                             viewModel.updateConfig(config.copy(jumatSlideshowEnabled = it))
+                                         },
+                                         includeGlobalSlideshow = includeGlobalSlideshow,
+                                         onIncludeGlobalSlideshowChange = {
+                                             includeGlobalSlideshow = it
+                                             viewModel.updateConfig(config.copy(includeGlobalSlideshow = it))
+                                         },
+                                         selectedGlobalSlideIds = selectedGlobalSlideIds,
+                                         onSelectedGlobalSlideIdsChange = {
+                                             selectedGlobalSlideIds = it
+                                             viewModel.updateConfig(config.copy(selectedGlobalSlideIds = it))
+                                         },
+                                         jumatTransitionType = jumatTransitionType,
+                                         onJumatTransitionTypeChange = {
+                                             jumatTransitionType = it
+                                             viewModel.updateConfig(config.copy(jumatTransitionType = it))
+                                         },
+                                         jumatSlideIntervalSeconds = jumatSlideIntervalSeconds,
+                                         onJumatSlideIntervalSecondsChange = {
+                                             jumatSlideIntervalSeconds = it
+                                             viewModel.updateConfig(config.copy(jumatSlideIntervalSeconds = it))
+                                         },
+                                         jumatSlideIntervalUnit = jumatSlideIntervalUnit,
+                                         onJumatSlideIntervalUnitChange = {
+                                             jumatSlideIntervalUnit = it
+                                             viewModel.updateConfig(config.copy(jumatSlideIntervalUnit = it))
+                                         },
+                                         jumatVideoWaitUntilEnd = jumatVideoWaitUntilEnd,
+                                         onJumatVideoWaitUntilEndChange = {
+                                             jumatVideoWaitUntilEnd = it
+                                             viewModel.updateConfig(config.copy(jumatVideoWaitUntilEnd = it))
+                                         },
+                                         fridayMediaList = fridayMediaList,
+                                         mediaList = mediaList,
+                                         onAddFridayMediaItems = { uris -> viewModel.addFridayMediaItems(uris, context) },
+                                         onUpdateFridayMediaItemPath = { id, uri -> viewModel.updateFridayMediaItemPath(id, uri, context) },
+                                         onDeleteFridayMediaItem = { item -> viewModel.deleteFridayMediaItem(item) },
+                                         onReorderFridayMediaItems = { ids -> viewModel.updateFridayMediaOrder(ids) },
+                                         onPreviewFridaySlideshow = onPreviewFridaySlideshow,
                                          isCompact = isCompact
                                      )
                                  }
@@ -703,12 +823,21 @@ fun SideSheetContent(
                         contentAlignment = Alignment.Center
                     ) {
                         if (isCollapsed) {
-                            Icon(
-                                imageVector = category.icon,
-                                contentDescription = category.getDisplayName(),
-                                tint = tintColor,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            if (category.icon is androidx.compose.ui.graphics.vector.ImageVector) {
+                                Icon(
+                                    imageVector = category.icon,
+                                    contentDescription = category.getDisplayName(),
+                                    tint = tintColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            } else if (category.icon is Int) {
+                                Icon(
+                                    painter = androidx.compose.ui.res.painterResource(id = category.icon),
+                                    contentDescription = category.getDisplayName(),
+                                    tint = tintColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
                         } else {
                             Row(
                                 modifier = Modifier
@@ -716,12 +845,21 @@ fun SideSheetContent(
                                     .padding(horizontal = 16.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = category.icon,
-                                    contentDescription = null,
-                                    tint = tintColor,
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                if (category.icon is androidx.compose.ui.graphics.vector.ImageVector) {
+                                    Icon(
+                                        imageVector = category.icon,
+                                        contentDescription = null,
+                                        tint = tintColor,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                } else if (category.icon is Int) {
+                                    Icon(
+                                        painter = androidx.compose.ui.res.painterResource(id = category.icon),
+                                        contentDescription = null,
+                                        tint = tintColor,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     text = category.getDisplayName(),
@@ -784,7 +922,7 @@ fun SideSheetContent(
 enum class SettingsCategory(
     val getDisplayName: @Composable () -> String,
     val getDescription: @Composable () -> String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
+    val icon: Any // Accepts ImageVector or Drawable Res ID (Int)
 ) {
     PRAYER_SCHEDULE(
         getDisplayName = { Lang.get("Prayer Schedule", "Jadwal Shalat") },
@@ -805,6 +943,11 @@ enum class SettingsCategory(
         getDisplayName = { Lang.get("Connectivity", "Konektivitas") },
         getDescription = { Lang.get("Manage web control server access, connected devices, and PIN security.", "Kelola akses server kontrol web, perangkat yang terhubung, PIN, dan otoritas master.") },
         icon = Icons.Default.Devices
+    ),
+    FRIDAY_SETTINGS(
+        getDisplayName = { Lang.get("Friday", "Hari Jum'at") },
+        getDescription = { Lang.get("Configure Friday specific schedules, standby modes, khutbah warnings, and murottal audio.", "Atur jadwal khusus hari Jumat, standby, murottal sebelum adzan, dan teks pengumuman khutbah.") },
+        icon = com.groovernapp.mosqueathan.R.drawable.ic_star_crescent
     ),
     SYSTEM_MAINTENANCE(
         getDisplayName = { Lang.get("System & Reset", "Sistem & Reset") },

@@ -22,9 +22,11 @@ fun DisplayMediaSettingsPane(
     mediaList: List<MediaEntity>,
     slideshowSchedules: List<SlideshowScheduleEntity>,
     dashboardBackgrounds: List<com.groovernapp.mosqueathan.data.DashboardBackgroundEntity>,
+    announcements: List<com.groovernapp.mosqueathan.data.AnnouncementEntity>,
     onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit,
     onAddMediaItems: (List<android.net.Uri>) -> Unit,
     onUpdateMediaItemPath: (String, android.net.Uri) -> Unit,
+    onUpdateMediaItemUsed: (String, Boolean) -> Unit,
     onDeleteMediaItem: (MediaEntity) -> Unit,
     onReorderMediaItems: (List<String>) -> Unit,
     onSelectCustomBackground: (android.net.Uri) -> Unit,
@@ -42,6 +44,10 @@ fun DisplayMediaSettingsPane(
     onUpdateDashboardBackgroundOrder: (List<String>) -> Unit,
     onUpdateDashboardSettings: (Boolean, String, Int) -> Unit,
     onUpdateSlideshowEnabled: (Boolean) -> Unit,
+    onAddAnnouncement: (String) -> Unit,
+    onUpdateAnnouncement: (String, String) -> Unit,
+    onDeleteAnnouncement: (String) -> Unit,
+    onReorderAnnouncements: (List<String>) -> Unit,
     isCompact: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -106,6 +112,7 @@ fun DisplayMediaSettingsPane(
                 mediaList = mediaList,
                 slideshowSchedules = slideshowSchedules,
                 dashboardBackgrounds = dashboardBackgrounds,
+                announcements = announcements,
                 onUpdateThemeSettings = onUpdateThemeSettings,
                 onAddMediaItem = {
                     mediaPickerLauncher.launch(
@@ -122,6 +129,7 @@ fun DisplayMediaSettingsPane(
                         )
                     )
                 },
+                onUpdateMediaItemUsed = onUpdateMediaItemUsed,
                 onDeleteMediaItem = onDeleteMediaItem,
                 onReorderMediaItems = onReorderMediaItems,
                 onSelectCustomBackground = {
@@ -158,6 +166,10 @@ fun DisplayMediaSettingsPane(
                 onUpdateDashboardBackgroundOrder = onUpdateDashboardBackgroundOrder,
                 onUpdateDashboardSettings = onUpdateDashboardSettings,
                 onUpdateSlideshowEnabled = onUpdateSlideshowEnabled,
+                onAddAnnouncement = onAddAnnouncement,
+                onUpdateAnnouncement = onUpdateAnnouncement,
+                onDeleteAnnouncement = onDeleteAnnouncement,
+                onReorderAnnouncements = onReorderAnnouncements,
                 isCompact = isCompact
             )
         }
@@ -204,9 +216,11 @@ fun DisplayMediaSettingsPanePreview() {
             mediaList = mockMediaList,
             slideshowSchedules = mockSlideshowSchedules,
             dashboardBackgrounds = emptyList(),
+            announcements = emptyList(),
             onUpdateThemeSettings = { _, _, _, _ -> },
             onAddMediaItems = {},
             onUpdateMediaItemPath = { _, _ -> },
+            onUpdateMediaItemUsed = { _, _ -> },
             onDeleteMediaItem = {},
             onReorderMediaItems = {},
             onSelectCustomBackground = {},
@@ -224,6 +238,10 @@ fun DisplayMediaSettingsPanePreview() {
             onUpdateDashboardBackgroundUsed = { _, _ -> },
             onUpdateDashboardBackgroundOrder = {},
             onUpdateDashboardSettings = { _, _, _ -> },
+            onAddAnnouncement = {},
+            onUpdateAnnouncement = { _, _ -> },
+            onDeleteAnnouncement = {},
+            onReorderAnnouncements = {},
             isCompact = false
         )
     }

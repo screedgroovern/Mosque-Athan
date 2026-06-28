@@ -19,6 +19,7 @@ object WebPageJsCore {
         let adzanFooters = [];
         let iqomahFooters = [];
         let mediaList = [];
+        let fridayMediaList = [];
         let dashboardBackgrounds = [];
         let kemenagSchedules = [];
         let slideshowSchedules = [];
@@ -31,6 +32,8 @@ object WebPageJsCore {
         let isAnnouncementReorderMode = false;
         let currentDbBgIndex = 0;
         let currentSlideIndex = 0;
+        let currentFridaySlideIndex = 0;
+        let currentFridayGlobalSlideIndex = 0;
 
         // Auto-sync custom_tv_ip with the current URL if loaded directly from a TV/emulator settings server
         const locHostname = window.location.hostname;
@@ -247,9 +250,12 @@ object WebPageJsCore {
                 btn_slideshow_schedules: "Jadwal Slideshow",
                 label_announcement_list: "Daftar Running Text (Drag & Drop untuk mengatur urutan)",
                 btn_delete: "Hapus",
-                 title_display_media: "Tampilan & Media",
+                title_display_media: "Tampilan & Media",
                 tab_dashboard: "Dashboard",
-                tab_slideshow: "Slide Show",
+                tab_slideshow: "Slideshow",
+                tab_friday_slideshow: "Slideshow",
+                nav_friday_settings: "Hari Jum'at",
+                title_friday_settings: "Hari Jum'at",
                 label_dashboard_bg_list: "Daftar Latar Belakang Dashboard",
                 label_dashboard_randomize: "Tampilkan random",
                 label_dashboard_transition: "Animasi Transisi",
@@ -264,7 +270,7 @@ object WebPageJsCore {
                 label_video_playback_desc: "Tunggu video selesai diputar atau ikuti interval slide biasa",
                 btn_video_wait: "Selesai Video",
                 btn_video_follow: "Ikuti Interval",
-                label_slideshow_schedule: "Jadwal Slide Show",
+                label_slideshow_schedule: "Jadwal Slideshow",
                 btn_preview_slideshow: "Preview Slideshow",
                 label_include_default_title: "Sertakan Gambar Default (Masjidil Haram)",
                 label_include_default_desc: "Sertakan atau kecualikan gambar default dalam rotasi slideshow",
@@ -487,9 +493,12 @@ object WebPageJsCore {
                 btn_slideshow_schedules: "Slideshow Schedules",
                 label_announcement_list: "Running Text List (Drag & Drop to reorder)",
                 btn_delete: "Delete",
-                 title_display_media: "Display & Media",
+                title_display_media: "Display & Media",
                 tab_dashboard: "Dashboard",
-                tab_slideshow: "Slide Show",
+                tab_slideshow: "Slideshow",
+                tab_friday_slideshow: "Slideshow",
+                nav_friday_settings: "Friday",
+                title_friday_settings: "Friday",
                 label_dashboard_bg_list: "Dashboard Background List",
                 label_dashboard_randomize: "Randomize",
                 label_dashboard_transition: "Transition Animation",
@@ -504,7 +513,7 @@ object WebPageJsCore {
                 label_video_playback_desc: "Wait for video to finish playing or follow regular slide interval",
                 btn_video_wait: "Wait for Video",
                 btn_video_follow: "Follow Interval",
-                label_slideshow_schedule: "Slide Show Schedule",
+                label_slideshow_schedule: "Slideshow Schedule",
                 btn_preview_slideshow: "Preview Slideshow",
                 label_include_default_title: "Include Default Image (Masjidil Haram)",
                 label_include_default_desc: "Include or exclude the default image in the slideshow rotation",

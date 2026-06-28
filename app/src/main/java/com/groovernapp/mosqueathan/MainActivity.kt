@@ -110,8 +110,18 @@ class MainActivity : ComponentActivity() {
                                 includeDefaultImage = state.includeDefaultImage,
                                 dashboardTransitionType = state.dashboardTransitionType,
                                 dashboardTransitionInterval = state.dashboardTransitionInterval,
+                                isFridayStandby = state.isFridayStandby,
+                                jumatWarningText = state.jumatWarningText,
+                                isFridayBeforeAdzan = state.isFridayBeforeAdzan,
+                                isFridayAfterAdzan = state.isFridayAfterAdzan,
                                 onNavigateToSettings = {
                                     appViewModel.transitionToSettings()
+                                },
+                                onStartAdzanNow = {
+                                    appViewModel.forceStandbyMode()
+                                },
+                                onForceFridaySilence = {
+                                    appViewModel.forceFridaySilence()
                                 }
                             )
                         }
@@ -155,6 +165,9 @@ class MainActivity : ComponentActivity() {
                                 onPreviewSlideshow = {
                                     appViewModel.previewSlideshow()
                                 },
+                                onPreviewFridaySlideshow = {
+                                    appViewModel.previewFridaySlideshow()
+                                },
                                 onBack = {
                                     appViewModel.transitionToDashboard()
                                 }
@@ -178,6 +191,11 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (appViewModel.isStandbyActive.value) {
+            appViewModel.exitStandbyMode()
+            return true
+        }
+
         if (appViewModel.activeScreen.value is AppViewModel.ActiveScreen.Dashboard) {
             if (keyCode in listOf(KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN)) {
                 inputKeyHistory.add(keyCode)

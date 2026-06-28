@@ -444,6 +444,69 @@ object WebPageJsActions {
                 }
             }
 
+            // Friday Slideshow media preview rendering
+            const fridaySlidePagerContainer = document.getElementById('friday-slideshow-media-viewpager-container');
+            const fridaySlidePreviewContent = document.getElementById('friday-slideshow-media-preview-content');
+            const fridaySlideDots = document.getElementById('friday-slideshow-media-dots');
+            
+            const fridaySlides = fridayMediaList || [];
+            
+            const fridaySlidePrevBtn = document.getElementById('btn-nav-prev-friday-slideshow-media');
+            const fridaySlideNextBtn = document.getElementById('btn-nav-next-friday-slideshow-media');
+            const fridaySlideActions = document.getElementById('friday-slideshow-media-actions');
+            if (fridaySlidePrevBtn) fridaySlidePrevBtn.style.display = fridaySlides.length > 1 ? 'flex' : 'none';
+            if (fridaySlideNextBtn) fridaySlideNextBtn.style.display = fridaySlides.length > 1 ? 'flex' : 'none';
+            if (fridaySlideActions) fridaySlideActions.style.display = fridaySlides.length > 0 ? 'flex' : 'none';
+            
+            if (fridaySlidePagerContainer) {
+                if (fridaySlides.length === 0) {
+                    if (fridaySlidePreviewContent) {
+                        fridaySlidePreviewContent.innerHTML = '<div style="font-weight:bold; color:var(--text-secondary);">' +
+                            (currentLang === 'id' ? 'Belum ada media slideshow Jum\'at.' : 'No Friday slideshow media yet.') + '</div>';
+                    }
+                    if (fridaySlideDots) fridaySlideDots.style.display = 'none';
+                } else {
+                    if (currentFridaySlideIndex >= fridaySlides.length) {
+                        currentFridaySlideIndex = fridaySlides.length - 1;
+                    }
+                    if (currentFridaySlideIndex < 0) {
+                        currentFridaySlideIndex = 0;
+                    }
+                    
+                    const item = fridaySlides[currentFridaySlideIndex];
+                    const isLocalPreview = item.filePath.startsWith('data:') || item.filePath.startsWith('blob:');
+                    const previewSrc = isLocalPreview ? item.filePath : '/media?path=' + encodeURIComponent(item.filePath);
+                    
+                    if (fridaySlidePreviewContent) {
+                        fridaySlidePreviewContent.innerHTML = '';
+                        if (item.isVideo) {
+                            const videoTag = document.createElement('video');
+                            videoTag.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+                            videoTag.autoplay = false;
+                            videoTag.controls = true;
+                            videoTag.muted = true;
+                            videoTag.src = previewSrc;
+                            fridaySlidePreviewContent.appendChild(videoTag);
+                        } else {
+                            const imgTag = document.createElement('img');
+                            imgTag.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+                            imgTag.src = previewSrc;
+                            fridaySlidePreviewContent.appendChild(imgTag);
+                        }
+                    }
+                    
+                    if (fridaySlideDots) {
+                        fridaySlideDots.style.display = 'flex';
+                        fridaySlideDots.innerHTML = '';
+                        fridaySlides.forEach((_, idx) => {
+                            const dot = document.createElement('div');
+                            dot.style.cssText = 'width:6px; height:6px; margin:0 3px; border-radius:50%; background:' + (idx === currentFridaySlideIndex ? '#ffd54f' : 'rgba(255,255,255,0.4)') + '; transition: background 0.3s;';
+                            fridaySlideDots.appendChild(dot);
+                        });
+                    }
+                }
+            }
+
             // Standby settings
             const standbyModeCheckbox = document.getElementById('standbyModeEnabled');
             if (standbyModeCheckbox) {
@@ -454,6 +517,94 @@ object WebPageJsActions {
             const slideshowEnabledCheckbox = document.getElementById('slideshowEnabled');
             if (slideshowEnabledCheckbox) {
                 slideshowEnabledCheckbox.checked = !!appConfig.slideshowEnabled;
+            }
+
+            // Friday settings
+
+            const jumatEnabledCheckbox = document.getElementById('jumatEnabled');
+            if (jumatEnabledCheckbox) {
+                jumatEnabledCheckbox.checked = !!appConfig.jumatEnabled;
+                updateFridayEnabledState(jumatEnabledCheckbox.checked);
+            }
+            
+            const standbyCheckbox = document.getElementById('jumatStandbyOnly');
+            if (standbyCheckbox) {
+                updateFridayStandbyOnlyState(standbyCheckbox.checked);
+            }
+            
+            const includeGlobalCheckbox = document.getElementById('includeGlobalSlideshow');
+            if (includeGlobalCheckbox) {
+                includeGlobalCheckbox.checked = !!appConfig.includeGlobalSlideshow;
+            }
+            
+            updateFridaySlideshowUI();
+
+            const jumatStartTimeInput = document.getElementById('jumatStartTime');
+            if (jumatStartTimeInput) {
+                jumatStartTimeInput.value = appConfig.jumatStartTime || '11:00';
+            }
+            const jumatEndTimeInput = document.getElementById('jumatEndTime');
+            if (jumatEndTimeInput) {
+                jumatEndTimeInput.value = appConfig.jumatEndTime || '13:00';
+            }
+            const offsetJumatSpan = document.getElementById('offsetJumat');
+            if (offsetJumatSpan) {
+                const val = appConfig.offsetJumat || 0;
+                offsetJumatSpan.innerText = (val > 0 ? "+" : "") + val;
+            }
+            const jumatStandbyOnlyCheckbox = document.getElementById('jumatStandbyOnly');
+            if (jumatStandbyOnlyCheckbox) {
+                jumatStandbyOnlyCheckbox.checked = !!appConfig.jumatStandbyOnly;
+            }
+            const jumatWarningTextInput = document.getElementById('jumatWarningText');
+            if (jumatWarningTextInput) {
+                jumatWarningTextInput.value = appConfig.jumatWarningText || '';
+            }
+            const murottalEnabledCheckbox = document.getElementById('murottalEnabled');
+            if (murottalEnabledCheckbox) {
+                murottalEnabledCheckbox.checked = !!appConfig.murottalEnabled;
+                if (typeof updateMurottalUI === 'function') updateMurottalUI(murottalEnabledCheckbox.checked);
+            }
+            const murottalStartDelaySpan = document.getElementById('murottalStartDelay');
+            if (murottalStartDelaySpan) {
+                murottalStartDelaySpan.innerText = appConfig.murottalStartDelay || 0;
+            }
+            const murottalAudioPathsInput = document.getElementById('murottalAudioPaths');
+            if (murottalAudioPathsInput) {
+                murottalAudioPathsInput.value = appConfig.murottalAudioPaths || '';
+            }
+            const jumatSlideshowEnabledCheckbox = document.getElementById('jumatSlideshowEnabled');
+            if (jumatSlideshowEnabledCheckbox) {
+                jumatSlideshowEnabledCheckbox.checked = !!appConfig.jumatSlideshowEnabled;
+            }
+            const includeGlobalSlideshowCheckbox = document.getElementById('includeGlobalSlideshow');
+            if (includeGlobalSlideshowCheckbox) {
+                includeGlobalSlideshowCheckbox.checked = !!appConfig.includeGlobalSlideshow;
+            }
+
+            const jumatTransitionTypeSelect = document.getElementById('jumatTransitionType');
+            if (jumatTransitionTypeSelect) {
+                jumatTransitionTypeSelect.value = appConfig.jumatTransitionType || 'FADE';
+            }
+            const jumatSlideIntervalSpan = document.getElementById('jumatSlideIntervalSeconds');
+            if (jumatSlideIntervalSpan) {
+                jumatSlideIntervalSpan.innerText = appConfig.jumatSlideIntervalSeconds || 10;
+            }
+            const jumatSlideIntervalUnitSelect = document.getElementById('jumatSlideIntervalUnit');
+            if (jumatSlideIntervalUnitSelect) {
+                jumatSlideIntervalUnitSelect.value = appConfig.jumatSlideIntervalUnit || 'SECONDS';
+            }
+            const jumatVideoWaitCheckbox = document.getElementById('jumatVideoWaitUntilEnd');
+            if (jumatVideoWaitCheckbox) {
+                jumatVideoWaitCheckbox.checked = appConfig.jumatVideoWaitUntilEnd !== false; // defaults to true
+            }
+            const selectedGlobalSlideIdsInput = document.getElementById('selectedGlobalSlideIds');
+            if (selectedGlobalSlideIdsInput) {
+                selectedGlobalSlideIdsInput.value = appConfig.selectedGlobalSlideIds || '';
+            }
+
+            if (typeof updateFridayStandbyOnlyState === 'function') {
+                updateFridayStandbyOnlyState(!!appConfig.jumatStandbyOnly);
             }
 
             // Inline schedules rendering
@@ -2572,12 +2723,456 @@ object WebPageJsActions {
             }
         }
 
+        function updateFridaySlideshowUI() {
+            const jumatSlideshowEnabled = document.getElementById('jumatSlideshowEnabled')?.checked;
+            const container = document.getElementById('friday-slideshow-ui-container');
+            if (container) {
+                container.style.display = jumatSlideshowEnabled ? 'block' : 'none';
+            }
+            const includeGlobalGroup = document.getElementById('include-global-slideshow-group');
+            if (includeGlobalGroup) {
+                includeGlobalGroup.style.display = jumatSlideshowEnabled ? 'flex' : 'none';
+            }
+            if (jumatSlideshowEnabled) {
+                renderFridayGlobalMedia();
+            }
+        }
+
+        function switchFridaySlideshowTab(tab) {
+            switchSubTab('friday-slideshow-ui-container', tab === 'friday' ? 'friday-media-section' : 'global-slideshow-section');
+            if (tab === 'global') renderFridayGlobalMedia();
+        }
+
+        function navigateFridayGlobalSlideshowMedia(dir) {
+            const slides = mediaList || [];
+            if (slides.length === 0) return;
+            currentFridayGlobalSlideIndex = (currentFridayGlobalSlideIndex + dir + slides.length) % slides.length;
+            renderFridayGlobalMedia();
+        }
+
+        function toggleCurrentFridayGlobalSlideshowUsed(checked) {
+            const slides = mediaList || [];
+            if (slides.length === 0) return;
+            const item = slides[currentFridayGlobalSlideIndex];
+            if (!item) return;
+            toggleGlobalSlideSelection(item.id, checked);
+        }
+
+        function renderFridayGlobalMedia() {
+            const previewContent = document.getElementById('friday-global-slideshow-media-preview-content');
+            const dots = document.getElementById('friday-global-slideshow-media-dots');
+            const useCheckbox = document.getElementById('use-current-friday-global-slideshow');
+            const prevBtn = document.getElementById('btn-nav-prev-friday-global-slideshow-media');
+            const nextBtn = document.getElementById('btn-nav-next-friday-global-slideshow-media');
+
+            const slides = mediaList || [];
+            
+            if (prevBtn) prevBtn.style.display = slides.length > 1 ? 'flex' : 'none';
+            if (nextBtn) nextBtn.style.display = slides.length > 1 ? 'flex' : 'none';
+
+            if (slides.length === 0) {
+                if (previewContent) {
+                    previewContent.innerHTML = '<div style="font-weight:bold; color:var(--text-secondary); text-align:center; padding:1rem;">' +
+                        (currentLang === 'id' ? 'Belum ada media slideshow global.' : 'No global slideshow media yet.') + '</div>';
+                }
+                if (dots) dots.style.display = 'none';
+                if (useCheckbox) useCheckbox.closest('#friday-global-slideshow-use-container').style.display = 'none';
+                return;
+            }
+
+            if (dots) dots.style.display = 'flex';
+            if (useCheckbox) useCheckbox.closest('#friday-global-slideshow-use-container').style.display = 'flex';
+
+            if (currentFridayGlobalSlideIndex >= slides.length) {
+                currentFridayGlobalSlideIndex = slides.length - 1;
+            }
+            if (currentFridayGlobalSlideIndex < 0) {
+                currentFridayGlobalSlideIndex = 0;
+            }
+
+            const item = slides[currentFridayGlobalSlideIndex];
+            const isLocalPreview = item.filePath.startsWith('data:') || item.filePath.startsWith('blob:');
+            const previewSrc = isLocalPreview ? item.filePath : '/media?path=' + encodeURIComponent(item.filePath);
+
+            if (previewContent) {
+                previewContent.innerHTML = '';
+                if (item.isVideo) {
+                    const videoTag = document.createElement('video');
+                    videoTag.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+                    videoTag.autoplay = false;
+                    videoTag.controls = true;
+                    videoTag.muted = true;
+                    videoTag.src = previewSrc;
+                    previewContent.appendChild(videoTag);
+                } else {
+                    const imgTag = document.createElement('img');
+                    imgTag.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+                    imgTag.src = previewSrc;
+                    previewContent.appendChild(imgTag);
+                }
+            }
+
+            // Checkbox value
+            const selectedIds = (appConfig.selectedGlobalSlideIds || '').split(',').map(s => s.trim()).filter(s => s.length > 0);
+            const isSelected = selectedIds.includes(item.id);
+            if (useCheckbox) {
+                useCheckbox.checked = isSelected;
+            }
+
+            // Render dots
+            if (dots) {
+                dots.innerHTML = '';
+                slides.forEach((_, idx) => {
+                    const dot = document.createElement('div');
+                    dot.style.cssText = 'width:6px; height:6px; margin:0 3px; border-radius:50%; background:' + (idx === currentFridayGlobalSlideIndex ? '#ffd54f' : 'rgba(255,255,255,0.4)') + '; transition: background 0.3s;';
+                    dots.appendChild(dot);
+                });
+            }
+        }
+
+        function toggleGlobalSlideSelection(slideId, isChecked) {
+            let selectedIds = (appConfig.selectedGlobalSlideIds || '').split(',').map(s => s.trim()).filter(s => s.length > 0);
+            if (isChecked) {
+                if (!selectedIds.includes(slideId)) {
+                    selectedIds.push(slideId);
+                }
+            } else {
+                selectedIds = selectedIds.filter(id => id !== slideId);
+            }
+            const newValue = selectedIds.join(',');
+            appConfig.selectedGlobalSlideIds = newValue;
+            
+            // Re-render
+            renderFridayGlobalMedia();
+            
+            // Send update
+            safeSend({
+                action: 'update_config',
+                selectedGlobalSlideIds: newValue
+            });
+        }
+
+        function updateFridayEnabledState(checked) {
+            const dependentCards = document.getElementById('friday-dependent-cards');
+            if (dependentCards) {
+                dependentCards.style.display = checked ? 'block' : 'none';
+            }
+            const timeInputs = document.getElementById('friday-time-inputs');
+            if (timeInputs) {
+                timeInputs.style.display = checked ? 'block' : 'none';
+            }
+        }
+
+        function updateFridayStandbyOnlyState(checked) {
+
+            const warningContainer = document.getElementById('friday-warning-text-container');
+            const murottalCard = document.getElementById('friday-murottal-card');
+            const slideshowCard = document.getElementById('friday-slideshow-card');
+            
+            const warningInput = document.getElementById('jumatWarningText');
+            const murottalInput = document.getElementById('murottalEnabled');
+            const jumatSlideshowInput = document.getElementById('jumatSlideshowEnabled');
+            const includeGlobalInput = document.getElementById('includeGlobalSlideshow');
+
+            if (checked) {
+                if (murottalCard) murottalCard.style.opacity = '0.4';
+                if (murottalInput) murottalInput.disabled = true;
+                if (slideshowCard) slideshowCard.style.opacity = '0.4';
+                if (jumatSlideshowInput) jumatSlideshowInput.disabled = true;
+                if (includeGlobalInput) includeGlobalInput.disabled = true;
+            } else {
+                if (murottalCard) murottalCard.style.opacity = '1.0';
+                if (murottalInput) murottalInput.disabled = false;
+                if (slideshowCard) slideshowCard.style.opacity = '1.0';
+                if (jumatSlideshowInput) jumatSlideshowInput.disabled = false;
+                if (includeGlobalInput) includeGlobalInput.disabled = false;
+            }
+        }
+
+        function toggleFridayStandbyOnly(checked) {
+            appConfig.jumatStandbyOnly = checked;
+            updateFridayStandbyOnlyState(checked);
+            safeSend({
+                action: 'update_config',
+                jumatStandbyOnly: checked
+            });
+        }
+
+
+        function toggleFridaySetting(key, checked) {
+            if (key === 'jumatEnabled') {
+                updateFridayEnabledState(checked);
+            } else if (key === 'murottalEnabled') {
+                if (typeof updateMurottalUI === 'function') updateMurottalUI(checked);
+            }
+            appConfig[key] = checked;
+            safeSend({
+                action: 'update_config',
+                [key]: checked
+            });
+        }
+
+        function saveFridayTextSetting(key, value) {
+            appConfig[key] = value;
+            safeSend({
+                action: 'update_config',
+                [key]: value
+            });
+        }
+
+        function adjustFridayOffset(diff) {
+            let val = appConfig.offsetJumat || 0;
+            val = Math.max(-60, Math.min(60, val + diff));
+            appConfig.offsetJumat = val;
+            const sign = val > 0 ? "+" : "";
+            document.getElementById('offsetJumat').innerText = sign + val;
+            safeSend({
+                action: 'update_config',
+                offsetJumat: val
+            });
+        }
+
+        function adjustFridayMurottalDelay(diff) {
+            let val = appConfig.murottalStartDelay || 0;
+            val = Math.max(0, val + diff);
+            appConfig.murottalStartDelay = val;
+            document.getElementById('murottalStartDelay').innerText = val;
+            safeSend({
+                action: 'update_config',
+                murottalStartDelay: val
+            });
+        }
+
+        function adjustFridaySlideInterval(diff) {
+            let val = appConfig.jumatSlideIntervalSeconds || 10;
+            val = Math.max(3, val + diff);
+            val = Math.min(300, val);
+            appConfig.jumatSlideIntervalSeconds = val;
+            document.getElementById('jumatSlideIntervalSeconds').innerText = val;
+            safeSend({
+                action: 'update_config',
+                jumatSlideIntervalSeconds: val
+            });
+        }
+
+        function updateMurottalUI(checked) {
+            const container = document.getElementById('murottal-dependent-inputs');
+            if (container) {
+                container.style.display = checked ? 'block' : 'none';
+            }
+            renderMurottalAudioList();
+        }
+
+        function renderMurottalAudioList() {
+            const listContainer = document.getElementById('murottal-audio-list-container');
+            const listBtn = document.getElementById('btn-list-audio-murottal');
+            if (!listContainer) return;
+            
+            const rawPaths = appConfig.murottalAudioPaths || '';
+            const paths = rawPaths.split(',').map(p => p.trim()).filter(p => p.length > 0);
+            
+            listContainer.innerHTML = '';
+            
+            if (paths.length === 0) {
+                listContainer.innerHTML = '<div style="color: rgba(255,255,255,0.3); font-size: 12px;">' + (currentLang === 'id' ? 'Belum ada file audio' : 'No audio files selected') + '</div>';
+            } else {
+                paths.slice(0, 5).forEach(path => {
+                    const filename = path.split('/').pop() || path;
+                    const row = document.createElement('div');
+                    row.style.display = 'flex';
+                    row.style.alignItems = 'center';
+                    row.style.justifyContent = 'space-between';
+                    row.style.background = 'rgba(255,255,255,0.05)';
+                    row.style.borderRadius = '8px';
+                    row.style.padding = '8px';
+                    row.style.marginBottom = '4px';
+                    
+                    row.innerHTML = 
+                        '<div style="color: white; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%;">' + escapeHtml(filename) + '</div>' +
+                        '<button class="btn" style="background: transparent; border: none; padding: 4px; color: rgba(255,0,0,0.8); cursor: pointer;" onclick="removeMurottalAudio(\'' + escapeHtml(path).replace(/'/g, "\\'") + '\')">' +
+                            '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>' +
+                        '</button>';
+                    listContainer.appendChild(row);
+                });
+            }
+            
+            if (listBtn) {
+                listBtn.style.display = paths.length > 5 ? 'block' : 'none';
+                listBtn.innerText = (currentLang === 'id' ? 'Daftar Audio' : 'List Audio') + ' (' + paths.length + ')';
+            }
+        }
+
+        function promptAddMurottalAudio() {
+            const current = appConfig.murottalAudioPaths || '';
+            const newPath = prompt(currentLang === 'id' ? 'Masukkan path file audio (contoh: /storage/emulated/0/Music/murottal.mp3):' : 'Enter audio file path (e.g. /storage/emulated/0/Music/murottal.mp3):');
+            if (newPath && newPath.trim().length > 0) {
+                const paths = current.split(',').map(p => p.trim()).filter(p => p.length > 0);
+                if (!paths.includes(newPath.trim())) {
+                    paths.push(newPath.trim());
+                    appConfig.murottalAudioPaths = paths.join(',');
+                    renderMurottalAudioList();
+                    saveFridayTextSetting('murottalAudioPaths', appConfig.murottalAudioPaths);
+                }
+            }
+        }
+
+        function removeMurottalAudio(pathToRemove) {
+            const current = appConfig.murottalAudioPaths || '';
+            const paths = current.split(',').map(p => p.trim()).filter(p => p.length > 0);
+            const newPaths = paths.filter(p => p !== pathToRemove);
+            appConfig.murottalAudioPaths = newPaths.join(',');
+            renderMurottalAudioList();
+            saveFridayTextSetting('murottalAudioPaths', appConfig.murottalAudioPaths);
+        }
+
+        function showAllMurottalAudio() {
+            alert(currentLang === 'id' ? 'Fitur daftar lengkap akan segera hadir.' : 'Full list feature coming soon.');
+        }
+
+        function previewFridaySlideshow() {
+            safeSend({
+                action: 'preview_friday_slideshow'
+            });
+            showToast(currentLang === 'id' ? 'Memulai pratinjau slideshow Jum\'at di TV...' : 'Starting Friday slideshow preview on TV...', 'info');
+        }
+
+        // Friday slideshow media functions
+        function navigateFridaySlideshowMedia(dir) {
+            const slides = fridayMediaList || [];
+            if (slides.length === 0) return;
+            currentFridaySlideIndex = (currentFridaySlideIndex + dir + slides.length) % slides.length;
+            updateUI();
+        }
+        
+        function triggerFridaySlideshowMediaEdit() {
+            const input = document.getElementById('edit-friday-slideshow-media-input');
+            if (input) input.click();
+        }
+        
+        function handleFridaySlideshowMediaEdit(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const slides = fridayMediaList || [];
+            const currentItem = slides[currentFridaySlideIndex];
+            if (!currentItem) return;
+            
+            const isVideo = file.type.startsWith('video/');
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64 = e.target.result;
+                if (isOfflineMode) {
+                    const localId = currentItem.id;
+                    const action = {
+                        action: 'update_friday_media_item_path',
+                        id: localId,
+                        filename: file.name,
+                        base64: base64,
+                        isVideo: isVideo
+                    };
+                    saveFileOffline(action);
+                    showToast(currentLang === 'id' ? 'Mengubah media slide Jum\'at secara lokal...' : 'Updating Friday slideshow media locally...', 'info');
+                } else {
+                    safeSend({
+                        action: 'update_friday_media_item_path',
+                        id: currentItem.id,
+                        filename: file.name,
+                        base64: base64,
+                        isVideo: isVideo
+                    });
+                    showToast(currentLang === 'id' ? 'Mengubah media slide Jum\'at...' : 'Updating Friday slideshow media...', 'info');
+                }
+            };
+            reader.readAsDataURL(file);
+            input.value = '';
+        }
+        
+        function deleteCurrentFridaySlideshowMedia() {
+            const slides = fridayMediaList || [];
+            const currentItem = slides[currentFridaySlideIndex];
+            if (!currentItem) return;
+            if (confirm(currentLang === 'id' ? 'Hapus slide Jum\'at ini dari rotasi?' : 'Delete this Friday slide from rotation?')) {
+                if (isOfflineMode) {
+                    const action = {
+                        action: 'delete_friday_media',
+                        id: currentItem.id
+                    };
+                    pushOfflineAction(action);
+                    showToast(currentLang === 'id' ? 'Menghapus media slide Jum\'at secara lokal...' : 'Deleting Friday slideshow media locally...', 'warning');
+                } else {
+                    safeSend({
+                        action: 'delete_friday_media',
+                        id: currentItem.id
+                    });
+                    showToast(currentLang === 'id' ? 'Menghapus media slide Jum\'at...' : 'Deleting Friday slideshow media...', 'warning');
+                }
+            }
+        }
+
+        function handleFridaySlideshowMediaUpload(input) {
+            const files = input.files;
+            if (!files || files.length === 0) return;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const isVideo = file.type.startsWith('video/');
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result;
+                    const tempId = 'temp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    
+                    if (isOfflineMode) {
+                        const action = {
+                            action: 'upload_friday_media',
+                            id: tempId,
+                            filename: file.name,
+                            base64: base64,
+                            isVideo: isVideo
+                        };
+                        saveFileOffline(action);
+                        showToast(currentLang === 'id' ? 'Menambahkan media slide Jum\'at secara lokal...' : 'Adding Friday slideshow media locally...', 'success');
+                    } else {
+                        safeSend({
+                            action: 'upload_friday_media',
+                            filename: file.name,
+                            base64: base64,
+                            isVideo: isVideo
+                        });
+                        showToast(currentLang === 'id' ? 'Mengunggah media slide Jum\'at...' : 'Uploading Friday slideshow media...', 'info');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+            input.value = '';
+        }
+
         // Bind dropdown actions to global window scope explicitly
+        window.navigateFridaySlideshowMedia = navigateFridaySlideshowMedia;
+        window.triggerFridaySlideshowMediaEdit = triggerFridaySlideshowMediaEdit;
+        window.handleFridaySlideshowMediaEdit = handleFridaySlideshowMediaEdit;
+        window.deleteCurrentFridaySlideshowMedia = deleteCurrentFridaySlideshowMedia;
+        window.handleFridaySlideshowMediaUpload = handleFridaySlideshowMediaUpload;
+        window.promptAddMurottalAudio = promptAddMurottalAudio;
+        window.removeMurottalAudio = removeMurottalAudio;
+        window.showAllMurottalAudio = showAllMurottalAudio;
+        window.previewFridaySlideshow = previewFridaySlideshow;
         window.toggleIntervalUnitDropdown = toggleIntervalUnitDropdown;
         window.selectIntervalUnit = selectIntervalUnit;
         window.changeDashboardIntervalUnit = changeDashboardIntervalUnit;
         window.adjustDashboardInterval = adjustDashboardInterval;
         window.renameMyDevice = renameMyDevice;
+        window.updateFridayStandbyOnlyState = updateFridayStandbyOnlyState;
+        window.toggleFridayStandbyOnly = toggleFridayStandbyOnly;
+        window.toggleFridaySetting = toggleFridaySetting;
+        window.saveFridayTextSetting = saveFridayTextSetting;
+        window.adjustFridayOffset = adjustFridayOffset;
+        window.adjustFridayMurottalDelay = adjustFridayMurottalDelay;
+        window.adjustFridaySlideInterval = adjustFridaySlideInterval;
+        window.updateFridaySlideshowUI = updateFridaySlideshowUI;
+        window.switchFridaySlideshowTab = switchFridaySlideshowTab;
+        window.renderFridayGlobalMedia = renderFridayGlobalMedia;
+        window.toggleGlobalSlideSelection = toggleGlobalSlideSelection;
+        window.navigateFridayGlobalSlideshowMedia = navigateFridayGlobalSlideshowMedia;
+        window.toggleCurrentFridayGlobalSlideshowUsed = toggleCurrentFridayGlobalSlideshowUsed;
 
         // Close dropdown when clicking outside of the dropdown container
         document.addEventListener('click', function(event) {

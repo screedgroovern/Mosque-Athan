@@ -47,7 +47,9 @@ object PrayerCalculator {
         offsetAshar: Int = 0,
         offsetMaghrib: Int = 0,
         offsetIsya: Int = 0,
-        kemenagCityId: String = ""
+        kemenagCityId: String = "",
+        jumatEnabled: Boolean = false,
+        offsetJumat: Int = 0
     ): PrayerResult {
 
         val zone = TimeZone.currentSystemDefault()
@@ -58,6 +60,9 @@ object PrayerCalculator {
         var sunriseAdjusted: Instant? = null
         var dhuhrAdjusted: Instant? = null
         var asrAdjusted: Instant? = null
+        
+        val isFridayMode = today.dayOfWeek == kotlinx.datetime.DayOfWeek.FRIDAY && jumatEnabled
+        val actualOffsetDzuhur = if (isFridayMode) offsetJumat else offsetDzuhur
         var maghribAdjusted: Instant? = null
         var ishaAdjusted: Instant? = null
         var nextFajrAdjusted: Instant? = null
@@ -70,7 +75,7 @@ object PrayerCalculator {
                 imsakAdjusted = parseKemenagTime(today, todaySchedule.imsak, zone)?.plus(offsetImsak.toLong(), DateTimeUnit.MINUTE)
                 fajrAdjusted = parseKemenagTime(today, todaySchedule.subuh, zone)?.plus(offsetSubuh.toLong(), DateTimeUnit.MINUTE)
                 sunriseAdjusted = parseKemenagTime(today, todaySchedule.terbit, zone)?.plus(offsetSyuruq.toLong(), DateTimeUnit.MINUTE)
-                dhuhrAdjusted = parseKemenagTime(today, todaySchedule.dzuhur, zone)?.plus(offsetDzuhur.toLong(), DateTimeUnit.MINUTE)
+                dhuhrAdjusted = parseKemenagTime(today, todaySchedule.dzuhur, zone)?.plus(actualOffsetDzuhur.toLong(), DateTimeUnit.MINUTE)
                 asrAdjusted = parseKemenagTime(today, todaySchedule.ashar, zone)?.plus(offsetAshar.toLong(), DateTimeUnit.MINUTE)
                 maghribAdjusted = parseKemenagTime(today, todaySchedule.maghrib, zone)?.plus(offsetMaghrib.toLong(), DateTimeUnit.MINUTE)
                 ishaAdjusted = parseKemenagTime(today, todaySchedule.isya, zone)?.plus(offsetIsya.toLong(), DateTimeUnit.MINUTE)
@@ -102,7 +107,7 @@ object PrayerCalculator {
         val fajrFinal = fajrAdjusted ?: prayerTimes.fajr.plus(offsetSubuh.toLong(), DateTimeUnit.MINUTE)
         val imsakFinal = imsakAdjusted ?: fajrFinal.plus((-10 + offsetImsak).toLong(), DateTimeUnit.MINUTE)
         val sunriseFinal = sunriseAdjusted ?: prayerTimes.sunrise.plus(offsetSyuruq.toLong(), DateTimeUnit.MINUTE)
-        val dhuhrFinal = dhuhrAdjusted ?: prayerTimes.dhuhr.plus(offsetDzuhur.toLong(), DateTimeUnit.MINUTE)
+        val dhuhrFinal = dhuhrAdjusted ?: prayerTimes.dhuhr.plus(actualOffsetDzuhur.toLong(), DateTimeUnit.MINUTE)
         val asrFinal = asrAdjusted ?: prayerTimes.asr.plus(offsetAshar.toLong(), DateTimeUnit.MINUTE)
         val maghribFinal = maghribAdjusted ?: prayerTimes.maghrib.plus(offsetMaghrib.toLong(), DateTimeUnit.MINUTE)
         val ishaFinal = ishaAdjusted ?: prayerTimes.isha.plus(offsetIsya.toLong(), DateTimeUnit.MINUTE)

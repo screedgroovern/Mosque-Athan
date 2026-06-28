@@ -71,6 +71,7 @@ import com.groovernapp.mosqueathan.data.MediaEntity
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.data.SlideshowScheduleEntity
 import com.groovernapp.mosqueathan.ui.component.Schedule
+import com.groovernapp.mosqueathan.ui.component.SlideshowComponent
 import com.groovernapp.mosqueathan.ui.settings.TvFocusableButton
 import com.groovernapp.mosqueathan.ui.settings.TvFocusablePrimaryButton
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
@@ -88,9 +89,11 @@ fun ThemeSettingsSegment(
     mediaList: List<MediaEntity>,
     slideshowSchedules: List<SlideshowScheduleEntity>,
     dashboardBackgrounds: List<DashboardBackgroundEntity>,
+    announcements: List<com.groovernapp.mosqueathan.data.AnnouncementEntity>,
     onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit,
     onAddMediaItem: () -> Unit,
     onUpdateMediaItemPath: (String) -> Unit,
+    onUpdateMediaItemUsed: (String, Boolean) -> Unit,
     onDeleteMediaItem: (MediaEntity) -> Unit,
     onReorderMediaItems: (List<String>) -> Unit,
     onSelectCustomBackground: () -> Unit,
@@ -108,6 +111,10 @@ fun ThemeSettingsSegment(
     onUpdateDashboardBackgroundOrder: (List<String>) -> Unit,
     onUpdateDashboardSettings: (Boolean, String, Int) -> Unit,
     onUpdateSlideshowEnabled: (Boolean) -> Unit,
+    onAddAnnouncement: (String) -> Unit,
+    onUpdateAnnouncement: (String, String) -> Unit,
+    onDeleteAnnouncement: (String) -> Unit,
+    onReorderAnnouncements: (List<String>) -> Unit,
     isCompact: Boolean
 ) {
     val pagerState = rememberPagerState(initialPage = 0) { 2 }
@@ -117,7 +124,7 @@ fun ThemeSettingsSegment(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // TabRow header for Dashboard & Slide Show segments
+        // TabRow header for Dashboard & Slideshow segments
         SecondaryTabRow(
             selectedTabIndex = pagerState.currentPage,
             containerColor = Color.Transparent,
@@ -157,11 +164,11 @@ fun ThemeSettingsSegment(
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Slide Show",
+                            contentDescription = "Slideshow",
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = Lang.get("Slide Show", "Slide Show"),
+                            text = Lang.get("Slideshow", "Slideshow"),
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -180,12 +187,17 @@ fun ThemeSettingsSegment(
                 DashboardTabContent(
                     config = config,
                     dashboardBackgrounds = dashboardBackgrounds,
+                    announcements = announcements,
                     onAddDashboardBackground = onAddDashboardBackground,
                     onUpdateDashboardBackgroundPath = onUpdateDashboardBackgroundPath,
                     onDeleteDashboardBackground = onDeleteDashboardBackground,
                     onUpdateDashboardBackgroundUsed = onUpdateDashboardBackgroundUsed,
                     onUpdateDashboardBackgroundOrder = onUpdateDashboardBackgroundOrder,
                     onUpdateDashboardSettings = onUpdateDashboardSettings,
+                    onAddAnnouncement = onAddAnnouncement,
+                    onUpdateAnnouncement = onUpdateAnnouncement,
+                    onDeleteAnnouncement = onDeleteAnnouncement,
+                    onReorderAnnouncements = onReorderAnnouncements,
                     isCompact = isCompact
                 )
             } else {
@@ -200,6 +212,7 @@ fun ThemeSettingsSegment(
                     onUpdateThemeSettings = onUpdateThemeSettings,
                     onAddMediaItem = onAddMediaItem,
                     onUpdateMediaItemPath = onUpdateMediaItemPath,
+                    onUpdateMediaItemUsed = onUpdateMediaItemUsed,
                     onDeleteMediaItem = onDeleteMediaItem,
                     onReorderMediaItems = onReorderMediaItems,
                     onAddSlideshowSchedule = onAddSlideshowSchedule,
@@ -220,12 +233,17 @@ fun ThemeSettingsSegment(
 fun DashboardTabContent(
     config: MosqueConfigEntity,
     dashboardBackgrounds: List<DashboardBackgroundEntity>,
+    announcements: List<com.groovernapp.mosqueathan.data.AnnouncementEntity>,
     onAddDashboardBackground: () -> Unit,
     onUpdateDashboardBackgroundPath: (String) -> Unit,
     onDeleteDashboardBackground: (String) -> Unit,
     onUpdateDashboardBackgroundUsed: (String, Boolean) -> Unit,
     onUpdateDashboardBackgroundOrder: (List<String>) -> Unit,
     onUpdateDashboardSettings: (Boolean, String, Int) -> Unit,
+    onAddAnnouncement: (String) -> Unit,
+    onUpdateAnnouncement: (String, String) -> Unit,
+    onDeleteAnnouncement: (String) -> Unit,
+    onReorderAnnouncements: (List<String>) -> Unit,
     isCompact: Boolean
 ) {
     Column(
@@ -273,275 +291,6 @@ fun DashboardTabContent(
             }
         }
 
-        // Preview Pager with peeking previous/next items AND long-press drag-to-reorder support
-        if (dashboardBackgrounds.isNotEmpty()) {
-            val pagerState = rememberPagerState(initialPage = 0) { dashboardBackgrounds.size }
-            val coroutineScope = rememberCoroutineScope()
-            var draggedBgPageIndex by remember { mutableStateOf<Int?>(null) }
-            var dragBgPageOffsetX by remember { mutableStateOf(0f) }
-            var bgPageCardWidth by remember { mutableStateOf(0) }
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    HorizontalPager(
-                        state = pagerState,
-                        contentPadding = PaddingValues(horizontal = 48.dp),
-                        pageSpacing = 16.dp,
-                        modifier = Modifier.fillMaxWidth()
-                    ) { index ->
-                        val bg = dashboardBackgrounds[index]
-                        val bitmap = remember(bg.filePath) {
-                            try {
-                                android.graphics.BitmapFactory.decodeFile(bg.filePath)?.asImageBitmap()
-                            } catch (_: Exception) {
-                                null
-                            }
-                        }
-                        val isCurrentPageDragged = index == draggedBgPageIndex
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(16f / 9f)
-                                .onGloballyPositioned { coords ->
-                                    if (index == pagerState.currentPage) {
-                                        bgPageCardWidth = coords.size.width
-                                    }
-                                }
-                                .zIndex(if (isCurrentPageDragged) 10f else 1f)
-                                .graphicsLayer {
-                                    translationX = if (isCurrentPageDragged) dragBgPageOffsetX else 0f
-                                }
-                                .pointerInput(Unit) {
-                                    detectDragGesturesAfterLongPress(
-                                        onDragStart = {
-                                            draggedBgPageIndex = index
-                                            dragBgPageOffsetX = 0f
-                                        },
-                                        onDrag = { change, dragAmount ->
-                                            change.consume()
-                                            dragBgPageOffsetX += dragAmount.x
-
-                                            val draggedIdx = draggedBgPageIndex
-                                            if (draggedIdx != null && bgPageCardWidth > 0) {
-                                                val threshold = bgPageCardWidth / 2f
-                                                if (dragBgPageOffsetX > threshold && draggedIdx < dashboardBackgrounds.size - 1) {
-                                                    val newList = dashboardBackgrounds.toMutableList()
-                                                    java.util.Collections.swap(newList, draggedIdx, draggedIdx + 1)
-                                                    onUpdateDashboardBackgroundOrder(newList.map { it.id })
-                                                    dragBgPageOffsetX -= bgPageCardWidth
-                                                    draggedBgPageIndex = draggedIdx + 1
-                                                    coroutineScope.launch {
-                                                        pagerState.scrollToPage(draggedIdx + 1)
-                                                    }
-                                                } else if (dragBgPageOffsetX < -threshold && draggedIdx > 0) {
-                                                    val newList = dashboardBackgrounds.toMutableList()
-                                                    java.util.Collections.swap(newList, draggedIdx, draggedIdx - 1)
-                                                    onUpdateDashboardBackgroundOrder(newList.map { it.id })
-                                                    dragBgPageOffsetX += bgPageCardWidth
-                                                    draggedBgPageIndex = draggedIdx - 1
-                                                    coroutineScope.launch {
-                                                        pagerState.scrollToPage(draggedIdx - 1)
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        onDragEnd = {
-                                            draggedBgPageIndex = null
-                                            dragBgPageOffsetX = 0f
-                                        },
-                                        onDragCancel = {
-                                            draggedBgPageIndex = null
-                                            dragBgPageOffsetX = 0f
-                                        }
-                                    )
-                                }
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White.copy(alpha = 0.05f))
-                        ) {
-                            if (bitmap != null) {
-                                Image(
-                                    bitmap = bitmap,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = Lang.get("Failed to load image", "Gagal memuat gambar"),
-                                        color = Color.White.copy(alpha = 0.5f)
-                                    )
-                                }
-                            }
-
-                            // Edit / Delete icons overlaid at the top
-                            Row(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                IconButton(
-                                    onClick = { onUpdateDashboardBackgroundPath(bg.id) },
-                                    colors = IconButtonDefaults.iconButtonColors(
-                                        containerColor = Color.Black.copy(alpha = 0.6f)
-                                    ),
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit Background",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-
-                                IconButton(
-                                    onClick = { onDeleteDashboardBackground(bg.id) },
-                                    colors = IconButtonDefaults.iconButtonColors(
-                                        containerColor = Color.Black.copy(alpha = 0.6f)
-                                    ),
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete Background",
-                                        tint = Color.Red.copy(alpha = 0.8f),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Dot Indicator stationary inside the pager overlay
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 12.dp)
-                            .height(16.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        repeat(dashboardBackgrounds.size) { iteration ->
-                            val color = if (pagerState.currentPage == iteration) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.4f)
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = 3.dp)
-                                    .clip(CircleShape)
-                                    .background(color)
-                                    .size(6.dp)
-                            )
-                        }
-                    }
-                }
-
-                // Checkbox "Use / Gunakan" outside pager, tied dynamically to current page
-                val currentBg = dashboardBackgrounds.getOrNull(pagerState.currentPage)
-                if (currentBg != null) {
-                    Row(
-                        modifier = Modifier
-                            .clickable { onUpdateDashboardBackgroundUsed(currentBg.id, !currentBg.isUsed) }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = currentBg.isUsed,
-                            onCheckedChange = { onUpdateDashboardBackgroundUsed(currentBg.id, it) },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = Color(0xFFFFD54F),
-                                checkmarkColor = Color.Black,
-                                uncheckedColor = Color.White.copy(alpha = 0.6f)
-                            )
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = Lang.get("Use", "Gunakan"),
-                            color = Color.White,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            }
-        } else {
-            // Default placeholder card (16:9)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.05f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.main_bg_default),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.4f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = Lang.get("Using Default Background", "Menggunakan Latar Belakang Default"),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-                }
-            }
-        }
-
-        // Add Background Button
-        TvFocusablePrimaryButton(
-            onClick = onAddDashboardBackground,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = Color.Black)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = Lang.get("Add Dashboard Background", "Tambah Latar Belakang Dashboard"),
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-            }
-        }
-
-        // Transition selector
-        TransitionAnimationRow(
-            title = Lang.get("Transition Animation", "Animasi Transisi"),
-            selectedType = config.dashboardTransitionType,
-            isCompact = isCompact,
-            onTypeSelected = { type ->
-                onUpdateDashboardSettings(
-                    config.dashboardRandomize,
-                    type,
-                    config.dashboardTransitionInterval
-                )
-            }
-        )
-
         val (displayValue, unitIndex) = remember(config.dashboardTransitionInterval) {
             val interval = config.dashboardTransitionInterval
             when {
@@ -552,37 +301,41 @@ fun DashboardTabContent(
             }
         }
 
-        val unitLabels = listOf(
-            Lang.get("seconds", "detik"),
-            Lang.get("minutes", "menit"),
-            Lang.get("hours", "jam"),
-            Lang.get("days", "hari")
-        )
-
         val multipliers = listOf(1, 60, 3600, 86400)
-        val maxValForUnit = when (unitIndex) {
-            0 -> 60 // detik
-            1 -> 60 // menit
-            2 -> 24 // jam
-            3 -> 30 // hari
-            else -> 60
-        }
 
-        DropdownAdjustmentRow(
-            title = Lang.get("Transition interval", "Interval transisi"),
-            value = displayValue,
-            minValue = 1,
-            maxValue = maxValForUnit,
-            unitLabels = unitLabels,
-            selectedUnitIndex = unitIndex,
-            onValueChange = { newVal ->
+        SlideshowComponent(
+            items = dashboardBackgrounds,
+            keySelector = { it.id },
+            filePathSelector = { it.filePath },
+            isUsedSelector = { it.isUsed },
+            onUpdateUseStatus = { item, isUsed -> onUpdateDashboardBackgroundUsed(item.id, isUsed) },
+            showAddButton = true,
+            addText = Lang.get("Add Dashboard Background", "Tambah Latar Belakang Dashboard"),
+            onAddClicked = onAddDashboardBackground,
+            onReorderItems = onUpdateDashboardBackgroundOrder,
+            onEditItem = { onUpdateDashboardBackgroundPath(it.id) },
+            onDeleteItem = { onDeleteDashboardBackground(it.id) },
+            emptyText = Lang.get("Using Default Background", "Menggunakan Latar Belakang Default"),
+            showTransitionAnimation = true,
+            transitionType = config.dashboardTransitionType,
+            onTransitionTypeChange = { type ->
+                onUpdateDashboardSettings(
+                    config.dashboardRandomize,
+                    type,
+                    config.dashboardTransitionInterval
+                )
+            },
+            showTransitionInterval = true,
+            transitionIntervalValue = displayValue,
+            transitionIntervalUnitIndex = unitIndex,
+            onTransitionIntervalValueChange = { newVal ->
                 onUpdateDashboardSettings(
                     config.dashboardRandomize,
                     config.dashboardTransitionType,
                     newVal * multipliers[unitIndex]
                 )
             },
-            onUnitChange = { index ->
+            onTransitionIntervalUnitChange = { index ->
                 val clampedVal = displayValue.coerceIn(1, when (index) {
                     0 -> 60
                     1 -> 60
@@ -595,7 +348,18 @@ fun DashboardTabContent(
                     config.dashboardTransitionType,
                     clampedVal * multipliers[index]
                 )
-            }
+            },
+            isCompact = isCompact
+        )
+
+        // Running Text Management
+        Spacer(modifier = Modifier.height(8.dp))
+        RunningTextSettingsCard(
+            announcements = announcements,
+            onAdd = onAddAnnouncement,
+            onEdit = onUpdateAnnouncement,
+            onDelete = onDeleteAnnouncement,
+            onReorder = onReorderAnnouncements
         )
     }
 }
@@ -612,6 +376,7 @@ fun SlideshowTabContent(
     onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit,
     onAddMediaItem: () -> Unit,
     onUpdateMediaItemPath: (String) -> Unit,
+    onUpdateMediaItemUsed: (String, Boolean) -> Unit,
     onDeleteMediaItem: (MediaEntity) -> Unit,
     onReorderMediaItems: (List<String>) -> Unit,
     onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit,
@@ -636,329 +401,70 @@ fun SlideshowTabContent(
             fontWeight = FontWeight.SemiBold
         )
 
-        // Slideshow Carousel with peeking previous/next items AND long-press drag-to-reorder support
-        if (mediaList.isNotEmpty()) {
-            val pagerState = rememberPagerState(initialPage = 0) { mediaList.size }
-            val coroutineScope = rememberCoroutineScope()
-            var draggedMediaPageIndex by remember { mutableStateOf<Int?>(null) }
-            var dragMediaPageOffsetX by remember { mutableStateOf(0f) }
-            var mediaPageCardWidth by remember { mutableStateOf(0) }
-
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                HorizontalPager(
-                    state = pagerState,
-                    contentPadding = PaddingValues(horizontal = 48.dp),
-                    pageSpacing = 16.dp,
-                    modifier = Modifier.fillMaxWidth()
-                ) { index ->
-                    val media = mediaList[index]
-                    val bitmap = remember(media.filePath) {
-                        try {
-                            if (!media.isVideo) {
-                                android.graphics.BitmapFactory.decodeFile(media.filePath)?.asImageBitmap()
-                            } else {
-                                null
-                            }
-                        } catch (_: Exception) {
-                            null
-                        }
-                    }
-                    val isCurrentPageDragged = index == draggedMediaPageIndex
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(16f / 9f)
-                            .onGloballyPositioned { coords ->
-                                if (index == pagerState.currentPage) {
-                                    mediaPageCardWidth = coords.size.width
-                                }
-                            }
-                            .zIndex(if (isCurrentPageDragged) 10f else 1f)
-                            .graphicsLayer {
-                                translationX = if (isCurrentPageDragged) dragMediaPageOffsetX else 0f
-                            }
-                            .pointerInput(Unit) {
-                                detectDragGesturesAfterLongPress(
-                                    onDragStart = {
-                                        draggedMediaPageIndex = index
-                                        dragMediaPageOffsetX = 0f
-                                    },
-                                    onDrag = { change, dragAmount ->
-                                        change.consume()
-                                        dragMediaPageOffsetX += dragAmount.x
-
-                                        val draggedIdx = draggedMediaPageIndex
-                                        if (draggedIdx != null && mediaPageCardWidth > 0) {
-                                            val threshold = mediaPageCardWidth / 2f
-                                            if (dragMediaPageOffsetX > threshold && draggedIdx < mediaList.size - 1) {
-                                                val newList = mediaList.toMutableList()
-                                                java.util.Collections.swap(newList, draggedIdx, draggedIdx + 1)
-                                                onReorderMediaItems(newList.map { it.id })
-                                                dragMediaPageOffsetX -= mediaPageCardWidth
-                                                draggedMediaPageIndex = draggedIdx + 1
-                                                coroutineScope.launch {
-                                                    pagerState.scrollToPage(draggedIdx + 1)
-                                                }
-                                            } else if (dragMediaPageOffsetX < -threshold && draggedIdx > 0) {
-                                                val newList = mediaList.toMutableList()
-                                                java.util.Collections.swap(newList, draggedIdx, draggedIdx - 1)
-                                                onReorderMediaItems(newList.map { it.id })
-                                                dragMediaPageOffsetX += mediaPageCardWidth
-                                                draggedMediaPageIndex = draggedIdx - 1
-                                                coroutineScope.launch {
-                                                    pagerState.scrollToPage(draggedIdx - 1)
-                                                }
-                                            }
-                                        }
-                                    },
-                                    onDragEnd = {
-                                        draggedMediaPageIndex = null
-                                        dragMediaPageOffsetX = 0f
-                                    },
-                                    onDragCancel = {
-                                        draggedMediaPageIndex = null
-                                        dragMediaPageOffsetX = 0f
-                                    }
-                                )
-                            }
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White.copy(alpha = 0.05f))
-                    ) {
-                        if (media.isVideo) {
-                            // Video placeholder
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = "Video File",
-                                    tint = Color(0xFFFFD54F),
-                                    modifier = Modifier.size(64.dp)
-                                )
-                                Text(
-                                    text = Lang.get("Video Slide", "Video Slide"),
-                                    color = Color.White.copy(alpha = 0.6f),
-                                    modifier = Modifier
-                                        .align(Alignment.BottomCenter)
-                                        .padding(bottom = 12.dp)
-                                )
-                            }
-                        } else if (bitmap != null) {
-                            Image(
-                                bitmap = bitmap,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = Lang.get("Failed to load image", "Gagal memuat gambar"),
-                                    color = Color.White.copy(alpha = 0.5f)
-                                )
-                            }
-                        }
-
-                        // Overlaid edit/delete icons
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            IconButton(
-                                onClick = { onUpdateMediaItemPath(media.id) },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = Color.Black.copy(alpha = 0.6f)
-                                ),
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit Media",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-
-                            IconButton(
-                                onClick = { onDeleteMediaItem(media) },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = Color.Black.copy(alpha = 0.6f)
-                                ),
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete Media",
-                                    tint = Color.Red.copy(alpha = 0.8f),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Stationary Dot Indicator overlaid at the bottom of the image area
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 12.dp)
-                        .height(16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    repeat(mediaList.size) { iteration ->
-                        val color = if (pagerState.currentPage == iteration) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.4f)
-                        Box(
-                            modifier = Modifier
-                                .padding(horizontal = 3.dp)
-                                .clip(CircleShape)
-                                .background(color)
-                                .size(6.dp)
-                        )
-                    }
-                }
-            }
-        } else {
-            // Default placeholder card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.05f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = Lang.get("No media added. Slideshow is empty.", "Belum ada media. Slideshow kosong."),
-                    color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 14.sp
-                )
+        val (displayValue, unitIndex) = remember(slideIntervalSeconds) {
+            val interval = slideIntervalSeconds
+            when {
+                interval % 86400 == 0 -> Pair(interval / 86400, 3) // Hari
+                interval % 3600 == 0 -> Pair(interval / 3600, 2)  // Jam
+                interval % 60 == 0 -> Pair(interval / 60, 1)    // Menit
+                else -> Pair(interval, 0)                      // Detik
             }
         }
 
-        // Add Media Button (Filled Style)
-        TvFocusablePrimaryButton(
-            onClick = onAddMediaItem,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = Color.Black)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = Lang.get("Add Image / Video to Slideshow", "Tambah Gambar / Video ke Slideshow"),
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-            }
-        }
+        val multipliers = listOf(1, 60, 3600, 86400)
 
-        TransitionAnimationRow(
-            title = Lang.get("Transition Animation", "Animasi Transisi"),
-            selectedType = transitionType,
-            isCompact = isCompact,
-            onTypeSelected = { type ->
+        SlideshowComponent(
+            items = mediaList,
+            keySelector = { it.id },
+            filePathSelector = { it.filePath },
+            isVideoSelector = { it.isVideo },
+            isUsedSelector = { it.isUsed },
+            onUpdateUseStatus = { item, isUsed -> onUpdateMediaItemUsed(item.id, isUsed) },
+            showAddButton = true,
+            addText = Lang.get("Add Image / Video to Slideshow", "Tambah Gambar / Video ke Slideshow"),
+            onAddClicked = onAddMediaItem,
+            onReorderItems = onReorderMediaItems,
+            onEditItem = { onUpdateMediaItemPath(it.id) },
+            onDeleteItem = { onDeleteMediaItem(it) },
+            emptyText = Lang.get("No media added. Slideshow is empty.", "Belum ada media. Slideshow kosong."),
+            showTransitionAnimation = true,
+            transitionType = transitionType,
+            onTransitionTypeChange = { type ->
                 onUpdateThemeSettings(
                     type,
                     slideIntervalSeconds,
                     videoWaitUntilEnd,
                     includeDefaultImage
                 )
-            }
-        )
-
-        // Responsive Transition Interval Counter
-        AdjustmentRow(
-            title = Lang.get("Transition interval", "Interval transisi"),
-            value = slideIntervalSeconds,
-            minValue = 5,
-            maxValue = 120,
-            showSign = false,
-            unitSuffix = Lang.get("seconds", "detik"),
-            onValueChange = { interval ->
+            },
+            showTransitionInterval = true,
+            transitionIntervalValue = displayValue,
+            transitionIntervalUnitIndex = unitIndex,
+            onTransitionIntervalValueChange = { newVal ->
                 onUpdateThemeSettings(
                     transitionType,
-                    interval,
+                    newVal * multipliers[unitIndex],
                     videoWaitUntilEnd,
                     includeDefaultImage
                 )
-            }
+            },
+            onTransitionIntervalUnitChange = { index ->
+                val clampedVal = displayValue.coerceIn(1, when (index) {
+                    0 -> 60
+                    1 -> 60
+                    2 -> 24
+                    3 -> 30
+                    else -> 60
+                })
+                onUpdateThemeSettings(
+                    transitionType,
+                    clampedVal * multipliers[index],
+                    videoWaitUntilEnd,
+                    includeDefaultImage
+                )
+            },
+            isCompact = isCompact
         )
-
-        // Video Playback behavior duration options (Wait for video / Follow interval)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.White.copy(alpha = 0.05f))
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = Lang.get("Video Playback Duration", "Durasi Putar Video"),
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = Lang.get(
-                        "Wait for video to finish playing or follow regular slide interval",
-                        "Tunggu video selesai diputar atau ikuti interval slide biasa"
-                    ),
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 12.sp
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(false, true).forEach { waitEnd ->
-                    val isSelected = videoWaitUntilEnd == waitEnd
-                    val label = if (waitEnd)
-                        Lang.get("Wait for Video", "Selesai Video")
-                    else
-                        Lang.get("Follow Interval", "Ikuti Interval")
-                    TvFocusableButton(
-                        onClick = {
-                            onUpdateThemeSettings(
-                                transitionType,
-                                slideIntervalSeconds,
-                                waitEnd,
-                                includeDefaultImage
-                            )
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.1f)
-                        ),
-                        shape = RoundedCornerShape(6.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                        modifier = Modifier.height(32.dp)
-                    ) {
-                        Text(
-                            text = label,
-                            color = if (isSelected) Color.Black else Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-        }
 
         // Slideshow Schedule section with enable/disable toggle
         Spacer(modifier = Modifier.height(8.dp))
@@ -1458,16 +964,18 @@ fun ThemeSettingsSegmentPreview() {
     MosqueAthanTheme {
         ThemeSettingsSegment(
             config = mockConfig,
-            transitionType = mockConfig.transitionType,
-            slideIntervalSeconds = mockConfig.slideIntervalSeconds,
-            videoWaitUntilEnd = mockConfig.videoWaitUntilEnd,
-            includeDefaultImage = mockConfig.includeDefaultImage,
+            transitionType = "FADE",
+            slideIntervalSeconds = 10,
+            videoWaitUntilEnd = false,
+            includeDefaultImage = true,
             mediaList = mockMediaList,
-            slideshowSchedules = mockSlideshowSchedules,
-            dashboardBackgrounds = mockDashboardBackgrounds,
+            slideshowSchedules = emptyList(),
+            dashboardBackgrounds = emptyList(),
+            announcements = emptyList(),
             onUpdateThemeSettings = { _, _, _, _ -> },
             onAddMediaItem = {},
             onUpdateMediaItemPath = {},
+            onUpdateMediaItemUsed = { _, _ -> },
             onDeleteMediaItem = {},
             onReorderMediaItems = {},
             onSelectCustomBackground = {},
@@ -1485,7 +993,136 @@ fun ThemeSettingsSegmentPreview() {
             onUpdateDashboardBackgroundUsed = { _, _ -> },
             onUpdateDashboardBackgroundOrder = {},
             onUpdateDashboardSettings = { _, _, _ -> },
+            onAddAnnouncement = {},
+            onUpdateAnnouncement = { _, _ -> },
+            onDeleteAnnouncement = {},
+            onReorderAnnouncements = {},
             isCompact = false
         )
+    }
+}
+
+@Composable
+fun RunningTextSettingsCard(
+    announcements: List<com.groovernapp.mosqueathan.data.AnnouncementEntity>,
+    onAdd: (String) -> Unit,
+    onEdit: (String, String) -> Unit,
+    onDelete: (String) -> Unit,
+    onReorder: (List<String>) -> Unit
+) {
+    var newText by remember { mutableStateOf("") }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = Lang.get("Manage Running Text", "Kelola Running Text"),
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = Lang.get(
+                    "Add running text messages that will scroll periodically at the bottom of the main dashboard screen.",
+                    "Tambahkan pesan running text yang akan bergulir secara berkala di bagian bawah dashboard layar utama masjid."
+                ),
+                color = Color.White.copy(alpha = 0.6f),
+                fontSize = 12.sp
+            )
+        }
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            androidx.compose.material3.OutlinedTextField(
+                value = newText,
+                onValueChange = { newText = it },
+                placeholder = { Text(Lang.get("Enter new running text...", "Masukkan teks running text baru..."), color = Color.White.copy(alpha=0.5f)) },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFFFFD54F),
+                    unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                )
+            )
+            TvFocusablePrimaryButton(
+                onClick = {
+                    if (newText.isNotBlank()) {
+                        onAdd(newText)
+                        newText = ""
+                    }
+                },
+                modifier = Modifier.height(56.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(Lang.get("Add", "Tambah"), color = Color.Black, fontWeight = FontWeight.Bold)
+            }
+        }
+        
+        if (announcements.isNotEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                announcements.sortedBy { it.position }.forEach { item ->
+                    var isEditing by remember(item.id) { mutableStateOf(false) }
+                    var editText by remember(item.id) { mutableStateOf(item.content) }
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.Black.copy(alpha = 0.3f))
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (isEditing) {
+                            androidx.compose.material3.OutlinedTextField(
+                                value = editText,
+                                onValueChange = { editText = it },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFFFFD54F),
+                                    unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White
+                                )
+                            )
+                            IconButton(onClick = {
+                                onEdit(item.id, editText)
+                                isEditing = false
+                            }) {
+                                Icon(Icons.Default.Add, contentDescription = "Save", tint = Color(0xFFFFD54F))
+                            }
+                        } else {
+                            Text(
+                                text = item.content,
+                                color = Color.White,
+                                modifier = Modifier.weight(1f),
+                                fontSize = 14.sp
+                            )
+                            IconButton(onClick = { isEditing = true }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.White.copy(alpha=0.7f), modifier=Modifier.size(20.dp))
+                            }
+                            IconButton(onClick = { onDelete(item.id) }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFE57373), modifier=Modifier.size(20.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

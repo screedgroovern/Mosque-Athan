@@ -51,6 +51,28 @@ class MosqueConfigEntity : RealmObject {
 
     // Slideshow schedule toggle
     var slideshowEnabled: Boolean = false
+
+    // Fitur Jumat
+    var jumatEnabled: Boolean = false
+    var jumatStartTime: String = "11:00"
+    var jumatEndTime: String = "13:00"
+    var offsetJumat: Int = 0
+    var jumatStandbyOnly: Boolean = false
+    var jumatWarningText: String = ""
+
+    // Murottal
+    var murottalEnabled: Boolean = false
+    var murottalStartDelay: Int = 0
+    var murottalAudioPaths: String = ""
+
+    // Slideshow Jumat
+    var jumatSlideshowEnabled: Boolean = false
+    var includeGlobalSlideshow: Boolean = false
+    var selectedGlobalSlideIds: String = ""
+    var jumatTransitionType: String = "FADE"
+    var jumatSlideIntervalSeconds: Int = 10
+    var jumatSlideIntervalUnit: String = "SECONDS"
+    var jumatVideoWaitUntilEnd: Boolean = true
 }
 fun MosqueConfigEntity.copy(
     id: String = this.id,
@@ -91,7 +113,23 @@ fun MosqueConfigEntity.copy(
     dashboardRandomize: Boolean = this.dashboardRandomize,
     dashboardTransitionType: String = this.dashboardTransitionType,
     dashboardTransitionInterval: Int = this.dashboardTransitionInterval,
-    slideshowEnabled: Boolean = this.slideshowEnabled
+    slideshowEnabled: Boolean = this.slideshowEnabled,
+    jumatEnabled: Boolean = this.jumatEnabled,
+    jumatStartTime: String = this.jumatStartTime,
+    jumatEndTime: String = this.jumatEndTime,
+    offsetJumat: Int = this.offsetJumat,
+    jumatStandbyOnly: Boolean = this.jumatStandbyOnly,
+    jumatWarningText: String = this.jumatWarningText,
+    murottalEnabled: Boolean = this.murottalEnabled,
+    murottalStartDelay: Int = this.murottalStartDelay,
+    murottalAudioPaths: String = this.murottalAudioPaths,
+    jumatSlideshowEnabled: Boolean = this.jumatSlideshowEnabled,
+    includeGlobalSlideshow: Boolean = this.includeGlobalSlideshow,
+    selectedGlobalSlideIds: String = this.selectedGlobalSlideIds,
+    jumatTransitionType: String = this.jumatTransitionType,
+    jumatSlideIntervalSeconds: Int = this.jumatSlideIntervalSeconds,
+    jumatSlideIntervalUnit: String = this.jumatSlideIntervalUnit,
+    jumatVideoWaitUntilEnd: Boolean = this.jumatVideoWaitUntilEnd
 ): MosqueConfigEntity {
     val newEntity = MosqueConfigEntity()
     newEntity.id = id
@@ -133,5 +171,21 @@ fun MosqueConfigEntity.copy(
     newEntity.dashboardTransitionType = dashboardTransitionType
     newEntity.dashboardTransitionInterval = dashboardTransitionInterval
     newEntity.slideshowEnabled = slideshowEnabled
+    newEntity.jumatEnabled = jumatEnabled
+    newEntity.jumatStartTime = jumatStartTime
+    newEntity.jumatEndTime = jumatEndTime
+    newEntity.offsetJumat = offsetJumat
+    newEntity.jumatStandbyOnly = jumatStandbyOnly
+    newEntity.jumatWarningText = jumatWarningText
+    newEntity.murottalEnabled = murottalEnabled
+    newEntity.murottalStartDelay = murottalStartDelay
+    newEntity.murottalAudioPaths = murottalAudioPaths
+    newEntity.jumatSlideshowEnabled = jumatSlideshowEnabled
+    newEntity.includeGlobalSlideshow = includeGlobalSlideshow
+    newEntity.selectedGlobalSlideIds = selectedGlobalSlideIds
+    newEntity.jumatTransitionType = jumatTransitionType
+    newEntity.jumatSlideIntervalSeconds = jumatSlideIntervalSeconds
+    newEntity.jumatSlideIntervalUnit = jumatSlideIntervalUnit
+    newEntity.jumatVideoWaitUntilEnd = jumatVideoWaitUntilEnd
     return newEntity
 }
