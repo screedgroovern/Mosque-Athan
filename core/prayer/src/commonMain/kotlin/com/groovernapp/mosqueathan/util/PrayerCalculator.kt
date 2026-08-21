@@ -6,6 +6,7 @@ import com.batoulapps.adhan2.PrayerTimes
 import com.batoulapps.adhan2.data.DateComponents
 import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.KemenagScheduleSource
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
@@ -49,7 +50,8 @@ object PrayerCalculator {
         offsetIsya: Int = 0,
         kemenagCityId: String = "",
         jumatEnabled: Boolean = false,
-        offsetJumat: Int = 0
+        offsetJumat: Int = 0,
+        kemenagSource: KemenagScheduleSource? = null
     ): PrayerResult {
 
         val zone = TimeZone.currentSystemDefault()
@@ -68,9 +70,8 @@ object PrayerCalculator {
         var nextFajrAdjusted: Instant? = null
         var tomorrowImsakAdjusted: Instant? = null
 
-        if (calculationMethodName == "KEMENAG" && kemenagCityId.isNotEmpty()) {
-            val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
-            val todaySchedule = repository.getKemenagSchedule(kemenagCityId, today.toString())
+        if (calculationMethodName == "KEMENAG" && kemenagCityId.isNotEmpty() && kemenagSource != null) {
+            val todaySchedule = kemenagSource.scheduleFor(kemenagCityId, today.toString())
             if (todaySchedule != null) {
                 imsakAdjusted = parseKemenagTime(today, todaySchedule.imsak, zone)?.plus(offsetImsak.toLong(), DateTimeUnit.MINUTE)
                 fajrAdjusted = parseKemenagTime(today, todaySchedule.subuh, zone)?.plus(offsetSubuh.toLong(), DateTimeUnit.MINUTE)
@@ -81,7 +82,7 @@ object PrayerCalculator {
                 ishaAdjusted = parseKemenagTime(today, todaySchedule.isya, zone)?.plus(offsetIsya.toLong(), DateTimeUnit.MINUTE)
             }
             val tomorrow = today.plus(1, DateTimeUnit.DAY)
-            val tomorrowSchedule = repository.getKemenagSchedule(kemenagCityId, tomorrow.toString())
+            val tomorrowSchedule = kemenagSource.scheduleFor(kemenagCityId, tomorrow.toString())
             if (tomorrowSchedule != null) {
                 nextFajrAdjusted = parseKemenagTime(tomorrow, tomorrowSchedule.subuh, zone)?.plus(offsetSubuh.toLong(), DateTimeUnit.MINUTE)
                 tomorrowImsakAdjusted = parseKemenagTime(tomorrow, tomorrowSchedule.imsak, zone)?.plus(offsetImsak.toLong(), DateTimeUnit.MINUTE)
@@ -147,20 +148,17 @@ object PrayerCalculator {
                 PrayerType.IMSAK to tomorrowImsak
             }
         }
-//        val dummy = LocalDateTime(2026, 6, 5, 10, 3, 50)
         return PrayerResult(
             imsak = imsakFinal.toLocalDateTime(zone),
             subuh = fajrFinal.toLocalDateTime(zone),
             syuruq = sunriseFinal.toLocalDateTime(zone),
             dzuhur = dhuhrFinal.toLocalDateTime(zone),
-//            dzuhur = dummy,
             ashar = asrFinal.toLocalDateTime(zone),
             maghrib = maghribFinal.toLocalDateTime(zone),
             isya = ishaFinal.toLocalDateTime(zone),
             currentPrayer = currentPrayer,
             nextPrayer = nextPrayer,
             nextPrayerTime = nextPrayerInstant.toLocalDateTime(zone)
-//            nextPrayerTime = dummy
         )
     }
 
@@ -172,7 +170,8 @@ object PrayerCalculator {
         methodName: String,
         offsetImsak: Int,
         offsetSubuh: Int,
-        kemenagCityId: String
+        kemenagCityId: String,
+        kemenagSource: KemenagScheduleSource? = null
     ): Pair<PrayerType, LocalDateTime> {
         val zone = TimeZone.currentSystemDefault()
         val today = now.toLocalDateTime(zone).date
@@ -202,9 +201,8 @@ object PrayerCalculator {
                 }
                 var nextFajrAdjusted: Instant? = null
                 var tomorrowImsakAdjusted: Instant? = null
-                if (methodName == "KEMENAG" && kemenagCityId.isNotEmpty()) {
-                    val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
-                    val tomorrowSchedule = repository.getKemenagSchedule(kemenagCityId, tomorrow.toString())
+                if (methodName == "KEMENAG" && kemenagCityId.isNotEmpty() && kemenagSource != null) {
+                    val tomorrowSchedule = kemenagSource.scheduleFor(kemenagCityId, tomorrow.toString())
                     if (tomorrowSchedule != null) {
                         nextFajrAdjusted = parseKemenagTime(tomorrow, tomorrowSchedule.subuh, zone)?.plus(offsetSubuh.toLong(), DateTimeUnit.MINUTE)
                         tomorrowImsakAdjusted = parseKemenagTime(tomorrow, tomorrowSchedule.imsak, zone)?.plus(offsetImsak.toLong(), DateTimeUnit.MINUTE)

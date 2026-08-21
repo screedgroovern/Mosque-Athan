@@ -8,9 +8,13 @@ import kotlin.time.Clock
 
 object PrayerUtils {
 
+    /** `yyyy-MM-dd`, locale-independent, replacing a platform format call. */
+    private fun isoDate(at: LocalDateTime): String =
+        "${at.year.pad(4)}-${at.month.number.pad(2)}-${at.day.pad(2)}"
+
     fun formatTime(
         dateTime: LocalDateTime
-    ) = "%02d:%02d".format(dateTime.hour, dateTime.minute)
+    ) = "${dateTime.hour.pad(2)}:${dateTime.minute.pad(2)}"
 
     fun countdown(
         target: LocalDateTime
@@ -24,7 +28,7 @@ object PrayerUtils {
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
 
-        return "%02d:%02d:%02d".format(hours, minutes, seconds)
+        return "${hours.pad(2)}:${minutes.pad(2)}:${seconds.pad(2)}"
     }
 
     fun parseTimeToMinutes(timeStr: String): Int? {
@@ -45,7 +49,7 @@ object PrayerUtils {
         if (day.isEmpty() || startTime.isEmpty() || endTime.isEmpty()) return false
 
         if (isSpecificDate) {
-            val todayStr = java.lang.String.format(java.util.Locale.US, "%04d-%02d-%02d", now.year, now.month.number, now.day)
+            val todayStr = isoDate(now)
             if (day.trim() != todayStr) {
                 return false
             }
@@ -98,7 +102,7 @@ object PrayerUtils {
 
         // Check specificDates (comma-separated date strings like "2026-06-18")
         if (specificDates.isNotEmpty()) {
-            val todayStr = java.lang.String.format(java.util.Locale.US, "%04d-%02d-%02d", now.year, now.month.number, now.day)
+            val todayStr = isoDate(now)
             val dates = specificDates.split(",").map { it.trim() }.filter { it.isNotEmpty() }
             return dates.any { it == todayStr }
         }

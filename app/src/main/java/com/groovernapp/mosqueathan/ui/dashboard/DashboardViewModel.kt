@@ -53,6 +53,7 @@ class DashboardViewModel : ViewModel() {
         )
 
     private val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
+    private val kemenagSource = com.groovernapp.mosqueathan.data.RealmKemenagScheduleSource(repository)
     val uiState = _uiState.asStateFlow()
     private var clockJob: Job? = null
 
@@ -122,6 +123,7 @@ class DashboardViewModel : ViewModel() {
     ) {
         val config = repository.getConfig()
         val (nextPrayerType, nextPrayerTime) = PrayerCalculator.getNextPrayer(
+            kemenagSource = kemenagSource,
             result = result,
             now = Clock.System.now(),
             latitude = config.latitude,
@@ -204,6 +206,7 @@ class DashboardViewModel : ViewModel() {
         hijriDate = HijriDateFormatter.today()
         val config = repository.getConfig()
         prayerResult = PrayerCalculator.calculate(
+            kemenagSource = kemenagSource,
             latitude = config.latitude,
             longitude = config.longitude,
             calculationMethodName = config.calculationMethodName,

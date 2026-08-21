@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google()
         mavenCentral()
@@ -22,3 +23,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "MosqueAthan"
 include(":app")
+include(":core:model")
+include(":core:prayer")

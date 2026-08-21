@@ -1,10 +1,11 @@
 package com.groovernapp.mosqueathan.util
 
-import java.util.Locale
+/** Whether the platform's current locale is Indonesian. */
+internal expect fun platformIsIndonesian(): Boolean
 
 object Lang {
     val isIndonesian: Boolean
-        get() = Locale.getDefault().language.let { it == "in" || it == "id" }
+        get() = platformIsIndonesian()
 
     fun get(en: String, id: String): String {
         return if (isIndonesian) id else en

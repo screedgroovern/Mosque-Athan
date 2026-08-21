@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-MosqueAthan (`com.groovernapp.mosqueathan`) — an Android TV mosque prayer-schedule display. Single Gradle module (`:app`), Kotlin + Jetpack Compose, Realm Kotlin for persistence, adhan2 for prayer-time math. Landscape-only, launcher-declared for `LEANBACK_LAUNCHER`, auto-started on boot via `BootReceiver` (TV devices only). UI strings are bilingual EN/ID at runtime — see `util/Lang.kt`.
+MosqueAthan (`com.groovernapp.mosqueathan`) — an Android TV mosque prayer-schedule display. Gradle modules `:app`, `:core:model`, `:core:prayer` (see *KMP migration*), Kotlin + Jetpack Compose, Realm Kotlin for persistence, adhan2 for prayer-time math. Landscape-only, launcher-declared for `LEANBACK_LAUNCHER`, auto-started on boot via `BootReceiver` (TV devices only). UI strings are bilingual EN/ID at runtime — see `util/Lang.kt`.
 
 Related doc already in the repo: `CODEX.md` (product/UI rules — coordinates, prayer display rules). Architecture, design-system and settings-UI rules live in this file; there is no separate `AGENTS.md`.
 
@@ -50,8 +50,8 @@ Entering settings on a TV without a mouse: the D-pad secret sequence **UP UP DOW
 
 ### Prayer times
 
-`util/PrayerCalculator.kt` is a stateless object; pass `now` explicitly (tests do). Two sources, layered:
-1. `calculationMethodName == "KEMENAG"` — pre-fetched Indonesian Kemenag schedules read from Realm (`KemenagScheduleEntity`), fetched from `api.myquran.com`.
+`PrayerCalculator` lives in `:core:prayer` and is genuinely stateless: `now` and the Kemenag schedule source are both parameters (tests pass fakes for each). Two sources, layered:
+1. `calculationMethodName == "KEMENAG"` — pre-fetched Indonesian Kemenag schedules supplied through the `KemenagScheduleSource` parameter. `:app` passes `RealmKemenagScheduleSource`, which reads `KemenagScheduleEntity` from Realm (fetched from `api.myquran.com`). If no source is passed, the Kemenag branch is skipped and adhan2 is used.
 2. Otherwise adhan2 `CalculationMethod.valueOf(name)`, falling back to `SINGAPORE` on an unknown name.
 
 Per-prayer minute offsets are applied on top of whichever source wins. Imsak defaults to Subuh − 10 min when not supplied. On Fridays with `jumatEnabled`, Dzuhur uses `offsetJumat` instead of `offsetDzuhur` and `PrayerType.DZUHUR.displayName` renders as "JUM'AT"/"FRIDAY".
@@ -137,9 +137,9 @@ should be preserved exactly.
 
 ## KMP migration (branch `kmp`)
 
-> **Nothing in this section has landed.** Everything above still describes the
-> live code. This is the plan for the `kmp` branch; treat it as intent, not as
-> current architecture.
+> **Step 1 has landed; steps 2–9 have not.** `build-logic`, `:core:model` and
+> `:core:prayer` exist and `PrayerCalculator` is pure. Everything else below is
+> still intent, not current architecture.
 
 ### Why
 
@@ -364,11 +364,10 @@ Line references are against `v.1.4.4`; re-check them before acting.
 
 | Blocker | Where | Fix |
 |---|---|---|
-| `PrayerCalculator` reaches the repository singleton — it is **not** pure, despite the claim above | `util/PrayerCalculator.kt:72`, `:206` | pass config in as a parameter |
 | `sendRemoteAction` builds `org.json.JSONObject` | `ui/settings/SettingsViewModel.kt:449` | kotlinx.serialization |
+| `HijriDateFormatter` uses `UmmalquraCalendar` + `java.util.Calendar` — **deliberately left in `:app`** during step 1 | `util/HijriDateFormatter.kt` | needs the real Umm al-Qura month table; an arithmetic approximation would change displayed dates, so it must be ported exactly |
 | `VideoView` through `AndroidView` | `ui/dashboard/DashboardScreen.kt:293` | `expect`/`actual` player |
 | `LocalConfiguration` / `UiModeManager` size detection | three sites, see *Design system* | `BoxWithConstraints` + `expect`/`actual` `isTv` |
-| `ummalqura-calendar` is JVM-only | `util/HijriDateFormatter.kt` (30 LOC) | pure-Kotlin Umm al-Qura conversion |
 | `zxing` is JVM/Android-only | device-pairing QR | per-platform implementation |
 | `BitmapFactory` | `util/ImageUtils.kt` | `expect`/`actual` |
 | `BootReceiver`, Manifest, leanback launcher | `app/` | stays Android-only, never shared |
@@ -386,7 +385,7 @@ shippable throughout.
 
 | # | Step | Releasable? |
 |---|---|---|
-| 1 | `build-logic` + `core:model` + `core:prayer`; fix `PrayerCalculator` purity | yes |
+| ~~1~~ | ~~`build-logic` + `core:model` + `core:prayer`; fix `PrayerCalculator` purity~~ **done** | yes |
 | 2 | Extract `ConfigRepository` interface + Koin; delete `getInstance()` | yes |
 | 3 | Realm → Room in `data` (see data-loss warning) | yes |
 | 4 | `core:protocol`; `org.json` → kotlinx.serialization on both sides | yes |

@@ -100,6 +100,7 @@ class AppViewModel : ViewModel() {
     private var forcedFridaySilence = false
 
     private val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
+    private val kemenagSource = com.groovernapp.mosqueathan.data.RealmKemenagScheduleSource(repository)
 
     fun initialize(
         dashboardViewModel: DashboardViewModel,
@@ -151,6 +152,7 @@ class AppViewModel : ViewModel() {
         forcedFridaySilence = false
         val config = currentConfig
         prayerResult = PrayerCalculator.calculate(
+            kemenagSource = kemenagSource,
             latitude = config.latitude,
             longitude = config.longitude,
             calculationMethodName = config.calculationMethodName,
