@@ -91,11 +91,41 @@ Consistently applied across all six panes — follow it exactly:
 - High-frequency text input is buffered in local `remember { mutableStateOf(...) }` inside the leaf composable and only emitted upward when parsed/valid, to avoid a Realm write per keystroke.
 - `isCompact` (screen width < 600dp and not a TV) drives the phone layout; `isTv` is detected via `UiModeManager`.
 
-### Design system
+### Design system — there isn't one yet
 
-Custom tokens via `MosqueTheme` (`ui/theme/Theme.kt`), provided over Material3's `darkColorScheme`. Use `MosqueTheme.colors` (`gold`, `textPrimary`, `textSecondary`, `cardBg`, `border`, `danger`, `success`, `backgroundBrush`), `MosqueTheme.spacing`, `MosqueTheme.typography` — not raw `Color(...)`/`dp`/`sp` literals.
+Earlier revisions of this file described a `MosqueTheme` token system and a
+family of `App*` components. **None of it exists.** Do not try to use it.
 
-Reuse from `ui/component/` rather than re-styling: `AppCard`, `AppButton`, `AppPrimaryButton`, `AppPreviewButton`, `AppDangerButton`, `AppTabbedLayout`, `AppAdjustmentRow`, `appTextFieldColors()`, plus the `Schedule` component for time/day/date schedule lists.
+What actually exists:
+
+- `ui/theme/Theme.kt` is 17 lines: `MosqueAthanTheme` wrapping
+  `MaterialTheme(darkColorScheme())`. There is no `MosqueTheme`, and no
+  `.colors` / `.spacing` / `.typography` extension.
+- There are **no** `App*` components. `grep "fun App[A-Za-z]*("` returns
+  nothing. No `AppCard`, `AppButton`, `AppTabbedLayout`, `appTextFieldColors()`.
+- Screens use raw Material3 directly: 13 `Button`, 12 `TextButton`, 3
+  `OutlinedButton`, 1 `FilledTonalButton`, 15 `IconButton`, 9 `Card`, 15
+  `OutlinedTextField`, 12 `Switch`.
+- Styling is inline literals: **168** `Color(0x…)` across 18 unique values
+  (`Color(0xFFFFD54F)` alone appears 135 times), **189** `.sp` across 20
+  distinct sizes, **560** `.dp` across 37 distinct values. The 18 colours
+  include 8 separate near-blacks that are really ad-hoc surface elevations.
+
+Adaptive layout is one breakpoint, `screenWidthDp < 600.dp`, computed
+independently in three places — `ui/settings/SettingsScreen.kt:162`,
+`ui/settings/SettingsScreenShared.kt:268`,
+`ui/settings/displaymedia/ThemeSettingsSegment.kt:704` — and inconsistently:
+only the first also tests `!isTv`. The resulting `isCompact` boolean is then
+threaded by hand through ~86 call sites. The web panel has its own unrelated
+breakpoints (600 / 1024 px, in `server/WebPageJsCore.kt`).
+
+**Until a design system lands (see the KMP section), match the surrounding
+file.** Do not invent a parallel convention, and do not add a half-token-system
+in one screen. The real fix is scoped as step 5 of the KMP migration.
+
+By contrast, the *state* pattern above (one ViewModel per settings category,
+single `uiState` + `onEvent`) is genuinely consistent across all six panes and
+should be preserved exactly.
 
 ## Conventions
 
@@ -104,3 +134,307 @@ Reuse from `ui/component/` rather than re-styling: `AppCard`, `AppButton`, `AppP
 - `git add` new files as soon as they are created.
 - Commit subjects follow `type: [Area] > description`, e.g. `style & refactor: [Friday] > refactor settings pane to use standalone viewmodel`.
 - Feature branches are versioned (`v.1.5x`, `v.1.4.x`); `main` is the PR target.
+
+## KMP migration (branch `kmp`)
+
+> **Nothing in this section has landed.** Everything above still describes the
+> live code. This is the plan for the `kmp` branch; treat it as intent, not as
+> current architecture.
+
+### Why
+
+Not iOS. The driver is that the web control panel is ~9,100 lines of
+HTML/CSS/JS written as Kotlin raw strings across `server/WebPage*.kt` and
+`server/*WebSegment.kt`, hand-maintained against a *separate* Compose UI that
+renders the same settings. The two drift, and the drift is only detectable by
+eye. Sharing one Compose Multiplatform UI makes that drift **structurally
+impossible** rather than merely rare. (`SettingsServer.kt`, 1,895 lines, is the
+transport and stays.)
+
+Secondary goal: legibility. A Gradle module boundary turns a convention into a
+compile error, so the build enforces the rules instead of the author remembering
+them. iOS is a side effect, not the goal.
+
+Platform roles — iOS must never become the mosque display (no boot autostart, no
+kiosk, suspended in background). The TV role stays Android-only, permanently.
+
+| Platform | Display | Controller |
+|---|---|---|
+| Android TV | **yes** — the only real display | n/a |
+| iOS | best-effort preview only | **yes** |
+| Web (wasmJs) | best-effort preview only | **yes** |
+
+"Best-effort preview" means Dashboard/Adzan/Iqomah render so the user can check
+what they just configured — not production display duty.
+
+### What is *not* being rebuilt
+
+This branch has broad licence to restructure, but three things are assets, not
+debt, and must survive unchanged:
+
+- **The state pattern** — one standalone ViewModel per settings category, single
+  `uiState: StateFlow`, single `onEvent(XEvent)`. This is the entire reason a
+  shared UI is feasible; it is already the KMP-idiomatic shape. Rewriting it to
+  formal MVI reducers, or to anything else, buys nothing.
+- **The `when (AppUiState)` screen state machine.** Deliberate, works, portable.
+- **`PrayerCalculator` and its tests.** The logic is correct; only its hidden
+  repository dependency needs fixing.
+
+The visual layer is what has no system. Scope the rebuild there.
+
+### Target structure
+
+```
+MosqueAthan/
+├── build-logic/                 convention plugins (KMP targets, compose, lint)
+├── gradle/libs.versions.toml
+│
+├── core/
+│   ├── model/                   MosqueConfig, PrayerType, PrayerResult, Lang
+│   ├── prayer/                  PrayerCalculator, PrayerUtils, HijriDateFormatter
+│   └── protocol/                sealed RemoteAction + kotlinx.serialization
+│
+├── data/                        ConfigRepository (interface) + implementations
+│
+├── ui/
+│   ├── design/                  tokens, App* components, window size class
+│   ├── display/                 Dashboard / Adzan / Iqomah + their ViewModels
+│   └── settings/                the six settings panes + their ViewModels
+│
+├── app/                         Android TV: Manifest, MainActivity,
+│                                BootReceiver, SettingsServer
+├── iosApp/
+└── webApp/
+```
+
+`build-logic` is a single included build. Without it the same
+`kotlin { androidTarget(); iosArm64(); wasmJs() … }` block is copy-pasted into
+six modules and their target lists silently diverge.
+
+Source sets per module: `commonMain`, `androidMain`, `iosMain`, `wasmJsMain`,
+`commonTest`. Do not create an intermediate source set speculatively — see the
+open decision on Room below.
+
+### Hard rules
+
+These are boundaries the *build* must enforce. If one is only a convention, it
+will be broken.
+
+1. **`core/*` must not depend on `data/*`.** Prayer-time logic cannot reach a
+   repository; config arrives as a parameter.
+2. **`ui/*` must not depend on Room.** UI knows `ConfigRepository`, never an
+   implementation.
+3. **No platform types in a ViewModel** — no `Context`, `Uri`, `Bitmap`,
+   `JSONObject`, `File`. This is the rule broken accidentally; the `ui:*` module
+   boundary is what catches it.
+4. **`expect`/`actual` only where genuinely unavoidable** — currently video
+   playback, image decoding, file paths, TV detection. Any other use is a design
+   smell.
+5. **State is an immutable `data class`**, updated via `copy()`. Never mutate a
+   field in place.
+6. Everything under **Conventions** above still applies unchanged.
+
+### Step 5 in detail: design system + adaptive layer
+
+The audit is in *Design system* above: no tokens, no components, 168 colour
+literals, 189 `.sp`, 560 `.dp`, one inconsistent breakpoint computed three
+times, `isCompact` threaded through ~86 call sites.
+
+This must land **before** the UI moves to `commonMain` (step 6), for two reasons
+that are not about taste:
+
+- Moving 168 colour literals and 189 `.sp` literals into `commonMain` means
+  moving the mess and then fixing it there — the work gets done twice.
+- `LocalConfiguration` and `UiModeManager` are both Android-only, so the size
+  detection **has to** be rebuilt regardless. Do it once, in the right place.
+
+#### Hard constraint: the mockup does not change
+
+This is a refactor, not a redesign.
+
+- **Tokens are derived from the values already in the code, never invented.**
+  Phase A is a 1:1 mapping — every existing value gets a token name, zero pixel
+  change.
+- **Consolidation is a separate, separately-reviewable change.** Collapsing 20
+  text sizes into ~8 roles, or 8 near-blacks into ~4 surface elevations, *does*
+  move pixels. It does not belong in the same commit as the extraction, and it
+  needs explicit sign-off.
+- **TV output must stay pixel-identical.** The TV rendering *is* the mockup.
+  Phone / tablet / 15" is where new adaptive behaviour may appear, since almost
+  nothing is handled there today.
+
+#### Window size class
+
+TV is not a width. A 15" monitor at 60 cm and a 43" TV at 3 m can both be
+1920 px wide and need completely different type scales — the variable is viewing
+distance. So Material3's three width classes are not enough on their own:
+
+```
+size class = f(width, isTv)      // TV is its own class at any width
+```
+
+| Class | Width | Target |
+|---|---|---|
+| `Compact` | < 600dp | phone |
+| `Medium` | 600–839dp | 10" tablet, portrait |
+| `Expanded` | ≥ 840dp | 10" tablet landscape, 15" screen |
+| `Tv` | overrides width | TV — larger type, D-pad focus |
+
+Deliver it as a **`CompositionLocal`, not a parameter.** `isCompact` threaded
+through ~86 call sites already hurts at two classes; at four it is unworkable.
+Components read `LocalWindowClass` themselves, and the typography/spacing tokens
+resolve per class — so `AppButton` never asks whether it is on a TV, it just
+reads tokens whose values differ.
+
+Detection: `BoxWithConstraints` at the root (portable to `commonMain`), plus
+`expect`/`actual` for `isTv` only — that is the sole part needing a platform.
+
+#### Tokens
+
+- **Colour** — semantic roles, not hex: `accent`, `surface` at 3–4 elevations
+  (replacing the 8 ad-hoc near-blacks), `textPrimary` / `textSecondary` /
+  `textDisabled`, `danger`, `success`, `info`, `border`.
+- **Typography** — ~8 roles (`displayLarge` for the 96sp countdown down to
+  `caption`), each with a value per size class. This is what makes TV work: same
+  role, different numbers, no `if (isTv)` at the call site.
+- **Spacing** — the 37 `.dp` values reduce to ~6 steps.
+
+#### Button variants
+
+Semantic, not visual. Height, padding, radius, text style and colour all come
+from tokens, so TV scaling is automatic.
+
+| Variant | Visual | Use for |
+|---|---|---|
+| `Primary` | filled, accent | the main action — one per screen |
+| `Secondary` | tonal | supporting actions |
+| `Tertiary` | outlined | optional actions |
+| `Text` | text only | navigation, cancel |
+| `Danger` | filled, red | reset, delete |
+| `Preview` | tonal, accent | adzan / iqomah preview |
+
+The single existing `FilledTonalButton` against 16 other buttons is the symptom:
+there is currently no rule for when tonal applies.
+
+### Technical decisions
+
+**Persistence — Room KMP.** Room covers Android/iOS/JVM/native but **not wasm**.
+That is acceptable because the web panel is a *client*, not a data owner: it
+never needs a local database, and its `ConfigRepository` is backed by the
+WebSocket connection to the TV. This is also why the Realm→Room migration is
+*not* on the critical path for fixing UI drift.
+
+If a browser-local store is ever genuinely required, the options that actually
+cover wasm are `kstore` (document-shaped, kotlinx.serialization) and
+`multiplatform-settings` (key-value). SQLDelight's web driver is experimental
+and historically tied to the `js` target rather than `wasmJs`.
+
+**Serialization — kotlinx.serialization.** `org.json` is Android-only and must
+go. The ~50 WebSocket actions become a sealed hierarchy in `core:protocol`
+shared by server and every client, replacing today's arrangement where each
+action name is retyped in both Kotlin and JavaScript.
+
+**DI — Koin.** `MosqueConfigRepository.getInstance()` must be removed; Compose
+Multiplatform needs a ViewModel factory in common code regardless.
+
+**Server — Android target only.** Browsers cannot open listening sockets and iOS
+suspends background sockets. Do not attempt to port `SettingsServer`.
+
+**Pattern — MVVM with unidirectional data flow (MVI-shaped).** Keep the existing
+single `uiState` + `onEvent` per settings category exactly as documented above.
+**Do not introduce formal reducers** — the ceremony is not worth it here.
+
+**Version catalog.** Declare `kotlinx-datetime` and `kotlinx-coroutines`
+explicitly (see the warning under *Build & test* — the current transitive
+arrangement actively breaks under a KMP setup).
+
+### Already portable
+
+The starting point is better than it looks:
+
+- `adhan2` is itself a KMP library.
+- `androidx.lifecycle` 2.10 — already in use — is multiplatform, so `ViewModel`
+  and `viewModelScope` move as-is.
+- 80 of 88 source files have no `android.*` import at all.
+- Everything in `ui/component/` is pure Compose and ports for free.
+
+### Known blockers
+
+Line references are against `v.1.4.4`; re-check them before acting.
+
+| Blocker | Where | Fix |
+|---|---|---|
+| `PrayerCalculator` reaches the repository singleton — it is **not** pure, despite the claim above | `util/PrayerCalculator.kt:72`, `:206` | pass config in as a parameter |
+| `sendRemoteAction` builds `org.json.JSONObject` | `ui/settings/SettingsViewModel.kt:449` | kotlinx.serialization |
+| `VideoView` through `AndroidView` | `ui/dashboard/DashboardScreen.kt:293` | `expect`/`actual` player |
+| `LocalConfiguration` / `UiModeManager` size detection | three sites, see *Design system* | `BoxWithConstraints` + `expect`/`actual` `isTv` |
+| `ummalqura-calendar` is JVM-only | `util/HijriDateFormatter.kt` (30 LOC) | pure-Kotlin Umm al-Qura conversion |
+| `zxing` is JVM/Android-only | device-pairing QR | per-platform implementation |
+| `BitmapFactory` | `util/ImageUtils.kt` | `expect`/`actual` |
+| `BootReceiver`, Manifest, leanback launcher | `app/` | stays Android-only, never shared |
+| `MosqueConfigEntity` is simultaneously the domain model and the Realm entity | `data/MosqueConfigEntity.kt` (191 LOC) | split into a `MosqueConfig` `data class` in `core:model` + a Room entity + a mapper |
+
+That last one is worth doing for its own sake: it is the root cause of the
+"adding a config field means editing all three places" problem documented under
+*Persistence*, and a plain `data class` gets `copy()` from the compiler —
+deleting the hand-written `copy(...)` extension entirely.
+
+### Migration order
+
+Each step is independently reviewable. Steps 1–6 stay Android-only and remain
+shippable throughout.
+
+| # | Step | Releasable? |
+|---|---|---|
+| 1 | `build-logic` + `core:model` + `core:prayer`; fix `PrayerCalculator` purity | yes |
+| 2 | Extract `ConfigRepository` interface + Koin; delete `getInstance()` | yes |
+| 3 | Realm → Room in `data` (see data-loss warning) | yes |
+| 4 | `core:protocol`; `org.json` → kotlinx.serialization on both sides | yes |
+| 5 | **`ui:design` — tokens, `App*` components, window size class** | yes |
+| 6 | `ui:settings` + `ui:display` into `commonMain` | yes |
+| 7 | `webApp` (wasmJs) — runs *alongside* the existing HTML panel | yes |
+| 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | only after 7 reaches parity |
+| 9 | `iosApp` — controller + preview | yes |
+
+**Step 3 wipes device data.** `RealmConfiguration` already uses
+`deleteRealmIfMigrationNeeded()` and there are no migrations, but this app runs
+in production in a real mosque — the live install's prayer offsets, media,
+announcements and schedules would be lost. Export the config through the
+existing web panel before upgrading that device, or write a one-off export step.
+Do not discover this on the mosque's TV.
+
+**Step 3 can be deferred until after step 7.** Room is not a prerequisite for
+the web panel — the panel is a client and needs no database. Running
+1 → 2 → 4 → 5 → 6 → 7 → 3 reaches the visible payoff sooner and keeps the only
+risky step off the critical path, at the cost of carrying Realm longer.
+
+### Do not
+
+- **Do not delete the `WebPage*`/`*WebSegment*` files before step 7 reaches
+  parity.** The app is in production; keep the old panel serving until the
+  replacement is proven.
+- **Do not port the server** to iOS or web.
+- **Do not add a Navigation graph.** The `when (AppUiState)` state machine is
+  deliberate, works, and is trivially portable.
+- **Do not rebuild the ViewModel/state layer.** See *What is not being rebuilt*.
+- **Do not change the mockup.** See the constraint under step 5.
+- **Do not run the steps as one branch-wide rewrite.** Each is a separate,
+  reviewable commit on `kmp`.
+
+### Open decisions
+
+**Does iOS need a local database at all?** If iOS stays controller-plus-preview,
+it does not — both iOS and web would use the WebSocket-backed
+`ConfigRepository`, Room lives only in `androidMain`, and no intermediate source
+set is needed. This is the simpler default and the recommended starting
+assumption.
+
+**Compose for web renders to a canvas, not the DOM.** No native text selection,
+no browser zoom semantics, and a multi-MB bundle. For a control panel served
+over the mosque LAN this is an acceptable trade — but it is a decision, not a
+surprise to be discovered later.
+
+**`v.1.4.x` still carries the false design-system documentation.** That branch's
+CLAUDE.md tells any agent to use `MosqueTheme.colors` and `App*` components that
+do not exist. Fixing it there is docs-only and touches no code, but the user has
+deliberately scoped changes to this branch.
