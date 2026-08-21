@@ -91,41 +91,45 @@ Consistently applied across all six panes — follow it exactly:
 - High-frequency text input is buffered in local `remember { mutableStateOf(...) }` inside the leaf composable and only emitted upward when parsed/valid, to avoid a Realm write per keystroke.
 - `isCompact` (screen width < 600dp and not a TV) drives the phone layout; `isTv` is detected via `UiModeManager`.
 
-### Design system — there isn't one yet
+### Design system
 
-Earlier revisions of this file described a `MosqueTheme` token system and a
-family of `App*` components. **None of it exists.** Do not try to use it.
+Tokens live in `:ui:design` and are reached through `MosqueTheme`:
 
-What actually exists:
+- `MosqueTheme.colors` — 39 tokens. Accent (`accent`, plus three near-duplicate
+  golds), surfaces (`surfaceDialog`, `surfaceCard`, …, nine near-blacks),
+  foreground on dark (`textPrimary` through `textGhostSoft`, ten emphasis
+  levels), fills and borders (`fill*`, `border*`, eight levels), status
+  (`danger`, `dangerStrong`, `success`, `info`), plus `onAccent`, `scrim`,
+  `transparent`.
+- `MosqueTheme.typography` — 22 font sizes. Ten display sizes for the TV
+  screens (`clockDisplay` 170sp down to `prayerNameCompact`), twelve for
+  settings UI (`titleLarge` down to `captionSmall`). Sizes, not `TextStyle`s:
+  call sites set their own weight and colour.
+- `MosqueTheme.spacing` / `.radius` / `.stroke` — 23 tokens on a 4dp-ish scale.
+- `MosqueTheme.windowClass` / `LocalWindowClass` — `Compact` / `Medium` /
+  `Expanded` / `Tv`. **Read this; do not accept an `isCompact` parameter.**
 
-- `ui/theme/Theme.kt` is 17 lines: `MosqueAthanTheme` wrapping
-  `MaterialTheme(darkColorScheme())`. There is no `MosqueTheme`, and no
-  `.colors` / `.spacing` / `.typography` extension.
-- There are **no** `App*` components. `grep "fun App[A-Za-z]*("` returns
-  nothing. No `AppCard`, `AppButton`, `AppTabbedLayout`, `appTextFieldColors()`.
-- Screens use raw Material3 directly: 13 `Button`, 12 `TextButton`, 3
-  `OutlinedButton`, 1 `FilledTonalButton`, 15 `IconButton`, 9 `Card`, 15
-  `OutlinedTextField`, 12 `Switch`.
-- Styling is inline literals: **168** `Color(0x…)` across 18 unique values
-  (`Color(0xFFFFD54F)` alone appears 135 times), **189** `.sp` across 20
-  distinct sizes, **560** `.dp` across 37 distinct values. The 18 colours
-  include 8 separate near-blacks that are really ad-hoc surface elevations.
+**Use tokens, never literals.** `:app` currently contains zero colour literals
+and zero `.sp` literals. Spacing, radius and stroke are tokenised wherever the
+call shape made the meaning unambiguous.
 
-Adaptive layout is one breakpoint, `screenWidthDp < 600.dp`, computed
-independently in three places — `ui/settings/SettingsScreen.kt:162`,
-`ui/settings/SettingsScreenShared.kt:268`,
-`ui/settings/displaymedia/ThemeSettingsSegment.kt:704` — and inconsistently:
-only the first also tests `!isTv`. The resulting `isCompact` boolean is then
-threaded by hand through ~86 call sites. The web panel has its own unrelated
-breakpoints (600 / 1024 px, in `server/WebPageJsCore.kt`).
+Two gaps remain, both deliberate:
 
-**Until a design system lands (see the KMP section), match the surrounding
-file.** Do not invent a parallel convention, and do not add a half-token-system
-in one screen. The real fix is scoped as step 5 of the KMP migration.
+- **Component sizes.** 246 `dp` literals survive in `size()`, `width()` and
+  `height()`. There is no component-size scale yet; deriving one means deciding
+  which values are icons, which are containers and which are fixed dialog
+  dimensions. Match the surrounding file until that scale exists.
+- **Components.** There are still no `App*` wrappers. Screens use raw Material3
+  directly — 13 `Button`, 12 `TextButton`, 3 `OutlinedButton`, 1
+  `FilledTonalButton`, 15 `IconButton`, 9 `Card`, 15 `OutlinedTextField`, 12
+  `Switch`, each styled inline. Introducing six semantic button variants means
+  choosing which of those stylings wins, which moves pixels, so it waits for
+  sign-off.
 
-By contrast, the *state* pattern above (one ViewModel per settings category,
-single `uiState` + `onEvent`) is genuinely consistent across all six panes and
-should be preserved exactly.
+The token set is deliberately redundant — four golds, nine near-blacks, ten text
+emphasis levels, twelve settings font sizes. That is a **1:1 extraction** of what
+was already inlined, so every swap was provably neutral. Collapsing the
+redundancy is a separate, pixel-moving change; see *Consolidation proposal*.
 
 ## Conventions
 
@@ -137,9 +141,10 @@ should be preserved exactly.
 
 ## KMP migration (branch `kmp`)
 
-> **Step 1 has landed; steps 2–9 have not.** `build-logic`, `:core:model` and
-> `:core:prayer` exist and `PrayerCalculator` is pure. Everything else below is
-> still intent, not current architecture.
+> **Steps 1 and 5 (phase A) have landed. Steps 2, 3, 4, 6–9 have not.**
+> `build-logic`, `:core:model`, `:core:prayer` and `:ui:design` exist,
+> `PrayerCalculator` is pure, and every colour and font size in `:app` reads
+> from a token. Everything else below is still intent.
 
 ### Why
 
@@ -442,7 +447,7 @@ shippable throughout.
 | 2 | Extract `ConfigRepository` interface + Koin; delete `getInstance()` | yes |
 | 3 | Realm → Room in `data`, shared entity/wire classes, `MosqueSnapshot` (see data-loss warning) | yes |
 | 4 | `core:protocol`; `org.json` → kotlinx.serialization on both sides | yes |
-| 5 | **`ui:design` — tokens, `App*` components, window size class** | yes |
+| ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
 | 6 | `ui:settings` + `ui:display` into `commonMain` | yes |
 | 7 | `webApp` (wasmJs) — runs *alongside* the existing HTML panel | yes |
 | 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | only after 7 reaches parity |
@@ -459,6 +464,41 @@ Do not discover this on the mosque's TV.
 the web panel — the panel is a client and needs no database. Running
 1 → 2 → 4 → 5 → 6 → 7 → 3 reaches the visible payoff sooner and keeps the only
 risky step off the critical path, at the cost of carrying Realm longer.
+
+### Consolidation proposal (phase B — awaiting sign-off)
+
+Phase A was a 1:1 extraction, so the token set is deliberately redundant. Phase B
+proposes what to merge. **Every merge here moves pixels**, which is why it is a
+proposal rather than a commit, and why it is the one part of step 5 that cannot be
+machine-verified as neutral.
+
+Visual version, with swatches and type specimens at true size:
+<https://claude.ai/code/artifact/4b371afb-8e98-4345-92b6-b160caa03e0d>
+
+| Family | Now | Proposed | Call sites moved |
+|---|---|---|---|
+| Colour | 39 | 19 | 61 |
+| Font sizes | 22 | 17 (12 display kept, 10 settings → 5) | 84 |
+| Component sizes | 0 tokens, 246 literals | 6 tokens covering 90 | 0 (naming only) |
+
+- **Colour.** One gold carries 135 of 138 accent uses; the other three appear once
+  each. Ten near-blacks across 19 uses collapse to four. Ten white-emphasis levels
+  collapse to four — full white and 0.6 alone cover 185 of 228 uses. Eight
+  fill/border alphas collapse to four. Two reds become one.
+- **Font sizes.** The consequential one. 13/14/15/16sp carry 118 of 189 uses while
+  differing by a single point. Surviving settings scale: **24 · 20 · 16 · 14 · 12**,
+  each then holding a value per window class — that is what gives the TV larger type
+  with no `if (isTv)` at a call site, and retires the hand-written
+  `fontSize = if (isCompact) 13.sp else 15.sp` conditionals. 84 sites shift by
+  1–2sp, mostly upward, so a phone-layout pass should follow.
+- **Still unresolved:** `10.dp`, used 11 times as spacing, sits between
+  `spacing.md` (8) and `spacing.lg` (12); nine off-scale component sizes (6, 10,
+  14, 18, 28, 40, 44, 56, 64) each need an individual call.
+- **`App*` components are explicitly not proposed.** The 44 buttons — 13 `Button`,
+  12 `TextButton`, 3 `OutlinedButton`, 1 `FilledTonalButton`, 15 `IconButton` —
+  are each styled inline and have not been catalogued. Assigning six semantic
+  variants without that audit would restyle buttons whose appearance may be
+  deliberate.
 
 ### Do not
 
