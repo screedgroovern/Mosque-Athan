@@ -24,6 +24,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.groovernapp.mosqueathan.server.SettingsServer
 import androidx.core.graphics.set
 import androidx.core.graphics.createBitmap
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun WebControlSettingsSegment(
@@ -75,7 +76,7 @@ fun WebControlSettingsSegment(
                     ) {
                         if (qrCodeBitmap != null) {
                             Card(
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.textPrimary),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
                                     .size(160.dp)
@@ -91,7 +92,7 @@ fun WebControlSettingsSegment(
 
                         Text(
                             text = serverUrl,
-                            color = Color(0xFFFFD54F),
+                            color = MosqueTheme.colors.accent,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -109,8 +110,8 @@ fun WebControlSettingsSegment(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(Color.White.copy(alpha = 0.05f))
-                                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                    .background(MosqueTheme.colors.fillSubtle)
+                                    .border(1.dp, MosqueTheme.colors.fillStrong, RoundedCornerShape(8.dp))
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
@@ -118,13 +119,13 @@ fun WebControlSettingsSegment(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = "Pengaturan di TV",
-                                        color = Color.White,
+                                        color = MosqueTheme.colors.textPrimary,
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         text = "Tampilkan/sembunyikan menu pengaturan di TV",
-                                        color = Color.White.copy(alpha = 0.6f),
+                                        color = MosqueTheme.colors.textTertiary,
                                         fontSize = 11.sp
                                     )
                                 }
@@ -132,8 +133,8 @@ fun WebControlSettingsSegment(
                                     checked = showSettingsOnTv,
                                     onCheckedChange = { onUpdateShowSettingsOnTv(it) },
                                     colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFFFFD54F),
-                                        checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f)
+                                        checkedThumbColor = MosqueTheme.colors.accent,
+                                        checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f)
                                     )
                                 )
                             }
@@ -145,23 +146,23 @@ fun WebControlSettingsSegment(
                         ) {
                             Text(
                                 text = "Petunjuk Koneksi:",
-                                color = Color.White,
+                                color = MosqueTheme.colors.textPrimary,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "1. Hubungkan HP atau Laptop ke Wi-Fi / jaringan lokal yang sama.",
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MosqueTheme.colors.textSecondary,
                                 fontSize = 12.sp
                             )
                             Text(
                                 text = "2. Scan kode QR di samping atau ketik alamat URL di browser.",
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MosqueTheme.colors.textSecondary,
                                 fontSize = 12.sp
                             )
                             Text(
                                 text = "3. Simpan perubahan pada browser, setelan aplikasi akan ter-update otomatis.",
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MosqueTheme.colors.textSecondary,
                                 fontSize = 12.sp
                             )
                         }
@@ -183,7 +184,7 @@ fun WebControlSettingsSegment(
                     ) {
                         if (qrCodeBitmap != null) {
                             Card(
-                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.textPrimary),
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
                                     .size(180.dp)
@@ -199,7 +200,7 @@ fun WebControlSettingsSegment(
 
                         Text(
                             text = serverUrl,
-                            color = Color(0xFFFFD54F),
+                            color = MosqueTheme.colors.accent,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -217,8 +218,8 @@ fun WebControlSettingsSegment(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(Color.White.copy(alpha = 0.05f))
-                                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                    .background(MosqueTheme.colors.fillSubtle)
+                                    .border(1.dp, MosqueTheme.colors.fillStrong, RoundedCornerShape(8.dp))
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
@@ -226,13 +227,13 @@ fun WebControlSettingsSegment(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = "Pengaturan di TV",
-                                        color = Color.White,
+                                        color = MosqueTheme.colors.textPrimary,
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         text = "Tampilkan/sembunyikan menu pengaturan di TV",
-                                        color = Color.White.copy(alpha = 0.6f),
+                                        color = MosqueTheme.colors.textTertiary,
                                         fontSize = 11.sp
                                     )
                                 }
@@ -240,8 +241,8 @@ fun WebControlSettingsSegment(
                                     checked = showSettingsOnTv,
                                     onCheckedChange = { onUpdateShowSettingsOnTv(it) },
                                     colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Color(0xFFFFD54F),
-                                        checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f)
+                                        checkedThumbColor = MosqueTheme.colors.accent,
+                                        checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f)
                                     )
                                 )
                             }
@@ -253,23 +254,23 @@ fun WebControlSettingsSegment(
                         ) {
                             Text(
                                 text = "Petunjuk Koneksi:",
-                                color = Color.White,
+                                color = MosqueTheme.colors.textPrimary,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "1. Hubungkan HP atau Laptop ke Wi-Fi / jaringan lokal yang sama.",
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MosqueTheme.colors.textSecondary,
                                 fontSize = 13.sp
                             )
                             Text(
                                 text = "2. Scan kode QR di samping atau ketik alamat URL di browser.",
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MosqueTheme.colors.textSecondary,
                                 fontSize = 13.sp
                             )
                             Text(
                                 text = "3. Simpan perubahan pada browser, setelan aplikasi akan ter-update otomatis.",
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MosqueTheme.colors.textSecondary,
                                 fontSize = 13.sp
                             )
                         }

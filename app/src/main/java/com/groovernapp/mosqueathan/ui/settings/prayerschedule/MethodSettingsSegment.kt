@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.KemenagScheduleEntity
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun MethodSettingsSegment(
@@ -96,14 +97,14 @@ fun MethodSettingsSegment(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = com.groovernapp.mosqueathan.util.Lang.get("Selected City: ", "Kota Terpilih: ") + kemenagCityName,
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = com.groovernapp.mosqueathan.util.Lang.get("Schedule Duration: ", "Periode Waktu Jadwal: "),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -128,20 +129,20 @@ fun MethodSettingsSegment(
                         .fillMaxWidth()
                         .height(56.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
+                        .background(MosqueTheme.colors.fillSubtle)
                         .clickable { durationExpanded = true }
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(text = selectedDurationText, color = Color.White, fontSize = 16.sp)
+                    Text(text = selectedDurationText, color = MosqueTheme.colors.textPrimary, fontSize = 16.sp)
                     DropdownMenu(
                         expanded = durationExpanded,
                         onDismissRequest = { durationExpanded = false },
-                        modifier = Modifier.background(Color(0xFF0C120F))
+                        modifier = Modifier.background(MosqueTheme.colors.surfaceSunken)
                     ) {
                         durationList.forEach { (value, label) ->
                             DropdownMenuItem(
-                                text = { Text(text = label, color = Color.White) },
+                                text = { Text(text = label, color = MosqueTheme.colors.textPrimary) },
                                 onClick = {
                                     onKemenagDurationChange(value)
                                     durationExpanded = false
@@ -173,20 +174,20 @@ fun MethodSettingsSegment(
                         label = {
                             Text(
                                 text = com.groovernapp.mosqueathan.util.Lang.get("City", "Kota"),
-                                color = Color.White.copy(alpha = 0.6f)
+                                color = MosqueTheme.colors.textTertiary
                             )
                         },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.White.copy(alpha = 0.2f),
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                            focusedBorderColor = MosqueTheme.colors.border,
+                            unfocusedBorderColor = MosqueTheme.colors.border,
+                            focusedTextColor = MosqueTheme.colors.textPrimary,
+                            unfocusedTextColor = MosqueTheme.colors.textPrimary
                         ),
                         trailingIcon = {
                             TextButton(onClick = { showCitySearchDialog = true }) {
                                 Text(
                                     text = com.groovernapp.mosqueathan.util.Lang.get("Change", "Ubah"),
-                                    color = Color(0xFFFFD54F),
+                                    color = MosqueTheme.colors.accent,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -219,13 +220,13 @@ fun MethodSettingsSegment(
                     if (isDownloading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = Color.Black,
+                            color = MosqueTheme.colors.onAccent,
                             strokeWidth = 2.dp
                         )
                     } else {
                         Text(
                             text = com.groovernapp.mosqueathan.util.Lang.get("Download Prayer Times", "Unduh Jadwal Sholat"),
-                            color = Color.Black,
+                            color = MosqueTheme.colors.onAccent,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
@@ -239,7 +240,7 @@ fun MethodSettingsSegment(
                 ) {
                     Text(
                         text = com.groovernapp.mosqueathan.util.Lang.get("View Downloaded Schedules", "Lihat Jadwal Terunduh"),
-                        color = Color.Black,
+                        color = MosqueTheme.colors.onAccent,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
@@ -252,11 +253,11 @@ fun MethodSettingsSegment(
     if (showCitySearchDialog) {
         AlertDialog(
             onDismissRequest = { showCitySearchDialog = false },
-            containerColor = Color(0xFF1E2622),
+            containerColor = MosqueTheme.colors.surfaceRaised,
             title = {
                 Text(
                     text = com.groovernapp.mosqueathan.util.Lang.get("Search City", "Cari Kota"),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -268,18 +269,18 @@ fun MethodSettingsSegment(
                             searchQuery = it
                             onSearchKemenagCities(it)
                         },
-                        placeholder = { Text(com.groovernapp.mosqueathan.util.Lang.get("Type city name...", "Ketik nama kota..."), color = Color.White.copy(alpha = 0.5f)) },
+                        placeholder = { Text(com.groovernapp.mosqueathan.util.Lang.get("Type city name...", "Ketik nama kota..."), color = MosqueTheme.colors.textMuted) },
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFFFFD54F),
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                            focusedBorderColor = MosqueTheme.colors.accent,
+                            unfocusedBorderColor = MosqueTheme.colors.border,
+                            focusedTextColor = MosqueTheme.colors.textPrimary,
+                            unfocusedTextColor = MosqueTheme.colors.textPrimary
                         ),
                         trailingIcon = {
                             if (isSearchingCities) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
-                                    color = Color(0xFFFFD54F),
+                                    color = MosqueTheme.colors.accent,
                                     strokeWidth = 2.dp
                                 )
                             }
@@ -299,7 +300,7 @@ fun MethodSettingsSegment(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(Color.White.copy(alpha = 0.05f))
+                                    .background(MosqueTheme.colors.fillSubtle)
                                     .clickable {
                                         onKemenagCitySelected(id, name)
                                         showCitySearchDialog = false
@@ -307,7 +308,7 @@ fun MethodSettingsSegment(
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = name, color = Color.White, fontSize = 14.sp)
+                                Text(text = name, color = MosqueTheme.colors.textPrimary, fontSize = 14.sp)
                             }
                         }
                     }
@@ -315,7 +316,7 @@ fun MethodSettingsSegment(
             },
             confirmButton = {
                 TextButton(onClick = { showCitySearchDialog = false }) {
-                    Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = Color(0xFFFFD54F))
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = MosqueTheme.colors.accent)
                 }
             }
         )
@@ -324,11 +325,11 @@ fun MethodSettingsSegment(
     if (showSchedulesDialog) {
         AlertDialog(
             onDismissRequest = { showSchedulesDialog = false },
-            containerColor = Color(0xFF1E2622),
+            containerColor = MosqueTheme.colors.surfaceRaised,
             title = {
                 Text(
                     text = com.groovernapp.mosqueathan.util.Lang.get("Downloaded Schedules", "Jadwal Terunduh"),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -337,7 +338,7 @@ fun MethodSettingsSegment(
                     Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                         Text(
                             text = com.groovernapp.mosqueathan.util.Lang.get("No schedules downloaded yet", "Belum ada jadwal yang diunduh"),
-                            color = Color.White.copy(alpha = 0.5f),
+                            color = MosqueTheme.colors.textMuted,
                             fontSize = 14.sp
                         )
                     }
@@ -362,7 +363,7 @@ fun MethodSettingsSegment(
 
                                 Text(
                                     text = displayMonthYear,
-                                    color = Color(0xFFFFD54F),
+                                    color = MosqueTheme.colors.accent,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp,
                                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
@@ -373,7 +374,7 @@ fun MethodSettingsSegment(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(Color.White.copy(alpha = 0.05f))
+                                        .background(MosqueTheme.colors.fillSubtle)
                                         .padding(12.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
@@ -381,19 +382,19 @@ fun MethodSettingsSegment(
                                     Column {
                                         Text(
                                             text = sch.dateString,
-                                            color = Color.White,
+                                            color = MosqueTheme.colors.textPrimary,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 14.sp
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = "Imsak: ${sch.imsak} | Subuh: ${sch.subuh} | Terbit: ${sch.terbit}",
-                                            color = Color.White.copy(alpha = 0.7f),
+                                            color = MosqueTheme.colors.textSecondary,
                                             fontSize = 12.sp
                                         )
                                         Text(
                                             text = "Dzuhur: ${sch.dzuhur} | Ashar: ${sch.ashar} | Maghrib: ${sch.maghrib} | Isya': ${sch.isya}",
-                                            color = Color.White.copy(alpha = 0.7f),
+                                            color = MosqueTheme.colors.textSecondary,
                                             fontSize = 12.sp
                                         )
                                     }
@@ -405,7 +406,7 @@ fun MethodSettingsSegment(
             },
             confirmButton = {
                 TextButton(onClick = { showSchedulesDialog = false }) {
-                    Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = Color(0xFFFFD54F))
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = MosqueTheme.colors.accent)
                 }
             }
         )
@@ -438,13 +439,13 @@ fun DatePickerField(
         onValueChange = {},
         readOnly = true,
         interactionSource = interactionSource,
-        label = { Text(label, color = Color.White.copy(alpha = 0.6f)) },
-        placeholder = { Text(placeholder, color = Color.White.copy(alpha = 0.3f)) },
+        label = { Text(label, color = MosqueTheme.colors.textTertiary) },
+        placeholder = { Text(placeholder, color = MosqueTheme.colors.textGhost) },
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFFFFD54F),
-            unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White
+            focusedBorderColor = MosqueTheme.colors.accent,
+            unfocusedBorderColor = MosqueTheme.colors.border,
+            focusedTextColor = MosqueTheme.colors.textPrimary,
+            unfocusedTextColor = MosqueTheme.colors.textPrimary
         ),
         modifier = modifier.onKeyEvent { event ->
             if (event.type == KeyEventType.KeyUp && (event.key == Key.DirectionCenter || event.key == Key.Enter)) {
@@ -487,32 +488,32 @@ fun DatePickerField(
                     }
                     showDialog = false
                 }) {
-                    Text(com.groovernapp.mosqueathan.util.Lang.get("OK", "OK"), color = Color(0xFFFFD54F))
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("OK", "OK"), color = MosqueTheme.colors.accent)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = Color.White)
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             },
-            colors = DatePickerDefaults.colors(containerColor = Color(0xFF101915))
+            colors = DatePickerDefaults.colors(containerColor = MosqueTheme.colors.surfaceDialog)
         ) {
             DatePicker(
                 state = datePickerState,
                 colors = DatePickerDefaults.colors(
-                    titleContentColor = Color.White,
-                    headlineContentColor = Color.White,
-                    weekdayContentColor = Color.White.copy(alpha = 0.6f),
-                    navigationContentColor = Color.White,
-                    yearContentColor = Color.White,
-                    currentYearContentColor = Color(0xFFFFD54F),
-                    selectedYearContentColor = Color.Black,
-                    selectedYearContainerColor = Color(0xFFFFD54F),
-                    dayContentColor = Color.White,
-                    selectedDayContentColor = Color.Black,
-                    selectedDayContainerColor = Color(0xFFFFD54F),
-                    todayContentColor = Color(0xFFFFD54F),
-                    todayDateBorderColor = Color(0xFFFFD54F)
+                    titleContentColor = MosqueTheme.colors.textPrimary,
+                    headlineContentColor = MosqueTheme.colors.textPrimary,
+                    weekdayContentColor = MosqueTheme.colors.textTertiary,
+                    navigationContentColor = MosqueTheme.colors.textPrimary,
+                    yearContentColor = MosqueTheme.colors.textPrimary,
+                    currentYearContentColor = MosqueTheme.colors.accent,
+                    selectedYearContentColor = MosqueTheme.colors.onAccent,
+                    selectedYearContainerColor = MosqueTheme.colors.accent,
+                    dayContentColor = MosqueTheme.colors.textPrimary,
+                    selectedDayContentColor = MosqueTheme.colors.onAccent,
+                    selectedDayContainerColor = MosqueTheme.colors.accent,
+                    todayContentColor = MosqueTheme.colors.accent,
+                    todayDateBorderColor = MosqueTheme.colors.accent
                 )
             )
         }
@@ -537,10 +538,10 @@ private fun CalculationMethodItem(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .background(if (isSelected) Color(0xFFFFD54F).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.05f))
+            .background(if (isSelected) MosqueTheme.colors.accent.copy(alpha = 0.15f) else MosqueTheme.colors.fillSubtle)
             .border(
                 width = 1.dp,
-                color = if (isSelected) Color(0xFFFFD54F) else Color.Transparent,
+                color = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.transparent,
                 shape = RoundedCornerShape(8.dp)
             )
             .clickable { onMethodChange(method) }
@@ -552,19 +553,19 @@ private fun CalculationMethodItem(
                 .size(radioSize)
                 .border(
                     width = 2.dp,
-                    color = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.4f),
+                    color = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.textFaint,
                     shape = androidx.compose.foundation.shape.CircleShape
                 )
                 .padding(radioInnerPadding)
                 .background(
-                    color = if (isSelected) Color(0xFFFFD54F) else Color.Transparent,
+                    color = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.transparent,
                     shape = androidx.compose.foundation.shape.CircleShape
                 )
         )
         Spacer(modifier = Modifier.width(spacerWidth))
         Text(
             text = method,
-            color = Color.White,
+            color = MosqueTheme.colors.textPrimary,
             fontSize = if (isCompact) 13.sp else 14.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
         )

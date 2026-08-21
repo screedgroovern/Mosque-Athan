@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.groovernapp.mosqueathan.R
 import com.groovernapp.mosqueathan.ui.component.CountdownScreen
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun IqomahScreen(state: IqomahUiModel, onDismiss: () -> Unit = {}) {
@@ -15,9 +16,9 @@ fun IqomahScreen(state: IqomahUiModel, onDismiss: () -> Unit = {}) {
         countdownValue = state.iqomahCountdown,
         footerText = state.footerText,
         gradientColors = listOf(
-            Color.Black.copy(alpha = 0.76f),
-            Color(0xFF18231B).copy(alpha = 0.86f),
-            Color.Black.copy(alpha = 0.80f)
+            MosqueTheme.colors.scrim.copy(alpha = 0.76f),
+            MosqueTheme.colors.backdropIqomah.copy(alpha = 0.86f),
+            MosqueTheme.colors.scrim.copy(alpha = 0.80f)
         ),
         onDismiss = onDismiss
     )

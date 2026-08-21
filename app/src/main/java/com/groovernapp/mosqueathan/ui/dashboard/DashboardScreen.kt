@@ -25,6 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import kotlin.random.Random
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun DashboardScreen(
@@ -223,7 +224,7 @@ fun DashboardScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = alpha))
+                    .background(MosqueTheme.colors.onAccent.copy(alpha = alpha))
             )
         }
 

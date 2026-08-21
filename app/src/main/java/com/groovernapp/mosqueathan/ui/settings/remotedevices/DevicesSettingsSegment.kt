@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun DevicesSettingsSegment(
@@ -42,7 +43,7 @@ fun DevicesSettingsSegment(
             title = {
                 Text(
                     com.groovernapp.mosqueathan.util.Lang.get("Transfer Master Access?", "Pindahkan Hak Master?"),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             },
@@ -53,13 +54,13 @@ fun DevicesSettingsSegment(
                             "WARNING: Master access privileges will be transferred to '${targetDevice.deviceName}'. Once transferred, you can no longer change the PIN or assign Master from this device.",
                             "PERINGATAN: Hak akses Master akan dialihkan ke '${targetDevice.deviceName}'. Setelah dipindahkan, Anda tidak dapat lagi mengubah PIN atau menunjuk Master dari perangkat ini."
                         ),
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = MosqueTheme.colors.textStrong
                     )
                     if (config.pinCode.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             com.groovernapp.mosqueathan.util.Lang.get("Enter current PIN to confirm:", "Masukkan PIN saat ini untuk konfirmasi:"),
-                            color = Color(0xFFFFD54F),
+                            color = MosqueTheme.colors.accent,
                             fontWeight = FontWeight.SemiBold
                         )
                         OutlinedTextField(
@@ -93,7 +94,7 @@ fun DevicesSettingsSegment(
                 ) {
                     Text(
                         com.groovernapp.mosqueathan.util.Lang.get("Confirm", "Konfirmasi"),
-                        color = Color.Black,
+                        color = MosqueTheme.colors.onAccent,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -104,10 +105,10 @@ fun DevicesSettingsSegment(
                     transferPinInput = ""
                     pinErrorMsg = null
                 }) {
-                    Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = Color.White)
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             },
-            containerColor = Color(0xFF101915),
+            containerColor = MosqueTheme.colors.surfaceDialog,
             shape = RoundedCornerShape(12.dp)
         )
     }
@@ -115,7 +116,7 @@ fun DevicesSettingsSegment(
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Daftar Perangkat terdaftar / terhubung",
-            color = Color(0xFFFFD54F),
+            color = MosqueTheme.colors.accent,
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 8.dp)
@@ -128,7 +129,7 @@ fun DevicesSettingsSegment(
             ) {
                 Text(
                     "Belum ada perangkat yang terhubung.",
-                    color = Color.White.copy(alpha = 0.5f)
+                    color = MosqueTheme.colors.textMuted
                 )
             }
         } else {
@@ -147,7 +148,7 @@ fun DevicesSettingsSegment(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.05f))
+                            .background(MosqueTheme.colors.fillSubtle)
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -166,13 +167,13 @@ fun DevicesSettingsSegment(
                             Column {
                                 Text(
                                     text = device.deviceName,
-                                    color = Color.White,
+                                    color = MosqueTheme.colors.textPrimary,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = if (device.isOnline) "Terhubung" else "Terputus",
-                                    color = Color.White.copy(alpha = 0.6f),
+                                    color = MosqueTheme.colors.textTertiary,
                                     fontSize = 12.sp
                                 )
                             }
@@ -185,7 +186,7 @@ fun DevicesSettingsSegment(
                             if (device.isMaster) {
                                 Text(
                                     text = "Master",
-                                    color = Color(0xFFFFD54F),
+                                    color = MosqueTheme.colors.accent,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 8.dp)
@@ -203,7 +204,7 @@ fun DevicesSettingsSegment(
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                     modifier = Modifier.height(32.dp)
                                 ) {
-                                    Text("Jadikan Master", color = Color.White, fontSize = 12.sp)
+                                    Text("Jadikan Master", color = MosqueTheme.colors.textPrimary, fontSize = 12.sp)
                                 }
                             }
 
@@ -214,7 +215,7 @@ fun DevicesSettingsSegment(
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                     modifier = Modifier.height(32.dp)
                                 ) {
-                                    Text("Hapus", color = Color.White, fontSize = 12.sp)
+                                    Text("Hapus", color = MosqueTheme.colors.textPrimary, fontSize = 12.sp)
                                 }
                             }
                         }

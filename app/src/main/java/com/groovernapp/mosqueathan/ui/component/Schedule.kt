@@ -35,6 +35,7 @@ import com.groovernapp.mosqueathan.ui.settings.TvFocusablePrimaryButton
 import com.groovernapp.mosqueathan.util.Lang
 import java.util.Calendar
 import java.util.TimeZone
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun Schedule(
@@ -71,7 +72,7 @@ fun Schedule(
             // Left-aligned Title
             Text(
                 text = title,
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 modifier = Modifier.fillMaxWidth()
@@ -84,13 +85,13 @@ fun Schedule(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White.copy(alpha = 0.03f))
+                    .background(MosqueTheme.colors.fillFaint)
                     .padding(vertical = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = Lang.get("No schedules added yet.", "Belum ada jadwal yang ditambahkan."),
-                    color = Color.White.copy(alpha = 0.4f),
+                    color = MosqueTheme.colors.textFaint,
                     fontSize = 14.sp
                 )
             }
@@ -126,8 +127,8 @@ fun Schedule(
             Button(
                 onClick = onAddSchedule,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFD54F),
-                    contentColor = Color.Black
+                    containerColor = MosqueTheme.colors.accent,
+                    contentColor = MosqueTheme.colors.onAccent
                 ),
                 shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
@@ -160,7 +161,7 @@ fun Schedule(
             ) {
                 Text(
                     text = scheduleListButtonText,
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
@@ -187,12 +188,12 @@ fun Schedule(
 
         AlertDialog(
             onDismissRequest = { showAllSchedulesDialog = false },
-            title = { Text(Lang.get("Schedules List", "Daftar Jadwal"), color = Color.White) },
+            title = { Text(Lang.get("Schedules List", "Daftar Jadwal"), color = MosqueTheme.colors.textPrimary) },
             text = {
                 Box(modifier = Modifier.width(480.dp).height(400.dp)) {
                     if (sortedSchedules.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(Lang.get("No schedules set.", "Tidak ada jadwal."), color = Color.White.copy(alpha = 0.5f))
+                            Text(Lang.get("No schedules set.", "Tidak ada jadwal."), color = MosqueTheme.colors.textMuted)
                         }
                     } else {
                         LazyColumn(
@@ -227,10 +228,10 @@ fun Schedule(
                 TvFocusablePrimaryButton(
                     onClick = { showAllSchedulesDialog = false }
                 ) {
-                    Text(Lang.get("Close", "Tutup"), color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text(Lang.get("Close", "Tutup"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
                 }
             },
-            containerColor = Color(0xFF181C1A)
+            containerColor = MosqueTheme.colors.surfaceCard
         )
     }
 
@@ -298,7 +299,7 @@ fun ScheduleListItem(
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White.copy(alpha = 0.05f)
+            containerColor = MosqueTheme.colors.fillSubtle
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -315,7 +316,7 @@ fun ScheduleListItem(
                 // Large Time clickable
                 Text(
                     text = "${schedule.startTime} - ${schedule.endTime}",
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
@@ -331,7 +332,7 @@ fun ScheduleListItem(
                     IconButton(
                         onClick = onEditTimeClick,
                         colors = IconButtonDefaults.iconButtonColors(
-                            contentColor = Color(0xFFFFD54F)
+                            contentColor = MosqueTheme.colors.accent
                         )
                     ) {
                         Icon(
@@ -369,7 +370,7 @@ fun ScheduleListItem(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(if (isActive) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.1f))
+                                .background(if (isActive) MosqueTheme.colors.accent else MosqueTheme.colors.fill)
                                 .clickable {
                                     val nextActive = !isActive
                                     val daysList = activeDaysList.toMutableList()
@@ -386,7 +387,7 @@ fun ScheduleListItem(
                         ) {
                             Text(
                                 text = localizedName,
-                                color = if (isActive) Color.Black else Color.White.copy(alpha = 0.6f),
+                                color = if (isActive) MosqueTheme.colors.onAccent else MosqueTheme.colors.textTertiary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -405,10 +406,10 @@ fun ScheduleListItem(
                             modifier = Modifier
                                 .size(36.dp)
                                     .clip(RoundedCornerShape(10))
-                                .background(if (isActive) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.08f))
+                                .background(if (isActive) MosqueTheme.colors.accent else MosqueTheme.colors.fillSoft)
                                 .border(
                                     width = 1.dp,
-                                    color = if (isActive) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.15f),
+                                    color = if (isActive) MosqueTheme.colors.accent else MosqueTheme.colors.fillStrong,
                                     shape = RoundedCornerShape(10)
                                 )
                                 .clickable {
@@ -426,7 +427,7 @@ fun ScheduleListItem(
                         ) {
                             Text(
                                 text = localizedName,
-                                color = if (isActive) Color.Black else Color.White,
+                                color = if (isActive) MosqueTheme.colors.onAccent else MosqueTheme.colors.textPrimary,
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -445,8 +446,8 @@ fun ScheduleListItem(
                     badge = {
                         if (datesCount > 0) {
                             Badge(
-                                containerColor = Color(0xFFFFD54F),
-                                contentColor = Color.Black
+                                containerColor = MosqueTheme.colors.accent,
+                                contentColor = MosqueTheme.colors.onAccent
                             ) {
                                 Text(text = datesCount.toString())
                             }
@@ -457,7 +458,7 @@ fun ScheduleListItem(
                         onClick = onScheduleClick,
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color.White
+                            contentColor = MosqueTheme.colors.textPrimary
                         ),
                         border = borderStroke(),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
@@ -467,7 +468,7 @@ fun ScheduleListItem(
                                 imageVector = Icons.Default.CalendarMonth,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
-                                tint = Color(0xFFFFD54F)
+                                tint = MosqueTheme.colors.accent
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
@@ -503,7 +504,7 @@ fun TimePickerDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF181C1A)),
+            colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.surfaceCard),
             modifier = Modifier
                 .width(420.dp)
                 .padding(16.dp)
@@ -514,7 +515,7 @@ fun TimePickerDialog(
             ) {
                 Text(
                     text = Lang.get("Edit Schedule Time", "Atur Jam Jadwal"),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -546,7 +547,7 @@ fun TimePickerDialog(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(Lang.get("Cancel", "Batal"), color = Color.White)
+                        Text(Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                     }
 
                     TvFocusablePrimaryButton(
@@ -558,7 +559,7 @@ fun TimePickerDialog(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(Lang.get("Save", "Simpan"), color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text(Lang.get("Save", "Simpan"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -575,7 +576,7 @@ fun TimeStepperField(
     onMinuteChange: (Int) -> Unit
 ) {
     Column {
-        Text(text = label, color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp)
+        Text(text = label, color = MosqueTheme.colors.textTertiary, fontSize = 13.sp)
         Spacer(modifier = Modifier.height(4.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -587,11 +588,11 @@ fun TimeStepperField(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
-                Text("−", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("−", color = MosqueTheme.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
             Text(
                 text = hour.toString().padStart(2, '0'),
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.width(36.dp),
@@ -603,12 +604,12 @@ fun TimeStepperField(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
-                Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
             Text(
                 text = ":",
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 4.dp)
@@ -620,11 +621,11 @@ fun TimeStepperField(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
-                Text("−", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("−", color = MosqueTheme.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
             Text(
                 text = minute.toString().padStart(2, '0'),
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.width(36.dp),
@@ -636,7 +637,7 @@ fun TimeStepperField(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
-                Text("+", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -660,7 +661,7 @@ fun MultiDatePickerDialog(
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF181C1A)),
+            colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.surfaceCard),
             modifier = Modifier
                 .width(420.dp)
                 .height(450.dp)
@@ -672,7 +673,7 @@ fun MultiDatePickerDialog(
             ) {
                 Text(
                     text = Lang.get("Specific Dates List", "Daftar Tanggal Spesifik"),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -682,7 +683,7 @@ fun MultiDatePickerDialog(
                     onClick = { showSingleDatePicker = true },
                     modifier = Modifier.fillMaxWidth().height(40.dp)
                 ) {
-                    Text(Lang.get("+ Add Date", "+ Tambah Tanggal"), color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text(Lang.get("+ Add Date", "+ Tambah Tanggal"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
                 }
 
                 // List of dates with delete option (extremely TV friendly)
@@ -698,7 +699,7 @@ fun MultiDatePickerDialog(
                             ) {
                                 Text(
                                     text = Lang.get("No specific dates added.", "Tidak ada tanggal spesifik."),
-                                    color = Color.White.copy(alpha = 0.4f),
+                                    color = MosqueTheme.colors.textFaint,
                                     fontSize = 13.sp
                                 )
                             }
@@ -709,12 +710,12 @@ fun MultiDatePickerDialog(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(Color.White.copy(alpha = 0.05f))
+                                    .background(MosqueTheme.colors.fillSubtle)
                                     .padding(horizontal = 12.dp, vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = dateString, color = Color.White, fontSize = 14.sp)
+                                Text(text = dateString, color = MosqueTheme.colors.textPrimary, fontSize = 14.sp)
                                 IconButton(
                                     onClick = { datesList.remove(dateString) },
                                     modifier = Modifier.size(24.dp)
@@ -740,7 +741,7 @@ fun MultiDatePickerDialog(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(Lang.get("Cancel", "Batal"), color = Color.White)
+                        Text(Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                     }
 
                     TvFocusablePrimaryButton(
@@ -750,7 +751,7 @@ fun MultiDatePickerDialog(
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(Lang.get("Save", "Simpan"), color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text(Lang.get("Save", "Simpan"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -778,32 +779,32 @@ fun MultiDatePickerDialog(
                     }
                     showSingleDatePicker = false
                 }) {
-                    Text(Lang.get("OK", "OK"), color = Color(0xFFFFD54F))
+                    Text(Lang.get("OK", "OK"), color = MosqueTheme.colors.accent)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSingleDatePicker = false }) {
-                    Text(Lang.get("Cancel", "Batal"), color = Color.White)
+                    Text(Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             },
-            colors = DatePickerDefaults.colors(containerColor = Color(0xFF101915))
+            colors = DatePickerDefaults.colors(containerColor = MosqueTheme.colors.surfaceDialog)
         ) {
             DatePicker(
                 state = datePickerState,
                 colors = DatePickerDefaults.colors(
-                    titleContentColor = Color.White,
-                    headlineContentColor = Color.White,
-                    weekdayContentColor = Color.White.copy(alpha = 0.6f),
-                    navigationContentColor = Color.White,
-                    yearContentColor = Color.White,
-                    currentYearContentColor = Color(0xFFFFD54F),
-                    selectedYearContentColor = Color.Black,
-                    selectedYearContainerColor = Color(0xFFFFD54F),
-                    dayContentColor = Color.White,
-                    selectedDayContentColor = Color.Black,
-                    selectedDayContainerColor = Color(0xFFFFD54F),
-                    todayContentColor = Color(0xFFFFD54F),
-                    todayDateBorderColor = Color(0xFFFFD54F)
+                    titleContentColor = MosqueTheme.colors.textPrimary,
+                    headlineContentColor = MosqueTheme.colors.textPrimary,
+                    weekdayContentColor = MosqueTheme.colors.textTertiary,
+                    navigationContentColor = MosqueTheme.colors.textPrimary,
+                    yearContentColor = MosqueTheme.colors.textPrimary,
+                    currentYearContentColor = MosqueTheme.colors.accent,
+                    selectedYearContentColor = MosqueTheme.colors.onAccent,
+                    selectedYearContainerColor = MosqueTheme.colors.accent,
+                    dayContentColor = MosqueTheme.colors.textPrimary,
+                    selectedDayContentColor = MosqueTheme.colors.onAccent,
+                    selectedDayContainerColor = MosqueTheme.colors.accent,
+                    todayContentColor = MosqueTheme.colors.accent,
+                    todayDateBorderColor = MosqueTheme.colors.accent
                 )
             )
         }

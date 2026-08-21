@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun LocationSettingsSegment(
@@ -49,7 +50,7 @@ fun LocationSettingsSegment(
                     "Note: Kemenag method is active. Prayer times are calculated based on the selected city ($kemenagCityName), not the GPS coordinates above.",
                     "Catatan: Metode Kemenag aktif. Waktu sholat dihitung berdasarkan kota yang dipilih ($kemenagCityName), bukan koordinat GPS di atas."
                 ),
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(top = 4.dp)

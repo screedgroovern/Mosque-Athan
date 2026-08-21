@@ -61,6 +61,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Close
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun SettingsScreen(
@@ -209,9 +210,9 @@ fun SettingsScreen(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.85f),
-                            Color(0xFF101915).copy(alpha = 0.90f),
-                            Color.Black.copy(alpha = 0.92f)
+                            MosqueTheme.colors.scrim.copy(alpha = 0.85f),
+                            MosqueTheme.colors.surfaceDialog.copy(alpha = 0.90f),
+                            MosqueTheme.colors.scrim.copy(alpha = 0.92f)
                         )
                     )
                 )
@@ -223,7 +224,7 @@ fun SettingsScreen(
             drawerContent = {
                 if (isCompact) {
                     ModalDrawerSheet(
-                        drawerContainerColor = Color(0xFF121212),
+                        drawerContainerColor = MosqueTheme.colors.surfaceDrawer,
                         modifier = Modifier.width(280.dp)
                     ) {
                         SideSheetContent(
@@ -301,14 +302,14 @@ fun SettingsScreen(
                                 Icon(
                                     imageVector = Icons.Default.Menu,
                                     contentDescription = "Open Menu",
-                                    tint = Color.White,
+                                    tint = MosqueTheme.colors.textPrimary,
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
                         }
                         Text(
                             text = selectedCategory.getDisplayName(),
-                            color = Color.White,
+                            color = MosqueTheme.colors.textPrimary,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -320,7 +321,7 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Close",
-                                tint = Color.White,
+                                tint = MosqueTheme.colors.textPrimary,
                                 modifier = Modifier.size(28.dp)
                             )
                         }
@@ -331,7 +332,7 @@ fun SettingsScreen(
                 if (!isCompact) {
                     Text(
                         text = selectedCategory.getDescription(),
-                        color = Color.White.copy(alpha = 0.6f),
+                        color = MosqueTheme.colors.textTertiary,
                         fontSize = 15.sp,
                         modifier = Modifier.padding(bottom = 24.dp)
                     )
@@ -340,9 +341,9 @@ fun SettingsScreen(
                 // Category specific UI Card
                 Card(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.0f)),
+                    colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.0f)),
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+                    border = BorderStroke(1.dp, MosqueTheme.colors.fillStrong)
                 ) {
                     Column(
                         modifier = Modifier
@@ -709,7 +710,7 @@ fun SideSheetContent(
         modifier = modifier
             .fillMaxHeight()
             .width(width)
-            .background(Color.Black.copy(alpha = 0.4f))
+            .background(MosqueTheme.colors.scrim.copy(alpha = 0.4f))
             .padding(vertical = 24.dp, horizontal = if (isCollapsed) 8.dp else 16.dp),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
@@ -728,7 +729,7 @@ fun SideSheetContent(
                     Icon(
                         imageVector = Icons.Default.Settings,
                         contentDescription = Lang.get("Settings", "Pengaturan"),
-                        tint = Color(0xFFFFD54F),
+                        tint = MosqueTheme.colors.accent,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -747,13 +748,13 @@ fun SideSheetContent(
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = null,
-                            tint = Color(0xFFFFD54F),
+                            tint = MosqueTheme.colors.accent,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = Lang.get("Settings", "Pengaturan"),
-                            color = Color(0xFFFFD54F),
+                            color = MosqueTheme.colors.accent,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -764,7 +765,7 @@ fun SideSheetContent(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.MenuOpen,
                                 contentDescription = "Collapse Menu",
-                                tint = Color(0xFFFFD54F),
+                                tint = MosqueTheme.colors.accent,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -788,18 +789,18 @@ fun SideSheetContent(
                     val isFocusedOrHovered = isFocused || isHovered
 
                     val borderColor = when {
-                        isSelected -> Color(0xFFFFD54F)
-                        isFocusedOrHovered -> Color(0xFFFFD54F).copy(alpha = 0.8f)
-                        else -> Color.White.copy(alpha = 0.15f)
+                        isSelected -> MosqueTheme.colors.accent
+                        isFocusedOrHovered -> MosqueTheme.colors.accent.copy(alpha = 0.8f)
+                        else -> MosqueTheme.colors.fillStrong
                     }
                     val borderWidth = if (isSelected || isFocusedOrHovered) 2.dp else 1.dp
                     val backgroundColor = when {
-                        isSelected && isFocusedOrHovered -> Color(0xFFFFD54F).copy(alpha = 0.25f)
-                        isSelected -> Color(0xFFFFD54F).copy(alpha = 0.15f)
-                        isFocusedOrHovered -> Color.White.copy(alpha = 0.12f)
-                        else -> Color.Transparent
+                        isSelected && isFocusedOrHovered -> MosqueTheme.colors.accent.copy(alpha = 0.25f)
+                        isSelected -> MosqueTheme.colors.accent.copy(alpha = 0.15f)
+                        isFocusedOrHovered -> MosqueTheme.colors.fillMedium
+                        else -> MosqueTheme.colors.transparent
                     }
-                    val tintColor = if (isSelected || isFocusedOrHovered) Color(0xFFFFD54F) else Color.White
+                    val tintColor = if (isSelected || isFocusedOrHovered) MosqueTheme.colors.accent else MosqueTheme.colors.textPrimary
 
                     Box(
                         modifier = Modifier
@@ -885,7 +886,7 @@ fun SideSheetContent(
             if (!isCollapsed) {
                 Text(
                     text = Lang.get("Version: v$versionName", "Versi: v$versionName"),
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = MosqueTheme.colors.textMuted,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)
@@ -903,13 +904,13 @@ fun SideSheetContent(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = Lang.get("Back", "Kembali"),
-                        tint = Color.White,
+                        tint = MosqueTheme.colors.textPrimary,
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
                     Text(
                         text = Lang.get("Back", "Kembali"),
-                        color = Color.White,
+                        color = MosqueTheme.colors.textPrimary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )

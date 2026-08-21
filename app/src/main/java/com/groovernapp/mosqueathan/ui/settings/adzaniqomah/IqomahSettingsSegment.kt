@@ -51,6 +51,7 @@ import com.groovernapp.mosqueathan.ui.settings.parseFooterTexts
 import com.groovernapp.mosqueathan.ui.settings.textFieldColors
 import com.groovernapp.mosqueathan.ui.settings.RunningTextListSettingsComponent
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun IqomahSettingsSegment(
@@ -82,7 +83,7 @@ fun IqomahSettingsSegment(
         // Subtitle: Iqomah wait time after adzan
         Text(
             text = Lang.get("Iqomah wait time after adzan", "Jeda waktu iqomah setelah adzan"),
-            color = Color(0xFFFFD54F),
+            color = MosqueTheme.colors.accent,
             fontSize = if (isCompact) 15.sp else 18.sp,
             fontWeight = FontWeight.Bold
         )
@@ -98,7 +99,7 @@ fun IqomahSettingsSegment(
         HorizontalDivider(
             Modifier,
             DividerDefaults.Thickness,
-            color = Color.White.copy(alpha = 0.15f)
+            color = MosqueTheme.colors.fillStrong
         )
 
         RunningTextListSettingsComponent(
@@ -115,7 +116,7 @@ fun IqomahSettingsSegment(
         HorizontalDivider(
             Modifier,
             DividerDefaults.Thickness,
-            color = Color.White.copy(alpha = 0.15f)
+            color = MosqueTheme.colors.fillStrong
         )
 
         // Preview Button
@@ -126,7 +127,7 @@ fun IqomahSettingsSegment(
         ) {
             Text(
                 text = Lang.get("Preview Iqomah Screen", "Preview Layar Iqomah"),
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontWeight = FontWeight.Bold,
                 fontSize = if (isCompact) 13.sp else 14.sp
             )

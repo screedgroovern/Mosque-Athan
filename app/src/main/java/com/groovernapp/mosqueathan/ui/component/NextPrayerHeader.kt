@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.ui.dashboard.NextPrayerUiModel
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun NextPrayerHeader(
@@ -41,7 +42,7 @@ fun NextPrayerHeader(
 
         Text(
             text = nextPrayer.prayerType.displayName,
-            color = Color(0xFFFFD54F),
+            color = MosqueTheme.colors.accent,
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(
@@ -60,7 +61,7 @@ fun NextPrayerHeader(
 
         Text(
             text = "•",
-            color = Color.White,
+            color = MosqueTheme.colors.textPrimary,
             fontSize = 24.sp
         )
 
@@ -68,7 +69,7 @@ fun NextPrayerHeader(
 
         Text(
             text = nextPrayer.countdown,
-            color = Color.White,
+            color = MosqueTheme.colors.textPrimary,
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold
         )

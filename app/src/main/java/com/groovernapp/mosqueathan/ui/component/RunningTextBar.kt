@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun RunningTextBar(text: String) {
@@ -20,14 +21,14 @@ fun RunningTextBar(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .background(Color(0xFF0F3316))
+            .background(MosqueTheme.colors.runningTextBackground)
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.CenterStart
     ) {
 
         Text(
             text = text,
-            color = Color(0xFFFFC107),
+            color = MosqueTheme.colors.accentAmber,
             fontSize = 30.sp,
             maxLines = 1,
             softWrap = false,

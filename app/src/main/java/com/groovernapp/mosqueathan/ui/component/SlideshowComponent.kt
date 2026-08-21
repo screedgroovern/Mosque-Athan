@@ -39,6 +39,7 @@ import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 import java.util.Collections
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun <T> SlideshowComponent(
@@ -172,7 +173,7 @@ fun <T> SlideshowComponent(
                                     )
                                 }
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White.copy(alpha = 0.05f))
+                                .background(MosqueTheme.colors.fillSubtle)
                         ) {
                             if (isVideo) {
                                 Box(
@@ -182,12 +183,12 @@ fun <T> SlideshowComponent(
                                     Icon(
                                         imageVector = Icons.Default.PlayArrow,
                                         contentDescription = "Video File",
-                                        tint = Color(0xFFFFD54F),
+                                        tint = MosqueTheme.colors.accent,
                                         modifier = Modifier.size(64.dp)
                                     )
                                     Text(
                                         text = Lang.get("Video Slide", "Video Slide"),
-                                        color = Color.White.copy(alpha = 0.6f),
+                                        color = MosqueTheme.colors.textTertiary,
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
                                             .padding(bottom = 12.dp)
@@ -207,7 +208,7 @@ fun <T> SlideshowComponent(
                                 ) {
                                     Text(
                                         text = Lang.get("Failed to load image", "Gagal memuat gambar"),
-                                        color = Color.White.copy(alpha = 0.5f)
+                                        color = MosqueTheme.colors.textMuted
                                     )
                                 }
                             }
@@ -221,14 +222,14 @@ fun <T> SlideshowComponent(
                                 IconButton(
                                     onClick = { onEditItem(item) },
                                     colors = IconButtonDefaults.iconButtonColors(
-                                        containerColor = Color.Black.copy(alpha = 0.6f)
+                                        containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.6f)
                                     ),
                                     modifier = Modifier.size(36.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,
                                         contentDescription = "Edit Media",
-                                        tint = Color.White,
+                                        tint = MosqueTheme.colors.textPrimary,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -236,7 +237,7 @@ fun <T> SlideshowComponent(
                                 IconButton(
                                     onClick = { onDeleteItem(item) },
                                     colors = IconButtonDefaults.iconButtonColors(
-                                        containerColor = Color.Black.copy(alpha = 0.6f)
+                                        containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.6f)
                                     ),
                                     modifier = Modifier.size(36.dp)
                                 ) {
@@ -261,7 +262,7 @@ fun <T> SlideshowComponent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         repeat(items.size) { iteration ->
-                            val color = if (pagerState.currentPage == iteration) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.4f)
+                            val color = if (pagerState.currentPage == iteration) MosqueTheme.colors.accent else MosqueTheme.colors.textFaint
                             Box(
                                 modifier = Modifier
                                     .padding(horizontal = 3.dp)
@@ -288,15 +289,15 @@ fun <T> SlideshowComponent(
                                 checked = isUsed,
                                 onCheckedChange = { onUpdateUseStatus(currentItem, it) },
                                 colors = CheckboxDefaults.colors(
-                                    checkedColor = Color(0xFFFFD54F),
-                                    checkmarkColor = Color.Black,
-                                    uncheckedColor = Color.White.copy(alpha = 0.6f)
+                                    checkedColor = MosqueTheme.colors.accent,
+                                    checkmarkColor = MosqueTheme.colors.onAccent,
+                                    uncheckedColor = MosqueTheme.colors.textTertiary
                                 )
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = Lang.get("Use", "Gunakan"),
-                                color = Color.White,
+                                color = MosqueTheme.colors.textPrimary,
                                 fontSize = 14.sp
                             )
                         }
@@ -310,12 +311,12 @@ fun <T> SlideshowComponent(
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White.copy(alpha = 0.05f)),
+                    .background(MosqueTheme.colors.fillSubtle),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = emptyText,
-                    color = Color.White.copy(alpha = 0.5f),
+                    color = MosqueTheme.colors.textMuted,
                     fontSize = 14.sp
                 )
             }
@@ -333,11 +334,11 @@ fun <T> SlideshowComponent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = Color.Black)
+                    Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = MosqueTheme.colors.onAccent)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = addText,
-                        color = Color.Black,
+                        color = MosqueTheme.colors.onAccent,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )

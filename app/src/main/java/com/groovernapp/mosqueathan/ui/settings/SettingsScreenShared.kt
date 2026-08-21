@@ -44,21 +44,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Delete
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun textFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Color.White,
-    unfocusedTextColor = Color.White,
-    focusedBorderColor = Color(0xFFFFD54F),
-    unfocusedBorderColor = Color.White.copy(alpha = 0.25f),
-    focusedLabelColor = Color(0xFFFFD54F),
-    unfocusedLabelColor = Color.White.copy(alpha = 0.6f),
-    cursorColor = Color(0xFFFFD54F),
-    disabledTextColor = Color.White.copy(alpha = 0.38f),
-    disabledBorderColor = Color.White.copy(alpha = 0.12f),
-    disabledLabelColor = Color.White.copy(alpha = 0.38f),
-    disabledLeadingIconColor = Color.White.copy(alpha = 0.38f),
-    disabledTrailingIconColor = Color.White.copy(alpha = 0.38f)
+    focusedTextColor = MosqueTheme.colors.textPrimary,
+    unfocusedTextColor = MosqueTheme.colors.textPrimary,
+    focusedBorderColor = MosqueTheme.colors.accent,
+    unfocusedBorderColor = MosqueTheme.colors.borderStrong,
+    focusedLabelColor = MosqueTheme.colors.accent,
+    unfocusedLabelColor = MosqueTheme.colors.textTertiary,
+    cursorColor = MosqueTheme.colors.accent,
+    disabledTextColor = MosqueTheme.colors.textDisabled,
+    disabledBorderColor = MosqueTheme.colors.fillMedium,
+    disabledLabelColor = MosqueTheme.colors.textDisabled,
+    disabledLeadingIconColor = MosqueTheme.colors.textDisabled,
+    disabledTrailingIconColor = MosqueTheme.colors.textDisabled
 )
 
 /**
@@ -75,7 +76,7 @@ fun textFieldColors() = OutlinedTextFieldDefaults.colors(
 fun TvFocusableButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    colors: ButtonColors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.15f)),
+    colors: ButtonColors = ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.fillStrong),
     shape: Shape = RoundedCornerShape(6.dp),
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     enabled: Boolean = true,
@@ -88,7 +89,7 @@ fun TvFocusableButton(
 
     // Determine focus-adjusted colors
     val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(3.dp, Color(0xFFFFD54F))
+        BorderStroke(3.dp, MosqueTheme.colors.accent)
     } else {
         null
     }
@@ -98,7 +99,7 @@ fun TvFocusableButton(
     // When focused/hovered, brighten the container color
     val effectiveColors = if (isFocusedOrHovered) {
         ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFFFD54F).copy(alpha = 0.35f)
+            containerColor = MosqueTheme.colors.accent.copy(alpha = 0.35f)
         )
     } else {
         colors
@@ -136,7 +137,7 @@ fun TvFocusablePrimaryButton(
     val isFocusedOrHovered = isFocused || isHovered
 
     val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(3.dp, Color.White)
+        BorderStroke(3.dp, MosqueTheme.colors.textPrimary)
     } else {
         null
     }
@@ -144,9 +145,9 @@ fun TvFocusablePrimaryButton(
     val focusScale = if (isFocusedOrHovered) 1.05f else 1.0f
 
     val effectiveColors = if (isFocusedOrHovered) {
-        ButtonDefaults.buttonColors(containerColor = Color(0xFFFFE082))
+        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.accentLight)
     } else {
-        ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD54F))
+        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.accent)
     }
 
     Button(
@@ -177,20 +178,20 @@ fun TvFocusablePreviewButton(
     val isFocusedOrHovered = isFocused || isHovered
 
     val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(3.dp, Color(0xFFFFD54F))
+        BorderStroke(3.dp, MosqueTheme.colors.accent)
     } else {
-        BorderStroke(1.5.dp, Color(0xFFFFD54F).copy(alpha = 0.6f))
+        BorderStroke(1.5.dp, MosqueTheme.colors.accent.copy(alpha = 0.6f))
     }
 
     val focusScale = if (isFocusedOrHovered) 1.05f else 1.0f
 
     val effectiveColors = if (isFocusedOrHovered) {
         ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFFFD54F).copy(alpha = 0.25f)
+            containerColor = MosqueTheme.colors.accent.copy(alpha = 0.25f)
         )
     } else {
         ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFFFD54F).copy(alpha = 0.08f)
+            containerColor = MosqueTheme.colors.accent.copy(alpha = 0.08f)
         )
     }
 
@@ -226,7 +227,7 @@ fun TvFocusableDangerButton(
     val isFocusedOrHovered = isFocused || isHovered
 
     val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(3.dp, Color(0xFFFFD54F))
+        BorderStroke(3.dp, MosqueTheme.colors.accent)
     } else {
         null
     }
@@ -272,13 +273,13 @@ fun AdjustmentRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .background(MosqueTheme.colors.fillSubtle)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = title,
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -293,13 +294,13 @@ fun AdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
      
                 val sign = if (showSign && value > 0) "+" else ""
                 Text(
                     text = "$sign$value",
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp),
@@ -312,13 +313,13 @@ fun AdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
                 
                 if (unitSuffix.isNotEmpty()) {
                     Text(
                         text = unitSuffix,
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = MosqueTheme.colors.textSecondary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                     )
@@ -330,14 +331,14 @@ fun AdjustmentRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .background(MosqueTheme.colors.fillSubtle)
                 .padding(horizontal = 20.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = title,
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -352,13 +353,13 @@ fun AdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
      
                 val sign = if (showSign && value > 0) "+" else ""
                 Text(
                     text = "$sign$value",
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp),
@@ -371,13 +372,13 @@ fun AdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
                 
                 if (unitSuffix.isNotEmpty()) {
                     Text(
                         text = unitSuffix,
-                        color = Color.White.copy(alpha = 0.7f),
+                        color = MosqueTheme.colors.textSecondary,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
                     )
@@ -428,7 +429,7 @@ fun RunningTextListSettingsComponent(
     if (editingIndex != null) {
         AlertDialog(
             onDismissRequest = { editingIndex = null },
-            title = { Text(com.groovernapp.mosqueathan.util.Lang.get("Edit Running Text", "Edit Teks Berjalan"), color = Color.White) },
+            title = { Text(com.groovernapp.mosqueathan.util.Lang.get("Edit Running Text", "Edit Teks Berjalan"), color = MosqueTheme.colors.textPrimary) },
             text = {
                 OutlinedTextField(
                     value = editTextValue,
@@ -450,12 +451,12 @@ fun RunningTextListSettingsComponent(
                         editingIndex = null
                     }
                 ) {
-                    Text(com.groovernapp.mosqueathan.util.Lang.get("Save", "Simpan"), color = Color.Black)
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Save", "Simpan"), color = MosqueTheme.colors.onAccent)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { editingIndex = null }) {
-                    Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = Color.White)
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             }
         )
@@ -464,7 +465,7 @@ fun RunningTextListSettingsComponent(
     if (isAddingNew) {
         AlertDialog(
             onDismissRequest = { isAddingNew = false },
-            title = { Text(com.groovernapp.mosqueathan.util.Lang.get("Add Running Text", "Tambah Teks Berjalan"), color = Color.White) },
+            title = { Text(com.groovernapp.mosqueathan.util.Lang.get("Add Running Text", "Tambah Teks Berjalan"), color = MosqueTheme.colors.textPrimary) },
             text = {
                 OutlinedTextField(
                     value = addTextValue,
@@ -484,12 +485,12 @@ fun RunningTextListSettingsComponent(
                         isAddingNew = false
                     }
                 ) {
-                    Text(com.groovernapp.mosqueathan.util.Lang.get("Add", "Tambah"), color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Add", "Tambah"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { isAddingNew = false }) {
-                    Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = Color.White)
+                    Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             }
         )
@@ -510,7 +511,7 @@ fun RunningTextListSettingsComponent(
         ) {
             Text(
                 text = title,
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontSize = if (isCompact) 15.sp else 18.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -519,7 +520,7 @@ fun RunningTextListSettingsComponent(
         Column {
             Text(
                 text = subtitle,
-                color = Color.White.copy(alpha = 0.8f),
+                color = MosqueTheme.colors.textStrong,
                 fontSize = if (isCompact) 13.sp else 15.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -538,8 +539,8 @@ fun RunningTextListSettingsComponent(
                                 shape = RoundedCornerShape(6.dp),
                                 modifier = Modifier.height(36.dp),
                                 colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = Color.White.copy(alpha = 0.12f),
-                                    contentColor = Color(0xFFFFD54F)
+                                    containerColor = MosqueTheme.colors.fillMedium,
+                                    contentColor = MosqueTheme.colors.accent
                                 ),
                                 contentPadding = PaddingValues(horizontal = 12.dp)
                             ) {
@@ -563,7 +564,7 @@ fun RunningTextListSettingsComponent(
                     ) {
                         Text(
                             text = com.groovernapp.mosqueathan.util.Lang.get("Add", "Tambah"),
-                            color = Color.Black,
+                            color = MosqueTheme.colors.onAccent,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
@@ -592,7 +593,7 @@ fun RunningTextListSettingsComponent(
                         },
                         modifier = Modifier.height(56.dp)
                     ) {
-                        Text(com.groovernapp.mosqueathan.util.Lang.get("Add", "Tambah"), color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text(com.groovernapp.mosqueathan.util.Lang.get("Add", "Tambah"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -616,7 +617,7 @@ fun RunningTextListSettingsComponent(
                             translationY = if (isCurrentDragged) dragOffsetY else 0f
                         }
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.05f))
+                        .background(MosqueTheme.colors.fillSubtle)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
                     if (isCompact) {
@@ -628,7 +629,7 @@ fun RunningTextListSettingsComponent(
                                 Icon(
                                     imageVector = Icons.Default.Menu,
                                     contentDescription = "Drag Handle",
-                                    tint = Color.White.copy(alpha = 0.4f),
+                                    tint = MosqueTheme.colors.textFaint,
                                     modifier = Modifier
                                         .size(24.dp)
                                         .pointerInput(Unit) {
@@ -697,7 +698,7 @@ fun RunningTextListSettingsComponent(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     text = itemText,
-                                    color = Color.White,
+                                    color = MosqueTheme.colors.textPrimary,
                                     fontSize = if (isCompact) 13.sp else 15.sp,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -706,7 +707,7 @@ fun RunningTextListSettingsComponent(
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 Text(
                                     text = itemText,
-                                    color = Color.White,
+                                    color = MosqueTheme.colors.textPrimary,
                                     fontSize = if (isCompact) 13.sp else 15.sp,
                                     modifier = Modifier.fillMaxWidth()
                                 )
@@ -727,13 +728,13 @@ fun RunningTextListSettingsComponent(
                                         Icon(
                                             imageVector = Icons.Outlined.Edit,
                                             contentDescription = "Edit",
-                                            tint = Color(0xFF90CAF9),
+                                            tint = MosqueTheme.colors.info,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = com.groovernapp.mosqueathan.util.Lang.get("Edit", "Edit"),
-                                            color = Color(0xFF90CAF9),
+                                            color = MosqueTheme.colors.info,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -750,13 +751,13 @@ fun RunningTextListSettingsComponent(
                                         Icon(
                                             imageVector = Icons.Outlined.Delete,
                                             contentDescription = "Remove",
-                                            tint = Color(0xFFE57373),
+                                            tint = MosqueTheme.colors.danger,
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = com.groovernapp.mosqueathan.util.Lang.get("Delete", "Hapus"),
-                                            color = Color(0xFFE57373),
+                                            color = MosqueTheme.colors.danger,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -772,7 +773,7 @@ fun RunningTextListSettingsComponent(
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = "Drag Handle",
-                                tint = Color.White.copy(alpha = 0.4f),
+                                tint = MosqueTheme.colors.textFaint,
                                 modifier = Modifier
                                     .size(24.dp)
                                     .pointerInput(Unit) {
@@ -841,7 +842,7 @@ fun RunningTextListSettingsComponent(
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = itemText,
-                                color = Color.White,
+                                color = MosqueTheme.colors.textPrimary,
                                 fontSize = 15.sp,
                                 modifier = Modifier.weight(1f)
                             )
@@ -853,7 +854,7 @@ fun RunningTextListSettingsComponent(
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,
                                     contentDescription = "Edit",
-                                    tint = Color(0xFF90CAF9)
+                                    tint = MosqueTheme.colors.info
                                 )
                             }
                             IconButton(onClick = {
@@ -863,7 +864,7 @@ fun RunningTextListSettingsComponent(
                                 Icon(
                                     imageVector = Icons.Outlined.Delete,
                                     contentDescription = "Remove",
-                                    tint = Color(0xFFE57373)
+                                    tint = MosqueTheme.colors.danger
                                 )
                             }
                         }

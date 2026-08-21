@@ -31,6 +31,7 @@ import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun PrayerScheduleSettingsSegment(
@@ -78,8 +79,8 @@ fun PrayerScheduleSettingsSegment(
     ) {
         SecondaryTabRow(
             selectedTabIndex = pagerState.currentPage,
-            containerColor = Color.Transparent,
-            contentColor = Color(0xFFFFD54F),
+            containerColor = MosqueTheme.colors.transparent,
+            contentColor = MosqueTheme.colors.accent,
             divider = {}
         ) {
             Tab(
@@ -105,8 +106,8 @@ fun PrayerScheduleSettingsSegment(
                         )
                     }
                 },
-                selectedContentColor = Color(0xFFFFD54F),
-                unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                selectedContentColor = MosqueTheme.colors.accent,
+                unselectedContentColor = MosqueTheme.colors.textTertiary
             )
             Tab(
                 selected = pagerState.currentPage == 1,
@@ -131,8 +132,8 @@ fun PrayerScheduleSettingsSegment(
                         )
                     }
                 },
-                selectedContentColor = Color(0xFFFFD54F),
-                unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                selectedContentColor = MosqueTheme.colors.accent,
+                unselectedContentColor = MosqueTheme.colors.textTertiary
             )
         }
 

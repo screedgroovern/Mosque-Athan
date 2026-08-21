@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import com.groovernapp.mosqueathan.R
 import com.groovernapp.mosqueathan.ui.component.CountdownScreen
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun AdzanScreen(state: AdzanUiModel, onDismiss: () -> Unit = {}) {
@@ -15,9 +16,9 @@ fun AdzanScreen(state: AdzanUiModel, onDismiss: () -> Unit = {}) {
         countdownValue = state.countdown,
         footerText = state.footerText,
         gradientColors = listOf(
-            Color.Black.copy(alpha = 0.70f),
-            Color(0xFF142018).copy(alpha = 0.82f),
-            Color.Black.copy(alpha = 0.78f)
+            MosqueTheme.colors.scrim.copy(alpha = 0.70f),
+            MosqueTheme.colors.backdropAdzan.copy(alpha = 0.82f),
+            MosqueTheme.colors.scrim.copy(alpha = 0.78f)
         ),
         onDismiss = onDismiss
     )

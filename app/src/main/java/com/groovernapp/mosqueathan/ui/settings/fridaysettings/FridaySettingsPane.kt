@@ -41,6 +41,7 @@ import com.groovernapp.mosqueathan.ui.settings.TvFocusablePrimaryButton
 import com.groovernapp.mosqueathan.ui.settings.textFieldColors
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun FridaySettingsPane(
@@ -125,20 +126,20 @@ fun FridaySettingsPane(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = Lang.get("Enable Friday Mode", "Aktifkan Mode Jum'at"),
-                            color = Color.White,
+                            color = MosqueTheme.colors.textPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         )
                         Text(
                             text = Lang.get("Enable Friday features and layout adjustments", "Aktifkan fitur khusus dan penyesuaian tata letak untuk hari Jum'at"),
-                            color = Color.White.copy(alpha = 0.6f),
+                            color = MosqueTheme.colors.textTertiary,
                             fontSize = 13.sp
                         )
                     }
                     Switch(
                         checked = jumatEnabled,
                         onCheckedChange = onJumatEnabledChange,
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFFD54F), checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f))
+                        colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
                     )
                 }
 
@@ -194,13 +195,13 @@ fun FridaySettingsPane(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = Lang.get("Standby Mode Only", "Mode Standby Saja"),
-                                color = if (jumatEnabled) Color.White else Color.White.copy(alpha = 0.35f),
+                                color = if (jumatEnabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textVeryFaint,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
                                 text = Lang.get("Turn screen completely black after Friday Adzan until Friday service ends", "Layar TV akan padam total setelah adzan Jum'at sampai ibadah Jum'at selesai"),
-                                color = if (jumatEnabled) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.25f),
+                                color = if (jumatEnabled) MosqueTheme.colors.textTertiary else MosqueTheme.colors.borderStrong,
                                 fontSize = 13.sp
                             )
                         }
@@ -209,7 +210,7 @@ fun FridaySettingsPane(
                             onCheckedChange = onJumatStandbyOnlyChange,
                             enabled = jumatEnabled
                         ,
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFFD54F), checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f))
+                            colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
                         )
                     }
 
@@ -219,7 +220,7 @@ fun FridaySettingsPane(
                                 "Note: Other Friday visual features are disabled because Standby Mode is active.",
                                 "Catatan: Menu visual Jum'at lainnya dinonaktifkan karena Mode Standby Saja aktif."
                             ),
-                            color = Color(0xFFFFD54F),
+                            color = MosqueTheme.colors.accent,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(vertical = 4.dp)
@@ -243,13 +244,13 @@ fun FridaySettingsPane(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = Lang.get("Auto Play Murottal", "Putar Murottal Otomatis"),
-                                color = if (jumatEnabled && !jumatStandbyOnly) Color.White else Color.White.copy(alpha = 0.35f),
+                                color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textVeryFaint,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
                                 text = Lang.get("Automatically play Quran audio files before adzan", "Putar berkas audio Al-Qur'an secara otomatis menjelang adzan"),
-                                color = if (jumatEnabled && !jumatStandbyOnly) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.25f),
+                                color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textTertiary else MosqueTheme.colors.borderStrong,
                                 fontSize = 13.sp
                             )
                         }
@@ -258,7 +259,7 @@ fun FridaySettingsPane(
                             onCheckedChange = onMurottalEnabledChange,
                             enabled = jumatEnabled && !jumatStandbyOnly
                         ,
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFFD54F), checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f))
+                            colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
                         )
                     }
 
@@ -296,13 +297,13 @@ fun FridaySettingsPane(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = Lang.get("Enable Friday Slideshow", "Aktifkan Slideshow Jum'at"),
-                                color = if (jumatEnabled && !jumatStandbyOnly) Color.White else Color.White.copy(alpha = 0.35f),
+                                color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textVeryFaint,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
                                 text = Lang.get("Display different backgrounds/slides on Friday", "Tampilkan gambar/slideshow khusus di hari Jum'at"),
-                                color = if (jumatEnabled && !jumatStandbyOnly) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.25f),
+                                color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textTertiary else MosqueTheme.colors.borderStrong,
                                 fontSize = 13.sp
                             )
                         }
@@ -311,7 +312,7 @@ fun FridaySettingsPane(
                             onCheckedChange = onJumatSlideshowEnabledChange,
                             enabled = jumatEnabled && !jumatStandbyOnly
                         ,
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFFD54F), checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f))
+                            colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
                         )
                     }
 
@@ -323,13 +324,13 @@ fun FridaySettingsPane(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = Lang.get("Include Global Slideshow", "Sertakan Slideshow Global"),
-                                color = if (jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled) Color.White else Color.White.copy(alpha = 0.35f),
+                                color = if (jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textVeryFaint,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
                             Text(
                                 text = Lang.get("Mix global slideshow images in rotation", "Sertakan gambar dari slideshow reguler dalam putaran"),
-                                color = if (jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.25f),
+                                color = if (jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled) MosqueTheme.colors.textTertiary else MosqueTheme.colors.borderStrong,
                                 fontSize = 13.sp
                             )
                         }
@@ -338,7 +339,7 @@ fun FridaySettingsPane(
                             onCheckedChange = onIncludeGlobalSlideshowChange,
                             enabled = jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled
                         ,
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFFD54F), checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f))
+                            colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
                         )
                     }
 
@@ -349,8 +350,8 @@ fun FridaySettingsPane(
                             
                             SecondaryTabRow(
                                 selectedTabIndex = pagerState.currentPage,
-                                containerColor = Color.Transparent,
-                                contentColor = Color(0xFFFFD54F),
+                                containerColor = MosqueTheme.colors.transparent,
+                                contentColor = MosqueTheme.colors.accent,
                                 divider = {}
                             ) {
                                 Tab(
@@ -363,8 +364,8 @@ fun FridaySettingsPane(
                                             fontWeight = FontWeight.Bold
                                         )
                                     },
-                                    selectedContentColor = Color(0xFFFFD54F),
-                                    unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                                    selectedContentColor = MosqueTheme.colors.accent,
+                                    unselectedContentColor = MosqueTheme.colors.textTertiary
                                 )
                                 Tab(
                                     selected = pagerState.currentPage == 1,
@@ -376,8 +377,8 @@ fun FridaySettingsPane(
                                             fontWeight = FontWeight.Bold
                                         )
                                     },
-                                    selectedContentColor = Color(0xFFFFD54F),
-                                    unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                                    selectedContentColor = MosqueTheme.colors.accent,
+                                    unselectedContentColor = MosqueTheme.colors.textTertiary
                                 )
                             }
                             HorizontalPager(
@@ -436,23 +437,23 @@ fun FridaySettingsPane(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(Lang.get("Transition Type", "Tipe Transisi"), color = Color.White, fontWeight = FontWeight.Bold)
+                            Text(Lang.get("Transition Type", "Tipe Transisi"), color = MosqueTheme.colors.textPrimary, fontWeight = FontWeight.Bold)
                             var expanded by remember { mutableStateOf(false) }
                             Box {
                                 OutlinedButton(
                                     onClick = { expanded = true },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueTheme.colors.textPrimary)
                                 ) {
                                     Text(jumatTransitionType)
                                 }
                                 DropdownMenu(
                                     expanded = expanded,
                                     onDismissRequest = { expanded = false },
-                                    modifier = Modifier.background(Color(0xFF2A2A2A))
+                                    modifier = Modifier.background(MosqueTheme.colors.surfaceNeutralRaised)
                                 ) {
                                     listOf("FADE", "SLIDE", "ZOOM", "NONE").forEach { type ->
                                         DropdownMenuItem(
-                                            text = { Text(type, color = Color.White) },
+                                            text = { Text(type, color = MosqueTheme.colors.textPrimary) },
                                             onClick = {
                                                 onJumatTransitionTypeChange(type)
                                                 expanded = false
@@ -483,24 +484,24 @@ fun FridaySettingsPane(
                             Box {
                                 OutlinedButton(
                                     onClick = { unitExpanded = true },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueTheme.colors.textPrimary)
                                 ) {
                                     Text(if (jumatSlideIntervalUnit == "MINUTES") Lang.get("Minutes", "Menit") else Lang.get("Seconds", "Detik"))
                                 }
                                 DropdownMenu(
                                     expanded = unitExpanded,
                                     onDismissRequest = { unitExpanded = false },
-                                    modifier = Modifier.background(Color(0xFF2A2A2A))
+                                    modifier = Modifier.background(MosqueTheme.colors.surfaceNeutralRaised)
                                 ) {
                                     DropdownMenuItem(
-                                        text = { Text(Lang.get("Seconds", "Detik"), color = Color.White) },
+                                        text = { Text(Lang.get("Seconds", "Detik"), color = MosqueTheme.colors.textPrimary) },
                                         onClick = {
                                             onJumatSlideIntervalUnitChange("SECONDS")
                                             unitExpanded = false
                                         }
                                     )
                                     DropdownMenuItem(
-                                        text = { Text(Lang.get("Minutes", "Menit"), color = Color.White) },
+                                        text = { Text(Lang.get("Minutes", "Menit"), color = MosqueTheme.colors.textPrimary) },
                                         onClick = {
                                             onJumatSlideIntervalUnitChange("MINUTES")
                                             unitExpanded = false
@@ -518,20 +519,20 @@ fun FridaySettingsPane(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = Lang.get("Wait Video End", "Tunggu Video Selesai"),
-                                    color = Color.White,
+                                    color = MosqueTheme.colors.textPrimary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
                                 )
                                 Text(
                                     text = Lang.get("Wait for video to finish before next slide", "Tunggu video selesai sebelum lanjut slide berikutnya"),
-                                    color = Color.White.copy(alpha = 0.6f),
+                                    color = MosqueTheme.colors.textTertiary,
                                     fontSize = 13.sp
                                 )
                             }
                             Switch(
                                 checked = jumatVideoWaitUntilEnd,
                                 onCheckedChange = onJumatVideoWaitUntilEndChange,
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color(0xFFFFD54F), checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f))
+                                colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
                             )
                         }
 
@@ -543,7 +544,7 @@ fun FridaySettingsPane(
                             Text(
                                 text = Lang.get("Preview Slideshow", "Pratinjau Slideshow"),
                                 fontWeight = FontWeight.Bold,
-                                color = Color.Black
+                                color = MosqueTheme.colors.onAccent
                             )
                         }
                     }
@@ -643,21 +644,21 @@ fun MurottalAudioPathsManager(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(Lang.get("Murottal Audio Files", "File Audio Murottal"), color = if (enabled) Color.White else Color.White.copy(alpha = 0.5f), fontSize = 14.sp)
+        Text(Lang.get("Murottal Audio Files", "File Audio Murottal"), color = if (enabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textMuted, fontSize = 14.sp)
         
         if (paths.isNotEmpty()) {
             paths.take(5).forEach { path ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
+                        .background(MosqueTheme.colors.fillSubtle, RoundedCornerShape(8.dp))
                         .padding(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = path.substringAfterLast("/").takeIf { it.isNotEmpty() } ?: path,
-                        color = Color.White,
+                        color = MosqueTheme.colors.textPrimary,
                         fontSize = 12.sp,
                         maxLines = 1,
                         modifier = Modifier.weight(1f)
@@ -674,14 +675,14 @@ fun MurottalAudioPathsManager(
                 }
             }
         } else {
-            Text(Lang.get("No audio files selected", "Belum ada file audio"), color = Color.White.copy(alpha = 0.3f), fontSize = 12.sp)
+            Text(Lang.get("No audio files selected", "Belum ada file audio"), color = MosqueTheme.colors.textGhost, fontSize = 12.sp)
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
                 onClick = { audioPickerLauncher.launch(arrayOf("audio/*")) },
                 enabled = enabled,
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f), contentColor = Color.White)
+                colors = ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.fill, contentColor = MosqueTheme.colors.textPrimary)
             ) {
                 Text(Lang.get("Add Audio", "Tambah Audio"))
             }
@@ -689,7 +690,7 @@ fun MurottalAudioPathsManager(
                 Button(
                     onClick = { /* Open full list dialog or expand */ },
                     enabled = enabled,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.1f), contentColor = Color.White)
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.fill, contentColor = MosqueTheme.colors.textPrimary)
                 ) {
                     Text(Lang.get("List Audio (${paths.size})", "Daftar Audio (${paths.size})"))
                 }

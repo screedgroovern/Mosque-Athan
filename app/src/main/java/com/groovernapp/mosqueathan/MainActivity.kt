@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -180,7 +181,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.Black)
+                                .background(MosqueTheme.colors.onAccent)
                                 .pointerInput(Unit) {
                                     detectTapGestures { }
                                 }

@@ -18,6 +18,7 @@ import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.ui.dashboard.DashboardUiState
 import com.groovernapp.mosqueathan.ui.dashboard.NextPrayerUiModel
 import com.groovernapp.mosqueathan.ui.dashboard.PrayerTimesUiModel
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun ClockSection(state: DashboardUiState.Dashboard) {
@@ -28,7 +29,7 @@ fun ClockSection(state: DashboardUiState.Dashboard) {
 
         Text(
             text = state.currentTime,
-            color = Color.White,
+            color = MosqueTheme.colors.textPrimary,
             fontSize = 170.sp,
             fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Bold
@@ -36,7 +37,7 @@ fun ClockSection(state: DashboardUiState.Dashboard) {
 
         Text(
             text = "Masjid Al-Hikmah Tegalrejo",
-            color = Color.White,
+            color = MosqueTheme.colors.textPrimary,
             fontWeight = FontWeight.Bold,
             fontSize = 32.sp
         )
@@ -45,13 +46,13 @@ fun ClockSection(state: DashboardUiState.Dashboard) {
 
         Text(
             text = state.gregorianDate,
-            color = Color.White,
+            color = MosqueTheme.colors.textPrimary,
             fontSize = 22.sp
         )
 
         Text(
             text = state.hijriDate,
-            color = Color.White,
+            color = MosqueTheme.colors.textPrimary,
             fontSize = 22.sp
         )
     }

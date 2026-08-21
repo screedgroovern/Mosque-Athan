@@ -51,6 +51,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.type
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun RemoteDevicesSettingsPane(
@@ -121,12 +122,12 @@ fun RemoteDevicesSettingsPane(
                     .weight(1f)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
-                        if (isServer) Color(0xFFFFD54F).copy(alpha = 0.25f)
-                        else Color.Transparent
+                        if (isServer) MosqueTheme.colors.accent.copy(alpha = 0.25f)
+                        else MosqueTheme.colors.transparent
                     )
                     .border(
                         width = 2.dp,
-                        color = if (isServer) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.15f),
+                        color = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.fillStrong,
                         shape = RoundedCornerShape(12.dp)
                     )
                     .clickable { onUpdateConnectivityMode("SERVER") }
@@ -141,11 +142,11 @@ fun RemoteDevicesSettingsPane(
                         imageVector = Icons.Default.Dns,
                         contentDescription = null,
                         modifier = Modifier.size(44.dp),
-                        tint = if (isServer) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.6f)
+                        tint = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary
                     )
                     Text(
                         text = Lang.get("Mode Server", "Mode Server"),
-                        color = if (isServer) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.6f),
+                        color = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -158,12 +159,12 @@ fun RemoteDevicesSettingsPane(
                     .weight(1f)
                     .clip(RoundedCornerShape(12.dp))
                     .background(
-                        if (!isServer) Color(0xFFFFD54F).copy(alpha = 0.25f)
-                        else Color.Transparent
+                        if (!isServer) MosqueTheme.colors.accent.copy(alpha = 0.25f)
+                        else MosqueTheme.colors.transparent
                     )
                     .border(
                         width = 2.dp,
-                        color = if (!isServer) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.15f),
+                        color = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.fillStrong,
                         shape = RoundedCornerShape(12.dp)
                     )
                     .clickable { onUpdateConnectivityMode("REMOTE") }
@@ -178,11 +179,11 @@ fun RemoteDevicesSettingsPane(
                         imageVector = Icons.Default.Devices,
                         contentDescription = null,
                         modifier = Modifier.size(44.dp),
-                        tint = if (!isServer) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.6f)
+                        tint = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary
                     )
                     Text(
                         text = Lang.get("Mode Remote Control", "Mode Remote Control"),
-                        color = if (!isServer) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.6f),
+                        color = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -203,7 +204,7 @@ fun RemoteDevicesSettingsPane(
                     "Aplikasi berfungsi sebagai remote kontrol untuk mengendalikan, mengubah pengaturan, dan menyinkronkan data dengan TV / server MosqueAthan utama."
                 )
             },
-            color = Color.White.copy(alpha = 0.6f),
+            color = MosqueTheme.colors.textTertiary,
             fontSize = 13.sp,
             modifier = Modifier.padding(horizontal = if (isCompact) 16.dp else 24.dp)
         )
@@ -212,8 +213,8 @@ fun RemoteDevicesSettingsPane(
 
         SecondaryTabRow(
             selectedTabIndex = selectedTabIndex,
-            containerColor = Color.Transparent,
-            contentColor = Color(0xFFFFD54F),
+            containerColor = MosqueTheme.colors.transparent,
+            contentColor = MosqueTheme.colors.accent,
             divider = {}
         ) {
             Tab(
@@ -236,8 +237,8 @@ fun RemoteDevicesSettingsPane(
                         )
                     }
                 },
-                selectedContentColor = Color(0xFFFFD54F),
-                unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                selectedContentColor = MosqueTheme.colors.accent,
+                unselectedContentColor = MosqueTheme.colors.textTertiary
             )
             Tab(
                 selected = selectedTabIndex == 1,
@@ -259,8 +260,8 @@ fun RemoteDevicesSettingsPane(
                         )
                     }
                 },
-                selectedContentColor = Color(0xFFFFD54F),
-                unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                selectedContentColor = MosqueTheme.colors.accent,
+                unselectedContentColor = MosqueTheme.colors.textTertiary
             )
         }
 

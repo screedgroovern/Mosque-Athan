@@ -78,6 +78,7 @@ import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun ThemeSettingsSegment(
@@ -127,8 +128,8 @@ fun ThemeSettingsSegment(
         // TabRow header for Dashboard & Slideshow segments
         SecondaryTabRow(
             selectedTabIndex = pagerState.currentPage,
-            containerColor = Color.Transparent,
-            contentColor = Color(0xFFFFD54F),
+            containerColor = MosqueTheme.colors.transparent,
+            contentColor = MosqueTheme.colors.accent,
             divider = {}
         ) {
             Tab(
@@ -151,8 +152,8 @@ fun ThemeSettingsSegment(
                         )
                     }
                 },
-                selectedContentColor = Color(0xFFFFD54F),
-                unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                selectedContentColor = MosqueTheme.colors.accent,
+                unselectedContentColor = MosqueTheme.colors.textTertiary
             )
             Tab(
                 selected = pagerState.currentPage == 1,
@@ -174,8 +175,8 @@ fun ThemeSettingsSegment(
                         )
                     }
                 },
-                selectedContentColor = Color(0xFFFFD54F),
-                unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                selectedContentColor = MosqueTheme.colors.accent,
+                unselectedContentColor = MosqueTheme.colors.textTertiary
             )
         }
 
@@ -260,7 +261,7 @@ fun DashboardTabContent(
         ) {
             Text(
                 text = Lang.get("Dashboard Background List", "Daftar Latar Belakang Dashboard"),
-                color = Color.White.copy(alpha = 0.6f),
+                color = MosqueTheme.colors.textTertiary,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -270,7 +271,7 @@ fun DashboardTabContent(
             ) {
                 Text(
                     text = Lang.get("Randomize", "Tampilkan random"),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 14.sp
                 )
                 Switch(
@@ -284,8 +285,8 @@ fun DashboardTabContent(
                         )
                     },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color(0xFFFFD54F),
-                        checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f)
+                        checkedThumbColor = MosqueTheme.colors.accent,
+                        checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f)
                     )
                 )
             }
@@ -396,7 +397,7 @@ fun SlideshowTabContent(
     ) {
         Text(
             text = Lang.get("Slideshow Media Items", "Daftar Media Slideshow"),
-            color = Color.White.copy(alpha = 0.6f),
+            color = MosqueTheme.colors.textTertiary,
             fontSize = 13.sp,
             fontWeight = FontWeight.SemiBold
         )
@@ -475,7 +476,7 @@ fun SlideshowTabContent(
         ) {
             Text(
                 text = Lang.get("Slide Show Schedule", "Jadwal Slide Show"),
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f)
@@ -494,10 +495,10 @@ fun SlideshowTabContent(
                     }
                 },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.Black,
-                    checkedTrackColor = Color(0xFFFFD54F),
-                    uncheckedThumbColor = Color.White.copy(alpha = 0.7f),
-                    uncheckedTrackColor = Color.White.copy(alpha = 0.2f)
+                    checkedThumbColor = MosqueTheme.colors.onAccent,
+                    checkedTrackColor = MosqueTheme.colors.accent,
+                    uncheckedThumbColor = MosqueTheme.colors.textSecondary,
+                    uncheckedTrackColor = MosqueTheme.colors.border
                 )
             )
         }
@@ -541,7 +542,7 @@ fun SlideshowTabContent(
         ) {
             Text(
                 text = Lang.get("Preview Slideshow", "Preview Slideshow"),
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp
             )
@@ -553,7 +554,7 @@ fun SlideshowTabContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .background(MosqueTheme.colors.fillSubtle)
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -564,7 +565,7 @@ fun SlideshowTabContent(
                         "Include Default Image (Masjidil Haram)",
                         "Sertakan Gambar Default (Masjidil Haram)"
                     ),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -574,7 +575,7 @@ fun SlideshowTabContent(
                         "Include or exclude the default image in the slideshow rotation",
                         "Sertakan atau kecualikan gambar default dalam rotasi slideshow"
                     ),
-                    color = Color.White.copy(alpha = 0.6f),
+                    color = MosqueTheme.colors.textTertiary,
                     fontSize = 12.sp
                 )
             }
@@ -590,8 +591,8 @@ fun SlideshowTabContent(
                     )
                 },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFFFFD54F),
-                    checkedTrackColor = Color(0xFFFFD54F).copy(alpha = 0.5f)
+                    checkedThumbColor = MosqueTheme.colors.accent,
+                    checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f)
                 )
             )
         }
@@ -610,13 +611,13 @@ fun TransitionAnimationRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .background(MosqueTheme.colors.fillSubtle)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
                 text = title,
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -630,7 +631,7 @@ fun TransitionAnimationRow(
                     TvFocusableButton(
                         onClick = { onTypeSelected(type) },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.1f)
+                            containerColor = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.fill
                         ),
                         shape = RoundedCornerShape(6.dp),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
@@ -638,7 +639,7 @@ fun TransitionAnimationRow(
                     ) {
                         Text(
                             type,
-                            color = if (isSelected) Color.Black else Color.White,
+                            color = if (isSelected) MosqueTheme.colors.onAccent else MosqueTheme.colors.textPrimary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -651,14 +652,14 @@ fun TransitionAnimationRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .background(MosqueTheme.colors.fillSubtle)
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = title,
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -668,7 +669,7 @@ fun TransitionAnimationRow(
                     TvFocusableButton(
                         onClick = { onTypeSelected(type) },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) Color(0xFFFFD54F) else Color.White.copy(alpha = 0.1f)
+                            containerColor = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.fill
                         ),
                         shape = RoundedCornerShape(6.dp),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
@@ -676,7 +677,7 @@ fun TransitionAnimationRow(
                     ) {
                         Text(
                             type,
-                            color = if (isSelected) Color.Black else Color.White,
+                            color = if (isSelected) MosqueTheme.colors.onAccent else MosqueTheme.colors.textPrimary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -709,13 +710,13 @@ fun DropdownAdjustmentRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .background(MosqueTheme.colors.fillSubtle)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = title,
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -730,12 +731,12 @@ fun DropdownAdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
      
                 Text(
                     text = value.toString(),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp),
@@ -748,7 +749,7 @@ fun DropdownAdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
                 
                 Box {
@@ -756,7 +757,7 @@ fun DropdownAdjustmentRow(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(6.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White.copy(alpha = 0.08f)
+                            containerColor = MosqueTheme.colors.fillSoft
                         ),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                         modifier = Modifier.height(32.dp)
@@ -767,14 +768,14 @@ fun DropdownAdjustmentRow(
                         ) {
                             Text(
                                 text = unitLabels[selectedUnitIndex],
-                                color = Color.White,
+                                color = MosqueTheme.colors.textPrimary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
                             )
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = "Dropdown",
-                                tint = Color.White,
+                                tint = MosqueTheme.colors.textPrimary,
                                 modifier = Modifier.size(14.dp)
                             )
                         }
@@ -783,14 +784,14 @@ fun DropdownAdjustmentRow(
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(Color(0xFF1E1E1E))
+                        modifier = Modifier.background(MosqueTheme.colors.surfaceNeutral)
                     ) {
                         unitLabels.forEachIndexed { index, label ->
                             DropdownMenuItem(
                                 text = { 
                                     Text(
                                         text = label, 
-                                        color = if (selectedUnitIndex == index) Color(0xFFFFD54F) else Color.White,
+                                        color = if (selectedUnitIndex == index) MosqueTheme.colors.accent else MosqueTheme.colors.textPrimary,
                                         fontWeight = FontWeight.Bold
                                     ) 
                                 },
@@ -809,14 +810,14 @@ fun DropdownAdjustmentRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color.White.copy(alpha = 0.05f))
+                .background(MosqueTheme.colors.fillSubtle)
                 .padding(horizontal = 20.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = title,
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -831,12 +832,12 @@ fun DropdownAdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("-", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
      
                 Text(
                     text = value.toString(),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp),
@@ -849,7 +850,7 @@ fun DropdownAdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("+", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
                 
                 Box {
@@ -857,7 +858,7 @@ fun DropdownAdjustmentRow(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(6.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White.copy(alpha = 0.08f)
+                            containerColor = MosqueTheme.colors.fillSoft
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         modifier = Modifier.height(36.dp)
@@ -868,14 +869,14 @@ fun DropdownAdjustmentRow(
                         ) {
                             Text(
                                 text = unitLabels[selectedUnitIndex],
-                                color = Color.White,
+                                color = MosqueTheme.colors.textPrimary,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium
                             )
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = "Dropdown",
-                                tint = Color.White,
+                                tint = MosqueTheme.colors.textPrimary,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -884,14 +885,14 @@ fun DropdownAdjustmentRow(
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(Color(0xFF1E1E1E))
+                        modifier = Modifier.background(MosqueTheme.colors.surfaceNeutral)
                     ) {
                         unitLabels.forEachIndexed { index, label ->
                             DropdownMenuItem(
                                 text = { 
                                     Text(
                                         text = label, 
-                                        color = if (selectedUnitIndex == index) Color(0xFFFFD54F) else Color.White,
+                                        color = if (selectedUnitIndex == index) MosqueTheme.colors.accent else MosqueTheme.colors.textPrimary,
                                         fontWeight = FontWeight.Bold
                                     ) 
                                 },
@@ -1016,14 +1017,14 @@ fun RunningTextSettingsCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .background(MosqueTheme.colors.fillSubtle)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = Lang.get("Manage Running Text", "Kelola Running Text"),
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -1032,7 +1033,7 @@ fun RunningTextSettingsCard(
                     "Add running text messages that will scroll periodically at the bottom of the main dashboard screen.",
                     "Tambahkan pesan running text yang akan bergulir secara berkala di bagian bawah dashboard layar utama masjid."
                 ),
-                color = Color.White.copy(alpha = 0.6f),
+                color = MosqueTheme.colors.textTertiary,
                 fontSize = 12.sp
             )
         }
@@ -1045,14 +1046,14 @@ fun RunningTextSettingsCard(
             androidx.compose.material3.OutlinedTextField(
                 value = newText,
                 onValueChange = { newText = it },
-                placeholder = { Text(Lang.get("Enter new running text...", "Masukkan teks running text baru..."), color = Color.White.copy(alpha=0.5f)) },
+                placeholder = { Text(Lang.get("Enter new running text...", "Masukkan teks running text baru..."), color = MosqueTheme.colors.textMuted) },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFFFFD54F),
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    focusedBorderColor = MosqueTheme.colors.accent,
+                    unfocusedBorderColor = MosqueTheme.colors.border,
+                    focusedTextColor = MosqueTheme.colors.textPrimary,
+                    unfocusedTextColor = MosqueTheme.colors.textPrimary
                 )
             )
             TvFocusablePrimaryButton(
@@ -1065,7 +1066,7 @@ fun RunningTextSettingsCard(
                 modifier = Modifier.height(56.dp),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text(Lang.get("Add", "Tambah"), color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(Lang.get("Add", "Tambah"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
             }
         }
         
@@ -1082,7 +1083,7 @@ fun RunningTextSettingsCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color.Black.copy(alpha = 0.3f))
+                            .background(MosqueTheme.colors.scrim.copy(alpha = 0.3f))
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1094,30 +1095,30 @@ fun RunningTextSettingsCard(
                                 modifier = Modifier.weight(1f),
                                 singleLine = true,
                                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFFFFD54F),
-                                    unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
-                                    focusedTextColor = Color.White,
-                                    unfocusedTextColor = Color.White
+                                    focusedBorderColor = MosqueTheme.colors.accent,
+                                    unfocusedBorderColor = MosqueTheme.colors.border,
+                                    focusedTextColor = MosqueTheme.colors.textPrimary,
+                                    unfocusedTextColor = MosqueTheme.colors.textPrimary
                                 )
                             )
                             IconButton(onClick = {
                                 onEdit(item.id, editText)
                                 isEditing = false
                             }) {
-                                Icon(Icons.Default.Add, contentDescription = "Save", tint = Color(0xFFFFD54F))
+                                Icon(Icons.Default.Add, contentDescription = "Save", tint = MosqueTheme.colors.accent)
                             }
                         } else {
                             Text(
                                 text = item.content,
-                                color = Color.White,
+                                color = MosqueTheme.colors.textPrimary,
                                 modifier = Modifier.weight(1f),
                                 fontSize = 14.sp
                             )
                             IconButton(onClick = { isEditing = true }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.White.copy(alpha=0.7f), modifier=Modifier.size(20.dp))
+                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MosqueTheme.colors.textSecondary, modifier=Modifier.size(20.dp))
                             }
                             IconButton(onClick = { onDelete(item.id) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFE57373), modifier=Modifier.size(20.dp))
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MosqueTheme.colors.danger, modifier=Modifier.size(20.dp))
                             }
                         }
                     }

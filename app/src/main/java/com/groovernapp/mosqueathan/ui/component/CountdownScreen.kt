@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.R
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun CountdownScreen(
@@ -40,9 +41,9 @@ fun CountdownScreen(
     countdownValue: String,
     footerText: String,
     gradientColors: List<Color> = listOf(
-        Color.Black.copy(alpha = 0.76f),
-        Color(0xFF18231B).copy(alpha = 0.86f),
-        Color.Black.copy(alpha = 0.80f)
+        MosqueTheme.colors.scrim.copy(alpha = 0.76f),
+        MosqueTheme.colors.backdropIqomah.copy(alpha = 0.86f),
+        MosqueTheme.colors.scrim.copy(alpha = 0.80f)
     ),
     onDismiss: () -> Unit = {}
 ) {
@@ -74,7 +75,7 @@ fun CountdownScreen(
                 Text(
                     modifier = Modifier.fillMaxWidth(),
                     text = currentTime,
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 40.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -84,7 +85,7 @@ fun CountdownScreen(
                 ) {
                     Text(
                         text = titleText,
-                        color = Color(0xFFE7C66A),
+                        color = MosqueTheme.colors.accentMuted,
                         fontSize = 34.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center
@@ -94,7 +95,7 @@ fun CountdownScreen(
 
                     Text(
                         text = prayerName,
-                        color = Color.White,
+                        color = MosqueTheme.colors.textPrimary,
                         fontSize = 92.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
@@ -118,10 +119,10 @@ private fun CountdownPanel(value: String) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(Color.Black.copy(alpha = 0.40f))
+            .background(MosqueTheme.colors.scrim.copy(alpha = 0.40f))
             .border(
                 width = 1.dp,
-                color = Color.White.copy(alpha = 0.28f),
+                color = MosqueTheme.colors.textGhostSoft,
                 shape = RoundedCornerShape(8.dp)
             )
             .padding(horizontal = 56.dp, vertical = 28.dp),
@@ -129,7 +130,7 @@ private fun CountdownPanel(value: String) {
     ) {
         Text(
             text = value,
-            color = Color.White,
+            color = MosqueTheme.colors.textPrimary,
             fontSize = 112.sp,
             fontWeight = FontWeight.Bold
         )

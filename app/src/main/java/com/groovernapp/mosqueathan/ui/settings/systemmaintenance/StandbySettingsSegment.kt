@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.data.StandbyScheduleEntity
 import com.groovernapp.mosqueathan.ui.component.Schedule
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun StandbySettingsSegment(
@@ -37,7 +38,7 @@ fun StandbySettingsSegment(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = Lang.get("Automatic Standby Mode", "Mode Standby Otomatis"),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -47,7 +48,7 @@ fun StandbySettingsSegment(
                         "Put the TV in standby mode (black screen) outside operational hours.",
                         "Masuk ke mode standby (layar hitam) di luar jam operasional."
                     ),
-                    color = Color.White.copy(alpha = 0.6f),
+                    color = MosqueTheme.colors.textTertiary,
                     fontSize = 13.sp
                 )
             }
@@ -55,15 +56,15 @@ fun StandbySettingsSegment(
                 checked = standbyModeEnabled,
                 onCheckedChange = onStandbyModeEnabledChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.Black,
-                    checkedTrackColor = Color(0xFFFFD54F),
-                    uncheckedThumbColor = Color.White.copy(alpha = 0.7f),
-                    uncheckedTrackColor = Color.White.copy(alpha = 0.2f)
+                    checkedThumbColor = MosqueTheme.colors.onAccent,
+                    checkedTrackColor = MosqueTheme.colors.accent,
+                    uncheckedThumbColor = MosqueTheme.colors.textSecondary,
+                    uncheckedTrackColor = MosqueTheme.colors.border
                 )
             )
         }
 
-        Divider(color = Color.White.copy(alpha = 0.15f))
+        Divider(color = MosqueTheme.colors.fillStrong)
 
         // Schedule Component for Standby schedules
         Schedule(
@@ -93,7 +94,7 @@ fun StandbySettingsSegment(
                 "You can now set multiple standby schedules for different days or specific dates. TV will sleep during active standby periods.",
                 "Anda sekarang dapat mengatur beberapa jadwal standby untuk hari yang berbeda atau tanggal spesifik. TV akan mati selama periode standby aktif."
             ),
-            color = Color.White.copy(alpha = 0.5f),
+            color = MosqueTheme.colors.textMuted,
             fontSize = 13.sp
         )
     }

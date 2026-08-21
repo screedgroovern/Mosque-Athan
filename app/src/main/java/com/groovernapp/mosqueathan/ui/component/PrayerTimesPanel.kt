@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.ui.dashboard.PrayerTimesUiModel
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun PrayerTimesPanel(
@@ -19,7 +20,7 @@ fun PrayerTimesPanel(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Black.copy(alpha = 0.55f))
+            .background(MosqueTheme.colors.scrim.copy(alpha = 0.55f))
             .padding(vertical = if (isSlideshowActive) 16.dp else 20.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {

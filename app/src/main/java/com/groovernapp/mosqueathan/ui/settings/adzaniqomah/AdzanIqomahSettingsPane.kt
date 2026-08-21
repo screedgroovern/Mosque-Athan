@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun AdzanIqomahSettingsPane(
@@ -65,8 +66,8 @@ fun AdzanIqomahSettingsPane(
     ) {
         SecondaryTabRow(
             selectedTabIndex = pagerState.currentPage,
-            containerColor = Color.Transparent,
-            contentColor = Color(0xFFFFD54F),
+            containerColor = MosqueTheme.colors.transparent,
+            contentColor = MosqueTheme.colors.accent,
             divider = {}
         ) {
             Tab(
@@ -89,8 +90,8 @@ fun AdzanIqomahSettingsPane(
                         )
                     }
                 },
-                selectedContentColor = Color(0xFFFFD54F),
-                unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                selectedContentColor = MosqueTheme.colors.accent,
+                unselectedContentColor = MosqueTheme.colors.textTertiary
             )
             Tab(
                 selected = pagerState.currentPage == 1,
@@ -112,8 +113,8 @@ fun AdzanIqomahSettingsPane(
                         )
                     }
                 },
-                selectedContentColor = Color(0xFFFFD54F),
-                unselectedContentColor = Color.White.copy(alpha = 0.6f)
+                selectedContentColor = MosqueTheme.colors.accent,
+                unselectedContentColor = MosqueTheme.colors.textTertiary
             )
         }
 
@@ -125,10 +126,10 @@ fun AdzanIqomahSettingsPane(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.Black.copy(alpha = 0.35f)
+                        containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.35f)
                     ),
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                    border = BorderStroke(1.dp, MosqueTheme.colors.fill)
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         AdzanSettingsSegment(
@@ -145,10 +146,10 @@ fun AdzanIqomahSettingsPane(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = Color.Black.copy(alpha = 0.35f)
+                        containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.35f)
                     ),
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                    border = BorderStroke(1.dp, MosqueTheme.colors.fill)
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         IqomahSettingsSegment(

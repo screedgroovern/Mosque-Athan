@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun SettingsCard(
@@ -23,10 +24,10 @@ fun SettingsCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color.Black.copy(alpha = if (dimmed) 0.15f else 0.35f)
+            containerColor = MosqueTheme.colors.onAccent.copy(alpha = if (dimmed) 0.15f else 0.35f)
         ),
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = if (dimmed) 0.05f else 0.1f))
+        border = BorderStroke(1.dp, MosqueTheme.colors.textPrimary.copy(alpha = if (dimmed) 0.05f else 0.1f))
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             Row(
@@ -38,13 +39,13 @@ fun SettingsCard(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = Color(0xFFFFD54F).copy(alpha = if (dimmed) 0.4f else 1f),
+                        tint = MosqueTheme.colors.accent.copy(alpha = if (dimmed) 0.4f else 1f),
                         modifier = Modifier.size(24.dp)
                     )
                 }
                 Text(
                     text = title,
-                    color = Color(0xFFFFD54F).copy(alpha = if (dimmed) 0.4f else 1f),
+                    color = MosqueTheme.colors.accent.copy(alpha = if (dimmed) 0.4f else 1f),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )

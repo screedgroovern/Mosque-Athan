@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun AdzanSettingsSegment(
@@ -47,7 +48,7 @@ fun AdzanSettingsSegment(
     ) {
         Text(
             text = Lang.get("Adzan Preparation", "Persiapan Adzan"),
-            color = Color(0xFFFFD54F),
+            color = MosqueTheme.colors.accent,
             fontSize = if (isCompact) 15.sp else 18.sp,
             fontWeight = FontWeight.Bold
         )
@@ -61,7 +62,7 @@ fun AdzanSettingsSegment(
             onValueChange = onAdzanLeadMinutesChange
         )
 
-        HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
+        HorizontalDivider(color = MosqueTheme.colors.fillStrong)
 
         RunningTextListSettingsComponent(
             title = Lang.get("Running Text", "Teks Berjalan"),
@@ -74,7 +75,7 @@ fun AdzanSettingsSegment(
             isCompact = isCompact
         )
 
-        HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
+        HorizontalDivider(color = MosqueTheme.colors.fillStrong)
 
         // Preview Button
         TvFocusablePreviewButton(
@@ -84,7 +85,7 @@ fun AdzanSettingsSegment(
         ) {
             Text(
                 text = Lang.get("Preview Adzan Screen", "Preview Layar Adzan"),
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontWeight = FontWeight.Bold,
                 fontSize = if (isCompact) 13.sp else 14.sp
             )

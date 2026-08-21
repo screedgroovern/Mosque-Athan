@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun ResetSettingsSegment(onResetToDefaults: () -> Unit) {
@@ -29,7 +30,7 @@ fun ResetSettingsSegment(onResetToDefaults: () -> Unit) {
         ) {
             Text(
                 text = Lang.get("Reset all Settings to default", "Reset semua Pengaturan ke default"),
-                color = Color.White,
+                color = MosqueTheme.colors.textPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )

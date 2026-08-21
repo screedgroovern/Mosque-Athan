@@ -36,6 +36,7 @@ import com.groovernapp.mosqueathan.ui.component.ClockSection
 import com.groovernapp.mosqueathan.ui.component.NextPrayerHeader
 import com.groovernapp.mosqueathan.ui.component.PrayerTimesPanel
 import com.groovernapp.mosqueathan.ui.component.RunningTextBar
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun DashboardContent(
@@ -75,7 +76,7 @@ fun DashboardContent(
                 ) {
                     Text(
                         text = "Persiapan Ibadah Jum'at",
-                        color = Color.White,
+                        color = MosqueTheme.colors.textPrimary,
                         fontSize = 48.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -206,7 +207,7 @@ fun SmallClockCard(
     Box(
         modifier = Modifier
             .background(
-                color = Color.Black.copy(alpha = 0.6f),
+                color = MosqueTheme.colors.scrim.copy(alpha = 0.6f),
                 shape = RoundedCornerShape(8.dp)
             )
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -236,19 +237,19 @@ fun SmallClockCard(
             ) {
                 Text(
                     text = hours,
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = ":",
-                    color = if (isColonVisible) Color.White else Color.Transparent,
+                    color = if (isColonVisible) MosqueTheme.colors.textPrimary else MosqueTheme.colors.transparent,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = minutes,
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -259,7 +260,7 @@ fun SmallClockCard(
             val nextPrayerName = nextPrayer.prayerType.displayName.lowercase().replaceFirstChar { it.uppercase() }
             Text(
                 text = "$nextPrayerName · ${nextPrayer.countdown}",
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -268,7 +269,7 @@ fun SmallClockCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 val cardModifier = if (isFridayBeforeAdzan) {
                     Modifier
-                        .background(Color(0xFFFFD54F).copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
+                        .background(MosqueTheme.colors.accent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
                         .pointerInput(Unit) {
                             awaitPointerEventScope {
                                 while (true) {
@@ -294,14 +295,14 @@ fun SmallClockCard(
                         }
                 } else {
                     Modifier
-                        .background(Color(0xFFFFD54F).copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
+                        .background(MosqueTheme.colors.accent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
                         .clickable { onStartAdzanNow() }
                 }
                 Box(
                     modifier = cardModifier
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Text("Mulai Adzan Sekarang", color = Color(0xFFFFD54F), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Mulai Adzan Sekarang", color = MosqueTheme.colors.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

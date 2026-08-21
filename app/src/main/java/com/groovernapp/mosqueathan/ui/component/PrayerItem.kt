@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun PrayerItem(
@@ -18,7 +19,7 @@ fun PrayerItem(
     highlighted: Boolean,
     isSlideshowActive: Boolean
 ) {
-    val color = if (highlighted) Color(0xFFFFD54F) else Color.White
+    val color = if (highlighted) MosqueTheme.colors.accent else MosqueTheme.colors.textPrimary
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 

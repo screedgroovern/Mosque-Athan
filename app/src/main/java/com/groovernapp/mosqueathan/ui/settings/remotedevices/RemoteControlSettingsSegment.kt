@@ -28,6 +28,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun RemoteControlSettingsSegment(
@@ -71,7 +72,7 @@ fun RemoteControlSettingsSegment(
         ) {
             Text(
                 text = Lang.get("Sinkronisasi", "Sinkronisasi"),
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -81,7 +82,7 @@ fun RemoteControlSettingsSegment(
                     "Hubungkan ke Android TV untuk sinkronisasi setelan jadwal, adzan, dan tampilan media secara realtime.",
                     "Hubungkan ke Android TV untuk sinkronisasi setelan jadwal, adzan, dan tampilan media secara realtime."
                 ),
-                color = Color.White.copy(alpha = 0.6f),
+                color = MosqueTheme.colors.textTertiary,
                 fontSize = 13.sp
             )
 
@@ -112,8 +113,8 @@ fun RemoteControlSettingsSegment(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD54F),
-                            contentColor = Color.Black
+                            containerColor = MosqueTheme.colors.accent,
+                            contentColor = MosqueTheme.colors.onAccent
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth().height(48.dp)
@@ -136,8 +137,8 @@ fun RemoteControlSettingsSegment(
                             barcodeLauncher.launch(options)
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White.copy(alpha = 0.1f),
-                            contentColor = Color.White
+                            containerColor = MosqueTheme.colors.fill,
+                            contentColor = MosqueTheme.colors.textPrimary
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.fillMaxWidth().height(48.dp)
@@ -164,8 +165,8 @@ fun RemoteControlSettingsSegment(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD54F),
-                            contentColor = Color.Black
+                            containerColor = MosqueTheme.colors.accent,
+                            contentColor = MosqueTheme.colors.onAccent
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f).height(48.dp)
@@ -188,8 +189,8 @@ fun RemoteControlSettingsSegment(
                             barcodeLauncher.launch(options)
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White.copy(alpha = 0.1f),
-                            contentColor = Color.White
+                            containerColor = MosqueTheme.colors.fill,
+                            contentColor = MosqueTheme.colors.textPrimary
                         ),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f).height(48.dp)
@@ -211,20 +212,20 @@ fun RemoteControlSettingsSegment(
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White.copy(alpha = 0.05f),
-                    contentColor = Color.White
+                    containerColor = MosqueTheme.colors.fillSubtle,
+                    contentColor = MosqueTheme.colors.textPrimary
                 ),
                 shape = RoundedCornerShape(8.dp),
-                border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(Color.White.copy(alpha = 0.15f))),
+                border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(MosqueTheme.colors.fillStrong)),
                 modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
-                Icon(imageVector = Icons.Default.Sync, contentDescription = null, tint = Color(0xFFFFD54F))
+                Icon(imageVector = Icons.Default.Sync, contentDescription = null, tint = MosqueTheme.colors.accent)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(Lang.get("Sinkronkan Sekarang", "Sinkronkan Sekarang"), fontWeight = FontWeight.Bold)
             }
         }
 
-        HorizontalDivider(color = Color.White.copy(alpha = 0.1f), thickness = 1.dp)
+        HorizontalDivider(color = MosqueTheme.colors.fill, thickness = 1.dp)
 
         // Section 2: PIN Remote Kontrol
         Column(
@@ -233,7 +234,7 @@ fun RemoteControlSettingsSegment(
         ) {
             Text(
                 text = Lang.get("PIN Remote Kontrol", "PIN Remote Kontrol"),
-                color = Color(0xFFFFD54F),
+                color = MosqueTheme.colors.accent,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -243,19 +244,19 @@ fun RemoteControlSettingsSegment(
                     "Gunakan PIN keamanan untuk membatasi perangkat remote control lain agar tidak dapat mengubah setelan sembarangan.",
                     "Gunakan PIN keamanan untuk membatasi perangkat remote control lain agar tidak dapat mengubah setelan sembarangan."
                 ),
-                color = Color.White.copy(alpha = 0.6f),
+                color = MosqueTheme.colors.textTertiary,
                 fontSize = 13.sp
             )
 
             val hasPin = config.pinCode.isNotEmpty()
-            val badgeBg = if (hasPin) Color(0xFF10B981).copy(alpha = 0.15f) else Color(0xFFEF4444).copy(alpha = 0.15f)
-            val badgeColor = if (hasPin) Color(0xFF10B981) else Color(0xFFEF4444)
+            val badgeBg = if (hasPin) MosqueTheme.colors.success.copy(alpha = 0.15f) else MosqueTheme.colors.dangerStrong.copy(alpha = 0.15f)
+            val badgeColor = if (hasPin) MosqueTheme.colors.success else MosqueTheme.colors.dangerStrong
             val badgeText = if (hasPin) Lang.get("AKTIF (MEMAKAI PIN)", "AKTIF (MEMAKAI PIN)") else Lang.get("TIDAK AKTIF", "TIDAK AKTIF")
 
             val statusBadgeContent = @Composable {
                 Text(
                     text = Lang.get("Status PIN Keamanan:", "Status PIN Keamanan:"),
-                    color = Color.White,
+                    color = MosqueTheme.colors.textPrimary,
                     fontSize = 14.sp
                 )
                 Box(
@@ -280,7 +281,7 @@ fun RemoteControlSettingsSegment(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.03f))
+                        .background(MosqueTheme.colors.fillFaint)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.Start
@@ -292,7 +293,7 @@ fun RemoteControlSettingsSegment(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.03f))
+                        .background(MosqueTheme.colors.fillFaint)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -317,7 +318,7 @@ fun RemoteControlSettingsSegment(
                     "Kosongkan PIN lalu simpan untuk menghapus pengaman PIN.",
                     "Kosongkan PIN lalu simpan untuk menghapus pengaman PIN."
                 ),
-                color = Color.White.copy(alpha = 0.4f),
+                color = MosqueTheme.colors.textFaint,
                 fontSize = 11.sp
             )
 
@@ -328,8 +329,8 @@ fun RemoteControlSettingsSegment(
                     pinText = ""
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFD54F),
-                    contentColor = Color.Black
+                    containerColor = MosqueTheme.colors.accent,
+                    contentColor = MosqueTheme.colors.onAccent
                 ),
                 shape = RoundedCornerShape(8.dp),
                 modifier = if (isCompact) {
