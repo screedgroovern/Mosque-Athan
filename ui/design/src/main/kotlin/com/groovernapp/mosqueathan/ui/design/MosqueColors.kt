@@ -86,7 +86,22 @@ object MosqueColors {
     val fillSubtle = Color.White.copy(alpha = 0.05f)
     val fillFaint = Color.White.copy(alpha = 0.03f)
 
+    // --- On accent ----------------------------------------------------------
+    /**
+     * Foreground on the gold accent — black text and icons on a gold button.
+     * Distinct from [scrim] despite the same underlying colour: this one is a
+     * foreground role, and 35 call sites use it that way.
+     */
+    val onAccent = Color.Black
+
     // --- Absolutes ----------------------------------------------------------
+    /**
+     * Overlays and gradient stops. Call sites keep their own `.copy(alpha = …)`:
+     * the thirteen black alpha levels in this app are almost all one-off gradient
+     * stops rather than reusable steps, so naming each would invent a scale that
+     * does not exist. The white alpha levels above *are* named, because those are
+     * genuinely reused — 0.6f alone appears 41 times as secondary text.
+     */
     val scrim = Color.Black
     val transparent = Color.Transparent
 }

@@ -167,6 +167,12 @@ kiosk, suspended in background). The TV role stays Android-only, permanently.
 "Best-effort preview" means Dashboard/Adzan/Iqomah render so the user can check
 what they just configured — not production display duty.
 
+"Controller" means a **remote control that works fully offline**: it holds a
+complete replica of the server's settings, is edited with no connection, and
+syncs later. The server is usually the TV, but any Android device can serve.
+Access control (`ConnectedDeviceEntity`) is the one thing a controller does not
+manage.
+
 ### What is *not* being rebuilt
 
 This branch has broad licence to restructure, but three things are assets, not
@@ -318,16 +324,63 @@ there is currently no rule for when tonal applies.
 
 ### Technical decisions
 
-**Persistence — Room KMP.** Room covers Android/iOS/JVM/native but **not wasm**.
-That is acceptable because the web panel is a *client*, not a data owner: it
-never needs a local database, and its `ConfigRepository` is backed by the
-WebSocket connection to the TV. This is also why the Realm→Room migration is
-*not* on the critical path for fixing UI drift.
+**Persistence — Room on Android/iOS/desktop, IndexedDB on web, one shared model.**
 
-If a browser-local store is ever genuinely required, the options that actually
-cover wasm are `kstore` (document-shaped, kotlinx.serialization) and
-`multiplatform-settings` (key-value). SQLDelight's web driver is experimental
-and historically tied to the `js` target rather than `wasmJs`.
+An earlier revision of this file claimed the controller is "a client, not a data
+owner" and needs no local database. **That was wrong**, and it is worth stating
+plainly because the mistake would have produced the wrong architecture: the
+remote control is a *full offline replica*. A takmir pairs by scanning a QR code
+on the display, takes the device home, edits every setting with no connection at
+all, returns to the mosque, and syncs. It therefore needs the entire settings
+model stored locally — not a handful of preferences.
+
+The decision:
+
+- **One set of classes, annotated twice.** A Room `@Entity` and the wire model
+  are the *same* `@Serializable data class`. No mappers, and adding a config
+  field touches one class rather than three. This works here because every
+  existing entity is flat — only `String`/`Boolean`/`Int`, no nesting — so Room
+  needs no `TypeConverter`.
+- **Android / iOS / Windows:** Room (`androidx.room` KMP) over those entities.
+  SQLite provides durability, so no hand-rolled atomic-write code.
+- **Web:** Room has no wasm target, so the browser stores the same
+  `MosqueSnapshot` in IndexedDB, whose transactions are already atomic. This is a
+  second *store*, not a second *model* — the distinction that matters.
+- **Sync payload:** `MosqueSnapshot` — one `@Serializable` container holding the
+  config object plus a list per table. `ConnectedDeviceEntity` is excluded:
+  access control stays server-authoritative.
+
+Rejected, with reasons, so they are not relitigated:
+
+- **SQLDelight everywhere** — the honest fallback, and strictly better than a
+  split. Rejected because its web driver is experimental and historically tied
+  to the `js` target, not `wasmJs`; SQLite-wasm adds 1–1.5MB to an already large
+  Compose bundle; and it prices in querying this data never needs (one config
+  row, a few hundred rows total, no joins, single writer). Revisit it the moment
+  conflict resolution becomes row-level rather than snapshot-level.
+- **A JSON blob inside a single-row SQLite table** — gets durability without
+  modelling tables, but reads as a trick, and legibility is a stated goal of
+  this migration.
+- **Separate storage and wire models with a mapper** — reintroduces exactly the
+  "edit three places" problem documented under *Persistence* above.
+
+**Schema evolution still needs defaults.** Coupling the storage model to the
+wire model is normally a smell; it is acceptable here because both ends are this
+codebase, maintained by the same two people, who update devices together — so
+skew *between* devices is not a real risk and should not be designed around.
+
+What remains real regardless: the snapshot already written to disk is always
+from the previous version of the code. After an app update, a takmir's phone
+still holds yesterday's JSON. So configure `Json { ignoreUnknownKeys = true;
+encodeDefaults = true }` and give every newly added field a default. That is one
+line plus a habit, and it is about reading your own older data, not about
+tolerating a mismatched peer.
+
+**Media files are not in the snapshot.** It carries `filePath` and `isVideo`
+only. A takmir who adds a video at home has a file that exists nowhere else, so
+sync has to upload it — potentially hundreds of megabytes over mosque wifi. This
+is a separate problem from settings sync and needs its own design; it is the part
+most likely to be discovered late.
 
 **Serialization — kotlinx.serialization.** `org.json` is Android-only and must
 go. The ~50 WebSocket actions become a sealed hierarchy in `core:protocol`
@@ -387,7 +440,7 @@ shippable throughout.
 |---|---|---|
 | ~~1~~ | ~~`build-logic` + `core:model` + `core:prayer`; fix `PrayerCalculator` purity~~ **done** | yes |
 | 2 | Extract `ConfigRepository` interface + Koin; delete `getInstance()` | yes |
-| 3 | Realm → Room in `data` (see data-loss warning) | yes |
+| 3 | Realm → Room in `data`, shared entity/wire classes, `MosqueSnapshot` (see data-loss warning) | yes |
 | 4 | `core:protocol`; `org.json` → kotlinx.serialization on both sides | yes |
 | 5 | **`ui:design` — tokens, `App*` components, window size class** | yes |
 | 6 | `ui:settings` + `ui:display` into `commonMain` | yes |
@@ -422,11 +475,21 @@ risky step off the critical path, at the cost of carrying Realm longer.
 
 ### Open decisions
 
-**Does iOS need a local database at all?** If iOS stays controller-plus-preview,
-it does not — both iOS and web would use the WebSocket-backed
-`ConfigRepository`, Room lives only in `androidMain`, and no intermediate source
-set is needed. This is the simpler default and the recommended starting
-assumption.
+**How conflicts are resolved.** Storage is settled; the merge model is not.
+Comparing only local-versus-server fires the confirmation dialog even when just
+one side changed, which trains people to dismiss it — and then they dismiss the
+one that mattered. Keep **three** snapshots instead:
+
+| State | Action |
+|---|---|
+| `local == base` | server wins silently |
+| `server == base` | local is pushed silently |
+| both differ from `base` | *now* ask the user |
+
+where `base` is the snapshot as of the last successful sync. Without `base` the
+feature works technically and loses data in practice. Whether resolution should
+ever become per-field rather than whole-snapshot is a product decision, and the
+answer changes the storage choice — see the SQLDelight note above.
 
 **Compose for web renders to a canvas, not the DOM.** No native text selection,
 no browser zoom semantics, and a multi-MB bundle. For a control panel served
