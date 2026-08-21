@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Delete
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 
 @Composable
 fun textFieldColors() = OutlinedTextFieldDefaults.colors(
@@ -263,10 +264,8 @@ fun AdjustmentRow(
     unitSuffix: String = com.groovernapp.mosqueathan.util.Lang.get("minutes", "menit"),
     onValueChange: (Int) -> Unit
 ) {
-    val density = androidx.compose.ui.platform.LocalDensity.current
     val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-    val screenWidthDp = with(density) { containerSize.width.toDp() }
-    val isCompact = screenWidthDp < 600.dp
+    val isCompact = LocalWindowClass.current.isCompact
 
     if (isCompact) {
         Column(

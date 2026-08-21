@@ -62,6 +62,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Close
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 
 @Composable
 fun SettingsScreen(
@@ -91,10 +92,7 @@ fun SettingsScreen(
         mutableStateOf(if (showAllSettings) SettingsCategory.PRAYER_SCHEDULE else SettingsCategory.REMOTE_DEVICES)
     }
     val context = androidx.compose.ui.platform.LocalContext.current
-    val isTv = remember(context) {
-        val uiModeManager = context.getSystemService(android.content.Context.UI_MODE_SERVICE) as android.app.UiModeManager
-        uiModeManager.currentModeType == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
-    }
+    val isTv = LocalWindowClass.current.isTv
 
     // Location States
     var latText by remember(config.latitude) { mutableStateOf(config.latitude.toString()) }
@@ -157,10 +155,8 @@ fun SettingsScreen(
         }
     }
 
-    val density = androidx.compose.ui.platform.LocalDensity.current
     val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-    val screenWidthDp = with(density) { containerSize.width.toDp() }
-    val isCompact = screenWidthDp < 600.dp && !isTv
+    val isCompact = LocalWindowClass.current.isCompact
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()

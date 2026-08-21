@@ -79,6 +79,7 @@ import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 
 @Composable
 fun ThemeSettingsSegment(
@@ -699,10 +700,8 @@ fun DropdownAdjustmentRow(
     onValueChange: (Int) -> Unit,
     onUnitChange: (Int) -> Unit
 ) {
-    val density = androidx.compose.ui.platform.LocalDensity.current
     val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-    val screenWidthDp = with(density) { containerSize.width.toDp() }
-    val isCompact = screenWidthDp < 600.dp
+    val isCompact = LocalWindowClass.current.isCompact
     var expanded by remember { mutableStateOf(false) }
 
     if (isCompact) {
