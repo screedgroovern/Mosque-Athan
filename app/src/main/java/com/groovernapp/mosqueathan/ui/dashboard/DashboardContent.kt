@@ -56,7 +56,7 @@ fun DashboardContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 20.dp),
+                    .padding(horizontal = MosqueTheme.spacing.huge, vertical = MosqueTheme.spacing.xxl),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SmallClockCard(
@@ -101,7 +101,7 @@ fun DashboardContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 32.dp, vertical = 20.dp),
+                            .padding(horizontal = MosqueTheme.spacing.huge, vertical = MosqueTheme.spacing.xxl),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SmallClockCard(
@@ -147,8 +147,8 @@ fun DashboardContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(
-                                horizontal = 32.dp,
-                                vertical = 20.dp
+                                horizontal = MosqueTheme.spacing.huge,
+                                vertical = MosqueTheme.spacing.xxl
                             ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -208,9 +208,9 @@ fun SmallClockCard(
         modifier = Modifier
             .background(
                 color = MosqueTheme.colors.scrim.copy(alpha = 0.6f),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(MosqueTheme.radius.md)
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.md)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
@@ -269,7 +269,7 @@ fun SmallClockCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 val cardModifier = if (isFridayBeforeAdzan) {
                     Modifier
-                        .background(MosqueTheme.colors.accent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
+                        .background(MosqueTheme.colors.accent.copy(alpha = 0.2f), shape = RoundedCornerShape(MosqueTheme.radius.xs))
                         .pointerInput(Unit) {
                             awaitPointerEventScope {
                                 while (true) {
@@ -295,12 +295,12 @@ fun SmallClockCard(
                         }
                 } else {
                     Modifier
-                        .background(MosqueTheme.colors.accent.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
+                        .background(MosqueTheme.colors.accent.copy(alpha = 0.2f), shape = RoundedCornerShape(MosqueTheme.radius.xs))
                         .clickable { onStartAdzanNow() }
                 }
                 Box(
                     modifier = cardModifier
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.sm)
                 ) {
                     Text("Mulai Adzan Sekarang", color = MosqueTheme.colors.accent, fontSize = MosqueTheme.typography.caption, fontWeight = FontWeight.Bold)
                 }

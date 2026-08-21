@@ -63,11 +63,11 @@ fun RemoteControlSettingsSegment(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = if (isCompact) 0.dp else 24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
     ) {
         // Section 1: Sambungkan & Sinkronisasi TV (Sinkronisasi)
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
@@ -116,7 +116,7 @@ fun RemoteControlSettingsSegment(
                             containerColor = MosqueTheme.colors.accent,
                             contentColor = MosqueTheme.colors.onAccent
                         ),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.fillMaxWidth().height(48.dp)
                     ) {
                         Icon(imageVector = Icons.Default.Tv, contentDescription = null)
@@ -140,7 +140,7 @@ fun RemoteControlSettingsSegment(
                             containerColor = MosqueTheme.colors.fill,
                             contentColor = MosqueTheme.colors.textPrimary
                         ),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.fillMaxWidth().height(48.dp)
                     ) {
                         Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null)
@@ -152,7 +152,7 @@ fun RemoteControlSettingsSegment(
                 // Side-by-side on larger screens
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
                 ) {
                     Button(
                         onClick = {
@@ -168,7 +168,7 @@ fun RemoteControlSettingsSegment(
                             containerColor = MosqueTheme.colors.accent,
                             contentColor = MosqueTheme.colors.onAccent
                         ),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f).height(48.dp)
                     ) {
                         Icon(imageVector = Icons.Default.Tv, contentDescription = null)
@@ -192,7 +192,7 @@ fun RemoteControlSettingsSegment(
                             containerColor = MosqueTheme.colors.fill,
                             contentColor = MosqueTheme.colors.textPrimary
                         ),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f).height(48.dp)
                     ) {
                         Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null)
@@ -215,7 +215,7 @@ fun RemoteControlSettingsSegment(
                     containerColor = MosqueTheme.colors.fillSubtle,
                     contentColor = MosqueTheme.colors.textPrimary
                 ),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(MosqueTheme.radius.md),
                 border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(MosqueTheme.colors.fillStrong)),
                 modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
@@ -225,11 +225,11 @@ fun RemoteControlSettingsSegment(
             }
         }
 
-        HorizontalDivider(color = MosqueTheme.colors.fill, thickness = 1.dp)
+        HorizontalDivider(color = MosqueTheme.colors.fill, thickness = MosqueTheme.stroke.hairline)
 
         // Section 2: PIN Remote Kontrol
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
@@ -261,9 +261,9 @@ fun RemoteControlSettingsSegment(
                 )
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
+                        .clip(RoundedCornerShape(MosqueTheme.radius.xs))
                         .background(badgeBg)
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = MosqueTheme.spacing.md, vertical = MosqueTheme.spacing.xs)
                 ) {
                     Text(
                         text = badgeText,
@@ -280,10 +280,10 @@ fun RemoteControlSettingsSegment(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(MosqueTheme.radius.md))
                         .background(MosqueTheme.colors.fillFaint)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                        .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                     horizontalAlignment = Alignment.Start
                 ) {
                     statusBadgeContent()
@@ -292,9 +292,9 @@ fun RemoteControlSettingsSegment(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(MosqueTheme.radius.md))
                         .background(MosqueTheme.colors.fillFaint)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -332,7 +332,7 @@ fun RemoteControlSettingsSegment(
                     containerColor = MosqueTheme.colors.accent,
                     contentColor = MosqueTheme.colors.onAccent
                 ),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = if (isCompact) {
                     Modifier.fillMaxWidth().height(48.dp)
                 } else {

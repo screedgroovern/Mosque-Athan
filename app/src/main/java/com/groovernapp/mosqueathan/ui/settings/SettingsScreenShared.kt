@@ -77,7 +77,7 @@ fun TvFocusableButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     colors: ButtonColors = ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.fillStrong),
-    shape: Shape = RoundedCornerShape(6.dp),
+    shape: Shape = RoundedCornerShape(MosqueTheme.radius.sm),
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
@@ -89,7 +89,7 @@ fun TvFocusableButton(
 
     // Determine focus-adjusted colors
     val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(3.dp, MosqueTheme.colors.accent)
+        BorderStroke(MosqueTheme.stroke.thick, MosqueTheme.colors.accent)
     } else {
         null
     }
@@ -126,7 +126,7 @@ fun TvFocusableButton(
 fun TvFocusablePrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(8.dp),
+    shape: Shape = RoundedCornerShape(MosqueTheme.radius.md),
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
@@ -137,7 +137,7 @@ fun TvFocusablePrimaryButton(
     val isFocusedOrHovered = isFocused || isHovered
 
     val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(3.dp, MosqueTheme.colors.textPrimary)
+        BorderStroke(MosqueTheme.stroke.thick, MosqueTheme.colors.textPrimary)
     } else {
         null
     }
@@ -167,7 +167,7 @@ fun TvFocusablePrimaryButton(
 fun TvFocusablePreviewButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(8.dp),
+    shape: Shape = RoundedCornerShape(MosqueTheme.radius.md),
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
@@ -178,7 +178,7 @@ fun TvFocusablePreviewButton(
     val isFocusedOrHovered = isFocused || isHovered
 
     val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(3.dp, MosqueTheme.colors.accent)
+        BorderStroke(MosqueTheme.stroke.thick, MosqueTheme.colors.accent)
     } else {
         BorderStroke(1.5.dp, MosqueTheme.colors.accent.copy(alpha = 0.6f))
     }
@@ -216,7 +216,7 @@ fun TvFocusablePreviewButton(
 fun TvFocusableDangerButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(6.dp),
+    shape: Shape = RoundedCornerShape(MosqueTheme.radius.sm),
     contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
@@ -227,7 +227,7 @@ fun TvFocusableDangerButton(
     val isFocusedOrHovered = isFocused || isHovered
 
     val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(3.dp, MosqueTheme.colors.accent)
+        BorderStroke(MosqueTheme.stroke.thick, MosqueTheme.colors.accent)
     } else {
         null
     }
@@ -272,10 +272,10 @@ fun AdjustmentRow(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
                 .background(MosqueTheme.colors.fillSubtle)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
         ) {
             Text(
                 text = title,
@@ -286,11 +286,11 @@ fun AdjustmentRow(
      
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
             ) {
                 TvFocusableButton(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
@@ -309,7 +309,7 @@ fun AdjustmentRow(
      
                 TvFocusableButton(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
@@ -330,9 +330,9 @@ fun AdjustmentRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
                 .background(MosqueTheme.colors.fillSubtle)
-                .padding(horizontal = 20.dp, vertical = 10.dp),
+                .padding(horizontal = MosqueTheme.spacing.xxl, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -345,11 +345,11 @@ fun AdjustmentRow(
      
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
             ) {
                 TvFocusableButton(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
@@ -368,7 +368,7 @@ fun AdjustmentRow(
      
                 TvFocusableButton(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
@@ -502,7 +502,7 @@ fun RunningTextListSettingsComponent(
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -536,13 +536,13 @@ fun RunningTextListSettingsComponent(
                         if (items.isNotEmpty()) {
                             FilledTonalButton(
                                 onClick = { isReorderMode = !isReorderMode },
-                                shape = RoundedCornerShape(6.dp),
+                                shape = RoundedCornerShape(MosqueTheme.radius.sm),
                                 modifier = Modifier.height(36.dp),
                                 colors = ButtonDefaults.filledTonalButtonColors(
                                     containerColor = MosqueTheme.colors.fillMedium,
                                     contentColor = MosqueTheme.colors.accent
                                 ),
-                                contentPadding = PaddingValues(horizontal = 12.dp)
+                                contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg)
                             ) {
                                 Text(
                                     text = if (isReorderMode) com.groovernapp.mosqueathan.util.Lang.get("Done", "Selesai") else com.groovernapp.mosqueathan.util.Lang.get("Arrange", "Urutkan"),
@@ -560,7 +560,7 @@ fun RunningTextListSettingsComponent(
                             addTextValue = ""
                         },
                         modifier = Modifier.height(36.dp),
-                        shape = RoundedCornerShape(6.dp)
+                        shape = RoundedCornerShape(MosqueTheme.radius.sm)
                     ) {
                         Text(
                             text = com.groovernapp.mosqueathan.util.Lang.get("Add", "Tambah"),
@@ -573,7 +573,7 @@ fun RunningTextListSettingsComponent(
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
@@ -601,7 +601,7 @@ fun RunningTextListSettingsComponent(
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
         ) {
             items.forEachIndexed { index, itemText ->
                 val isCurrentDragged = index == draggedIndex
@@ -616,9 +616,9 @@ fun RunningTextListSettingsComponent(
                         .graphicsLayer {
                             translationY = if (isCurrentDragged) dragOffsetY else 0f
                         }
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(MosqueTheme.radius.md))
                         .background(MosqueTheme.colors.fillSubtle)
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .padding(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.md)
                 ) {
                     if (isCompact) {
                         if (isReorderMode) {
@@ -722,7 +722,7 @@ fun RunningTextListSettingsComponent(
                                             editTextValue = itemText
                                             editingIndex = index
                                         },
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                        contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
                                         modifier = Modifier.height(32.dp)
                                     ) {
                                         Icon(
@@ -745,7 +745,7 @@ fun RunningTextListSettingsComponent(
                                             val updated = items.toMutableList().apply { removeAt(index) }
                                             onItemsChange(updated)
                                         },
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                        contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
                                         modifier = Modifier.height(32.dp)
                                     ) {
                                         Icon(

@@ -123,7 +123,7 @@ fun ThemeSettingsSegment(
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         // TabRow header for Dashboard & Slideshow segments
         SecondaryTabRow(
@@ -138,7 +138,7 @@ fun ThemeSettingsSegment(
                 text = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Image,
@@ -161,7 +161,7 @@ fun ThemeSettingsSegment(
                 text = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
@@ -251,7 +251,7 @@ fun DashboardTabContent(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         // Row for Randomize Switch (Aligned Top-Right)
         Row(
@@ -267,7 +267,7 @@ fun DashboardTabContent(
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
             ) {
                 Text(
                     text = Lang.get("Randomize", "Tampilkan random"),
@@ -393,7 +393,7 @@ fun SlideshowTabContent(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         Text(
             text = Lang.get("Slideshow Media Items", "Daftar Media Slideshow"),
@@ -537,7 +537,7 @@ fun SlideshowTabContent(
         Spacer(modifier = Modifier.height(8.dp))
         TvFocusableButton(
             onClick = onPreviewSlideshow,
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier.fillMaxWidth().height(48.dp)
         ) {
             Text(
@@ -553,9 +553,9 @@ fun SlideshowTabContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
                 .background(MosqueTheme.colors.fillSubtle)
-                .padding(16.dp),
+                .padding(MosqueTheme.spacing.xl),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -610,9 +610,9 @@ fun TransitionAnimationRow(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
                 .background(MosqueTheme.colors.fillSubtle)
-                .padding(16.dp),
+                .padding(MosqueTheme.spacing.xl),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Text(
@@ -623,7 +623,7 @@ fun TransitionAnimationRow(
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 listOf("FADE", "SLIDE", "ZOOM", "INSTANT").forEach { type ->
@@ -633,8 +633,8 @@ fun TransitionAnimationRow(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.fill
                         ),
-                        shape = RoundedCornerShape(6.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.sm),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(32.dp)
                     ) {
                         Text(
@@ -651,9 +651,9 @@ fun TransitionAnimationRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
                 .background(MosqueTheme.colors.fillSubtle)
-                .padding(16.dp),
+                .padding(MosqueTheme.spacing.xl),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -663,7 +663,7 @@ fun TransitionAnimationRow(
                 fontSize = MosqueTheme.typography.bodyCompact,
                 fontWeight = FontWeight.SemiBold
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
                 listOf("FADE", "SLIDE", "ZOOM", "INSTANT").forEach { type ->
                     val isSelected = selectedType == type
                     TvFocusableButton(
@@ -671,8 +671,8 @@ fun TransitionAnimationRow(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.fill
                         ),
-                        shape = RoundedCornerShape(6.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.sm),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(32.dp)
                     ) {
                         Text(
@@ -709,10 +709,10 @@ fun DropdownAdjustmentRow(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
                 .background(MosqueTheme.colors.fillSubtle)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
         ) {
             Text(
                 text = title,
@@ -723,11 +723,11 @@ fun DropdownAdjustmentRow(
      
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
             ) {
                 TvFocusableButton(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
@@ -745,7 +745,7 @@ fun DropdownAdjustmentRow(
      
                 TvFocusableButton(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
@@ -755,16 +755,16 @@ fun DropdownAdjustmentRow(
                 Box {
                     TvFocusableButton(
                         onClick = { expanded = true },
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MosqueTheme.colors.fillSoft
                         ),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(32.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.sm)
                         ) {
                             Text(
                                 text = unitLabels[selectedUnitIndex],
@@ -809,9 +809,9 @@ fun DropdownAdjustmentRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
                 .background(MosqueTheme.colors.fillSubtle)
-                .padding(horizontal = 20.dp, vertical = 10.dp),
+                .padding(horizontal = MosqueTheme.spacing.xxl, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -824,11 +824,11 @@ fun DropdownAdjustmentRow(
      
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
             ) {
                 TvFocusableButton(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
@@ -846,7 +846,7 @@ fun DropdownAdjustmentRow(
      
                 TvFocusableButton(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
-                    shape = RoundedCornerShape(6.dp),
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
@@ -856,16 +856,16 @@ fun DropdownAdjustmentRow(
                 Box {
                     TvFocusableButton(
                         onClick = { expanded = true },
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MosqueTheme.colors.fillSoft
                         ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(36.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.sm)
                         ) {
                             Text(
                                 text = unitLabels[selectedUnitIndex],
@@ -1016,12 +1016,12 @@ fun RunningTextSettingsCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(MosqueTheme.radius.lg))
             .background(MosqueTheme.colors.fillSubtle)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(MosqueTheme.spacing.xl),
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xs)) {
             Text(
                 text = Lang.get("Manage Running Text", "Kelola Running Text"),
                 color = MosqueTheme.colors.textPrimary,
@@ -1041,7 +1041,7 @@ fun RunningTextSettingsCard(
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
         ) {
             androidx.compose.material3.OutlinedTextField(
                 value = newText,
@@ -1064,7 +1064,7 @@ fun RunningTextSettingsCard(
                     }
                 },
                 modifier = Modifier.height(56.dp),
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(MosqueTheme.radius.md)
             ) {
                 Text(Lang.get("Add", "Tambah"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
             }
@@ -1073,7 +1073,7 @@ fun RunningTextSettingsCard(
         if (announcements.isNotEmpty()) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
             ) {
                 announcements.sortedBy { it.position }.forEach { item ->
                     var isEditing by remember(item.id) { mutableStateOf(false) }
@@ -1082,11 +1082,11 @@ fun RunningTextSettingsCard(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(MosqueTheme.radius.md))
                             .background(MosqueTheme.colors.scrim.copy(alpha = 0.3f))
-                            .padding(12.dp),
+                            .padding(MosqueTheme.spacing.lg),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         if (isEditing) {
                             androidx.compose.material3.OutlinedTextField(

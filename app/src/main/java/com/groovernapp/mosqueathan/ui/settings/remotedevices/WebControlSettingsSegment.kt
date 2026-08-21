@@ -65,22 +65,22 @@ fun WebControlSettingsSegment(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = MosqueTheme.spacing.xl),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxl)
                 ) {
                     // Top Section: QR Code + Server URL
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         if (qrCodeBitmap != null) {
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.textPrimary),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(MosqueTheme.radius.lg),
                                 modifier = Modifier
                                     .size(160.dp)
-                                    .padding(4.dp)
+                                    .padding(MosqueTheme.spacing.xs)
                             ) {
                                 Image(
                                     bitmap = qrCodeBitmap,
@@ -102,17 +102,17 @@ fun WebControlSettingsSegment(
                     // Bottom Section: Switch & Instructions/Notes
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl),
                         horizontalAlignment = Alignment.Start
                     ) {
                         if (!isTv) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(MosqueTheme.radius.md))
                                     .background(MosqueTheme.colors.fillSubtle)
-                                    .border(1.dp, MosqueTheme.colors.fillStrong, RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    .border(1.dp, MosqueTheme.colors.fillStrong, RoundedCornerShape(MosqueTheme.radius.md))
+                                    .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -141,7 +141,7 @@ fun WebControlSettingsSegment(
                         }
 
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
@@ -172,23 +172,23 @@ fun WebControlSettingsSegment(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(32.dp),
+                        .padding(horizontal = MosqueTheme.spacing.xxxl),
+                    horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.huge),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Left Column: QR Code + Server URL
                     Column(
                         modifier = Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
                     ) {
                         if (qrCodeBitmap != null) {
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.textPrimary),
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(MosqueTheme.radius.lg),
                                 modifier = Modifier
                                     .size(180.dp)
-                                    .padding(4.dp)
+                                    .padding(MosqueTheme.spacing.xs)
                             ) {
                                 Image(
                                     bitmap = qrCodeBitmap,
@@ -210,17 +210,17 @@ fun WebControlSettingsSegment(
                     // Right Column: Switch & Instructions/Notes
                     Column(
                         modifier = Modifier.weight(1.2f),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl),
                         horizontalAlignment = Alignment.Start
                     ) {
                         if (!isTv) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(MosqueTheme.radius.md))
                                     .background(MosqueTheme.colors.fillSubtle)
-                                    .border(1.dp, MosqueTheme.colors.fillStrong, RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    .border(1.dp, MosqueTheme.colors.fillStrong, RoundedCornerShape(MosqueTheme.radius.md))
+                                    .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -249,7 +249,7 @@ fun WebControlSettingsSegment(
                         }
 
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(

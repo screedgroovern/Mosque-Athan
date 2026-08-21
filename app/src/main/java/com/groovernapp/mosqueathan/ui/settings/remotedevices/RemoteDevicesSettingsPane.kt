@@ -107,20 +107,20 @@ fun RemoteDevicesSettingsPane(
             }
             .focusable()
             .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         // Mode Selector Toggles
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = if (isCompact) 16.dp else 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
         ) {
             // Mode Server Button
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(MosqueTheme.radius.lg))
                     .background(
                         if (isServer) MosqueTheme.colors.accent.copy(alpha = 0.25f)
                         else MosqueTheme.colors.transparent
@@ -128,15 +128,15 @@ fun RemoteDevicesSettingsPane(
                     .border(
                         width = 2.dp,
                         color = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.fillStrong,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(MosqueTheme.radius.lg)
                     )
                     .clickable { onUpdateConnectivityMode("SERVER") }
-                    .padding(vertical = 16.dp),
+                    .padding(vertical = MosqueTheme.spacing.xl),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Dns,
@@ -157,7 +157,7 @@ fun RemoteDevicesSettingsPane(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(MosqueTheme.radius.lg))
                     .background(
                         if (!isServer) MosqueTheme.colors.accent.copy(alpha = 0.25f)
                         else MosqueTheme.colors.transparent
@@ -165,15 +165,15 @@ fun RemoteDevicesSettingsPane(
                     .border(
                         width = 2.dp,
                         color = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.fillStrong,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(MosqueTheme.radius.lg)
                     )
                     .clickable { onUpdateConnectivityMode("REMOTE") }
-                    .padding(vertical = 16.dp),
+                    .padding(vertical = MosqueTheme.spacing.xl),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Devices,
@@ -223,7 +223,7 @@ fun RemoteDevicesSettingsPane(
                 text = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         Icon(
                             imageVector = if (isServer) Icons.Default.Dns else Icons.Default.Sync,
@@ -246,7 +246,7 @@ fun RemoteDevicesSettingsPane(
                 text = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Devices,
@@ -268,7 +268,7 @@ fun RemoteDevicesSettingsPane(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp)
+                .padding(bottom = MosqueTheme.spacing.xxxl)
         ) {
             if (selectedTabIndex == 0) {
                 if (isServer) {

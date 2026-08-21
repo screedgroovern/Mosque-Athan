@@ -27,7 +27,7 @@ fun LocationSettingsSegment(
     kemenagCityName: String
 ) {
     val isEnabled = calculationMethodName != "KEMENAG"
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
         OutlinedTextField(
             value = latText,
             onValueChange = onLatTextChange,
@@ -53,7 +53,7 @@ fun LocationSettingsSegment(
                 color = MosqueTheme.colors.accent,
                 fontSize = MosqueTheme.typography.label,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = MosqueTheme.spacing.xs)
             )
         }
     }

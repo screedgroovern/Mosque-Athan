@@ -26,7 +26,7 @@ fun StandbySettingsSegment(
     onUpdateStandbyScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxl),
         modifier = Modifier
     ) {
         // Toggle Switch standbyModeEnabled

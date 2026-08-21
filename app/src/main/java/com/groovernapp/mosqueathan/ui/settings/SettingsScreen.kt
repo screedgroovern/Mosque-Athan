@@ -288,7 +288,7 @@ fun SettingsScreen(
             ) {
                 // Details Header
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = MosqueTheme.spacing.xl),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -297,7 +297,7 @@ fun SettingsScreen(
                         if (isCompact) {
                             IconButton(
                                 onClick = { coroutineScope.launch { drawerState.open() } },
-                                modifier = Modifier.padding(end = 8.dp)
+                                modifier = Modifier.padding(end = MosqueTheme.spacing.md)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Menu,
@@ -334,7 +334,7 @@ fun SettingsScreen(
                         text = selectedCategory.getDescription(),
                         color = MosqueTheme.colors.textTertiary,
                         fontSize = MosqueTheme.typography.bodyCompact,
-                        modifier = Modifier.padding(bottom = 24.dp)
+                        modifier = Modifier.padding(bottom = MosqueTheme.spacing.xxxl)
                     )
                 }
 
@@ -342,8 +342,8 @@ fun SettingsScreen(
                 Card(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.0f)),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MosqueTheme.colors.fillStrong)
+                    shape = RoundedCornerShape(MosqueTheme.radius.lg),
+                    border = BorderStroke(MosqueTheme.stroke.hairline, MosqueTheme.colors.fillStrong)
                 ) {
                     Column(
                         modifier = Modifier
@@ -356,7 +356,7 @@ fun SettingsScreen(
                                 .weight(1f)
                                 .then(
                                     if (selectedCategory in listOf(SettingsCategory.PRAYER_SCHEDULE, SettingsCategory.ADZAN_IQOMAH)) {
-                                        Modifier.padding(bottom = 16.dp)
+                                        Modifier.padding(bottom = MosqueTheme.spacing.xl)
                                     } else {
                                         Modifier
                                     }
@@ -711,20 +711,20 @@ fun SideSheetContent(
             .fillMaxHeight()
             .width(width)
             .background(MosqueTheme.colors.scrim.copy(alpha = 0.4f))
-            .padding(vertical = 24.dp, horizontal = if (isCollapsed) 8.dp else 16.dp),
+            .padding(vertical = MosqueTheme.spacing.xxxl, horizontal = if (isCollapsed) 8.dp else 16.dp),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg),
             horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
         ) {
             // Header Settings with Gear Icon
             if (isCollapsed) {
                 IconButton(
                     onClick = onToggleExpand,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = MosqueTheme.spacing.xl)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
@@ -737,7 +737,7 @@ fun SideSheetContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp, start = 8.dp, end = 4.dp),
+                        .padding(bottom = MosqueTheme.spacing.xl, start = MosqueTheme.spacing.md, end = MosqueTheme.spacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -778,7 +778,7 @@ fun SideSheetContent(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg),
                 horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
             ) {
                 displayedCategories.forEach { category ->
@@ -809,11 +809,11 @@ fun SideSheetContent(
                             .border(
                                 width = borderWidth,
                                 color = borderColor,
-                                shape = RoundedCornerShape(8.dp)
+                                shape = RoundedCornerShape(MosqueTheme.radius.md)
                             )
                             .background(
                                 backgroundColor,
-                                RoundedCornerShape(8.dp)
+                                RoundedCornerShape(MosqueTheme.radius.md)
                             )
                             .clickable(
                                 interactionSource = interactionSource,
@@ -843,7 +843,7 @@ fun SideSheetContent(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp),
+                                    .padding(horizontal = MosqueTheme.spacing.xl),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 if (category.icon is androidx.compose.ui.graphics.vector.ImageVector) {
@@ -877,10 +877,10 @@ fun SideSheetContent(
 
         // Bottom area
         Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(top = MosqueTheme.spacing.xl),
             horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
         ) {
             if (!isCollapsed) {
@@ -889,13 +889,13 @@ fun SideSheetContent(
                     color = MosqueTheme.colors.textMuted,
                     fontSize = MosqueTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)
+                    modifier = Modifier.padding(start = MosqueTheme.spacing.lg, bottom = MosqueTheme.spacing.xs)
                 )
             }
 
             TvFocusableButton(
                 onClick = onBack,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)

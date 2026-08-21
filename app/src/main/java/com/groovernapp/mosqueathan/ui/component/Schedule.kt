@@ -66,7 +66,7 @@ fun Schedule(
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         if (title.isNotEmpty()) {
             // Left-aligned Title
@@ -84,9 +84,9 @@ fun Schedule(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(MosqueTheme.radius.md))
                     .background(MosqueTheme.colors.fillFaint)
-                    .padding(vertical = 24.dp),
+                    .padding(vertical = MosqueTheme.spacing.xxxl),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -121,7 +121,7 @@ fun Schedule(
         // Add & Schedule List Buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
@@ -130,8 +130,8 @@ fun Schedule(
                     containerColor = MosqueTheme.colors.accent,
                     contentColor = MosqueTheme.colors.onAccent
                 ),
-                shape = RoundedCornerShape(8.dp),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                shape = RoundedCornerShape(MosqueTheme.radius.md),
+                contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
                 modifier = Modifier.weight(1f)
             ) {
                 Row(
@@ -154,7 +154,7 @@ fun Schedule(
 
             TvFocusableButton(
                 onClick = { showAllSchedulesDialog = true },
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp)
@@ -197,7 +197,7 @@ fun Schedule(
                         }
                     } else {
                         LazyColumn(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                             modifier = Modifier.fillMaxSize()
                         ) {
                             items(sortedSchedules) { schedule ->
@@ -297,15 +297,15 @@ fun ScheduleListItem(
     }
 
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(MosqueTheme.radius.lg),
         colors = CardDefaults.cardColors(
             containerColor = MosqueTheme.colors.fillSubtle
         ),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.padding(MosqueTheme.spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
         ) {
             // Row 1: Time [ HH:mm ] and Edit Button
             Row(
@@ -321,12 +321,12 @@ fun ScheduleListItem(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .clickable(onClick = onEditTimeClick)
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = MosqueTheme.spacing.xs)
                 )
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                 ) {
                     // Edit Button (Vertically centered)
                     IconButton(
@@ -363,13 +363,13 @@ fun ScheduleListItem(
                 // TV layout: simpler display of active days to prevent complex D-pad horizontal switches
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.sm)
                 ) {
                     localizedDays.forEach { (englishName, localizedName) ->
                         val isActive = activeDaysList.contains(englishName)
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
+                                .clip(RoundedCornerShape(MosqueTheme.radius.xs))
                                 .background(if (isActive) MosqueTheme.colors.accent else MosqueTheme.colors.fill)
                                 .clickable {
                                     val nextActive = !isActive
@@ -382,7 +382,7 @@ fun ScheduleListItem(
                                     activeDaysState = daysList.joinToString(",")
                                     onToggleDay(englishName, nextActive)
                                 }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                                .padding(horizontal = MosqueTheme.spacing.md, vertical = MosqueTheme.spacing.xs),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -456,12 +456,12 @@ fun ScheduleListItem(
                 ) {
                     OutlinedButton(
                         onClick = onScheduleClick,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.md),
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MosqueTheme.colors.textPrimary
                         ),
                         border = borderStroke(),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.sm)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -503,15 +503,15 @@ fun TimePickerDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(MosqueTheme.radius.lg),
             colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.surfaceCard),
             modifier = Modifier
                 .width(420.dp)
-                .padding(16.dp)
+                .padding(MosqueTheme.spacing.xl)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(MosqueTheme.spacing.xl),
+                verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
             ) {
                 Text(
                     text = Lang.get("Edit Schedule Time", "Atur Jam Jadwal"),
@@ -540,11 +540,11 @@ fun TimePickerDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
                 ) {
                     TvFocusableDangerButton(
                         onClick = onDismiss,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
@@ -556,7 +556,7 @@ fun TimePickerDialog(
                             val end = "${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}"
                             onSave(start, end)
                         },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(Lang.get("Save", "Simpan"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
@@ -580,11 +580,11 @@ fun TimeStepperField(
         Spacer(modifier = Modifier.height(4.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xs)
         ) {
             TvFocusableButton(
                 onClick = { onHourChange((hour - 1 + 24) % 24) },
-                shape = RoundedCornerShape(6.dp),
+                shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
@@ -600,7 +600,7 @@ fun TimeStepperField(
             )
             TvFocusableButton(
                 onClick = { onHourChange((hour + 1) % 24) },
-                shape = RoundedCornerShape(6.dp),
+                shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
@@ -612,12 +612,12 @@ fun TimeStepperField(
                 color = MosqueTheme.colors.textPrimary,
                 fontSize = MosqueTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 4.dp)
+                modifier = Modifier.padding(horizontal = MosqueTheme.spacing.xs)
             )
 
             TvFocusableButton(
                 onClick = { onMinuteChange((minute - 1 + 60) % 60) },
-                shape = RoundedCornerShape(6.dp),
+                shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
@@ -633,7 +633,7 @@ fun TimeStepperField(
             )
             TvFocusableButton(
                 onClick = { onMinuteChange((minute + 1) % 60) },
-                shape = RoundedCornerShape(6.dp),
+                shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
@@ -660,16 +660,16 @@ fun MultiDatePickerDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(MosqueTheme.radius.lg),
             colors = CardDefaults.cardColors(containerColor = MosqueTheme.colors.surfaceCard),
             modifier = Modifier
                 .width(420.dp)
                 .height(450.dp)
-                .padding(16.dp)
+                .padding(MosqueTheme.spacing.xl)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.padding(MosqueTheme.spacing.xl),
+                verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
             ) {
                 Text(
                     text = Lang.get("Specific Dates List", "Daftar Tanggal Spesifik"),
@@ -688,13 +688,13 @@ fun MultiDatePickerDialog(
 
                 // List of dates with delete option (extremely TV friendly)
                 LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                     modifier = Modifier.weight(1f).fillMaxWidth()
                 ) {
                     if (datesList.isEmpty()) {
                         item {
                             Box(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                                modifier = Modifier.fillMaxWidth().padding(vertical = MosqueTheme.spacing.huge),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -709,9 +709,9 @@ fun MultiDatePickerDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(MosqueTheme.radius.md))
                                     .background(MosqueTheme.colors.fillSubtle)
-                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    .padding(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.md),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -734,11 +734,11 @@ fun MultiDatePickerDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
                 ) {
                     TvFocusableButton(
                         onClick = onDismiss,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
@@ -748,7 +748,7 @@ fun MultiDatePickerDialog(
                         onClick = {
                             onSave(datesList.joinToString(","))
                         },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(Lang.get("Save", "Simpan"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)

@@ -44,7 +44,7 @@ fun AdzanSettingsSegment(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         Text(
             text = Lang.get("Adzan Preparation", "Persiapan Adzan"),
@@ -80,7 +80,7 @@ fun AdzanSettingsSegment(
         // Preview Button
         TvFocusablePreviewButton(
             onClick = onPreviewAdzan,
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier.fillMaxWidth().height(40.dp)
         ) {
             Text(

@@ -118,12 +118,12 @@ fun CountdownScreen(
 private fun CountdownPanel(value: String) {
     Column(
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(MosqueTheme.radius.md))
             .background(MosqueTheme.colors.scrim.copy(alpha = 0.40f))
             .border(
                 width = 1.dp,
                 color = MosqueTheme.colors.textGhostSoft,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(MosqueTheme.radius.md)
             )
             .padding(horizontal = 56.dp, vertical = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally

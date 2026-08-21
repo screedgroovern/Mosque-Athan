@@ -74,7 +74,7 @@ fun PrayerScheduleSettingsSegment(
     val tabHeight = if (isCompact) 72.dp else 48.dp
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl),
         modifier = Modifier.fillMaxSize()
     ) {
         SecondaryTabRow(
@@ -90,7 +90,7 @@ fun PrayerScheduleSettingsSegment(
                 text = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Calculate,
@@ -102,7 +102,7 @@ fun PrayerScheduleSettingsSegment(
                             fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold,
                             maxLines = 2,
-                            modifier = Modifier.padding(vertical = 2.dp)
+                            modifier = Modifier.padding(vertical = MosqueTheme.spacing.xxs)
                         )
                     }
                 },
@@ -116,7 +116,7 @@ fun PrayerScheduleSettingsSegment(
                 text = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Tune,
@@ -128,7 +128,7 @@ fun PrayerScheduleSettingsSegment(
                             fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold,
                             maxLines = 2,
-                            modifier = Modifier.padding(vertical = 2.dp)
+                            modifier = Modifier.padding(vertical = MosqueTheme.spacing.xxs)
                         )
                     }
                 },
@@ -146,7 +146,7 @@ fun PrayerScheduleSettingsSegment(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
                 ) {
                     // CARD 1: Metode Perhitungan
                     SettingsCard(

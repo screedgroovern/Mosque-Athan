@@ -22,7 +22,7 @@ fun RunningTextBar(text: String) {
             .fillMaxWidth()
             .height(56.dp)
             .background(MosqueTheme.colors.runningTextBackground)
-            .padding(horizontal = 24.dp),
+            .padding(horizontal = MosqueTheme.spacing.xxxl),
         contentAlignment = Alignment.CenterStart
     ) {
 

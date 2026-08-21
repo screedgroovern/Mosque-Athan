@@ -26,14 +26,14 @@ fun SettingsCard(
         colors = CardDefaults.cardColors(
             containerColor = MosqueTheme.colors.onAccent.copy(alpha = if (dimmed) 0.15f else 0.35f)
         ),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, MosqueTheme.colors.textPrimary.copy(alpha = if (dimmed) 0.05f else 0.1f))
+        shape = RoundedCornerShape(MosqueTheme.radius.lg),
+        border = BorderStroke(MosqueTheme.stroke.hairline, MosqueTheme.colors.textPrimary.copy(alpha = if (dimmed) 0.05f else 0.1f))
     ) {
-        Column(modifier = Modifier.padding(24.dp)) {
+        Column(modifier = Modifier.padding(MosqueTheme.spacing.xxxl)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(bottom = 16.dp)
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
+                modifier = Modifier.padding(bottom = MosqueTheme.spacing.xl)
             ) {
                 if (icon != null) {
                     Icon(

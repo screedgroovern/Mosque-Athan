@@ -67,13 +67,13 @@ fun MethodSettingsSegment(
 
             val rows = calculationMethods.chunked(columns)
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 rows.forEach { rowItems ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         rowItems.forEach { method ->
                             CalculationMethodItem(
@@ -128,10 +128,10 @@ fun MethodSettingsSegment(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(MosqueTheme.radius.md))
                         .background(MosqueTheme.colors.fillSubtle)
                         .clickable { durationExpanded = true }
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = MosqueTheme.spacing.xl),
                     contentAlignment = Alignment.CenterStart
                 ) {
                     Text(text = selectedDurationText, color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.body)
@@ -155,7 +155,7 @@ fun MethodSettingsSegment(
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
                 ) {
                     if (kemenagDuration == "SPECIFIC_DATE") {
                         DatePickerField(
@@ -221,7 +221,7 @@ fun MethodSettingsSegment(
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = MosqueTheme.colors.onAccent,
-                            strokeWidth = 2.dp
+                            strokeWidth = MosqueTheme.stroke.thin
                         )
                     } else {
                         Text(
@@ -281,7 +281,7 @@ fun MethodSettingsSegment(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
                                     color = MosqueTheme.colors.accent,
-                                    strokeWidth = 2.dp
+                                    strokeWidth = MosqueTheme.stroke.thin
                                 )
                             }
                         },
@@ -293,19 +293,19 @@ fun MethodSettingsSegment(
                     
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth().height(250.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         items(citySearchResults) { (id, name) ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(MosqueTheme.radius.md))
                                     .background(MosqueTheme.colors.fillSubtle)
                                     .clickable {
                                         onKemenagCitySelected(id, name)
                                         showCitySearchDialog = false
                                     }
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(text = name, color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.label)
@@ -335,7 +335,7 @@ fun MethodSettingsSegment(
             },
             text = {
                 if (kemenagSchedules.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.fillMaxWidth().padding(MosqueTheme.spacing.huge), contentAlignment = Alignment.Center) {
                         Text(
                             text = com.groovernapp.mosqueathan.util.Lang.get("No schedules downloaded yet", "Belum ada jadwal yang diunduh"),
                             color = MosqueTheme.colors.textMuted,
@@ -345,7 +345,7 @@ fun MethodSettingsSegment(
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth().height(350.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         val grouped = kemenagSchedules.groupBy { 
                             val parts = it.dateString.split("-")
@@ -366,16 +366,16 @@ fun MethodSettingsSegment(
                                     color = MosqueTheme.colors.accent,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = MosqueTheme.typography.body,
-                                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                                    modifier = Modifier.padding(top = MosqueTheme.spacing.md, bottom = MosqueTheme.spacing.xs)
                                 )
                             }
                             items(schedules) { sch ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(8.dp))
+                                        .clip(RoundedCornerShape(MosqueTheme.radius.md))
                                         .background(MosqueTheme.colors.fillSubtle)
-                                        .padding(12.dp),
+                                        .padding(MosqueTheme.spacing.lg),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -537,12 +537,12 @@ private fun CalculationMethodItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(MosqueTheme.radius.md))
             .background(if (isSelected) MosqueTheme.colors.accent.copy(alpha = 0.15f) else MosqueTheme.colors.fillSubtle)
             .border(
                 width = 1.dp,
                 color = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.transparent,
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(MosqueTheme.radius.md)
             )
             .clickable { onMethodChange(method) }
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),

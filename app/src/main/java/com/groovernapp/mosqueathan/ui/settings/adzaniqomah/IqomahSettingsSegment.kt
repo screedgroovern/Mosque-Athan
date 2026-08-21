@@ -78,7 +78,7 @@ fun IqomahSettingsSegment(
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         // Subtitle: Iqomah wait time after adzan
         Text(
@@ -122,7 +122,7 @@ fun IqomahSettingsSegment(
         // Preview Button
         TvFocusablePreviewButton(
             onClick = onPreviewIqomah,
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier.fillMaxWidth().height(40.dp)
         ) {
             Text(

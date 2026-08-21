@@ -80,7 +80,7 @@ fun <T> SlideshowComponent(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         // Pager
         if (items.isNotEmpty()) {
@@ -93,7 +93,7 @@ fun <T> SlideshowComponent(
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
             ) {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -101,7 +101,7 @@ fun <T> SlideshowComponent(
                 ) {
                     HorizontalPager(
                         state = pagerState,
-                        contentPadding = PaddingValues(horizontal = 48.dp),
+                        contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.xxhuge),
                         pageSpacing = 16.dp,
                         modifier = Modifier.fillMaxWidth()
                     ) { index ->
@@ -172,7 +172,7 @@ fun <T> SlideshowComponent(
                                         }
                                     )
                                 }
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(MosqueTheme.radius.lg))
                                 .background(MosqueTheme.colors.fillSubtle)
                         ) {
                             if (isVideo) {
@@ -191,7 +191,7 @@ fun <T> SlideshowComponent(
                                         color = MosqueTheme.colors.textTertiary,
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
-                                            .padding(bottom = 12.dp)
+                                            .padding(bottom = MosqueTheme.spacing.lg)
                                     )
                                 }
                             } else if (bitmap != null) {
@@ -216,8 +216,8 @@ fun <T> SlideshowComponent(
                             Row(
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
-                                    .padding(12.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    .padding(MosqueTheme.spacing.lg),
+                                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                             ) {
                                 IconButton(
                                     onClick = { onEditItem(item) },
@@ -256,7 +256,7 @@ fun <T> SlideshowComponent(
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(bottom = 12.dp)
+                            .padding(bottom = MosqueTheme.spacing.lg)
                             .height(16.dp),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
@@ -282,7 +282,7 @@ fun <T> SlideshowComponent(
                         Row(
                             modifier = Modifier
                                 .clickable { onUpdateUseStatus(currentItem, !isUsed) }
-                                .padding(vertical = 4.dp),
+                                .padding(vertical = MosqueTheme.spacing.xs),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
@@ -310,7 +310,7 @@ fun <T> SlideshowComponent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(MosqueTheme.radius.lg))
                     .background(MosqueTheme.colors.fillSubtle),
                 contentAlignment = Alignment.Center
             ) {
@@ -426,7 +426,7 @@ fun SlideshowComponentPreview() {
                 onTransitionTypeChange = {},
                 onTransitionIntervalValueChange = {},
                 onTransitionIntervalUnitChange = {},
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(MosqueTheme.spacing.xl)
             )
         }
     }
@@ -442,7 +442,7 @@ fun SlideshowComponentEmptyPreview() {
                 keySelector = { it.id },
                 filePathSelector = { it.filePath },
                 onAddClicked = {},
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(MosqueTheme.spacing.xl)
             )
         }
     }

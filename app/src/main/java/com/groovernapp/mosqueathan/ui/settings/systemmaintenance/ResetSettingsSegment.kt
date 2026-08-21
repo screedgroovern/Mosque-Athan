@@ -23,10 +23,10 @@ fun ResetSettingsSegment(onResetToDefaults: () -> Unit) {
     ) {
         TvFocusableDangerButton(
             onClick = onResetToDefaults,
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier
                 .height(56.dp)
-                .padding(horizontal = 32.dp)
+                .padding(horizontal = MosqueTheme.spacing.huge)
         ) {
             Text(
                 text = Lang.get("Reset all Settings to default", "Reset semua Pengaturan ke default"),

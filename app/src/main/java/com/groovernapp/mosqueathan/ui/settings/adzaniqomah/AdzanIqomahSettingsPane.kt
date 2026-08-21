@@ -62,7 +62,7 @@ fun AdzanIqomahSettingsPane(
     Column(
         modifier = modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         SecondaryTabRow(
             selectedTabIndex = pagerState.currentPage,
@@ -76,7 +76,7 @@ fun AdzanIqomahSettingsPane(
                 text = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Campaign,
@@ -99,7 +99,7 @@ fun AdzanIqomahSettingsPane(
                 text = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                     ) {
                         Icon(
                             imageVector = Icons.Default.AccessTime,
@@ -128,10 +128,10 @@ fun AdzanIqomahSettingsPane(
                     colors = CardDefaults.cardColors(
                         containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.35f)
                     ),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MosqueTheme.colors.fill)
+                    shape = RoundedCornerShape(MosqueTheme.radius.lg),
+                    border = BorderStroke(MosqueTheme.stroke.hairline, MosqueTheme.colors.fill)
                 ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
+                    Column(modifier = Modifier.padding(MosqueTheme.spacing.xxxl)) {
                         AdzanSettingsSegment(
                             adzanLeadMinutes = adzanLeadMinutes,
                             onAdzanLeadMinutesChange = onAdzanLeadMinutesChange,
@@ -148,10 +148,10 @@ fun AdzanIqomahSettingsPane(
                     colors = CardDefaults.cardColors(
                         containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.35f)
                     ),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MosqueTheme.colors.fill)
+                    shape = RoundedCornerShape(MosqueTheme.radius.lg),
+                    border = BorderStroke(MosqueTheme.stroke.hairline, MosqueTheme.colors.fill)
                 ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
+                    Column(modifier = Modifier.padding(MosqueTheme.spacing.xxxl)) {
                         IqomahSettingsSegment(
                             iqomahSubuh = iqomahSubuh,
                             onIqomahSubuhChange = onIqomahSubuhChange,

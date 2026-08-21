@@ -110,14 +110,14 @@ fun FridaySettingsPane(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
     ) {
         // Card 1: Friday Core Settings
         SettingsCard(
             title = "", // No title
             icon = null
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -147,7 +147,7 @@ fun FridaySettingsPane(
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
                     ) {
                         OutlinedTextField(
                             value = jumatStartTime,
@@ -186,7 +186,7 @@ fun FridaySettingsPane(
                 icon = Icons.Default.Settings,
                 dimmed = !jumatEnabled
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -223,7 +223,7 @@ fun FridaySettingsPane(
                             color = MosqueTheme.colors.accent,
                             fontSize = MosqueTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            modifier = Modifier.padding(vertical = MosqueTheme.spacing.xs)
                         )
                     }
                 }
@@ -235,7 +235,7 @@ fun FridaySettingsPane(
                 icon = Icons.Default.Settings,
                 dimmed = !jumatEnabled || jumatStandbyOnly
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -288,7 +288,7 @@ fun FridaySettingsPane(
                 icon = Icons.Default.Settings,
                 dimmed = !jumatEnabled || jumatStandbyOnly
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -466,7 +466,7 @@ fun FridaySettingsPane(
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(modifier = Modifier.weight(1f)) {
@@ -564,7 +564,7 @@ fun FridayMediaListSection(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         com.groovernapp.mosqueathan.ui.component.SlideshowComponent(
             items = fridayMediaList,
@@ -597,7 +597,7 @@ fun GlobalSlideshowSelectionSection(
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
         com.groovernapp.mosqueathan.ui.component.SlideshowComponent(
             items = mediaList,
@@ -643,7 +643,7 @@ fun MurottalAudioPathsManager(
         }
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
         Text(Lang.get("Murottal Audio Files", "File Audio Murottal"), color = if (enabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textMuted, fontSize = MosqueTheme.typography.label)
         
         if (paths.isNotEmpty()) {
@@ -651,8 +651,8 @@ fun MurottalAudioPathsManager(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MosqueTheme.colors.fillSubtle, RoundedCornerShape(8.dp))
-                        .padding(8.dp),
+                        .background(MosqueTheme.colors.fillSubtle, RoundedCornerShape(MosqueTheme.radius.md))
+                        .padding(MosqueTheme.spacing.md),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -678,7 +678,7 @@ fun MurottalAudioPathsManager(
             Text(Lang.get("No audio files selected", "Belum ada file audio"), color = MosqueTheme.colors.textGhost, fontSize = MosqueTheme.typography.caption)
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
             Button(
                 onClick = { audioPickerLauncher.launch(arrayOf("audio/*")) },
                 enabled = enabled,

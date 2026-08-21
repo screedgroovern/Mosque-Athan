@@ -33,8 +33,8 @@ fun NextPrayerHeader(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                horizontal = 32.dp,
-                vertical = 20.dp
+                horizontal = MosqueTheme.spacing.huge,
+                vertical = MosqueTheme.spacing.xxl
             ),
         verticalAlignment =
             Alignment.CenterVertically

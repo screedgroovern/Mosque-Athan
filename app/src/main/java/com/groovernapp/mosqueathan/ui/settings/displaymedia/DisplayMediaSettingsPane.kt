@@ -15,6 +15,7 @@ import com.groovernapp.mosqueathan.data.MediaEntity
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.data.SlideshowScheduleEntity
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun DisplayMediaSettingsPane(
@@ -100,7 +101,7 @@ fun DisplayMediaSettingsPane(
     Column(
         modifier = modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
     ) {
         Column {
             ThemeSettingsSegment(

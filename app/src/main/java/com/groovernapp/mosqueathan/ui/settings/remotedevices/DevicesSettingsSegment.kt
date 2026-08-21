@@ -48,7 +48,7 @@ fun DevicesSettingsSegment(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
                     Text(
                         text = com.groovernapp.mosqueathan.util.Lang.get(
                             "WARNING: Master access privileges will be transferred to '${targetDevice.deviceName}'. Once transferred, you can no longer change the PIN or assign Master from this device.",
@@ -109,7 +109,7 @@ fun DevicesSettingsSegment(
                 }
             },
             containerColor = MosqueTheme.colors.surfaceDialog,
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(MosqueTheme.radius.lg)
         )
     }
 
@@ -119,12 +119,12 @@ fun DevicesSettingsSegment(
             color = MosqueTheme.colors.accent,
             fontSize = MosqueTheme.typography.bodyCompact,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = MosqueTheme.spacing.md)
         )
 
         if (devices.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = MosqueTheme.spacing.huge),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -147,15 +147,15 @@ fun DevicesSettingsSegment(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(MosqueTheme.radius.md))
                             .background(MosqueTheme.colors.fillSubtle)
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg),
                             modifier = Modifier.weight(1f)
                         ) {
                             Box(
@@ -180,7 +180,7 @@ fun DevicesSettingsSegment(
                         }
 
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             if (device.isMaster) {
@@ -189,7 +189,7 @@ fun DevicesSettingsSegment(
                                     color = MosqueTheme.colors.accent,
                                     fontSize = MosqueTheme.typography.label,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                    modifier = Modifier.padding(horizontal = MosqueTheme.spacing.md)
                                 )
                             } else {
                                 TvFocusableButton(
@@ -200,8 +200,8 @@ fun DevicesSettingsSegment(
                                             onSetDeviceMaster(device.deviceId)
                                         }
                                     },
-                                    shape = RoundedCornerShape(6.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
+                                    contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
                                     modifier = Modifier.height(32.dp)
                                 ) {
                                     Text("Jadikan Master", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.caption)
@@ -211,8 +211,8 @@ fun DevicesSettingsSegment(
                             if (!device.isMaster) {
                                 TvFocusableDangerButton(
                                     onClick = { onDeleteDevice(device.deviceId) },
-                                    shape = RoundedCornerShape(6.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
+                                    contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
                                     modifier = Modifier.height(32.dp)
                                 ) {
                                     Text("Hapus", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.caption)

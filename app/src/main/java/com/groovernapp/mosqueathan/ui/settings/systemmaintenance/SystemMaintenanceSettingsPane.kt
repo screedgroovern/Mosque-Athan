@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.groovernapp.mosqueathan.data.StandbyScheduleEntity
 import com.groovernapp.mosqueathan.ui.settings.SettingsCard
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun SystemMaintenanceSettingsPane(
@@ -33,7 +34,7 @@ fun SystemMaintenanceSettingsPane(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
     ) {
         SettingsCard(
             title = Lang.get("Standby & Display", "Standby & Tampilan"),
