@@ -61,6 +61,7 @@ kotlin {
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:prayer"))
+    implementation(project(":ui:design"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.ui.tooling.preview)

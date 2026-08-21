@@ -12,4 +12,5 @@ dependencies {
     // Keep these in sync with `agp` and `kotlin` there.
     implementation("com.android.tools.build:gradle:8.12.0")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.10")
+    implementation("org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.2.10")
 }

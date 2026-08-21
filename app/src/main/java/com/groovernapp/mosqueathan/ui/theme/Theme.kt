@@ -1,17 +1,16 @@
 package com.groovernapp.mosqueathan.ui.theme
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
-private val MosqueColorScheme = darkColorScheme()
-
+/**
+ * Kept as a thin delegate so the ten existing call sites do not have to change in the
+ * same commit that introduces the design tokens. Call [MosqueTheme] directly in new
+ * code; this alias goes away once the last caller is migrated.
+ */
 @Composable
 fun MosqueAthanTheme(
     content: @Composable () -> Unit
 ) {
-    MaterialTheme(
-        colorScheme = MosqueColorScheme,
-        content = content
-    )
+    MosqueTheme(content = content)
 }
