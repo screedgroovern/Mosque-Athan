@@ -74,7 +74,7 @@ fun Schedule(
                 text = title,
                 color = MosqueTheme.colors.accent,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                fontSize = MosqueTheme.typography.body,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -92,7 +92,7 @@ fun Schedule(
                 Text(
                     text = Lang.get("No schedules added yet.", "Belum ada jadwal yang ditambahkan."),
                     color = MosqueTheme.colors.textFaint,
-                    fontSize = 14.sp
+                    fontSize = MosqueTheme.typography.label
                 )
             }
         } else {
@@ -147,7 +147,7 @@ fun Schedule(
                     Text(
                         text = addButtonText,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        fontSize = MosqueTheme.typography.bodyCompact
                     )
                 }
             }
@@ -163,7 +163,7 @@ fun Schedule(
                     text = scheduleListButtonText,
                     color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
+                    fontSize = MosqueTheme.typography.bodyCompact
                 )
             }
         }
@@ -317,7 +317,7 @@ fun ScheduleListItem(
                 Text(
                     text = "${schedule.startTime} - ${schedule.endTime}",
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 22.sp,
+                    fontSize = MosqueTheme.typography.prayerNameCompact,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .clickable(onClick = onEditTimeClick)
@@ -388,7 +388,7 @@ fun ScheduleListItem(
                             Text(
                                 text = localizedName,
                                 color = if (isActive) MosqueTheme.colors.onAccent else MosqueTheme.colors.textTertiary,
-                                fontSize = 12.sp,
+                                fontSize = MosqueTheme.typography.caption,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -428,7 +428,7 @@ fun ScheduleListItem(
                             Text(
                                 text = localizedName,
                                 color = if (isActive) MosqueTheme.colors.onAccent else MosqueTheme.colors.textPrimary,
-                                fontSize = 12.sp,
+                                fontSize = MosqueTheme.typography.caption,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -473,7 +473,7 @@ fun ScheduleListItem(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = Lang.get("Schedule", "Jadwal Tanggal"),
-                                fontSize = 12.sp,
+                                fontSize = MosqueTheme.typography.caption,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -517,7 +517,7 @@ fun TimePickerDialog(
                     text = Lang.get("Edit Schedule Time", "Atur Jam Jadwal"),
                     color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = MosqueTheme.typography.body
                 )
 
                 // Start Time steppers
@@ -576,7 +576,7 @@ fun TimeStepperField(
     onMinuteChange: (Int) -> Unit
 ) {
     Column {
-        Text(text = label, color = MosqueTheme.colors.textTertiary, fontSize = 13.sp)
+        Text(text = label, color = MosqueTheme.colors.textTertiary, fontSize = MosqueTheme.typography.labelSmall)
         Spacer(modifier = Modifier.height(4.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -588,12 +588,12 @@ fun TimeStepperField(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
-                Text("−", color = MosqueTheme.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("−", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
             Text(
                 text = hour.toString().padStart(2, '0'),
                 color = MosqueTheme.colors.accent,
-                fontSize = 20.sp,
+                fontSize = MosqueTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.width(36.dp),
                 textAlign = TextAlign.Center
@@ -604,13 +604,13 @@ fun TimeStepperField(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
-                Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
 
             Text(
                 text = ":",
                 color = MosqueTheme.colors.textPrimary,
-                fontSize = 20.sp,
+                fontSize = MosqueTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
@@ -621,12 +621,12 @@ fun TimeStepperField(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
-                Text("−", color = MosqueTheme.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("−", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
             Text(
                 text = minute.toString().padStart(2, '0'),
                 color = MosqueTheme.colors.accent,
-                fontSize = 20.sp,
+                fontSize = MosqueTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.width(36.dp),
                 textAlign = TextAlign.Center
@@ -637,7 +637,7 @@ fun TimeStepperField(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp)
             ) {
-                Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -675,7 +675,7 @@ fun MultiDatePickerDialog(
                     text = Lang.get("Specific Dates List", "Daftar Tanggal Spesifik"),
                     color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = MosqueTheme.typography.body
                 )
 
                 // Add date button
@@ -700,7 +700,7 @@ fun MultiDatePickerDialog(
                                 Text(
                                     text = Lang.get("No specific dates added.", "Tidak ada tanggal spesifik."),
                                     color = MosqueTheme.colors.textFaint,
-                                    fontSize = 13.sp
+                                    fontSize = MosqueTheme.typography.labelSmall
                                 )
                             }
                         }
@@ -715,7 +715,7 @@ fun MultiDatePickerDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = dateString, color = MosqueTheme.colors.textPrimary, fontSize = 14.sp)
+                                Text(text = dateString, color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.label)
                                 IconButton(
                                     onClick = { datesList.remove(dateString) },
                                     modifier = Modifier.size(24.dp)

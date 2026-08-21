@@ -40,7 +40,7 @@ fun StandbySettingsSegment(
                     text = Lang.get("Automatic Standby Mode", "Mode Standby Otomatis"),
                     color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = MosqueTheme.typography.body
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -49,7 +49,7 @@ fun StandbySettingsSegment(
                         "Masuk ke mode standby (layar hitam) di luar jam operasional."
                     ),
                     color = MosqueTheme.colors.textTertiary,
-                    fontSize = 13.sp
+                    fontSize = MosqueTheme.typography.labelSmall
                 )
             }
             Switch(
@@ -95,7 +95,7 @@ fun StandbySettingsSegment(
                 "Anda sekarang dapat mengatur beberapa jadwal standby untuk hari yang berbeda atau tanggal spesifik. TV akan mati selama periode standby aktif."
             ),
             color = MosqueTheme.colors.textMuted,
-            fontSize = 13.sp
+            fontSize = MosqueTheme.typography.labelSmall
         )
     }
 }

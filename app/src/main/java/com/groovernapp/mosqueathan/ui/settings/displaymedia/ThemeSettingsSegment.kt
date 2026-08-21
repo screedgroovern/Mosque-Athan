@@ -147,7 +147,7 @@ fun ThemeSettingsSegment(
                         )
                         Text(
                             text = Lang.get("Dashboard", "Dashboard"),
-                            fontSize = 15.sp,
+                            fontSize = MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -170,7 +170,7 @@ fun ThemeSettingsSegment(
                         )
                         Text(
                             text = Lang.get("Slideshow", "Slideshow"),
-                            fontSize = 15.sp,
+                            fontSize = MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -262,7 +262,7 @@ fun DashboardTabContent(
             Text(
                 text = Lang.get("Dashboard Background List", "Daftar Latar Belakang Dashboard"),
                 color = MosqueTheme.colors.textTertiary,
-                fontSize = 13.sp,
+                fontSize = MosqueTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold
             )
             Row(
@@ -272,7 +272,7 @@ fun DashboardTabContent(
                 Text(
                     text = Lang.get("Randomize", "Tampilkan random"),
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 14.sp
+                    fontSize = MosqueTheme.typography.label
                 )
                 Switch(
                     modifier = Modifier.scale(0.8f),
@@ -398,7 +398,7 @@ fun SlideshowTabContent(
         Text(
             text = Lang.get("Slideshow Media Items", "Daftar Media Slideshow"),
             color = MosqueTheme.colors.textTertiary,
-            fontSize = 13.sp,
+            fontSize = MosqueTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold
         )
 
@@ -477,7 +477,7 @@ fun SlideshowTabContent(
             Text(
                 text = Lang.get("Slide Show Schedule", "Jadwal Slide Show"),
                 color = MosqueTheme.colors.textPrimary,
-                fontSize = 15.sp,
+                fontSize = MosqueTheme.typography.bodyCompact,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.weight(1f)
             )
@@ -544,7 +544,7 @@ fun SlideshowTabContent(
                 text = Lang.get("Preview Slideshow", "Preview Slideshow"),
                 color = MosqueTheme.colors.textPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
+                fontSize = MosqueTheme.typography.bodyCompact
             )
         }
 
@@ -566,7 +566,7 @@ fun SlideshowTabContent(
                         "Sertakan Gambar Default (Masjidil Haram)"
                     ),
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 15.sp,
+                    fontSize = MosqueTheme.typography.bodyCompact,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
@@ -576,7 +576,7 @@ fun SlideshowTabContent(
                         "Sertakan atau kecualikan gambar default dalam rotasi slideshow"
                     ),
                     color = MosqueTheme.colors.textTertiary,
-                    fontSize = 12.sp
+                    fontSize = MosqueTheme.typography.caption
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
@@ -618,7 +618,7 @@ fun TransitionAnimationRow(
             Text(
                 text = title,
                 color = MosqueTheme.colors.textPrimary,
-                fontSize = 14.sp,
+                fontSize = MosqueTheme.typography.label,
                 fontWeight = FontWeight.SemiBold
             )
             Row(
@@ -640,7 +640,7 @@ fun TransitionAnimationRow(
                         Text(
                             type,
                             color = if (isSelected) MosqueTheme.colors.onAccent else MosqueTheme.colors.textPrimary,
-                            fontSize = 12.sp,
+                            fontSize = MosqueTheme.typography.caption,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -660,7 +660,7 @@ fun TransitionAnimationRow(
             Text(
                 text = title,
                 color = MosqueTheme.colors.textPrimary,
-                fontSize = 15.sp,
+                fontSize = MosqueTheme.typography.bodyCompact,
                 fontWeight = FontWeight.SemiBold
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -678,7 +678,7 @@ fun TransitionAnimationRow(
                         Text(
                             type,
                             color = if (isSelected) MosqueTheme.colors.onAccent else MosqueTheme.colors.textPrimary,
-                            fontSize = 12.sp,
+                            fontSize = MosqueTheme.typography.caption,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -717,7 +717,7 @@ fun DropdownAdjustmentRow(
             Text(
                 text = title,
                 color = MosqueTheme.colors.textPrimary,
-                fontSize = 14.sp,
+                fontSize = MosqueTheme.typography.label,
                 fontWeight = FontWeight.SemiBold
             )
      
@@ -731,13 +731,13 @@ fun DropdownAdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
      
                 Text(
                     text = value.toString(),
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 15.sp,
+                    fontSize = MosqueTheme.typography.bodyCompact,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -749,7 +749,7 @@ fun DropdownAdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 
                 Box {
@@ -769,7 +769,7 @@ fun DropdownAdjustmentRow(
                             Text(
                                 text = unitLabels[selectedUnitIndex],
                                 color = MosqueTheme.colors.textPrimary,
-                                fontSize = 13.sp,
+                                fontSize = MosqueTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Medium
                             )
                             Icon(
@@ -818,7 +818,7 @@ fun DropdownAdjustmentRow(
             Text(
                 text = title,
                 color = MosqueTheme.colors.textPrimary,
-                fontSize = 17.sp,
+                fontSize = MosqueTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold
             )
      
@@ -832,13 +832,13 @@ fun DropdownAdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
      
                 Text(
                     text = value.toString(),
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 18.sp,
+                    fontSize = MosqueTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -850,7 +850,7 @@ fun DropdownAdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 
                 Box {
@@ -870,7 +870,7 @@ fun DropdownAdjustmentRow(
                             Text(
                                 text = unitLabels[selectedUnitIndex],
                                 color = MosqueTheme.colors.textPrimary,
-                                fontSize = 15.sp,
+                                fontSize = MosqueTheme.typography.bodyCompact,
                                 fontWeight = FontWeight.Medium
                             )
                             Icon(
@@ -1025,7 +1025,7 @@ fun RunningTextSettingsCard(
             Text(
                 text = Lang.get("Manage Running Text", "Kelola Running Text"),
                 color = MosqueTheme.colors.textPrimary,
-                fontSize = 16.sp,
+                fontSize = MosqueTheme.typography.body,
                 fontWeight = FontWeight.Bold
             )
             Text(
@@ -1034,7 +1034,7 @@ fun RunningTextSettingsCard(
                     "Tambahkan pesan running text yang akan bergulir secara berkala di bagian bawah dashboard layar utama masjid."
                 ),
                 color = MosqueTheme.colors.textTertiary,
-                fontSize = 12.sp
+                fontSize = MosqueTheme.typography.caption
             )
         }
         
@@ -1112,7 +1112,7 @@ fun RunningTextSettingsCard(
                                 text = item.content,
                                 color = MosqueTheme.colors.textPrimary,
                                 modifier = Modifier.weight(1f),
-                                fontSize = 14.sp
+                                fontSize = MosqueTheme.typography.label
                             )
                             IconButton(onClick = { isEditing = true }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MosqueTheme.colors.textSecondary, modifier=Modifier.size(20.dp))

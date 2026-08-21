@@ -147,7 +147,7 @@ fun RemoteDevicesSettingsPane(
                     Text(
                         text = Lang.get("Mode Server", "Mode Server"),
                         color = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary,
-                        fontSize = 14.sp,
+                        fontSize = MosqueTheme.typography.label,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -184,7 +184,7 @@ fun RemoteDevicesSettingsPane(
                     Text(
                         text = Lang.get("Mode Remote Control", "Mode Remote Control"),
                         color = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary,
-                        fontSize = 14.sp,
+                        fontSize = MosqueTheme.typography.label,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -205,7 +205,7 @@ fun RemoteDevicesSettingsPane(
                 )
             },
             color = MosqueTheme.colors.textTertiary,
-            fontSize = 13.sp,
+            fontSize = MosqueTheme.typography.labelSmall,
             modifier = Modifier.padding(horizontal = if (isCompact) 16.dp else 24.dp)
         )
 
@@ -232,7 +232,7 @@ fun RemoteDevicesSettingsPane(
                         )
                         Text(
                             text = if (isServer) Lang.get("Web Control Server", "Server Web Remote") else Lang.get("Sinkronisasi", "Sinkronisasi"),
-                            fontSize = 15.sp,
+                            fontSize = MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -255,7 +255,7 @@ fun RemoteDevicesSettingsPane(
                         )
                         Text(
                             text = Lang.get("Connected Devices", "Perangkat Terhubung"),
-                            fontSize = 15.sp,
+                            fontSize = MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold
                         )
                     }

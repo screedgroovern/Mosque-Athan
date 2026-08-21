@@ -98,14 +98,14 @@ fun MethodSettingsSegment(
                 Text(
                     text = com.groovernapp.mosqueathan.util.Lang.get("Selected City: ", "Kota Terpilih: ") + kemenagCityName,
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 16.sp,
+                    fontSize = MosqueTheme.typography.body,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = com.groovernapp.mosqueathan.util.Lang.get("Schedule Duration: ", "Periode Waktu Jadwal: "),
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 16.sp,
+                    fontSize = MosqueTheme.typography.body,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -134,7 +134,7 @@ fun MethodSettingsSegment(
                         .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Text(text = selectedDurationText, color = MosqueTheme.colors.textPrimary, fontSize = 16.sp)
+                    Text(text = selectedDurationText, color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.body)
                     DropdownMenu(
                         expanded = durationExpanded,
                         onDismissRequest = { durationExpanded = false },
@@ -228,7 +228,7 @@ fun MethodSettingsSegment(
                             text = com.groovernapp.mosqueathan.util.Lang.get("Download Prayer Times", "Unduh Jadwal Sholat"),
                             color = MosqueTheme.colors.onAccent,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            fontSize = MosqueTheme.typography.label
                         )
                     }
                 }
@@ -242,7 +242,7 @@ fun MethodSettingsSegment(
                         text = com.groovernapp.mosqueathan.util.Lang.get("View Downloaded Schedules", "Lihat Jadwal Terunduh"),
                         color = MosqueTheme.colors.onAccent,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = MosqueTheme.typography.label
                     )
                 }
                 Spacer(modifier = Modifier.height(24.dp))
@@ -308,7 +308,7 @@ fun MethodSettingsSegment(
                                     .padding(horizontal = 16.dp, vertical = 12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = name, color = MosqueTheme.colors.textPrimary, fontSize = 14.sp)
+                                Text(text = name, color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.label)
                             }
                         }
                     }
@@ -339,7 +339,7 @@ fun MethodSettingsSegment(
                         Text(
                             text = com.groovernapp.mosqueathan.util.Lang.get("No schedules downloaded yet", "Belum ada jadwal yang diunduh"),
                             color = MosqueTheme.colors.textMuted,
-                            fontSize = 14.sp
+                            fontSize = MosqueTheme.typography.label
                         )
                     }
                 } else {
@@ -365,7 +365,7 @@ fun MethodSettingsSegment(
                                     text = displayMonthYear,
                                     color = MosqueTheme.colors.accent,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
+                                    fontSize = MosqueTheme.typography.body,
                                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                                 )
                             }
@@ -384,18 +384,18 @@ fun MethodSettingsSegment(
                                             text = sch.dateString,
                                             color = MosqueTheme.colors.textPrimary,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 14.sp
+                                            fontSize = MosqueTheme.typography.label
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = "Imsak: ${sch.imsak} | Subuh: ${sch.subuh} | Terbit: ${sch.terbit}",
                                             color = MosqueTheme.colors.textSecondary,
-                                            fontSize = 12.sp
+                                            fontSize = MosqueTheme.typography.caption
                                         )
                                         Text(
                                             text = "Dzuhur: ${sch.dzuhur} | Ashar: ${sch.ashar} | Maghrib: ${sch.maghrib} | Isya': ${sch.isya}",
                                             color = MosqueTheme.colors.textSecondary,
-                                            fontSize = 12.sp
+                                            fontSize = MosqueTheme.typography.caption
                                         )
                                     }
                                 }
@@ -566,7 +566,7 @@ private fun CalculationMethodItem(
         Text(
             text = method,
             color = MosqueTheme.colors.textPrimary,
-            fontSize = if (isCompact) 13.sp else 14.sp,
+            fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.label,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
         )
     }

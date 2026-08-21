@@ -77,7 +77,7 @@ fun DashboardContent(
                     Text(
                         text = "Persiapan Ibadah Jum'at",
                         color = MosqueTheme.colors.textPrimary,
-                        fontSize = 48.sp,
+                        fontSize = MosqueTheme.typography.clockLarge,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -238,19 +238,19 @@ fun SmallClockCard(
                 Text(
                     text = hours,
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 24.sp,
+                    fontSize = MosqueTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = ":",
                     color = if (isColonVisible) MosqueTheme.colors.textPrimary else MosqueTheme.colors.transparent,
-                    fontSize = 24.sp,
+                    fontSize = MosqueTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = minutes,
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 24.sp,
+                    fontSize = MosqueTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -261,7 +261,7 @@ fun SmallClockCard(
             Text(
                 text = "$nextPrayerName · ${nextPrayer.countdown}",
                 color = MosqueTheme.colors.accent,
-                fontSize = 14.sp,
+                fontSize = MosqueTheme.typography.label,
                 fontWeight = FontWeight.Bold
             )
 
@@ -302,7 +302,7 @@ fun SmallClockCard(
                     modifier = cardModifier
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    Text("Mulai Adzan Sekarang", color = MosqueTheme.colors.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Mulai Adzan Sekarang", color = MosqueTheme.colors.accent, fontSize = MosqueTheme.typography.caption, fontWeight = FontWeight.Bold)
                 }
             }
         }

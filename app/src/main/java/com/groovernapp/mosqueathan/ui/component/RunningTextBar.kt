@@ -29,7 +29,7 @@ fun RunningTextBar(text: String) {
         Text(
             text = text,
             color = MosqueTheme.colors.accentAmber,
-            fontSize = 30.sp,
+            fontSize = MosqueTheme.typography.headline,
             maxLines = 1,
             softWrap = false,
             modifier = Modifier.basicMarquee(

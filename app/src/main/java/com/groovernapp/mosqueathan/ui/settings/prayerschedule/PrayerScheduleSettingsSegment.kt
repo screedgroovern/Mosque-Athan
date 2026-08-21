@@ -99,7 +99,7 @@ fun PrayerScheduleSettingsSegment(
                         )
                         Text(
                             text = Lang.get("Calculation Method", "Metode Perhitungan"),
-                            fontSize = if (isCompact) 13.sp else 15.sp,
+                            fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold,
                             maxLines = 2,
                             modifier = Modifier.padding(vertical = 2.dp)
@@ -125,7 +125,7 @@ fun PrayerScheduleSettingsSegment(
                         )
                         Text(
                             text = Lang.get("Prayer Time Adjustments", "Koreksi Waktu Shalat"),
-                            fontSize = if (isCompact) 13.sp else 15.sp,
+                            fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold,
                             maxLines = 2,
                             modifier = Modifier.padding(vertical = 2.dp)

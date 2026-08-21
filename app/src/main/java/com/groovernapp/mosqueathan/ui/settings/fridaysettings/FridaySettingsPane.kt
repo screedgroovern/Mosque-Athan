@@ -128,12 +128,12 @@ fun FridaySettingsPane(
                             text = Lang.get("Enable Friday Mode", "Aktifkan Mode Jum'at"),
                             color = MosqueTheme.colors.textPrimary,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            fontSize = MosqueTheme.typography.body
                         )
                         Text(
                             text = Lang.get("Enable Friday features and layout adjustments", "Aktifkan fitur khusus dan penyesuaian tata letak untuk hari Jum'at"),
                             color = MosqueTheme.colors.textTertiary,
-                            fontSize = 13.sp
+                            fontSize = MosqueTheme.typography.labelSmall
                         )
                     }
                     Switch(
@@ -197,12 +197,12 @@ fun FridaySettingsPane(
                                 text = Lang.get("Standby Mode Only", "Mode Standby Saja"),
                                 color = if (jumatEnabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textVeryFaint,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = MosqueTheme.typography.body
                             )
                             Text(
                                 text = Lang.get("Turn screen completely black after Friday Adzan until Friday service ends", "Layar TV akan padam total setelah adzan Jum'at sampai ibadah Jum'at selesai"),
                                 color = if (jumatEnabled) MosqueTheme.colors.textTertiary else MosqueTheme.colors.borderStrong,
-                                fontSize = 13.sp
+                                fontSize = MosqueTheme.typography.labelSmall
                             )
                         }
                         Switch(
@@ -221,7 +221,7 @@ fun FridaySettingsPane(
                                 "Catatan: Menu visual Jum'at lainnya dinonaktifkan karena Mode Standby Saja aktif."
                             ),
                             color = MosqueTheme.colors.accent,
-                            fontSize = 13.sp,
+                            fontSize = MosqueTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
@@ -246,12 +246,12 @@ fun FridaySettingsPane(
                                 text = Lang.get("Auto Play Murottal", "Putar Murottal Otomatis"),
                                 color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textVeryFaint,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = MosqueTheme.typography.body
                             )
                             Text(
                                 text = Lang.get("Automatically play Quran audio files before adzan", "Putar berkas audio Al-Qur'an secara otomatis menjelang adzan"),
                                 color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textTertiary else MosqueTheme.colors.borderStrong,
-                                fontSize = 13.sp
+                                fontSize = MosqueTheme.typography.labelSmall
                             )
                         }
                         Switch(
@@ -299,12 +299,12 @@ fun FridaySettingsPane(
                                 text = Lang.get("Enable Friday Slideshow", "Aktifkan Slideshow Jum'at"),
                                 color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textVeryFaint,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = MosqueTheme.typography.body
                             )
                             Text(
                                 text = Lang.get("Display different backgrounds/slides on Friday", "Tampilkan gambar/slideshow khusus di hari Jum'at"),
                                 color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textTertiary else MosqueTheme.colors.borderStrong,
-                                fontSize = 13.sp
+                                fontSize = MosqueTheme.typography.labelSmall
                             )
                         }
                         Switch(
@@ -326,12 +326,12 @@ fun FridaySettingsPane(
                                 text = Lang.get("Include Global Slideshow", "Sertakan Slideshow Global"),
                                 color = if (jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textVeryFaint,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp
+                                fontSize = MosqueTheme.typography.body
                             )
                             Text(
                                 text = Lang.get("Mix global slideshow images in rotation", "Sertakan gambar dari slideshow reguler dalam putaran"),
                                 color = if (jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled) MosqueTheme.colors.textTertiary else MosqueTheme.colors.borderStrong,
-                                fontSize = 13.sp
+                                fontSize = MosqueTheme.typography.labelSmall
                             )
                         }
                         Switch(
@@ -360,7 +360,7 @@ fun FridaySettingsPane(
                                     text = {
                                         Text(
                                             text = Lang.get("Slideshow", "Slideshow"),
-                                            fontSize = 15.sp,
+                                            fontSize = MosqueTheme.typography.bodyCompact,
                                             fontWeight = FontWeight.Bold
                                         )
                                     },
@@ -373,7 +373,7 @@ fun FridaySettingsPane(
                                     text = {
                                         Text(
                                             text = Lang.get("Global Slideshow", "Slideshow Global"),
-                                            fontSize = 15.sp,
+                                            fontSize = MosqueTheme.typography.bodyCompact,
                                             fontWeight = FontWeight.Bold
                                         )
                                     },
@@ -521,12 +521,12 @@ fun FridaySettingsPane(
                                     text = Lang.get("Wait Video End", "Tunggu Video Selesai"),
                                     color = MosqueTheme.colors.textPrimary,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp
+                                    fontSize = MosqueTheme.typography.body
                                 )
                                 Text(
                                     text = Lang.get("Wait for video to finish before next slide", "Tunggu video selesai sebelum lanjut slide berikutnya"),
                                     color = MosqueTheme.colors.textTertiary,
-                                    fontSize = 13.sp
+                                    fontSize = MosqueTheme.typography.labelSmall
                                 )
                             }
                             Switch(
@@ -644,7 +644,7 @@ fun MurottalAudioPathsManager(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(Lang.get("Murottal Audio Files", "File Audio Murottal"), color = if (enabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textMuted, fontSize = 14.sp)
+        Text(Lang.get("Murottal Audio Files", "File Audio Murottal"), color = if (enabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textMuted, fontSize = MosqueTheme.typography.label)
         
         if (paths.isNotEmpty()) {
             paths.take(5).forEach { path ->
@@ -659,7 +659,7 @@ fun MurottalAudioPathsManager(
                     Text(
                         text = path.substringAfterLast("/").takeIf { it.isNotEmpty() } ?: path,
                         color = MosqueTheme.colors.textPrimary,
-                        fontSize = 12.sp,
+                        fontSize = MosqueTheme.typography.caption,
                         maxLines = 1,
                         modifier = Modifier.weight(1f)
                     )
@@ -675,7 +675,7 @@ fun MurottalAudioPathsManager(
                 }
             }
         } else {
-            Text(Lang.get("No audio files selected", "Belum ada file audio"), color = MosqueTheme.colors.textGhost, fontSize = 12.sp)
+            Text(Lang.get("No audio files selected", "Belum ada file audio"), color = MosqueTheme.colors.textGhost, fontSize = MosqueTheme.typography.caption)
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

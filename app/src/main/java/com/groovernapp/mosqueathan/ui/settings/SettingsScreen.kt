@@ -310,7 +310,7 @@ fun SettingsScreen(
                         Text(
                             text = selectedCategory.getDisplayName(),
                             color = MosqueTheme.colors.textPrimary,
-                            fontSize = 24.sp,
+                            fontSize = MosqueTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -333,7 +333,7 @@ fun SettingsScreen(
                     Text(
                         text = selectedCategory.getDescription(),
                         color = MosqueTheme.colors.textTertiary,
-                        fontSize = 15.sp,
+                        fontSize = MosqueTheme.typography.bodyCompact,
                         modifier = Modifier.padding(bottom = 24.dp)
                     )
                 }
@@ -755,7 +755,7 @@ fun SideSheetContent(
                         Text(
                             text = Lang.get("Settings", "Pengaturan"),
                             color = MosqueTheme.colors.accent,
-                            fontSize = 20.sp,
+                            fontSize = MosqueTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -865,7 +865,7 @@ fun SideSheetContent(
                                 Text(
                                     text = category.getDisplayName(),
                                     color = tintColor,
-                                    fontSize = 16.sp,
+                                    fontSize = MosqueTheme.typography.body,
                                     fontWeight = if (isSelected || isFocusedOrHovered) FontWeight.Bold else FontWeight.Medium
                                 )
                             }
@@ -887,7 +887,7 @@ fun SideSheetContent(
                 Text(
                     text = Lang.get("Version: v$versionName", "Versi: v$versionName"),
                     color = MosqueTheme.colors.textMuted,
-                    fontSize = 13.sp,
+                    fontSize = MosqueTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(start = 12.dp, bottom = 4.dp)
                 )
@@ -911,7 +911,7 @@ fun SideSheetContent(
                     Text(
                         text = Lang.get("Back", "Kembali"),
                         color = MosqueTheme.colors.textPrimary,
-                        fontSize = 16.sp,
+                        fontSize = MosqueTheme.typography.body,
                         fontWeight = FontWeight.Bold
                     )
                 }

@@ -51,7 +51,7 @@ fun LocationSettingsSegment(
                     "Catatan: Metode Kemenag aktif. Waktu sholat dihitung berdasarkan kota yang dipilih ($kemenagCityName), bukan koordinat GPS di atas."
                 ),
                 color = MosqueTheme.colors.accent,
-                fontSize = 14.sp,
+                fontSize = MosqueTheme.typography.label,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(top = 4.dp)
             )

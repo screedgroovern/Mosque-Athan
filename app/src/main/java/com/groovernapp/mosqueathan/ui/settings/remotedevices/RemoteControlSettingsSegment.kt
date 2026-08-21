@@ -73,7 +73,7 @@ fun RemoteControlSettingsSegment(
             Text(
                 text = Lang.get("Sinkronisasi", "Sinkronisasi"),
                 color = MosqueTheme.colors.accent,
-                fontSize = 16.sp,
+                fontSize = MosqueTheme.typography.body,
                 fontWeight = FontWeight.Bold
             )
 
@@ -83,7 +83,7 @@ fun RemoteControlSettingsSegment(
                     "Hubungkan ke Android TV untuk sinkronisasi setelan jadwal, adzan, dan tampilan media secara realtime."
                 ),
                 color = MosqueTheme.colors.textTertiary,
-                fontSize = 13.sp
+                fontSize = MosqueTheme.typography.labelSmall
             )
 
             OutlinedTextField(
@@ -235,7 +235,7 @@ fun RemoteControlSettingsSegment(
             Text(
                 text = Lang.get("PIN Remote Kontrol", "PIN Remote Kontrol"),
                 color = MosqueTheme.colors.accent,
-                fontSize = 16.sp,
+                fontSize = MosqueTheme.typography.body,
                 fontWeight = FontWeight.Bold
             )
 
@@ -245,7 +245,7 @@ fun RemoteControlSettingsSegment(
                     "Gunakan PIN keamanan untuk membatasi perangkat remote control lain agar tidak dapat mengubah setelan sembarangan."
                 ),
                 color = MosqueTheme.colors.textTertiary,
-                fontSize = 13.sp
+                fontSize = MosqueTheme.typography.labelSmall
             )
 
             val hasPin = config.pinCode.isNotEmpty()
@@ -257,7 +257,7 @@ fun RemoteControlSettingsSegment(
                 Text(
                     text = Lang.get("Status PIN Keamanan:", "Status PIN Keamanan:"),
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 14.sp
+                    fontSize = MosqueTheme.typography.label
                 )
                 Box(
                     modifier = Modifier
@@ -268,7 +268,7 @@ fun RemoteControlSettingsSegment(
                     Text(
                         text = badgeText,
                         color = badgeColor,
-                        fontSize = 11.sp,
+                        fontSize = MosqueTheme.typography.captionSmall,
                         fontWeight = FontWeight.ExtraBold,
                         maxLines = 1,
                         softWrap = false
@@ -319,7 +319,7 @@ fun RemoteControlSettingsSegment(
                     "Kosongkan PIN lalu simpan untuk menghapus pengaman PIN."
                 ),
                 color = MosqueTheme.colors.textFaint,
-                fontSize = 11.sp
+                fontSize = MosqueTheme.typography.captionSmall
             )
 
             Button(

@@ -84,7 +84,7 @@ fun IqomahSettingsSegment(
         Text(
             text = Lang.get("Iqomah wait time after adzan", "Jeda waktu iqomah setelah adzan"),
             color = MosqueTheme.colors.accent,
-            fontSize = if (isCompact) 15.sp else 18.sp,
+            fontSize = if (isCompact) MosqueTheme.typography.bodyCompact else MosqueTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold
         )
 
@@ -129,7 +129,7 @@ fun IqomahSettingsSegment(
                 text = Lang.get("Preview Iqomah Screen", "Preview Layar Iqomah"),
                 color = MosqueTheme.colors.accent,
                 fontWeight = FontWeight.Bold,
-                fontSize = if (isCompact) 13.sp else 14.sp
+                fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.label
             )
         }
     }

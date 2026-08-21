@@ -21,6 +21,10 @@ import androidx.compose.ui.unit.sp
 object MosqueTypography {
 
     // --- Display: the TV screens -------------------------------------------
+    /** The full-screen clock in `ClockSection`. The largest size in the app. */
+    val clockDisplay: TextUnit = 170.sp
+    /** Countdown digits in the tall layout. */
+    val countdownDigitsLarge: TextUnit = 112.sp
     /** Iqomah countdown digits. */
     val iqomahCountdown: TextUnit = 96.sp
     /** Standby/adzan countdown digits. */

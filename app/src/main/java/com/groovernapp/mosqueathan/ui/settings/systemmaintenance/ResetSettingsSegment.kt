@@ -32,7 +32,7 @@ fun ResetSettingsSegment(onResetToDefaults: () -> Unit) {
                 text = Lang.get("Reset all Settings to default", "Reset semua Pengaturan ke default"),
                 color = MosqueTheme.colors.textPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = MosqueTheme.typography.body
             )
         }
     }

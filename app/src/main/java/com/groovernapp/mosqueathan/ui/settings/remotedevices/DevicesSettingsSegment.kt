@@ -71,7 +71,7 @@ fun DevicesSettingsSegment(
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (pinErrorMsg != null) {
-                            Text(pinErrorMsg!!, color = Color.Red, fontSize = 13.sp)
+                            Text(pinErrorMsg!!, color = Color.Red, fontSize = MosqueTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -117,7 +117,7 @@ fun DevicesSettingsSegment(
         Text(
             text = "Daftar Perangkat terdaftar / terhubung",
             color = MosqueTheme.colors.accent,
-            fontSize = 15.sp,
+            fontSize = MosqueTheme.typography.bodyCompact,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -168,13 +168,13 @@ fun DevicesSettingsSegment(
                                 Text(
                                     text = device.deviceName,
                                     color = MosqueTheme.colors.textPrimary,
-                                    fontSize = 15.sp,
+                                    fontSize = MosqueTheme.typography.bodyCompact,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = if (device.isOnline) "Terhubung" else "Terputus",
                                     color = MosqueTheme.colors.textTertiary,
-                                    fontSize = 12.sp
+                                    fontSize = MosqueTheme.typography.caption
                                 )
                             }
                         }
@@ -187,7 +187,7 @@ fun DevicesSettingsSegment(
                                 Text(
                                     text = "Master",
                                     color = MosqueTheme.colors.accent,
-                                    fontSize = 14.sp,
+                                    fontSize = MosqueTheme.typography.label,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 8.dp)
                                 )
@@ -204,7 +204,7 @@ fun DevicesSettingsSegment(
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                     modifier = Modifier.height(32.dp)
                                 ) {
-                                    Text("Jadikan Master", color = MosqueTheme.colors.textPrimary, fontSize = 12.sp)
+                                    Text("Jadikan Master", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.caption)
                                 }
                             }
 
@@ -215,7 +215,7 @@ fun DevicesSettingsSegment(
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                     modifier = Modifier.height(32.dp)
                                 ) {
-                                    Text("Hapus", color = MosqueTheme.colors.textPrimary, fontSize = 12.sp)
+                                    Text("Hapus", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.caption)
                                 }
                             }
                         }

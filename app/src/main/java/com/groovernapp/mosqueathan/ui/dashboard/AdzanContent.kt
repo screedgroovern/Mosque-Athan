@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun AdzanContent(
@@ -19,7 +20,7 @@ fun AdzanContent(
 
         Text(
             text = "WAKTU ${state.prayerType}",
-            fontSize = 64.sp
+            fontSize = MosqueTheme.typography.adzanTitle
         )
     }
 }

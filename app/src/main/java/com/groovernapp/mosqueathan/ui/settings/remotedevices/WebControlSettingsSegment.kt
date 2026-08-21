@@ -93,7 +93,7 @@ fun WebControlSettingsSegment(
                         Text(
                             text = serverUrl,
                             color = MosqueTheme.colors.accent,
-                            fontSize = 18.sp,
+                            fontSize = MosqueTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
@@ -120,13 +120,13 @@ fun WebControlSettingsSegment(
                                     Text(
                                         text = "Pengaturan di TV",
                                         color = MosqueTheme.colors.textPrimary,
-                                        fontSize = 14.sp,
+                                        fontSize = MosqueTheme.typography.label,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         text = "Tampilkan/sembunyikan menu pengaturan di TV",
                                         color = MosqueTheme.colors.textTertiary,
-                                        fontSize = 11.sp
+                                        fontSize = MosqueTheme.typography.captionSmall
                                     )
                                 }
                                 Switch(
@@ -147,23 +147,23 @@ fun WebControlSettingsSegment(
                             Text(
                                 text = "Petunjuk Koneksi:",
                                 color = MosqueTheme.colors.textPrimary,
-                                fontSize = 14.sp,
+                                fontSize = MosqueTheme.typography.label,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "1. Hubungkan HP atau Laptop ke Wi-Fi / jaringan lokal yang sama.",
                                 color = MosqueTheme.colors.textSecondary,
-                                fontSize = 12.sp
+                                fontSize = MosqueTheme.typography.caption
                             )
                             Text(
                                 text = "2. Scan kode QR di samping atau ketik alamat URL di browser.",
                                 color = MosqueTheme.colors.textSecondary,
-                                fontSize = 12.sp
+                                fontSize = MosqueTheme.typography.caption
                             )
                             Text(
                                 text = "3. Simpan perubahan pada browser, setelan aplikasi akan ter-update otomatis.",
                                 color = MosqueTheme.colors.textSecondary,
-                                fontSize = 12.sp
+                                fontSize = MosqueTheme.typography.caption
                             )
                         }
                     }
@@ -201,7 +201,7 @@ fun WebControlSettingsSegment(
                         Text(
                             text = serverUrl,
                             color = MosqueTheme.colors.accent,
-                            fontSize = 20.sp,
+                            fontSize = MosqueTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
@@ -228,13 +228,13 @@ fun WebControlSettingsSegment(
                                     Text(
                                         text = "Pengaturan di TV",
                                         color = MosqueTheme.colors.textPrimary,
-                                        fontSize = 15.sp,
+                                        fontSize = MosqueTheme.typography.bodyCompact,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
                                         text = "Tampilkan/sembunyikan menu pengaturan di TV",
                                         color = MosqueTheme.colors.textTertiary,
-                                        fontSize = 11.sp
+                                        fontSize = MosqueTheme.typography.captionSmall
                                     )
                                 }
                                 Switch(
@@ -255,23 +255,23 @@ fun WebControlSettingsSegment(
                             Text(
                                 text = "Petunjuk Koneksi:",
                                 color = MosqueTheme.colors.textPrimary,
-                                fontSize = 15.sp,
+                                fontSize = MosqueTheme.typography.bodyCompact,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "1. Hubungkan HP atau Laptop ke Wi-Fi / jaringan lokal yang sama.",
                                 color = MosqueTheme.colors.textSecondary,
-                                fontSize = 13.sp
+                                fontSize = MosqueTheme.typography.labelSmall
                             )
                             Text(
                                 text = "2. Scan kode QR di samping atau ketik alamat URL di browser.",
                                 color = MosqueTheme.colors.textSecondary,
-                                fontSize = 13.sp
+                                fontSize = MosqueTheme.typography.labelSmall
                             )
                             Text(
                                 text = "3. Simpan perubahan pada browser, setelan aplikasi akan ter-update otomatis.",
                                 color = MosqueTheme.colors.textSecondary,
-                                fontSize = 13.sp
+                                fontSize = MosqueTheme.typography.labelSmall
                             )
                         }
                     }
@@ -284,7 +284,7 @@ fun WebControlSettingsSegment(
                     "Perangkat tidak terhubung ke jaringan lokal.\nSilakan hubungkan Wi-Fi atau kabel LAN terlebih dahulu."
                 ),
                 color = Color.Red.copy(alpha = 0.8f),
-                fontSize = 16.sp,
+                fontSize = MosqueTheme.typography.body,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )

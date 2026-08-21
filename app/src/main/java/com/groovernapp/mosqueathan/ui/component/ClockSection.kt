@@ -30,7 +30,7 @@ fun ClockSection(state: DashboardUiState.Dashboard) {
         Text(
             text = state.currentTime,
             color = MosqueTheme.colors.textPrimary,
-            fontSize = 170.sp,
+            fontSize = MosqueTheme.typography.clockDisplay,
             fontFamily = FontFamily.Default,
             fontWeight = FontWeight.Bold
         )
@@ -39,7 +39,7 @@ fun ClockSection(state: DashboardUiState.Dashboard) {
             text = "Masjid Al-Hikmah Tegalrejo",
             color = MosqueTheme.colors.textPrimary,
             fontWeight = FontWeight.Bold,
-            fontSize = 32.sp
+            fontSize = MosqueTheme.typography.clockMedium
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -47,13 +47,13 @@ fun ClockSection(state: DashboardUiState.Dashboard) {
         Text(
             text = state.gregorianDate,
             color = MosqueTheme.colors.textPrimary,
-            fontSize = 22.sp
+            fontSize = MosqueTheme.typography.prayerNameCompact
         )
 
         Text(
             text = state.hijriDate,
             color = MosqueTheme.colors.textPrimary,
-            fontSize = 22.sp
+            fontSize = MosqueTheme.typography.prayerNameCompact
         )
     }
 }

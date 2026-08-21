@@ -43,7 +43,7 @@ fun NextPrayerHeader(
         Text(
             text = nextPrayer.prayerType.displayName,
             color = MosqueTheme.colors.accent,
-            fontSize = 30.sp,
+            fontSize = MosqueTheme.typography.headline,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -62,7 +62,7 @@ fun NextPrayerHeader(
         Text(
             text = "•",
             color = MosqueTheme.colors.textPrimary,
-            fontSize = 24.sp
+            fontSize = MosqueTheme.typography.titleLarge
         )
 
         Spacer(modifier = Modifier.width(12.dp))
@@ -70,7 +70,7 @@ fun NextPrayerHeader(
         Text(
             text = nextPrayer.countdown,
             color = MosqueTheme.colors.textPrimary,
-            fontSize = 30.sp,
+            fontSize = MosqueTheme.typography.headline,
             fontWeight = FontWeight.Bold
         )
     }

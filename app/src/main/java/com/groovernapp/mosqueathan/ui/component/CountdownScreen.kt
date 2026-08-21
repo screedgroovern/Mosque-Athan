@@ -76,7 +76,7 @@ fun CountdownScreen(
                     modifier = Modifier.fillMaxWidth(),
                     text = currentTime,
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 40.sp,
+                    fontSize = MosqueTheme.typography.countdownTitle,
                     fontWeight = FontWeight.Bold
                 )
 
@@ -86,7 +86,7 @@ fun CountdownScreen(
                     Text(
                         text = titleText,
                         color = MosqueTheme.colors.accentMuted,
-                        fontSize = 34.sp,
+                        fontSize = MosqueTheme.typography.countdownCaption,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center
                     )
@@ -96,7 +96,7 @@ fun CountdownScreen(
                     Text(
                         text = prayerName,
                         color = MosqueTheme.colors.textPrimary,
-                        fontSize = 92.sp,
+                        fontSize = MosqueTheme.typography.countdownDigits,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
@@ -131,7 +131,7 @@ private fun CountdownPanel(value: String) {
         Text(
             text = value,
             color = MosqueTheme.colors.textPrimary,
-            fontSize = 112.sp,
+            fontSize = MosqueTheme.typography.countdownDigitsLarge,
             fontWeight = FontWeight.Bold
         )
     }

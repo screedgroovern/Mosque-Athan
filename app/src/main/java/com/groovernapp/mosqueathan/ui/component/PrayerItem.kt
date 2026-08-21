@@ -26,7 +26,7 @@ fun PrayerItem(
         Text(
             text = title,
             color = color,
-            fontSize = if (isSlideshowActive) 16.sp else 20.sp,
+            fontSize = if (isSlideshowActive) MosqueTheme.typography.body else MosqueTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold
         )
 
@@ -35,7 +35,7 @@ fun PrayerItem(
         Text(
             text = time,
             color = color,
-            fontSize = if (isSlideshowActive) 22.sp else 28.sp,
+            fontSize = if (isSlideshowActive) MosqueTheme.typography.prayerNameCompact else MosqueTheme.typography.prayerName,
             fontWeight = FontWeight.Bold
         )
     }

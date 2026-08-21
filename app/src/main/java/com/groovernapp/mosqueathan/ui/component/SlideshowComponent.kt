@@ -298,7 +298,7 @@ fun <T> SlideshowComponent(
                             Text(
                                 text = Lang.get("Use", "Gunakan"),
                                 color = MosqueTheme.colors.textPrimary,
-                                fontSize = 14.sp
+                                fontSize = MosqueTheme.typography.label
                             )
                         }
                     }
@@ -317,7 +317,7 @@ fun <T> SlideshowComponent(
                 Text(
                     text = emptyText,
                     color = MosqueTheme.colors.textMuted,
-                    fontSize = 14.sp
+                    fontSize = MosqueTheme.typography.label
                 )
             }
         }
@@ -340,7 +340,7 @@ fun <T> SlideshowComponent(
                         text = addText,
                         color = MosqueTheme.colors.onAccent,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        fontSize = MosqueTheme.typography.bodyCompact
                     )
                 }
             }

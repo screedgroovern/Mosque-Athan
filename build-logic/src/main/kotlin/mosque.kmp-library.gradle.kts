@@ -32,6 +32,14 @@ extensions.configure<KotlinMultiplatformExtension> {
     }
 }
 
+// `./gradlew test` runs tasks named `test`, which AGP provides but Kotlin
+// Multiplatform does not - so the jvm target's tests were silently skipped by the
+// default command. That target is the guardrail against Android code reaching
+// commonMain, so it must not be opt-in.
+tasks.matching { it.name == "test" }.configureEach {
+    dependsOn(tasks.matching { it.name == "jvmTest" })
+}
+
 extensions.configure<LibraryExtension> {
     compileSdk = 36
 

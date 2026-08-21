@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun IqomahContent(
@@ -19,7 +20,7 @@ fun IqomahContent(
 
         Text(
             text = state.iqomah.remainingSeconds.toString(),
-            fontSize = 96.sp
+            fontSize = MosqueTheme.typography.iqomahCountdown
         )
     }
 }

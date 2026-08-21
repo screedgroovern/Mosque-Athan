@@ -85,7 +85,7 @@ fun AdzanIqomahSettingsPane(
                         )
                         Text(
                             text = Lang.get("Adzan", "Adzan"),
-                            fontSize = if (isCompact) 13.sp else 15.sp,
+                            fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -108,7 +108,7 @@ fun AdzanIqomahSettingsPane(
                         )
                         Text(
                             text = Lang.get("Iqomah", "Iqomah"),
-                            fontSize = if (isCompact) 13.sp else 15.sp,
+                            fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold
                         )
                     }

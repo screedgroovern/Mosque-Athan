@@ -280,7 +280,7 @@ fun AdjustmentRow(
             Text(
                 text = title,
                 color = MosqueTheme.colors.textPrimary,
-                fontSize = 14.sp,
+                fontSize = MosqueTheme.typography.label,
                 fontWeight = FontWeight.SemiBold
             )
      
@@ -294,14 +294,14 @@ fun AdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
      
                 val sign = if (showSign && value > 0) "+" else ""
                 Text(
                     text = "$sign$value",
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 15.sp,
+                    fontSize = MosqueTheme.typography.bodyCompact,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -313,14 +313,14 @@ fun AdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 
                 if (unitSuffix.isNotEmpty()) {
                     Text(
                         text = unitSuffix,
                         color = MosqueTheme.colors.textSecondary,
-                        fontSize = 13.sp,
+                        fontSize = MosqueTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
                     )
                 }
@@ -339,7 +339,7 @@ fun AdjustmentRow(
             Text(
                 text = title,
                 color = MosqueTheme.colors.textPrimary,
-                fontSize = 17.sp,
+                fontSize = MosqueTheme.typography.bodyLarge,
                 fontWeight = FontWeight.SemiBold
             )
      
@@ -353,14 +353,14 @@ fun AdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
      
                 val sign = if (showSign && value > 0) "+" else ""
                 Text(
                     text = "$sign$value",
                     color = MosqueTheme.colors.textPrimary,
-                    fontSize = 18.sp,
+                    fontSize = MosqueTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(36.dp),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -372,14 +372,14 @@ fun AdjustmentRow(
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(36.dp)
                 ) {
-                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
                 
                 if (unitSuffix.isNotEmpty()) {
                     Text(
                         text = unitSuffix,
                         color = MosqueTheme.colors.textSecondary,
-                        fontSize = 15.sp,
+                        fontSize = MosqueTheme.typography.bodyCompact,
                         fontWeight = FontWeight.Medium,
                     )
                 }
@@ -512,7 +512,7 @@ fun RunningTextListSettingsComponent(
             Text(
                 text = title,
                 color = MosqueTheme.colors.accent,
-                fontSize = if (isCompact) 15.sp else 18.sp,
+                fontSize = if (isCompact) MosqueTheme.typography.bodyCompact else MosqueTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -521,7 +521,7 @@ fun RunningTextListSettingsComponent(
             Text(
                 text = subtitle,
                 color = MosqueTheme.colors.textStrong,
-                fontSize = if (isCompact) 13.sp else 15.sp,
+                fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -547,7 +547,7 @@ fun RunningTextListSettingsComponent(
                                 Text(
                                     text = if (isReorderMode) com.groovernapp.mosqueathan.util.Lang.get("Done", "Selesai") else com.groovernapp.mosqueathan.util.Lang.get("Arrange", "Urutkan"),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
+                                    fontSize = MosqueTheme.typography.label
                                 )
                             }
                         }
@@ -566,7 +566,7 @@ fun RunningTextListSettingsComponent(
                             text = com.groovernapp.mosqueathan.util.Lang.get("Add", "Tambah"),
                             color = MosqueTheme.colors.onAccent,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            fontSize = MosqueTheme.typography.label
                         )
                     }
                 }
@@ -699,7 +699,7 @@ fun RunningTextListSettingsComponent(
                                 Text(
                                     text = itemText,
                                     color = MosqueTheme.colors.textPrimary,
-                                    fontSize = if (isCompact) 13.sp else 15.sp,
+                                    fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
@@ -708,7 +708,7 @@ fun RunningTextListSettingsComponent(
                                 Text(
                                     text = itemText,
                                     color = MosqueTheme.colors.textPrimary,
-                                    fontSize = if (isCompact) 13.sp else 15.sp,
+                                    fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -735,7 +735,7 @@ fun RunningTextListSettingsComponent(
                                         Text(
                                             text = com.groovernapp.mosqueathan.util.Lang.get("Edit", "Edit"),
                                             color = MosqueTheme.colors.info,
-                                            fontSize = 13.sp,
+                                            fontSize = MosqueTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Medium
                                         )
                                     }
@@ -758,7 +758,7 @@ fun RunningTextListSettingsComponent(
                                         Text(
                                             text = com.groovernapp.mosqueathan.util.Lang.get("Delete", "Hapus"),
                                             color = MosqueTheme.colors.danger,
-                                            fontSize = 13.sp,
+                                            fontSize = MosqueTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Medium
                                         )
                                     }
@@ -843,7 +843,7 @@ fun RunningTextListSettingsComponent(
                             Text(
                                 text = itemText,
                                 color = MosqueTheme.colors.textPrimary,
-                                fontSize = 15.sp,
+                                fontSize = MosqueTheme.typography.bodyCompact,
                                 modifier = Modifier.weight(1f)
                             )
                             Spacer(modifier = Modifier.width(8.dp))

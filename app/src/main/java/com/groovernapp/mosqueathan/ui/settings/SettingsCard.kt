@@ -46,7 +46,7 @@ fun SettingsCard(
                 Text(
                     text = title,
                     color = MosqueTheme.colors.accent.copy(alpha = if (dimmed) 0.4f else 1f),
-                    fontSize = 20.sp,
+                    fontSize = MosqueTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
