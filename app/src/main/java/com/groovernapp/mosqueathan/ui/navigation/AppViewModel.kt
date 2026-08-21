@@ -1,6 +1,5 @@
 package com.groovernapp.mosqueathan.ui.navigation
 
-import android.media.ToneGenerator
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
@@ -389,7 +388,7 @@ class AppViewModel : ViewModel() {
                 var isFridayBeforeAdzan = false
                 var isFridayAfterAdzan = false
 
-                if (isFriday && dashboardState is DashboardUiState.Dashboard) {
+                if (isFriday) {
                     val dzuhurTimeStr = dashboardState.prayerTimes.dzuhur
                     val dzuhurMins = parseTimeToMinutes(dzuhurTimeStr)
                     val currentMins = now.hour * 60 + now.minute
@@ -418,8 +417,19 @@ class AppViewModel : ViewModel() {
                     vWait = config.jumatVideoWaitUntilEnd
                 }
 
+                // While Friday mode owns the screen only the dedicated Friday slideshow may cover the
+                // dashboard. A general slideshow schedule overlapping the Friday window would
+                // otherwise keep painting its media and hide the dimming overlay.
+                val effectiveState = if (isFriday) {
+                    dashboardState.copy(
+                        isSlideshowActive = isFridayBeforeAdzan && config.jumatSlideshowEnabled
+                    )
+                } else {
+                    dashboardState
+                }
+
                 AppUiState.Dashboard(
-                    state = dashboardState,
+                    state = effectiveState,
                     customBackgroundPath = config.customBackgroundPath,
                     mediaList = finalMediaList,
                     dashboardBackgrounds = dashboardBackgrounds,
@@ -429,6 +439,7 @@ class AppViewModel : ViewModel() {
                     includeDefaultImage = config.includeDefaultImage,
                     dashboardTransitionType = config.dashboardTransitionType,
                     dashboardTransitionInterval = config.dashboardTransitionInterval,
+                    dashboardRandomize = config.dashboardRandomize,
                     isFridayStandby = isFriday,
                     jumatWarningText = config.jumatWarningText,
                     isFridayBeforeAdzan = isFridayBeforeAdzan,
@@ -503,7 +514,8 @@ class AppViewModel : ViewModel() {
                     includeDefaultImage = config.includeDefaultImage,
                     isPreviewMode = true,
                     dashboardTransitionType = config.dashboardTransitionType,
-                    dashboardTransitionInterval = config.dashboardTransitionInterval
+                    dashboardTransitionInterval = config.dashboardTransitionInterval,
+                    dashboardRandomize = config.dashboardRandomize
                 )
             }.collect { state ->
                 _appState.value = state
@@ -561,6 +573,7 @@ class AppViewModel : ViewModel() {
                     isPreviewMode = true,
                     dashboardTransitionType = config.dashboardTransitionType,
                     dashboardTransitionInterval = config.dashboardTransitionInterval,
+                    dashboardRandomize = config.dashboardRandomize,
                     isFridayStandby = false,
                     jumatWarningText = config.jumatWarningText,
                     isFridayBeforeAdzan = true,

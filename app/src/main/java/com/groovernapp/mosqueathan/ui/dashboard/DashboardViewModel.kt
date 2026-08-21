@@ -16,14 +16,13 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.Instant
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 
 class DashboardViewModel : ViewModel() {
 
-    private val hijriDate = HijriDateFormatter.today()
+    private var hijriDate = HijriDateFormatter.today()
     private var prayerResult: PrayerResult? = null
     private var lastCalculatedDate: LocalDate? = null
     private var activeAnnouncementsText = "Mari rapatkan shaf dan mohon handphone di-silent."
@@ -137,8 +136,10 @@ class DashboardViewModel : ViewModel() {
         val slideshowEnabled = config.slideshowEnabled
         var slideshowActive = false
         
-        if (isFridayBeforeAdzan(config, result, now) && config.jumatSlideshowEnabled) {
-            slideshowActive = true
+        if (isFridayModeActive(config, now)) {
+            // Friday mode owns the screen: only the dedicated Friday slideshow may take over,
+            // a general slideshow schedule overlapping the Friday window must not.
+            slideshowActive = isFridayBeforeAdzan(config, result, now) && config.jumatSlideshowEnabled
         } else if (slideshowEnabled && slideshowSchedules.isNotEmpty()) {
             for (sched in slideshowSchedules) {
                 if (com.groovernapp.mosqueathan.util.PrayerUtils.isScheduleActiveNew(
@@ -200,6 +201,7 @@ class DashboardViewModel : ViewModel() {
         }
 
         lastCalculatedDate = today
+        hijriDate = HijriDateFormatter.today()
         val config = repository.getConfig()
         prayerResult = PrayerCalculator.calculate(
             latitude = config.latitude,

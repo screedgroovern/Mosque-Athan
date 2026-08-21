@@ -24,6 +24,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
+import kotlin.random.Random
 
 @Composable
 fun DashboardScreen(
@@ -37,6 +38,7 @@ fun DashboardScreen(
     includeDefaultImage: Boolean,
     dashboardTransitionType: String = "FADE",
     dashboardTransitionInterval: Int = 10,
+    dashboardRandomize: Boolean = false,
     isFridayStandby: Boolean = false,
     jumatWarningText: String = "",
     isFridayBeforeAdzan: Boolean = false,
@@ -76,17 +78,27 @@ fun DashboardScreen(
     }
 
     // --- Dashboard backgrounds list (for when NOT isSlideshowActive) ---
-    val activeDashboardBgs = remember(dashboardBackgrounds) {
-        dashboardBackgrounds.filter { it.isUsed }
-    }
+    // Keyed on the file paths, not on the Realm entities: the entity list is handed down as a fresh
+    // list of frozen objects on every Realm version bump, which reset the rotation index back to 0
+    // before the interval ever elapsed — the background then never changed.
+    val activeBgPaths = dashboardBackgrounds.filter { it.isUsed }.map { it.filePath }
 
-    var currentDashboardBgIndex by remember(activeDashboardBgs) { mutableStateOf(0) }
+    var currentDashboardBgIndex by remember { mutableIntStateOf(0) }
 
-    if (activeDashboardBgs.size > 1) {
-        LaunchedEffect(currentDashboardBgIndex, activeDashboardBgs, dashboardTransitionInterval) {
-            val delayMs = dashboardTransitionInterval.coerceAtLeast(1).toLong() * 1000L
+    LaunchedEffect(activeBgPaths, dashboardTransitionInterval, dashboardRandomize) {
+        if (currentDashboardBgIndex >= activeBgPaths.size) {
+            currentDashboardBgIndex = 0
+        }
+        if (activeBgPaths.size < 2) return@LaunchedEffect
+
+        val delayMs = dashboardTransitionInterval.coerceAtLeast(1).toLong() * 1000L
+        while (true) {
             delay(delayMs)
-            currentDashboardBgIndex = (currentDashboardBgIndex + 1) % activeDashboardBgs.size
+            currentDashboardBgIndex = if (dashboardRandomize) {
+                nextRandomIndex(currentDashboardBgIndex, activeBgPaths.size)
+            } else {
+                (currentDashboardBgIndex + 1) % activeBgPaths.size
+            }
         }
     }
 
@@ -154,36 +166,35 @@ fun DashboardScreen(
                 }
             } else {
                 // Dashboard background mode — cycle through dashboardBackgrounds list
-                if (activeDashboardBgs.isNotEmpty()) {
-                    val currentBg = activeDashboardBgs.getOrNull(currentDashboardBgIndex)
-                    if (currentBg != null) {
-                        AnimatedContent(
-                            targetState = currentBg,
-                            transitionSpec = {
-                                when (dashboardTransitionType) {
-                                    "SLIDE" -> {
-                                        (slideInHorizontally { width -> width } + fadeIn(animationSpec = tween(800))) togetherWith
-                                                (slideOutHorizontally { width -> -width } + fadeOut(animationSpec = tween(800)))
-                                    }
-                                    "ZOOM" -> {
-                                        (scaleIn(initialScale = 0.92f) + fadeIn(animationSpec = tween(800))) togetherWith
-                                                (scaleOut(targetScale = 1.08f) + fadeOut(animationSpec = tween(800)))
-                                    }
-                                    "INSTANT" -> {
-                                        ContentTransform(
-                                            initialContentExit = ExitTransition.None,
-                                            targetContentEnter = EnterTransition.None
-                                        )
-                                    }
-                                    else -> { // "FADE"
-                                        fadeIn(animationSpec = tween(800)) togetherWith fadeOut(animationSpec = tween(800))
-                                    }
+                if (activeBgPaths.isNotEmpty()) {
+                    val currentBgPath = activeBgPaths.getOrNull(currentDashboardBgIndex)
+                        ?: activeBgPaths.first()
+                    AnimatedContent(
+                        targetState = currentBgPath,
+                        transitionSpec = {
+                            when (dashboardTransitionType) {
+                                "SLIDE" -> {
+                                    (slideInHorizontally { width -> width } + fadeIn(animationSpec = tween(800))) togetherWith
+                                            (slideOutHorizontally { width -> -width } + fadeOut(animationSpec = tween(800)))
                                 }
-                            },
-                            label = "DashboardBgTransition"
-                        ) { bg ->
-                            DashboardBgSlide(filePath = bg.filePath)
-                        }
+                                "ZOOM" -> {
+                                    (scaleIn(initialScale = 0.92f) + fadeIn(animationSpec = tween(800))) togetherWith
+                                            (scaleOut(targetScale = 1.08f) + fadeOut(animationSpec = tween(800)))
+                                }
+                                "INSTANT" -> {
+                                    ContentTransform(
+                                        initialContentExit = ExitTransition.None,
+                                        targetContentEnter = EnterTransition.None
+                                    )
+                                }
+                                else -> { // "FADE"
+                                    fadeIn(animationSpec = tween(800)) togetherWith fadeOut(animationSpec = tween(800))
+                                }
+                            }
+                        },
+                        label = "DashboardBgTransition"
+                    ) { path ->
+                        DashboardBgSlide(filePath = path)
                     }
                 } else if (customBgBitmap != null) {
                     Image(
@@ -232,6 +243,13 @@ fun DashboardScreen(
             is DashboardUiState.Iqomah -> IqomahContent(state)
         }
     }
+}
+
+private fun nextRandomIndex(currentIndex: Int, size: Int): Int {
+    if (size < 2) return 0
+    // Draw from the other slides only, so a random rotation never repeats the same background.
+    val draw = Random.nextInt(size - 1)
+    return if (draw >= currentIndex) draw + 1 else draw
 }
 
 @Composable

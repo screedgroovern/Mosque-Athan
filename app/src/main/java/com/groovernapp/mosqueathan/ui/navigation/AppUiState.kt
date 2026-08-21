@@ -18,6 +18,7 @@ sealed interface AppUiState {
         val isPreviewMode: Boolean = false,
         val dashboardTransitionType: String = "FADE",
         val dashboardTransitionInterval: Int = 86400,
+        val dashboardRandomize: Boolean = false,
         val isFridayStandby: Boolean = false,
         val jumatWarningText: String = "",
         val isFridayBeforeAdzan: Boolean = false,

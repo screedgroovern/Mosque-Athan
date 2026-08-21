@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
                     window.attributes = params
                 }
 
-                LaunchedEffect(appState) {
+                LaunchedEffect(appState is AppUiState.Settings) {
                     if (appState is AppUiState.Settings) {
                         this@MainActivity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                     } else {
@@ -110,6 +110,7 @@ class MainActivity : ComponentActivity() {
                                 includeDefaultImage = state.includeDefaultImage,
                                 dashboardTransitionType = state.dashboardTransitionType,
                                 dashboardTransitionInterval = state.dashboardTransitionInterval,
+                                dashboardRandomize = state.dashboardRandomize,
                                 isFridayStandby = state.isFridayStandby,
                                 jumatWarningText = state.jumatWarningText,
                                 isFridayBeforeAdzan = state.isFridayBeforeAdzan,
