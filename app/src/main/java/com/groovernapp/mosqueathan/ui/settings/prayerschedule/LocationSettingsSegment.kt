@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 
 @Composable
 fun LocationSettingsSegment(
@@ -32,7 +33,7 @@ fun LocationSettingsSegment(
             value = latText,
             onValueChange = onLatTextChange,
             label = { Text("Latitude") },
-            colors = textFieldColors(),
+            colors = mosqueTextFieldColors(),
             enabled = isEnabled,
             modifier = Modifier.fillMaxWidth()
         )
@@ -40,7 +41,7 @@ fun LocationSettingsSegment(
             value = lngText,
             onValueChange = onLngTextChange,
             label = { Text("Longitude") },
-            colors = textFieldColors(),
+            colors = mosqueTextFieldColors(),
             enabled = isEnabled,
             modifier = Modifier.fillMaxWidth()
         )

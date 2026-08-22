@@ -37,11 +37,13 @@ import com.groovernapp.mosqueathan.data.FridayMediaEntity
 import com.groovernapp.mosqueathan.data.MediaEntity
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
 import com.groovernapp.mosqueathan.ui.settings.SettingsCard
-import com.groovernapp.mosqueathan.ui.settings.TvFocusablePrimaryButton
-import com.groovernapp.mosqueathan.ui.settings.textFieldColors
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
+import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
 
 @Composable
 fun FridaySettingsPane(
@@ -153,7 +155,7 @@ fun FridaySettingsPane(
                             value = jumatStartTime,
                             onValueChange = onJumatStartTimeChange,
                             label = { Text(Lang.get("Start Time (HH:mm)", "Waktu Mulai (HH:mm)")) },
-                            colors = textFieldColors(),
+                            colors = mosqueTextFieldColors(),
                             singleLine = true,
                             modifier = Modifier.weight(1f)
                         )
@@ -161,7 +163,7 @@ fun FridaySettingsPane(
                             value = jumatEndTime,
                             onValueChange = onJumatEndTimeChange,
                             label = { Text(Lang.get("End Time (HH:mm)", "Waktu Selesai (HH:mm)")) },
-                            colors = textFieldColors(),
+                            colors = mosqueTextFieldColors(),
                             singleLine = true,
                             modifier = Modifier.weight(1f)
                         )
@@ -440,9 +442,8 @@ fun FridaySettingsPane(
                             Text(Lang.get("Transition Type", "Tipe Transisi"), color = MosqueTheme.colors.textPrimary, fontWeight = FontWeight.Bold)
                             var expanded by remember { mutableStateOf(false) }
                             Box {
-                                OutlinedButton(
+                                MosqueTertiaryButton(
                                     onClick = { expanded = true },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueTheme.colors.textPrimary)
                                 ) {
                                     Text(jumatTransitionType)
                                 }
@@ -482,9 +483,8 @@ fun FridaySettingsPane(
                             }
                             var unitExpanded by remember { mutableStateOf(false) }
                             Box {
-                                OutlinedButton(
+                                MosqueTertiaryButton(
                                     onClick = { unitExpanded = true },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueTheme.colors.textPrimary)
                                 ) {
                                     Text(if (jumatSlideIntervalUnit == "MINUTES") Lang.get("Minutes", "Menit") else Lang.get("Seconds", "Detik"))
                                 }
@@ -537,7 +537,7 @@ fun FridaySettingsPane(
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
-                        TvFocusablePrimaryButton(
+                        MosquePrimaryButton(
                             onClick = onPreviewFridaySlideshow,
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -679,18 +679,16 @@ fun MurottalAudioPathsManager(
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
-            Button(
+            MosqueSecondaryButton(
                 onClick = { audioPickerLauncher.launch(arrayOf("audio/*")) },
                 enabled = enabled,
-                colors = ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.fill, contentColor = MosqueTheme.colors.textPrimary)
             ) {
                 Text(Lang.get("Add Audio", "Tambah Audio"))
             }
             if (paths.size > 5) {
-                Button(
+                MosqueSecondaryButton(
                     onClick = { /* Open full list dialog or expand */ },
                     enabled = enabled,
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.fill, contentColor = MosqueTheme.colors.textPrimary)
                 ) {
                     Text(Lang.get("List Audio (${paths.size})", "Daftar Audio (${paths.size})"))
                 }

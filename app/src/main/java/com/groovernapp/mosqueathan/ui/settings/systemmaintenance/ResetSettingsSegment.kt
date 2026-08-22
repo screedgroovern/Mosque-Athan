@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
 
 @Composable
 fun ResetSettingsSegment(onResetToDefaults: () -> Unit) {
@@ -21,7 +22,7 @@ fun ResetSettingsSegment(onResetToDefaults: () -> Unit) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        TvFocusableDangerButton(
+        MosqueDangerButton(
             onClick = onResetToDefaults,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier

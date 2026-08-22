@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosquePreviewButton
 
 @Composable
 fun AdzanSettingsSegment(
@@ -78,7 +79,7 @@ fun AdzanSettingsSegment(
         HorizontalDivider(color = MosqueTheme.colors.fillStrong)
 
         // Preview Button
-        TvFocusablePreviewButton(
+        MosquePreviewButton(
             onClick = onPreviewAdzan,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier.fillMaxWidth().height(40.dp)

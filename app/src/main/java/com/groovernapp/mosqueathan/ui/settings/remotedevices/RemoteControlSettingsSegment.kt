@@ -22,13 +22,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
-import com.groovernapp.mosqueathan.ui.settings.textFieldColors
 import com.groovernapp.mosqueathan.util.Lang
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
+import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
 
 @Composable
 fun RemoteControlSettingsSegment(
@@ -92,7 +95,7 @@ fun RemoteControlSettingsSegment(
                 label = { Text(Lang.get("IP Address TV", "IP Address TV")) },
                 placeholder = { Text("Contoh: 192.168.1.15") },
                 singleLine = true,
-                colors = textFieldColors(),
+                colors = mosqueTextFieldColors(),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -102,7 +105,7 @@ fun RemoteControlSettingsSegment(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Button(
+                    MosquePrimaryButton(
                         onClick = {
                             if (ipText.trim().isEmpty()) {
                                 Toast.makeText(context, Lang.get("IP TV tidak boleh kosong!", "IP TV tidak boleh kosong!"), Toast.LENGTH_SHORT).show()
@@ -112,10 +115,6 @@ fun RemoteControlSettingsSegment(
                                 onSyncWithTv()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MosqueTheme.colors.accent,
-                            contentColor = MosqueTheme.colors.onAccent
-                        ),
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.fillMaxWidth().height(48.dp)
                     ) {
@@ -124,7 +123,7 @@ fun RemoteControlSettingsSegment(
                         Text(Lang.get("Hubungkan", "Hubungkan"), fontWeight = FontWeight.Bold)
                     }
 
-                    Button(
+                    MosqueSecondaryButton(
                         onClick = {
                             val options = ScanOptions().apply {
                                 setDesiredBarcodeFormats(ScanOptions.QR_CODE)
@@ -136,10 +135,6 @@ fun RemoteControlSettingsSegment(
                             }
                             barcodeLauncher.launch(options)
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MosqueTheme.colors.fill,
-                            contentColor = MosqueTheme.colors.textPrimary
-                        ),
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.fillMaxWidth().height(48.dp)
                     ) {
@@ -154,7 +149,7 @@ fun RemoteControlSettingsSegment(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
                 ) {
-                    Button(
+                    MosquePrimaryButton(
                         onClick = {
                             if (ipText.trim().isEmpty()) {
                                 Toast.makeText(context, Lang.get("IP TV tidak boleh kosong!", "IP TV tidak boleh kosong!"), Toast.LENGTH_SHORT).show()
@@ -164,10 +159,6 @@ fun RemoteControlSettingsSegment(
                                 onSyncWithTv()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MosqueTheme.colors.accent,
-                            contentColor = MosqueTheme.colors.onAccent
-                        ),
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f).height(48.dp)
                     ) {
@@ -176,7 +167,7 @@ fun RemoteControlSettingsSegment(
                         Text(Lang.get("Hubungkan", "Hubungkan"), fontWeight = FontWeight.Bold)
                     }
 
-                    Button(
+                    MosqueSecondaryButton(
                         onClick = {
                             val options = ScanOptions().apply {
                                 setDesiredBarcodeFormats(ScanOptions.QR_CODE)
@@ -188,10 +179,6 @@ fun RemoteControlSettingsSegment(
                             }
                             barcodeLauncher.launch(options)
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MosqueTheme.colors.fill,
-                            contentColor = MosqueTheme.colors.textPrimary
-                        ),
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f).height(48.dp)
                     ) {
@@ -202,7 +189,7 @@ fun RemoteControlSettingsSegment(
                 }
             }
 
-            Button(
+            MosqueTertiaryButton(
                 onClick = {
                     if (config.remoteTvIp.isEmpty()) {
                         Toast.makeText(context, Lang.get("Hubungkan ke TV terlebih dahulu!", "Hubungkan ke TV terlebih dahulu!"), Toast.LENGTH_SHORT).show()
@@ -211,12 +198,7 @@ fun RemoteControlSettingsSegment(
                         onSyncWithTv()
                     }
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MosqueTheme.colors.fillSubtle,
-                    contentColor = MosqueTheme.colors.textPrimary
-                ),
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
-                border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(width = 1.dp, brush = androidx.compose.ui.graphics.SolidColor(MosqueTheme.colors.fillStrong)),
                 modifier = Modifier.fillMaxWidth().height(48.dp)
             ) {
                 Icon(imageVector = Icons.Default.Sync, contentDescription = null, tint = MosqueTheme.colors.accent)
@@ -309,7 +291,7 @@ fun RemoteControlSettingsSegment(
                 placeholder = { Text("Masukkan PIN baru...") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
-                colors = textFieldColors(),
+                colors = mosqueTextFieldColors(),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -322,16 +304,12 @@ fun RemoteControlSettingsSegment(
                 fontSize = MosqueTheme.typography.captionSmall
             )
 
-            Button(
+            MosquePrimaryButton(
                 onClick = {
                     onUpdatePinCode(pinText.trim())
                     Toast.makeText(context, Lang.get("PIN keamanan berhasil disimpan!", "PIN keamanan berhasil disimpan!"), Toast.LENGTH_SHORT).show()
                     pinText = ""
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MosqueTheme.colors.accent,
-                    contentColor = MosqueTheme.colors.onAccent
-                ),
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = if (isCompact) {
                     Modifier.fillMaxWidth().height(48.dp)

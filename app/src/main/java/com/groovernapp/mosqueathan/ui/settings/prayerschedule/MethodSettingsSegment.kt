@@ -25,6 +25,7 @@ import com.groovernapp.mosqueathan.data.KemenagScheduleEntity
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 
 @Composable
 fun MethodSettingsSegment(
@@ -206,7 +207,7 @@ fun MethodSettingsSegment(
 
 
                 Spacer(modifier = Modifier.height(16.dp))
-                TvFocusablePrimaryButton(
+                MosquePrimaryButton(
                     onClick = {
                         isDownloading = true
                         onDownloadKemenagSchedules()
@@ -234,7 +235,7 @@ fun MethodSettingsSegment(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                TvFocusablePrimaryButton(
+                MosquePrimaryButton(
                     onClick = { showSchedulesDialog = true },
                     modifier = Modifier.fillMaxWidth().height(44.dp)
                 ) {

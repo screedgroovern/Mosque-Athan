@@ -44,348 +44,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Delete
+import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosquePreviewButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSelectableButton
+import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 
-@Composable
-fun textFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = MosqueTheme.colors.textPrimary,
-    unfocusedTextColor = MosqueTheme.colors.textPrimary,
-    focusedBorderColor = MosqueTheme.colors.accent,
-    unfocusedBorderColor = MosqueTheme.colors.border,
-    focusedLabelColor = MosqueTheme.colors.accent,
-    unfocusedLabelColor = MosqueTheme.colors.textSecondary,
-    cursorColor = MosqueTheme.colors.accent,
-    disabledTextColor = MosqueTheme.colors.textDisabled,
-    disabledBorderColor = MosqueTheme.colors.fill,
-    disabledLabelColor = MosqueTheme.colors.textDisabled,
-    disabledLeadingIconColor = MosqueTheme.colors.textDisabled,
-    disabledTrailingIconColor = MosqueTheme.colors.textDisabled
-)
-
-/**
- * A TV-friendly button that provides a highly visible hover/focus effect.
- * When focused or hovered, it shows:
- * - A bright yellow border (3dp)
- * - Brighter container color
- * - Slight scale-up animation (1.05x)
- *
- * This makes it easy for TV users with D-pad/remote to see which button
- * currently has focus.
- */
-@Composable
-fun TvFocusableButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    colors: ButtonColors = ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.fillStrong),
-    shape: Shape = RoundedCornerShape(MosqueTheme.radius.sm),
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
-    enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val isHovered by interactionSource.collectIsHoveredAsState()
-    val isFocusedOrHovered = isFocused || isHovered
-
-    // Determine focus-adjusted colors
-    val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(MosqueTheme.stroke.thick, MosqueTheme.colors.accent)
-    } else {
-        null
-    }
-
-    val focusScale = if (isFocusedOrHovered) 1.05f else 1.0f
-
-    // When focused/hovered, brighten the container color
-    val effectiveColors = if (isFocusedOrHovered) {
-        ButtonDefaults.buttonColors(
-            containerColor = MosqueTheme.colors.accent.copy(alpha = 0.35f)
-        )
-    } else {
-        colors
-    }
-
-    Button(
-        onClick = onClick,
-        modifier = modifier.scale(focusScale),
-        colors = effectiveColors,
-        shape = shape,
-        contentPadding = contentPadding,
-        enabled = enabled,
-        interactionSource = interactionSource,
-        border = focusBorder,
-        content = content
-    )
-}
-
-/**
- * A TV-friendly primary (gold/yellow) button with a visible hover/focus effect.
- * When focused/hovered, it shows a bright white border and slight scale-up.
- */
-@Composable
-fun TvFocusablePrimaryButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(MosqueTheme.radius.md),
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
-    enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val isHovered by interactionSource.collectIsHoveredAsState()
-    val isFocusedOrHovered = isFocused || isHovered
-
-    val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(MosqueTheme.stroke.thick, MosqueTheme.colors.textPrimary)
-    } else {
-        null
-    }
-
-    val focusScale = if (isFocusedOrHovered) 1.05f else 1.0f
-
-    val effectiveColors = if (isFocusedOrHovered) {
-        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.accent)
-    } else {
-        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.accent)
-    }
-
-    Button(
-        onClick = onClick,
-        modifier = modifier.scale(focusScale),
-        colors = effectiveColors,
-        shape = shape,
-        contentPadding = contentPadding,
-        enabled = enabled,
-        interactionSource = interactionSource,
-        border = focusBorder,
-        content = content
-    )
-}
-
-@Composable
-fun TvFocusablePreviewButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(MosqueTheme.radius.md),
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
-    enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val isHovered by interactionSource.collectIsHoveredAsState()
-    val isFocusedOrHovered = isFocused || isHovered
-
-    val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(MosqueTheme.stroke.thick, MosqueTheme.colors.accent)
-    } else {
-        BorderStroke(MosqueTheme.stroke.medium, MosqueTheme.colors.accent.copy(alpha = 0.6f))
-    }
-
-    val focusScale = if (isFocusedOrHovered) 1.05f else 1.0f
-
-    val effectiveColors = if (isFocusedOrHovered) {
-        ButtonDefaults.buttonColors(
-            containerColor = MosqueTheme.colors.accent.copy(alpha = 0.25f)
-        )
-    } else {
-        ButtonDefaults.buttonColors(
-            containerColor = MosqueTheme.colors.accent.copy(alpha = 0.08f)
-        )
-    }
-
-    Button(
-        onClick = onClick,
-        modifier = modifier.scale(focusScale),
-        colors = effectiveColors,
-        shape = shape,
-        contentPadding = contentPadding,
-        enabled = enabled,
-        interactionSource = interactionSource,
-        border = focusBorder,
-        content = content
-    )
-}
-
-/**
- * A TV-friendly danger (red) button with a visible hover/focus effect.
- * When focused/hovered, it shows a bright yellow border and brighter red.
- */
-@Composable
-fun TvFocusableDangerButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(MosqueTheme.radius.sm),
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
-    enabled: Boolean = true,
-    content: @Composable RowScope.() -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    val isHovered by interactionSource.collectIsHoveredAsState()
-    val isFocusedOrHovered = isFocused || isHovered
-
-    val focusBorder = if (isFocusedOrHovered) {
-        BorderStroke(MosqueTheme.stroke.thick, MosqueTheme.colors.accent)
-    } else {
-        null
-    }
-
-    val focusScale = if (isFocusedOrHovered) 1.05f else 1.0f
-
-    val effectiveColors = if (isFocusedOrHovered) {
-        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.danger.copy(alpha = 0.9f))
-    } else {
-        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.danger.copy(alpha = 0.7f))
-    }
-
-    Button(
-        onClick = onClick,
-        modifier = modifier.scale(focusScale),
-        colors = effectiveColors,
-        shape = shape,
-        contentPadding = contentPadding,
-        enabled = enabled,
-        interactionSource = interactionSource,
-        border = focusBorder,
-        content = content
-    )
-}
-
-@Composable
-fun AdjustmentRow(
-    title: String,
-    value: Int,
-    minValue: Int = 0,
-    maxValue: Int = 60,
-    showSign: Boolean = false,
-    unitSuffix: String = com.groovernapp.mosqueathan.util.Lang.get("minutes", "menit"),
-    onValueChange: (Int) -> Unit
-) {
-    val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-    val isCompact = LocalWindowClass.current.isCompact
-
-    if (isCompact) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(MosqueTheme.radius.md))
-                .background(MosqueTheme.colors.fillSubtle)
-                .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
-        ) {
-            Text(
-                text = title,
-                color = MosqueTheme.colors.textPrimary,
-                fontSize = MosqueTheme.typography.label,
-                fontWeight = FontWeight.SemiBold
-            )
-     
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
-            ) {
-                TvFocusableButton(
-                    onClick = { if (value > minValue) onValueChange(value - 1) },
-                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                }
-     
-                val sign = if (showSign && value > 0) "+" else ""
-                Text(
-                    text = "$sign$value",
-                    color = MosqueTheme.colors.textPrimary,
-                    fontSize = MosqueTheme.typography.bodyCompact,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(36.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-     
-                TvFocusableButton(
-                    onClick = { if (value < maxValue) onValueChange(value + 1) },
-                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                }
-                
-                if (unitSuffix.isNotEmpty()) {
-                    Text(
-                        text = unitSuffix,
-                        color = MosqueTheme.colors.textSecondary,
-                        fontSize = MosqueTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
-            }
-        }
-    } else {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(MosqueTheme.radius.md))
-                .background(MosqueTheme.colors.fillSubtle)
-                .padding(horizontal = MosqueTheme.spacing.xxl, vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                color = MosqueTheme.colors.textPrimary,
-                fontSize = MosqueTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-     
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
-            ) {
-                TvFocusableButton(
-                    onClick = { if (value > minValue) onValueChange(value - 1) },
-                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                }
-     
-                val sign = if (showSign && value > 0) "+" else ""
-                Text(
-                    text = "$sign$value",
-                    color = MosqueTheme.colors.textPrimary,
-                    fontSize = MosqueTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(36.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
-     
-                TvFocusableButton(
-                    onClick = { if (value < maxValue) onValueChange(value + 1) },
-                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                }
-                
-                if (unitSuffix.isNotEmpty()) {
-                    Text(
-                        text = unitSuffix,
-                        color = MosqueTheme.colors.textSecondary,
-                        fontSize = MosqueTheme.typography.bodyCompact,
-                        fontWeight = FontWeight.Medium,
-                    )
-                }
-            }
-        }
-    }
-}
 
 fun parseFooterTexts(raw: String): List<String> {
     if (raw.trim().startsWith("[")) {
@@ -433,13 +100,13 @@ fun RunningTextListSettingsComponent(
                 OutlinedTextField(
                     value = editTextValue,
                     onValueChange = { editTextValue = it },
-                    colors = textFieldColors(),
+                    colors = mosqueTextFieldColors(),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
-                TvFocusablePrimaryButton(
+                MosquePrimaryButton(
                     onClick = {
                         editingIndex?.let { index ->
                             if (editTextValue.isNotBlank()) {
@@ -469,14 +136,14 @@ fun RunningTextListSettingsComponent(
                 OutlinedTextField(
                     value = addTextValue,
                     onValueChange = { addTextValue = it },
-                    colors = textFieldColors(),
+                    colors = mosqueTextFieldColors(),
                     singleLine = true,
                     placeholder = { Text(placeholderText) },
                     modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
-                TvFocusablePrimaryButton(
+                MosquePrimaryButton(
                     onClick = {
                         if (addTextValue.isNotBlank()) {
                             onItemsChange(items + addTextValue.trim())
@@ -533,14 +200,10 @@ fun RunningTextListSettingsComponent(
                     // Arrange Button aligned left
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                         if (items.isNotEmpty()) {
-                            FilledTonalButton(
+                            MosqueSecondaryButton(
                                 onClick = { isReorderMode = !isReorderMode },
                                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                                 modifier = Modifier.height(36.dp),
-                                colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = MosqueTheme.colors.fill,
-                                    contentColor = MosqueTheme.colors.accent
-                                ),
                                 contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg)
                             ) {
                                 Text(
@@ -553,7 +216,7 @@ fun RunningTextListSettingsComponent(
                     }
 
                     // Add Button aligned right (smaller)
-                    TvFocusablePrimaryButton(
+                    MosquePrimaryButton(
                         onClick = {
                             isAddingNew = true
                             addTextValue = ""
@@ -579,11 +242,11 @@ fun RunningTextListSettingsComponent(
                         value = newText,
                         onValueChange = { newText = it },
                         placeholder = { Text(placeholderText) },
-                        colors = textFieldColors(),
+                        colors = mosqueTextFieldColors(),
                         singleLine = true,
                         modifier = Modifier.weight(1f)
                     )
-                    TvFocusablePrimaryButton(
+                    MosquePrimaryButton(
                         onClick = {
                             if (newText.isNotBlank()) {
                                 onItemsChange(items + newText.trim())
@@ -868,6 +531,139 @@ fun RunningTextListSettingsComponent(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AdjustmentRow(
+    title: String,
+    value: Int,
+    minValue: Int = 0,
+    maxValue: Int = 60,
+    showSign: Boolean = false,
+    unitSuffix: String = com.groovernapp.mosqueathan.util.Lang.get("minutes", "menit"),
+    onValueChange: (Int) -> Unit
+) {
+    val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+    val isCompact = LocalWindowClass.current.isCompact
+
+    if (isCompact) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
+                .background(MosqueTheme.colors.fillSubtle)
+                .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
+        ) {
+            Text(
+                text = title,
+                color = MosqueTheme.colors.textPrimary,
+                fontSize = MosqueTheme.typography.label,
+                fontWeight = FontWeight.SemiBold
+            )
+     
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
+            ) {
+                MosqueSecondaryButton(
+                    onClick = { if (value > minValue) onValueChange(value - 1) },
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+     
+                val sign = if (showSign && value > 0) "+" else ""
+                Text(
+                    text = "$sign$value",
+                    color = MosqueTheme.colors.textPrimary,
+                    fontSize = MosqueTheme.typography.bodyCompact,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.width(36.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+     
+                MosqueSecondaryButton(
+                    onClick = { if (value < maxValue) onValueChange(value + 1) },
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                
+                if (unitSuffix.isNotEmpty()) {
+                    Text(
+                        text = unitSuffix,
+                        color = MosqueTheme.colors.textSecondary,
+                        fontSize = MosqueTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            }
+        }
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
+                .background(MosqueTheme.colors.fillSubtle)
+                .padding(horizontal = MosqueTheme.spacing.xxl, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                color = MosqueTheme.colors.textPrimary,
+                fontSize = MosqueTheme.typography.bodyLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+     
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
+            ) {
+                MosqueSecondaryButton(
+                    onClick = { if (value > minValue) onValueChange(value - 1) },
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+     
+                val sign = if (showSign && value > 0) "+" else ""
+                Text(
+                    text = "$sign$value",
+                    color = MosqueTheme.colors.textPrimary,
+                    fontSize = MosqueTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.width(36.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+     
+                MosqueSecondaryButton(
+                    onClick = { if (value < maxValue) onValueChange(value + 1) },
+                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
+                    contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
+                
+                if (unitSuffix.isNotEmpty()) {
+                    Text(
+                        text = unitSuffix,
+                        color = MosqueTheme.colors.textSecondary,
+                        fontSize = MosqueTheme.typography.bodyCompact,
+                        fontWeight = FontWeight.Medium,
+                    )
                 }
             }
         }

@@ -44,14 +44,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
-import com.groovernapp.mosqueathan.ui.settings.TvFocusablePreviewButton
-import com.groovernapp.mosqueathan.ui.settings.TvFocusablePrimaryButton
 import com.groovernapp.mosqueathan.ui.settings.formatFooterTexts
 import com.groovernapp.mosqueathan.ui.settings.parseFooterTexts
-import com.groovernapp.mosqueathan.ui.settings.textFieldColors
 import com.groovernapp.mosqueathan.ui.settings.RunningTextListSettingsComponent
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosquePreviewButton
 
 @Composable
 fun IqomahSettingsSegment(
@@ -120,7 +119,7 @@ fun IqomahSettingsSegment(
         )
 
         // Preview Button
-        TvFocusablePreviewButton(
+        MosquePreviewButton(
             onClick = onPreviewIqomah,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier.fillMaxWidth().height(40.dp)

@@ -18,6 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
+import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 
 @Composable
 fun DevicesSettingsSegment(
@@ -67,7 +71,7 @@ fun DevicesSettingsSegment(
                             value = transferPinInput,
                             onValueChange = { transferPinInput = it },
                             placeholder = { Text(com.groovernapp.mosqueathan.util.Lang.get("Security PIN", "PIN Keamanan")) },
-                            colors = textFieldColors(),
+                            colors = mosqueTextFieldColors(),
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (pinErrorMsg != null) {
@@ -77,7 +81,7 @@ fun DevicesSettingsSegment(
                 }
             },
             confirmButton = {
-                TvFocusablePrimaryButton(
+                MosquePrimaryButton(
                     onClick = {
                         if (config.pinCode.isEmpty() || transferPinInput == config.pinCode) {
                             onSetDeviceMaster(targetDevice.deviceId)
@@ -192,7 +196,7 @@ fun DevicesSettingsSegment(
                                     modifier = Modifier.padding(horizontal = MosqueTheme.spacing.md)
                                 )
                             } else {
-                                TvFocusableButton(
+                                MosqueSecondaryButton(
                                     onClick = {
                                         if (hasMaster) {
                                             showTransferMasterDialog = device
@@ -209,7 +213,7 @@ fun DevicesSettingsSegment(
                             }
 
                             if (!device.isMaster) {
-                                TvFocusableDangerButton(
+                                MosqueDangerButton(
                                     onClick = { onDeleteDevice(device.deviceId) },
                                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                                     contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),

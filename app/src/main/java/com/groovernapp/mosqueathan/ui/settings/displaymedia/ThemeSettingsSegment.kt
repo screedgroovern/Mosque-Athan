@@ -72,14 +72,15 @@ import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.data.SlideshowScheduleEntity
 import com.groovernapp.mosqueathan.ui.component.Schedule
 import com.groovernapp.mosqueathan.ui.component.SlideshowComponent
-import com.groovernapp.mosqueathan.ui.settings.TvFocusableButton
-import com.groovernapp.mosqueathan.ui.settings.TvFocusablePrimaryButton
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSelectableButton
 
 @Composable
 fun ThemeSettingsSegment(
@@ -536,7 +537,7 @@ fun SlideshowTabContent(
 
         // Preview Slideshow button
         Spacer(modifier = Modifier.height(8.dp))
-        TvFocusableButton(
+        MosqueSecondaryButton(
             onClick = onPreviewSlideshow,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier.fillMaxWidth().height(48.dp)
@@ -629,11 +630,9 @@ fun TransitionAnimationRow(
             ) {
                 listOf("FADE", "SLIDE", "ZOOM", "INSTANT").forEach { type ->
                     val isSelected = selectedType == type
-                    TvFocusableButton(
+                    MosqueSelectableButton(
                         onClick = { onTypeSelected(type) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.fill
-                        ),
+                        selected = isSelected,
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(32.dp)
@@ -667,11 +666,9 @@ fun TransitionAnimationRow(
             Row(horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
                 listOf("FADE", "SLIDE", "ZOOM", "INSTANT").forEach { type ->
                     val isSelected = selectedType == type
-                    TvFocusableButton(
+                    MosqueSelectableButton(
                         onClick = { onTypeSelected(type) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.fill
-                        ),
+                        selected = isSelected,
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(32.dp)
@@ -724,7 +721,7 @@ fun DropdownAdjustmentRow(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
             ) {
-                TvFocusableButton(
+                MosqueSecondaryButton(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
@@ -742,7 +739,7 @@ fun DropdownAdjustmentRow(
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
      
-                TvFocusableButton(
+                MosqueSecondaryButton(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
@@ -752,12 +749,9 @@ fun DropdownAdjustmentRow(
                 }
                 
                 Box {
-                    TvFocusableButton(
+                    MosqueSecondaryButton(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MosqueTheme.colors.fill
-                        ),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(32.dp)
                     ) {
@@ -825,7 +819,7 @@ fun DropdownAdjustmentRow(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
             ) {
-                TvFocusableButton(
+                MosqueSecondaryButton(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
@@ -843,7 +837,7 @@ fun DropdownAdjustmentRow(
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
      
-                TvFocusableButton(
+                MosqueSecondaryButton(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
@@ -853,12 +847,9 @@ fun DropdownAdjustmentRow(
                 }
                 
                 Box {
-                    TvFocusableButton(
+                    MosqueSecondaryButton(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MosqueTheme.colors.fill
-                        ),
                         contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(36.dp)
                     ) {
@@ -1055,7 +1046,7 @@ fun RunningTextSettingsCard(
                     unfocusedTextColor = MosqueTheme.colors.textPrimary
                 )
             )
-            TvFocusablePrimaryButton(
+            MosquePrimaryButton(
                 onClick = {
                     if (newText.isNotBlank()) {
                         onAdd(newText)

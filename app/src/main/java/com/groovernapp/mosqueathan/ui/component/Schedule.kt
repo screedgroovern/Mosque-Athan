@@ -29,13 +29,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.groovernapp.mosqueathan.data.ScheduleItem
-import com.groovernapp.mosqueathan.ui.settings.TvFocusableButton
-import com.groovernapp.mosqueathan.ui.settings.TvFocusableDangerButton
-import com.groovernapp.mosqueathan.ui.settings.TvFocusablePrimaryButton
 import com.groovernapp.mosqueathan.util.Lang
 import java.util.Calendar
 import java.util.TimeZone
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
 
 @Composable
 fun Schedule(
@@ -124,12 +125,8 @@ fun Schedule(
             horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(
+            MosquePrimaryButton(
                 onClick = onAddSchedule,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MosqueTheme.colors.accent,
-                    contentColor = MosqueTheme.colors.onAccent
-                ),
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
                 modifier = Modifier.weight(1f)
@@ -152,7 +149,7 @@ fun Schedule(
                 }
             }
 
-            TvFocusableButton(
+            MosqueSecondaryButton(
                 onClick = { showAllSchedulesDialog = true },
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = Modifier
@@ -225,7 +222,7 @@ fun Schedule(
                 }
             },
             confirmButton = {
-                TvFocusablePrimaryButton(
+                MosquePrimaryButton(
                     onClick = { showAllSchedulesDialog = false }
                 ) {
                     Text(Lang.get("Close", "Tutup"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
@@ -454,13 +451,9 @@ fun ScheduleListItem(
                         }
                     }
                 ) {
-                    OutlinedButton(
+                    MosqueTertiaryButton(
                         onClick = onScheduleClick,
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MosqueTheme.colors.textPrimary
-                        ),
-                        border = borderStroke(),
                         contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.sm)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -484,8 +477,6 @@ fun ScheduleListItem(
     }
 }
 
-@Composable
-fun borderStroke() = ButtonDefaults.outlinedButtonBorder().copy()
 
 // TV friendly time steppers dialog
 @Composable
@@ -542,7 +533,7 @@ fun TimePickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
                 ) {
-                    TvFocusableDangerButton(
+                    MosqueDangerButton(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f)
@@ -550,7 +541,7 @@ fun TimePickerDialog(
                         Text(Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                     }
 
-                    TvFocusablePrimaryButton(
+                    MosquePrimaryButton(
                         onClick = {
                             val start = "${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}"
                             val end = "${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}"
@@ -582,7 +573,7 @@ fun TimeStepperField(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xs)
         ) {
-            TvFocusableButton(
+            MosqueSecondaryButton(
                 onClick = { onHourChange((hour - 1 + 24) % 24) },
                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
@@ -598,7 +589,7 @@ fun TimeStepperField(
                 modifier = Modifier.width(36.dp),
                 textAlign = TextAlign.Center
             )
-            TvFocusableButton(
+            MosqueSecondaryButton(
                 onClick = { onHourChange((hour + 1) % 24) },
                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
@@ -615,7 +606,7 @@ fun TimeStepperField(
                 modifier = Modifier.padding(horizontal = MosqueTheme.spacing.xs)
             )
 
-            TvFocusableButton(
+            MosqueSecondaryButton(
                 onClick = { onMinuteChange((minute - 1 + 60) % 60) },
                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
@@ -631,7 +622,7 @@ fun TimeStepperField(
                 modifier = Modifier.width(36.dp),
                 textAlign = TextAlign.Center
             )
-            TvFocusableButton(
+            MosqueSecondaryButton(
                 onClick = { onMinuteChange((minute + 1) % 60) },
                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
@@ -679,7 +670,7 @@ fun MultiDatePickerDialog(
                 )
 
                 // Add date button
-                TvFocusablePrimaryButton(
+                MosquePrimaryButton(
                     onClick = { showSingleDatePicker = true },
                     modifier = Modifier.fillMaxWidth().height(40.dp)
                 ) {
@@ -736,7 +727,7 @@ fun MultiDatePickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
                 ) {
-                    TvFocusableButton(
+                    MosqueSecondaryButton(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f)
@@ -744,7 +735,7 @@ fun MultiDatePickerDialog(
                         Text(Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                     }
 
-                    TvFocusablePrimaryButton(
+                    MosquePrimaryButton(
                         onClick = {
                             onSave(datesList.joinToString(","))
                         },

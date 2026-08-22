@@ -63,6 +63,7 @@ import androidx.compose.material.icons.filled.Close
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 
 @Composable
 fun SettingsScreen(
@@ -889,7 +890,7 @@ fun SideSheetContent(
                 )
             }
 
-            TvFocusableButton(
+            MosqueSecondaryButton(
                 onClick = onBack,
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = Modifier

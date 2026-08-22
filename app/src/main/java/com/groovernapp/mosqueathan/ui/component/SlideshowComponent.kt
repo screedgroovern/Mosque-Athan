@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.groovernapp.mosqueathan.data.MediaEntity
-import com.groovernapp.mosqueathan.ui.settings.TvFocusablePrimaryButton
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.TransitionAnimationRow
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.DropdownAdjustmentRow
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
@@ -40,6 +39,7 @@ import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 import java.util.Collections
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 
 @Composable
 fun <T> SlideshowComponent(
@@ -324,7 +324,7 @@ fun <T> SlideshowComponent(
 
         // Add Button
         if (showAddButton) {
-            TvFocusablePrimaryButton(
+            MosquePrimaryButton(
                 onClick = onAddClicked,
                 modifier = Modifier
                     .fillMaxWidth()
