@@ -19,9 +19,11 @@ import java.security.MessageDigest
 import java.util.concurrent.CopyOnWriteArrayList
 import com.groovernapp.mosqueathan.util.ImageUtils
 
-class SettingsServer(private val context: Context) {
+class SettingsServer(
+    private val context: Context,
+    private val repository: MosqueConfigRepository
+) {
 
-    private val repository = MosqueConfigRepository.getInstance()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var serverSocket: ServerSocket? = null
     private var isRunning = false

@@ -20,7 +20,10 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 
-class DashboardViewModel : ViewModel() {
+class DashboardViewModel(
+    private val repository: com.groovernapp.mosqueathan.data.MosqueConfigRepository,
+    private val kemenagSource: com.groovernapp.mosqueathan.domain.KemenagScheduleSource
+) : ViewModel() {
 
     private var hijriDate = HijriDateFormatter.today()
     private var prayerResult: PrayerResult? = null
@@ -52,8 +55,6 @@ class DashboardViewModel : ViewModel() {
             )
         )
 
-    private val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
-    private val kemenagSource = com.groovernapp.mosqueathan.data.RealmKemenagScheduleSource(repository)
     val uiState = _uiState.asStateFlow()
     private var clockJob: Job? = null
 

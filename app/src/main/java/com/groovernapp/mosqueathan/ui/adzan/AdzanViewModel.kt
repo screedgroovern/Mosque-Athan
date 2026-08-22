@@ -15,7 +15,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
-class AdzanViewModel : ViewModel() {
+class AdzanViewModel(
+    private val repository: com.groovernapp.mosqueathan.data.MosqueConfigRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         AdzanUiModel(
@@ -30,7 +32,7 @@ class AdzanViewModel : ViewModel() {
     private var countdownJob: Job? = null
 
     fun start(prayerType: PrayerType, prayerTime: LocalDateTime) {
-        val config = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance().getConfig()
+        val config = repository.getConfig()
         val footerRaw = config.adzanFooterText.ifEmpty { "Mohon bersiap dan hentikan aktivitas sementara." }
         val footer = try {
             if (footerRaw.trim().startsWith("[")) {

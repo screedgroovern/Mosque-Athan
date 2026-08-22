@@ -18,7 +18,15 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.plus
 import kotlin.time.Clock
 
-class MosqueConfigRepository private constructor() {
+/**
+ * The single source of truth for every setting, backed by Realm.
+ *
+ * Constructed once and handed out by the DI graph rather than reached for globally.
+ * That matters less for tidiness than for testability: while it was a global,
+ * nothing touching settings could be constructed in a test without opening a real
+ * database — which is why the Kemenag calculation test used to need one.
+ */
+class MosqueConfigRepository {
     private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, FridayMediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class, DashboardBackgroundEntity::class))
         .name("mosque_athan.realm")
         .schemaVersion(18)
@@ -1093,14 +1101,4 @@ class MosqueConfigRepository private constructor() {
         }
     }
 
-    companion object {
-        @Volatile
-        private var instance: MosqueConfigRepository? = null
-
-        fun getInstance(): MosqueConfigRepository {
-            return instance ?: synchronized(this) {
-                instance ?: MosqueConfigRepository().also { instance = it }
-            }
-        }
-    }
 }

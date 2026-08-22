@@ -5,7 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.activity.viewModels
+import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.groovernapp.mosqueathan.ui.adzan.AdzanScreen
@@ -33,11 +34,11 @@ import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 class MainActivity : ComponentActivity() {
 
-    val appViewModel: AppViewModel by viewModels()
-    private val dashboardViewModel: DashboardViewModel by viewModels()
-    private val adzanViewModel: AdzanViewModel by viewModels()
-    private val iqomahViewModel: IqomahViewModel by viewModels()
-    private val settingsViewModel: SettingsViewModel by viewModels()
+    val appViewModel: AppViewModel by viewModel()
+    private val dashboardViewModel: DashboardViewModel by viewModel()
+    private val adzanViewModel: AdzanViewModel by viewModel()
+    private val iqomahViewModel: IqomahViewModel by viewModel()
+    private val settingsViewModel: SettingsViewModel by viewModel()
 
     private val settingsSecretSequence = listOf(
         KeyEvent.KEYCODE_DPAD_UP,
@@ -46,6 +47,7 @@ class MainActivity : ComponentActivity() {
         KeyEvent.KEYCODE_DPAD_DOWN
     )
     private val inputKeyHistory = mutableListOf<Int>()
+    private val configRepository: com.groovernapp.mosqueathan.data.MosqueConfigRepository by inject()
     private var settingsServer: com.groovernapp.mosqueathan.server.SettingsServer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,7 +64,7 @@ class MainActivity : ComponentActivity() {
 
         appViewModel.initialize(dashboardViewModel, adzanViewModel, iqomahViewModel)
 
-        settingsServer = com.groovernapp.mosqueathan.server.SettingsServer(this).apply {
+        settingsServer = com.groovernapp.mosqueathan.server.SettingsServer(this, configRepository).apply {
             start(8080)
         }
 

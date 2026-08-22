@@ -13,7 +13,9 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-class IqomahViewModel : ViewModel() {
+class IqomahViewModel(
+    private val repository: com.groovernapp.mosqueathan.data.MosqueConfigRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         IqomahUiModel(
@@ -28,7 +30,7 @@ class IqomahViewModel : ViewModel() {
     private var countdownJob: Job? = null
 
     fun start(prayerType: PrayerType, customDurationSeconds: Int? = null) {
-        val config = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance().getConfig()
+        val config = repository.getConfig()
         val footerRaw = config.iqomahFooterText.ifEmpty { "Mari merapatkan dan meluruskan shaf." }
         val footer = try {
             if (footerRaw.trim().startsWith("[")) {
@@ -46,7 +48,7 @@ class IqomahViewModel : ViewModel() {
         }
         countdownJob?.cancel()
         countdownJob = viewModelScope.launch {
-            val minutes = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance().getIqomahMinutes(prayerType)
+            val minutes = repository.getIqomahMinutes(prayerType)
             var remaining = customDurationSeconds ?: (minutes * 60)
             while (remaining >= 0) {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

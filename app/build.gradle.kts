@@ -63,6 +63,9 @@ dependencies {
     implementation(project(":core:prayer"))
     implementation(project(":ui:design"))
 
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.ui.tooling.preview)
     testImplementation(libs.junit)

@@ -31,7 +31,10 @@ import kotlinx.datetime.toLocalDateTime
 import kotlinx.datetime.todayIn
 import kotlin.time.Duration.Companion.seconds
 
-class AppViewModel : ViewModel() {
+class AppViewModel(
+    private val repository: com.groovernapp.mosqueathan.data.MosqueConfigRepository,
+    private val kemenagSource: com.groovernapp.mosqueathan.domain.KemenagScheduleSource
+) : ViewModel() {
 
 
     private val _activeScreen = MutableStateFlow<ActiveScreen>(ActiveScreen.Dashboard)
@@ -99,8 +102,6 @@ class AppViewModel : ViewModel() {
     private var forcedStandby = false
     private var forcedFridaySilence = false
 
-    private val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
-    private val kemenagSource = com.groovernapp.mosqueathan.data.RealmKemenagScheduleSource(repository)
 
     fun initialize(
         dashboardViewModel: DashboardViewModel,

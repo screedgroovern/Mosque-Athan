@@ -15,9 +15,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Job
 import com.groovernapp.mosqueathan.util.ImageUtils
 
-class SettingsViewModel : ViewModel() {
+class SettingsViewModel(
+    private val repository: MosqueConfigRepository
+) : ViewModel() {
 
-    private val repository = MosqueConfigRepository.getInstance()
 
     private val _configState = MutableStateFlow(MosqueConfigEntity())
     val configState = _configState.asStateFlow()

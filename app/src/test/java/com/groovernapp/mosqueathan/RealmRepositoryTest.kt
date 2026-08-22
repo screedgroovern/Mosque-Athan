@@ -15,9 +15,13 @@ import org.junit.Test
  */
 class RealmRepositoryTest {
 
+    // Constructed directly, which is the point of step 2: before the singleton went
+    // away this had to be MosqueConfigRepository.getInstance(), so every test shared
+    // one process-wide instance whether it wanted to or not.
+    private val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository()
+
     @Test
     fun mosqueConfigDefaultsAndUpdates() = kotlinx.coroutines.runBlocking {
-        val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
         repository.resetToDefaults()
         val config = repository.getConfig()
         assertEquals(-7.713585464212388, config.latitude, 0.0001)
@@ -51,7 +55,6 @@ class RealmRepositoryTest {
 
     @Test
     fun announcementCrud() = kotlinx.coroutines.runBlocking {
-        val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
         repository.resetToDefaults()
 
         val active = repository.getActiveAnnouncements()
@@ -80,7 +83,6 @@ class RealmRepositoryTest {
      */
     @Test
     fun kemenagScheduleRoundTripsThroughRealm() = kotlinx.coroutines.runBlocking {
-        val repository = com.groovernapp.mosqueathan.data.MosqueConfigRepository.getInstance()
         repository.resetToDefaults()
         val cityId = "58a2fc6ed39fd083f55d4182bf88826d"
 

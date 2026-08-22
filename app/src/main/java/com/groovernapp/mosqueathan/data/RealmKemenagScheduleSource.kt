@@ -11,7 +11,7 @@ import com.groovernapp.mosqueathan.domain.KemenagScheduleSource
  * what keeps `:core:prayer` free of any persistence dependency.
  */
 class RealmKemenagScheduleSource(
-    private val repository: MosqueConfigRepository = MosqueConfigRepository.getInstance()
+    private val repository: MosqueConfigRepository
 ) : KemenagScheduleSource {
 
     override fun scheduleFor(cityId: String, dateString: String): KemenagSchedule? =
