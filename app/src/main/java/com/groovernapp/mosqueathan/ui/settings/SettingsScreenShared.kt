@@ -181,7 +181,7 @@ fun TvFocusablePreviewButton(
     val focusBorder = if (isFocusedOrHovered) {
         BorderStroke(MosqueTheme.stroke.thick, MosqueTheme.colors.accent)
     } else {
-        BorderStroke(1.5.dp, MosqueTheme.colors.accent.copy(alpha = 0.6f))
+        BorderStroke(MosqueTheme.stroke.medium, MosqueTheme.colors.accent.copy(alpha = 0.6f))
     }
 
     val focusScale = if (isFocusedOrHovered) 1.05f else 1.0f
@@ -236,9 +236,9 @@ fun TvFocusableDangerButton(
     val focusScale = if (isFocusedOrHovered) 1.05f else 1.0f
 
     val effectiveColors = if (isFocusedOrHovered) {
-        ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.9f))
+        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.danger.copy(alpha = 0.9f))
     } else {
-        ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.7f))
+        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.danger.copy(alpha = 0.7f))
     }
 
     Button(

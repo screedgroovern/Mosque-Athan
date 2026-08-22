@@ -244,7 +244,7 @@ fun <T> SlideshowComponent(
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Delete Media",
-                                        tint = Color.Red.copy(alpha = 0.8f),
+                                        tint = MosqueTheme.colors.danger.copy(alpha = 0.8f),
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }

@@ -283,7 +283,7 @@ fun WebControlSettingsSegment(
                     "Device is not connected to the local network.\nPlease connect to Wi-Fi or LAN cable first.",
                     "Perangkat tidak terhubung ke jaringan lokal.\nSilakan hubungkan Wi-Fi atau kabel LAN terlebih dahulu."
                 ),
-                color = Color.Red.copy(alpha = 0.8f),
+                color = MosqueTheme.colors.danger.copy(alpha = 0.8f),
                 fontSize = MosqueTheme.typography.body,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center

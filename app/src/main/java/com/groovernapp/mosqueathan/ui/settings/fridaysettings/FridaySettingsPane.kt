@@ -670,7 +670,7 @@ fun MurottalAudioPathsManager(
                         },
                         modifier = Modifier.size(24.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove", tint = Color.Red.copy(alpha = 0.8f))
+                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove", tint = MosqueTheme.colors.danger.copy(alpha = 0.8f))
                     }
                 }
             }

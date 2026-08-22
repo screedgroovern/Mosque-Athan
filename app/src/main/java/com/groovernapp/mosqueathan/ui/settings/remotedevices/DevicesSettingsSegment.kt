@@ -71,7 +71,7 @@ fun DevicesSettingsSegment(
                             modifier = Modifier.fillMaxWidth()
                         )
                         if (pinErrorMsg != null) {
-                            Text(pinErrorMsg!!, color = Color.Red, fontSize = MosqueTheme.typography.labelSmall)
+                            Text(pinErrorMsg!!, color = MosqueTheme.colors.danger, fontSize = MosqueTheme.typography.labelSmall)
                         }
                     }
                 }
@@ -162,7 +162,7 @@ fun DevicesSettingsSegment(
                                 modifier = Modifier
                                     .size(10.dp)
                                     .clip(RoundedCornerShape(5.dp))
-                                    .background(if (device.isOnline) Color.Green else Color.Gray)
+                                    .background(if (device.isOnline) MosqueTheme.colors.success else MosqueTheme.colors.textMuted)
                             )
                             Column {
                                 Text(

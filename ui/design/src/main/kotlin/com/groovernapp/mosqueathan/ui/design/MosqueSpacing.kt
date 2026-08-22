@@ -41,6 +41,8 @@ object MosqueRadius {
 /** Border and divider widths. */
 object MosqueStroke {
     val hairline: Dp = 1.dp
+    /** The resting border on a preview button, between [hairline] and [thin]. */
+    val medium: Dp = 1.5.dp
     val thin: Dp = 2.dp
     val thick: Dp = 3.dp
 }

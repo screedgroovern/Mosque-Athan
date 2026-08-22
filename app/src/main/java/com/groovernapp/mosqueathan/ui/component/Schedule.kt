@@ -346,7 +346,7 @@ fun ScheduleListItem(
                     IconButton(
                         onClick = onDeleteClick,
                         colors = IconButtonDefaults.iconButtonColors(
-                            contentColor = Color.Red.copy(alpha = 0.8f)
+                            contentColor = MosqueTheme.colors.danger.copy(alpha = 0.8f)
                         )
                     ) {
                         Icon(
@@ -723,7 +723,7 @@ fun MultiDatePickerDialog(
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Delete",
-                                        tint = Color.Red.copy(alpha = 0.8f),
+                                        tint = MosqueTheme.colors.danger.copy(alpha = 0.8f),
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
