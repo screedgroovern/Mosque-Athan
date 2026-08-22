@@ -41,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
-import com.groovernapp.mosqueathan.ui.settings.SettingsCard
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 
@@ -54,6 +53,7 @@ import androidx.compose.ui.input.key.type
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.focusHighlight
 import com.groovernapp.mosqueathan.ui.design.MosqueRadius
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
 
 @Composable
 fun RemoteDevicesSettingsPane(
@@ -276,7 +276,7 @@ fun RemoteDevicesSettingsPane(
         ) {
             if (selectedTabIndex == 0) {
                 if (isServer) {
-                    SettingsCard(
+                    MosqueSectionCard(
                         title = Lang.get("Web Control Server", "Server Web Remote"),
                         icon = Icons.Default.Dns
                     ) {
@@ -288,7 +288,7 @@ fun RemoteDevicesSettingsPane(
                         )
                     }
                 } else {
-                    SettingsCard(
+                    MosqueSectionCard(
                         title = Lang.get("Sinkronisasi", "Sinkronisasi"),
                         icon = Icons.Default.Sync
                     ) {
@@ -302,7 +302,7 @@ fun RemoteDevicesSettingsPane(
                     }
                 }
             } else {
-                SettingsCard(
+                MosqueSectionCard(
                     title = Lang.get("Connected Devices", "Perangkat Terhubung"),
                     icon = Icons.Default.Devices
                 ) {

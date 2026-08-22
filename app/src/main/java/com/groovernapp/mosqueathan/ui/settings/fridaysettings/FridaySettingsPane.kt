@@ -36,7 +36,6 @@ import androidx.compose.ui.zIndex
 import com.groovernapp.mosqueathan.data.FridayMediaEntity
 import com.groovernapp.mosqueathan.data.MediaEntity
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
-import com.groovernapp.mosqueathan.ui.settings.SettingsCard
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
@@ -47,6 +46,7 @@ import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 import com.groovernapp.mosqueathan.ui.design.focusHighlight
 import com.groovernapp.mosqueathan.ui.design.MosqueRadius
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
 
 @Composable
 fun FridaySettingsPane(
@@ -118,7 +118,7 @@ fun FridaySettingsPane(
         verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
     ) {
         // Card 1: Friday Core Settings
-        SettingsCard(
+        MosqueSectionCard(
             title = "", // No title
             icon = null
         ) {
@@ -187,7 +187,7 @@ fun FridaySettingsPane(
 
         if (jumatEnabled) {
             // Card 2: Silence & Warning Text
-            SettingsCard(
+            MosqueSectionCard(
                 title = Lang.get("Friday Silence Mode", "Mode Ibadah & Khutbah"),
                 icon = Icons.Default.Settings,
                 dimmed = !jumatEnabled
@@ -237,7 +237,7 @@ fun FridaySettingsPane(
             }
 
             // Card 3: Murottal Pre-Adzan Settings
-            SettingsCard(
+            MosqueSectionCard(
                 title = Lang.get("Pre-Adzan Murottal Quran", "Murottal Sebelum Adzan"),
                 icon = Icons.Default.Settings,
                 dimmed = !jumatEnabled || jumatStandbyOnly
@@ -291,7 +291,7 @@ fun FridaySettingsPane(
             }
 
             // Card 4: Friday Slideshow
-            SettingsCard(
+            MosqueSectionCard(
                 title = Lang.get("Friday Specific Slideshow", "Slideshow Khusus Jum'at"),
                 icon = Icons.Default.Settings,
                 dimmed = !jumatEnabled || jumatStandbyOnly

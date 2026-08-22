@@ -13,9 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.groovernapp.mosqueathan.data.StandbyScheduleEntity
-import com.groovernapp.mosqueathan.ui.settings.SettingsCard
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
 
 @Composable
 fun SystemMaintenanceSettingsPane(
@@ -36,7 +36,7 @@ fun SystemMaintenanceSettingsPane(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
     ) {
-        SettingsCard(
+        MosqueSectionCard(
             title = Lang.get("Standby & Display", "Standby & Tampilan"),
             icon = Icons.Default.Tv
         ) {
@@ -52,7 +52,7 @@ fun SystemMaintenanceSettingsPane(
             )
         }
 
-        SettingsCard(
+        MosqueSectionCard(
             title = Lang.get("Reset Configurations", "Reset Konfigurasi"),
             icon = Icons.Default.Restore
         ) {

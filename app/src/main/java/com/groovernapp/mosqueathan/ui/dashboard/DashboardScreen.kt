@@ -224,7 +224,7 @@ fun DashboardScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MosqueTheme.colors.onAccent.copy(alpha = alpha))
+                    .background(MosqueTheme.colors.scrim.copy(alpha = alpha))
             )
         }
 

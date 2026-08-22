@@ -181,7 +181,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(MosqueTheme.colors.onAccent)
+                                .background(MosqueTheme.colors.scrim)
                                 .pointerInput(Unit) {
                                     detectTapGestures { }
                                 }

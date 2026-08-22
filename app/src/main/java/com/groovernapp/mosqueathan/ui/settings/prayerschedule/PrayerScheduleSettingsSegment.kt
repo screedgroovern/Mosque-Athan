@@ -32,6 +32,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
 
 @Composable
 fun PrayerScheduleSettingsSegment(
@@ -149,7 +150,7 @@ fun PrayerScheduleSettingsSegment(
                     verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
                 ) {
                     // CARD 1: Metode Perhitungan
-                    SettingsCard(
+                    MosqueSectionCard(
                         title = Lang.get("Calculation Method", "Metode Perhitungan"),
                         icon = Icons.Default.Calculate
                     ) {
@@ -173,7 +174,7 @@ fun PrayerScheduleSettingsSegment(
                     }
 
                     // CARD 2: Lokasi GPS
-                    SettingsCard(
+                    MosqueSectionCard(
                         title = Lang.get("Mosque Coordinates", "Titik Lokasi Masjid"),
                         icon = Icons.Default.LocationOn,
                         dimmed = calculationMethodName == "KEMENAG"
@@ -195,7 +196,7 @@ fun PrayerScheduleSettingsSegment(
                         .verticalScroll(rememberScrollState())
                 ) {
                     // CARD 3: Koreksi Waktu (Offsets)
-                    SettingsCard(
+                    MosqueSectionCard(
                         title = Lang.get("Prayer Time Adjustments", "Koreksi Waktu Shalat"),
                         icon = Icons.Default.Tune
                     ) {
