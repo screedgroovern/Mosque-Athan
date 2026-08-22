@@ -1,6 +1,8 @@
 package com.groovernapp.mosqueathan.ui.design
 
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -21,43 +23,127 @@ import androidx.compose.ui.unit.sp
  *   is the part with no scale behind it, and the main target of the consolidation
  *   proposal.
  */
-object MosqueTypography {
+object MosqueTypography : TypeScale {
 
     // --- Display: the TV screens -------------------------------------------
     /** The full-screen clock in `ClockSection`. The largest size in the app. */
-    val clockDisplay: TextUnit = 170.sp
+    override val clockDisplay: TextUnit = 170.sp
     /** Countdown digits in the tall layout. */
-    val countdownDigitsLarge: TextUnit = 112.sp
+    override val countdownDigitsLarge: TextUnit = 112.sp
     /** Iqomah countdown digits. */
-    val iqomahCountdown: TextUnit = 96.sp
+    override val iqomahCountdown: TextUnit = 96.sp
     /** Standby/adzan countdown digits. */
-    val countdownDigits: TextUnit = 92.sp
+    override val countdownDigits: TextUnit = 92.sp
     /** Adzan screen prayer name. */
-    val adzanTitle: TextUnit = 64.sp
+    override val adzanTitle: TextUnit = 64.sp
     /** Dashboard clock. */
-    val clockLarge: TextUnit = 48.sp
+    override val clockLarge: TextUnit = 48.sp
     /** Countdown screen prayer name. */
-    val countdownTitle: TextUnit = 40.sp
+    override val countdownTitle: TextUnit = 40.sp
     /** Countdown screen caption. */
-    val countdownCaption: TextUnit = 34.sp
+    override val countdownCaption: TextUnit = 34.sp
     /** Secondary clock reading. */
-    val clockMedium: TextUnit = 32.sp
+    override val clockMedium: TextUnit = 32.sp
     /** Next-prayer header and running text. */
-    val headline: TextUnit = 30.sp
+    override val headline: TextUnit = 30.sp
     /** Prayer name in the times panel. */
-    val prayerName: TextUnit = 28.sp
+    override val prayerName: TextUnit = 28.sp
     /** Prayer name while the slideshow is running. */
-    val prayerNameCompact: TextUnit = 22.sp
+    override val prayerNameCompact: TextUnit = 22.sp
 
     // --- Settings UI --------------------------------------------------------
-    val titleLarge: TextUnit = 24.sp
-    val titleMedium: TextUnit = 20.sp
-    val titleSmall: TextUnit = 18.sp
-    val bodyLarge: TextUnit = 17.sp
-    val body: TextUnit = 16.sp
-    val bodyCompact: TextUnit = 15.sp
-    val label: TextUnit = 14.sp
-    val labelSmall: TextUnit = 13.sp
-    val caption: TextUnit = 12.sp
-    val captionSmall: TextUnit = 11.sp
+    override val titleLarge: TextUnit = 24.sp
+    override val titleMedium: TextUnit = 20.sp
+    override val titleSmall: TextUnit = 18.sp
+    override val bodyLarge: TextUnit = 17.sp
+    override val body: TextUnit = 16.sp
+    override val bodyCompact: TextUnit = 15.sp
+    override val label: TextUnit = 14.sp
+    override val labelSmall: TextUnit = 13.sp
+    override val caption: TextUnit = 12.sp
+    override val captionSmall: TextUnit = 11.sp
 }
+
+/**
+ * The set of roles, so a scaled variant can stand in for the base one.
+ *
+ * Exists because of a real failure: on a phone in landscape the window is 360dp
+ * tall, and `clockDisplay` at 170sp plus the three lines under it came to roughly
+ * 250dp of text. The clock ate the screen and the prayer times row — the single most
+ * important thing on the display — was pushed out of view entirely.
+ */
+interface TypeScale {
+    val clockDisplay: TextUnit
+    val countdownDigitsLarge: TextUnit
+    val iqomahCountdown: TextUnit
+    val countdownDigits: TextUnit
+    val adzanTitle: TextUnit
+    val clockLarge: TextUnit
+    val countdownTitle: TextUnit
+    val countdownCaption: TextUnit
+    val clockMedium: TextUnit
+    val headline: TextUnit
+    val prayerName: TextUnit
+    val prayerNameCompact: TextUnit
+    val titleLarge: TextUnit
+    val titleMedium: TextUnit
+    val titleSmall: TextUnit
+    val bodyLarge: TextUnit
+    val body: TextUnit
+    val bodyCompact: TextUnit
+    val label: TextUnit
+    val labelSmall: TextUnit
+    val caption: TextUnit
+    val captionSmall: TextUnit
+}
+
+/**
+ * [MosqueTypography] with the display roles multiplied by [factor].
+ *
+ * Only the display roles scale. The settings roles are already 11–24sp, and
+ * shrinking those makes a phone harder to read rather than easier.
+ */
+private class ScaledTypeScale(private val factor: Float) : TypeScale {
+    private fun TextUnit.scaled(): TextUnit = (value * factor).sp
+
+    override val clockDisplay = MosqueTypography.clockDisplay.scaled()
+    override val countdownDigitsLarge = MosqueTypography.countdownDigitsLarge.scaled()
+    override val iqomahCountdown = MosqueTypography.iqomahCountdown.scaled()
+    override val countdownDigits = MosqueTypography.countdownDigits.scaled()
+    override val adzanTitle = MosqueTypography.adzanTitle.scaled()
+    override val clockLarge = MosqueTypography.clockLarge.scaled()
+    override val countdownTitle = MosqueTypography.countdownTitle.scaled()
+    override val countdownCaption = MosqueTypography.countdownCaption.scaled()
+    override val clockMedium = MosqueTypography.clockMedium.scaled()
+    override val headline = MosqueTypography.headline.scaled()
+    override val prayerName = MosqueTypography.prayerName.scaled()
+    override val prayerNameCompact = MosqueTypography.prayerNameCompact.scaled()
+
+    override val titleLarge = MosqueTypography.titleLarge
+    override val titleMedium = MosqueTypography.titleMedium
+    override val titleSmall = MosqueTypography.titleSmall
+    override val bodyLarge = MosqueTypography.bodyLarge
+    override val body = MosqueTypography.body
+    override val bodyCompact = MosqueTypography.bodyCompact
+    override val label = MosqueTypography.label
+    override val labelSmall = MosqueTypography.labelSmall
+    override val caption = MosqueTypography.caption
+    override val captionSmall = MosqueTypography.captionSmall
+}
+
+/**
+ * How much to shrink display type for a window this tall.
+ *
+ * Exactly 1.0 at [FULL_HEIGHT] and above, so the television and the tablet — 711dp
+ * and up — render byte-identically to before. Below that it tracks the height, with
+ * a floor so the clock never becomes unreadable from across a room.
+ */
+fun displayTypeScaleFor(height: androidx.compose.ui.unit.Dp): TypeScale =
+    if (height >= FULL_HEIGHT) {
+        MosqueTypography
+    } else {
+        ScaledTypeScale((height / FULL_HEIGHT).coerceIn(MIN_FACTOR, 1f))
+    }
+
+private val FULL_HEIGHT = 600.dp
+private const val MIN_FACTOR = 0.45f

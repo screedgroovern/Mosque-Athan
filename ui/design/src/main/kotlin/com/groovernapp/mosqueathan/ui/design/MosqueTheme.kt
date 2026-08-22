@@ -4,6 +4,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 
@@ -31,7 +33,8 @@ fun MosqueTheme(
 
     CompositionLocalProvider(
         LocalWindowClass provides windowClass,
-        LocalWindowMetrics provides WindowMetrics(windowClass, widthDp, heightDp)
+        LocalWindowMetrics provides WindowMetrics(windowClass, widthDp, heightDp),
+        LocalTypeScale provides displayTypeScaleFor(heightDp)
     ) {
         MaterialTheme(
             colorScheme = darkColorScheme(),
@@ -43,7 +46,15 @@ fun MosqueTheme(
 /** Entry point for design tokens: `MosqueTheme.colors.accent`, `MosqueTheme.spacing.md`. */
 object MosqueTheme {
     val colors = MosqueColors
-    val typography = MosqueTypography
+    /**
+     * Type roles, scaled for the window's height.
+     *
+     * Identical to the base scale at 600dp tall and above, so nothing changes on the
+     * television or the tablet; on a phone in landscape the display sizes shrink so
+     * that the prayer times still fit on screen.
+     */
+    val typography: TypeScale
+        @Composable get() = LocalTypeScale.current
     val spacing = MosqueSpacing
     val size = MosqueSize
     val radius = MosqueRadius
@@ -57,3 +68,7 @@ object MosqueTheme {
     val window: WindowMetrics
         @Composable get() = LocalWindowMetrics.current
 }
+
+/** The active type scale. Provided by [MosqueTheme]; read it through `MosqueTheme.typography`. */
+val LocalTypeScale: ProvidableCompositionLocal<TypeScale> =
+    staticCompositionLocalOf { MosqueTypography }
