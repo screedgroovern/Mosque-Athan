@@ -22,6 +22,7 @@ import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
+import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
 
 @Composable
 fun DevicesSettingsSegment(
@@ -104,7 +105,7 @@ fun DevicesSettingsSegment(
                 }
             },
             dismissButton = {
-                TextButton(onClick = {
+                MosqueTextButton(onClick = {
                     showTransferMasterDialog = null
                     transferPinInput = ""
                     pinErrorMsg = null

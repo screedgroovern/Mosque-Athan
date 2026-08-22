@@ -25,6 +25,8 @@ import com.groovernapp.mosqueathan.server.SettingsServer
 import androidx.core.graphics.set
 import androidx.core.graphics.createBitmap
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.focusHighlight
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 
 @Composable
 fun WebControlSettingsSegment(
@@ -130,6 +132,7 @@ fun WebControlSettingsSegment(
                                     )
                                 }
                                 Switch(
+                                    modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                                     checked = showSettingsOnTv,
                                     onCheckedChange = { onUpdateShowSettingsOnTv(it) },
                                     colors = SwitchDefaults.colors(
@@ -238,6 +241,7 @@ fun WebControlSettingsSegment(
                                     )
                                 }
                                 Switch(
+                                    modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                                     checked = showSettingsOnTv,
                                     onCheckedChange = { onUpdateShowSettingsOnTv(it) },
                                     colors = SwitchDefaults.colors(

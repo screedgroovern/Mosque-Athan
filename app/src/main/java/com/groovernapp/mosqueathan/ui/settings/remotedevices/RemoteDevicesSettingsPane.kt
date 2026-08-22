@@ -52,6 +52,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.type
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.focusHighlight
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 
 @Composable
 fun RemoteDevicesSettingsPane(
@@ -130,6 +132,7 @@ fun RemoteDevicesSettingsPane(
                         color = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.fillStrong,
                         shape = RoundedCornerShape(MosqueTheme.radius.lg)
                     )
+                    .focusHighlight(shape = RoundedCornerShape(MosqueRadius.md), scaleUp = false)
                     .clickable { onUpdateConnectivityMode("SERVER") }
                     .padding(vertical = MosqueTheme.spacing.xl),
                 contentAlignment = Alignment.Center
@@ -167,6 +170,7 @@ fun RemoteDevicesSettingsPane(
                         color = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.fillStrong,
                         shape = RoundedCornerShape(MosqueTheme.radius.lg)
                     )
+                    .focusHighlight(shape = RoundedCornerShape(MosqueRadius.md), scaleUp = false)
                     .clickable { onUpdateConnectivityMode("REMOTE") }
                     .padding(vertical = MosqueTheme.spacing.xl),
                 contentAlignment = Alignment.Center

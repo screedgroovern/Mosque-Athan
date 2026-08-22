@@ -26,6 +26,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
+import com.groovernapp.mosqueathan.ui.design.focusHighlight
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 
 @Composable
 fun MethodSettingsSegment(
@@ -131,6 +134,7 @@ fun MethodSettingsSegment(
                         .height(56.dp)
                         .clip(RoundedCornerShape(MosqueTheme.radius.md))
                         .background(MosqueTheme.colors.fillSubtle)
+                        .focusHighlight(shape = RoundedCornerShape(MosqueRadius.md), scaleUp = false)
                         .clickable { durationExpanded = true }
                         .padding(horizontal = MosqueTheme.spacing.xl),
                     contentAlignment = Alignment.CenterStart
@@ -143,6 +147,7 @@ fun MethodSettingsSegment(
                     ) {
                         durationList.forEach { (value, label) ->
                             DropdownMenuItem(
+                                modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false),
                                 text = { Text(text = label, color = MosqueTheme.colors.textPrimary) },
                                 onClick = {
                                     onKemenagDurationChange(value)
@@ -185,7 +190,7 @@ fun MethodSettingsSegment(
                             unfocusedTextColor = MosqueTheme.colors.textPrimary
                         ),
                         trailingIcon = {
-                            TextButton(onClick = { showCitySearchDialog = true }) {
+                            MosqueTextButton(onClick = { showCitySearchDialog = true }) {
                                 Text(
                                     text = com.groovernapp.mosqueathan.util.Lang.get("Change", "Ubah"),
                                     color = MosqueTheme.colors.accent,
@@ -316,7 +321,7 @@ fun MethodSettingsSegment(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showCitySearchDialog = false }) {
+                MosqueTextButton(onClick = { showCitySearchDialog = false }) {
                     Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = MosqueTheme.colors.accent)
                 }
             }
@@ -406,7 +411,7 @@ fun MethodSettingsSegment(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showSchedulesDialog = false }) {
+                MosqueTextButton(onClick = { showSchedulesDialog = false }) {
                     Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = MosqueTheme.colors.accent)
                 }
             }
@@ -478,7 +483,7 @@ fun DatePickerField(
         DatePickerDialog(
             onDismissRequest = { showDialog = false },
             confirmButton = {
-                TextButton(onClick = {
+                MosqueTextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
                         cal.timeInMillis = millis
@@ -493,7 +498,7 @@ fun DatePickerField(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
+                MosqueTextButton(onClick = { showDialog = false }) {
                     Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             },
@@ -545,6 +550,7 @@ private fun CalculationMethodItem(
                 color = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.transparent,
                 shape = RoundedCornerShape(MosqueTheme.radius.md)
             )
+            .focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false)
             .clickable { onMethodChange(method) }
             .padding(horizontal = horizontalPadding, vertical = verticalPadding),
         verticalAlignment = Alignment.CenterVertically

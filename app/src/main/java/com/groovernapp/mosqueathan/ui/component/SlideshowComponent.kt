@@ -40,6 +40,9 @@ import kotlinx.coroutines.launch
 import java.util.Collections
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
+import com.groovernapp.mosqueathan.ui.design.focusHighlight
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 
 @Composable
 fun <T> SlideshowComponent(
@@ -219,7 +222,7 @@ fun <T> SlideshowComponent(
                                     .padding(MosqueTheme.spacing.lg),
                                 horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                             ) {
-                                IconButton(
+                                MosqueIconButton(
                                     onClick = { onEditItem(item) },
                                     colors = IconButtonDefaults.iconButtonColors(
                                         containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.6f)
@@ -234,7 +237,7 @@ fun <T> SlideshowComponent(
                                     )
                                 }
 
-                                IconButton(
+                                MosqueIconButton(
                                     onClick = { onDeleteItem(item) },
                                     colors = IconButtonDefaults.iconButtonColors(
                                         containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.6f)
@@ -281,11 +284,13 @@ fun <T> SlideshowComponent(
                         val isUsed = isUsedSelector(currentItem)
                         Row(
                             modifier = Modifier
+                                .focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false)
                                 .clickable { onUpdateUseStatus(currentItem, !isUsed) }
                                 .padding(vertical = MosqueTheme.spacing.xs),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
+                                modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.xs), scaleUp = false),
                                 checked = isUsed,
                                 onCheckedChange = { onUpdateUseStatus(currentItem, it) },
                                 colors = CheckboxDefaults.colors(

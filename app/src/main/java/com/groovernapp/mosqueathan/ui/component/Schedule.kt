@@ -37,6 +37,10 @@ import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
+import com.groovernapp.mosqueathan.ui.design.focusHighlight
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
+import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
 
 @Composable
 fun Schedule(
@@ -317,6 +321,7 @@ fun ScheduleListItem(
                     fontSize = MosqueTheme.typography.prayerNameCompact,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
+                        .focusHighlight(shape = RoundedCornerShape(MosqueRadius.md), scaleUp = false)
                         .clickable(onClick = onEditTimeClick)
                         .padding(vertical = MosqueTheme.spacing.xs)
                 )
@@ -326,7 +331,7 @@ fun ScheduleListItem(
                     horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                 ) {
                     // Edit Button (Vertically centered)
-                    IconButton(
+                    MosqueIconButton(
                         onClick = onEditTimeClick,
                         colors = IconButtonDefaults.iconButtonColors(
                             contentColor = MosqueTheme.colors.accent
@@ -340,7 +345,7 @@ fun ScheduleListItem(
                     }
 
                     // Delete Button
-                    IconButton(
+                    MosqueIconButton(
                         onClick = onDeleteClick,
                         colors = IconButtonDefaults.iconButtonColors(
                             contentColor = MosqueTheme.colors.danger.copy(alpha = 0.8f)
@@ -707,7 +712,7 @@ fun MultiDatePickerDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(text = dateString, color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.label)
-                                IconButton(
+                                MosqueIconButton(
                                     onClick = { datesList.remove(dateString) },
                                     modifier = Modifier.size(24.dp)
                                 ) {
@@ -756,7 +761,7 @@ fun MultiDatePickerDialog(
         DatePickerDialog(
             onDismissRequest = { showSingleDatePicker = false },
             confirmButton = {
-                TextButton(onClick = {
+                MosqueTextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
                         val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
                         cal.timeInMillis = millis
@@ -774,7 +779,7 @@ fun MultiDatePickerDialog(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showSingleDatePicker = false }) {
+                MosqueTextButton(onClick = { showSingleDatePicker = false }) {
                     Text(Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             },

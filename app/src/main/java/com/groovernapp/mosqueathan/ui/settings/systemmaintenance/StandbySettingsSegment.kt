@@ -13,6 +13,9 @@ import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.data.StandbyScheduleEntity
 import com.groovernapp.mosqueathan.ui.component.Schedule
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.focusHighlight
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun StandbySettingsSegment(
@@ -53,6 +56,7 @@ fun StandbySettingsSegment(
                 )
             }
             Switch(
+                modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                 checked = standbyModeEnabled,
                 onCheckedChange = onStandbyModeEnabledChange,
                 colors = SwitchDefaults.colors(

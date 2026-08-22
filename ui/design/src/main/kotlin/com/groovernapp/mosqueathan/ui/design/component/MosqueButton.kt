@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import com.groovernapp.mosqueathan.ui.design.FOCUS_SCALE
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 /**
@@ -72,7 +73,6 @@ private fun FocusableButton(
     )
 }
 
-private const val FOCUS_SCALE = 1.05f
 
 /** The main action on a screen. Gold, with black content. */
 @Composable

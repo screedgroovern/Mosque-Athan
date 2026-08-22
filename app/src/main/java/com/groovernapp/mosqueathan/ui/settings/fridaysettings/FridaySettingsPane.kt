@@ -44,6 +44,9 @@ import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
+import com.groovernapp.mosqueathan.ui.design.focusHighlight
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 
 @Composable
 fun FridaySettingsPane(
@@ -139,6 +142,7 @@ fun FridaySettingsPane(
                         )
                     }
                     Switch(
+                        modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                         checked = jumatEnabled,
                         onCheckedChange = onJumatEnabledChange,
                         colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
@@ -208,6 +212,7 @@ fun FridaySettingsPane(
                             )
                         }
                         Switch(
+                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                             checked = jumatStandbyOnly,
                             onCheckedChange = onJumatStandbyOnlyChange,
                             enabled = jumatEnabled
@@ -257,6 +262,7 @@ fun FridaySettingsPane(
                             )
                         }
                         Switch(
+                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                             checked = murottalEnabled,
                             onCheckedChange = onMurottalEnabledChange,
                             enabled = jumatEnabled && !jumatStandbyOnly
@@ -310,6 +316,7 @@ fun FridaySettingsPane(
                             )
                         }
                         Switch(
+                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                             checked = jumatSlideshowEnabled,
                             onCheckedChange = onJumatSlideshowEnabledChange,
                             enabled = jumatEnabled && !jumatStandbyOnly
@@ -337,6 +344,7 @@ fun FridaySettingsPane(
                             )
                         }
                         Switch(
+                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                             checked = includeGlobalSlideshow,
                             onCheckedChange = onIncludeGlobalSlideshowChange,
                             enabled = jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled
@@ -454,6 +462,7 @@ fun FridaySettingsPane(
                                 ) {
                                     listOf("FADE", "SLIDE", "ZOOM", "NONE").forEach { type ->
                                         DropdownMenuItem(
+                                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false),
                                             text = { Text(type, color = MosqueTheme.colors.textPrimary) },
                                             onClick = {
                                                 onJumatTransitionTypeChange(type)
@@ -494,6 +503,7 @@ fun FridaySettingsPane(
                                     modifier = Modifier.background(MosqueTheme.colors.surfaceRaised)
                                 ) {
                                     DropdownMenuItem(
+                                        modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false),
                                         text = { Text(Lang.get("Seconds", "Detik"), color = MosqueTheme.colors.textPrimary) },
                                         onClick = {
                                             onJumatSlideIntervalUnitChange("SECONDS")
@@ -501,6 +511,7 @@ fun FridaySettingsPane(
                                         }
                                     )
                                     DropdownMenuItem(
+                                        modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false),
                                         text = { Text(Lang.get("Minutes", "Menit"), color = MosqueTheme.colors.textPrimary) },
                                         onClick = {
                                             onJumatSlideIntervalUnitChange("MINUTES")
@@ -530,6 +541,7 @@ fun FridaySettingsPane(
                                 )
                             }
                             Switch(
+                                modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                                 checked = jumatVideoWaitUntilEnd,
                                 onCheckedChange = onJumatVideoWaitUntilEndChange,
                                 colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
@@ -663,7 +675,7 @@ fun MurottalAudioPathsManager(
                         maxLines = 1,
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(
+                    MosqueIconButton(
                         onClick = {
                             val newPaths = paths.filter { it != path }
                             onAudioPathsChange(newPaths.joinToString(","))

@@ -37,8 +37,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -52,6 +50,8 @@ import com.groovernapp.mosqueathan.ui.design.component.MosqueSelectableButton
 import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
 
 
 fun parseFooterTexts(raw: String): List<String> {
@@ -121,7 +121,7 @@ fun RunningTextListSettingsComponent(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { editingIndex = null }) {
+                MosqueTextButton(onClick = { editingIndex = null }) {
                     Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             }
@@ -155,7 +155,7 @@ fun RunningTextListSettingsComponent(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { isAddingNew = false }) {
+                MosqueTextButton(onClick = { isAddingNew = false }) {
                     Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             }
@@ -379,7 +379,7 @@ fun RunningTextListSettingsComponent(
                                     horizontalArrangement = Arrangement.End,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    TextButton(
+                                    MosqueTextButton(
                                         onClick = {
                                             editTextValue = itemText
                                             editingIndex = index
@@ -402,7 +402,7 @@ fun RunningTextListSettingsComponent(
                                         )
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    TextButton(
+                                    MosqueTextButton(
                                         onClick = {
                                             val updated = items.toMutableList().apply { removeAt(index) }
                                             onItemsChange(updated)
@@ -509,7 +509,7 @@ fun RunningTextListSettingsComponent(
                                 modifier = Modifier.weight(1f)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            IconButton(onClick = {
+                            MosqueIconButton(onClick = {
                                 editTextValue = itemText
                                 editingIndex = index
                             }) {
@@ -519,7 +519,7 @@ fun RunningTextListSettingsComponent(
                                     tint = MosqueTheme.colors.info
                                 )
                             }
-                            IconButton(onClick = {
+                            MosqueIconButton(onClick = {
                                 val updated = items.toMutableList().apply { removeAt(index) }
                                 onItemsChange(updated)
                             }) {

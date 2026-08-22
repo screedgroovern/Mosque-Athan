@@ -64,6 +64,7 @@ import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 
 @Composable
 fun SettingsScreen(
@@ -292,7 +293,7 @@ fun SettingsScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // Hamburger Menu Button (only on phone)
                         if (isCompact) {
-                            IconButton(
+                            MosqueIconButton(
                                 onClick = { coroutineScope.launch { drawerState.open() } },
                                 modifier = Modifier.padding(end = MosqueTheme.spacing.md)
                             ) {
@@ -314,7 +315,7 @@ fun SettingsScreen(
 
                     // Back button on top right of detail area (phone)
                     if (isCompact) {
-                        IconButton(onClick = onBack) {
+                        MosqueIconButton(onClick = onBack) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Close",
@@ -719,7 +720,7 @@ fun SideSheetContent(
         ) {
             // Header Settings with Gear Icon
             if (isCollapsed) {
-                IconButton(
+                MosqueIconButton(
                     onClick = onToggleExpand,
                     modifier = Modifier.padding(bottom = MosqueTheme.spacing.xl)
                 ) {
@@ -758,7 +759,7 @@ fun SideSheetContent(
                     }
 
                     if (!isTv) {
-                        IconButton(onClick = onToggleExpand) {
+                        MosqueIconButton(onClick = onToggleExpand) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.MenuOpen,
                                 contentDescription = "Collapse Menu",

@@ -33,7 +33,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Switch
@@ -81,6 +80,9 @@ import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSelectableButton
+import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
+import com.groovernapp.mosqueathan.ui.design.focusHighlight
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 
 @Composable
 fun ThemeSettingsSegment(
@@ -277,7 +279,7 @@ fun DashboardTabContent(
                     fontSize = MosqueTheme.typography.label
                 )
                 Switch(
-                    modifier = Modifier.scale(0.8f),
+                    modifier = Modifier.scale(0.8f).focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                     checked = config.dashboardRandomize,
                     onCheckedChange = { checked ->
                         onUpdateDashboardSettings(
@@ -484,6 +486,7 @@ fun SlideshowTabContent(
                 modifier = Modifier.weight(1f)
             )
             Switch(
+                modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                 checked = slideshowEnabled,
                 onCheckedChange = { checked ->
                     // If turning ON and list is empty — allowed, just set enabled
@@ -583,6 +586,7 @@ fun SlideshowTabContent(
             }
             Spacer(modifier = Modifier.width(16.dp))
             Switch(
+                modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                 checked = includeDefaultImage,
                 onCheckedChange = { checked ->
                     onUpdateThemeSettings(
@@ -781,6 +785,7 @@ fun DropdownAdjustmentRow(
                     ) {
                         unitLabels.forEachIndexed { index, label ->
                             DropdownMenuItem(
+                                modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false),
                                 text = { 
                                     Text(
                                         text = label, 
@@ -879,6 +884,7 @@ fun DropdownAdjustmentRow(
                     ) {
                         unitLabels.forEachIndexed { index, label ->
                             DropdownMenuItem(
+                                modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false),
                                 text = { 
                                     Text(
                                         text = label, 
@@ -1091,7 +1097,7 @@ fun RunningTextSettingsCard(
                                     unfocusedTextColor = MosqueTheme.colors.textPrimary
                                 )
                             )
-                            IconButton(onClick = {
+                            MosqueIconButton(onClick = {
                                 onEdit(item.id, editText)
                                 isEditing = false
                             }) {
@@ -1104,10 +1110,10 @@ fun RunningTextSettingsCard(
                                 modifier = Modifier.weight(1f),
                                 fontSize = MosqueTheme.typography.label
                             )
-                            IconButton(onClick = { isEditing = true }, modifier = Modifier.size(32.dp)) {
+                            MosqueIconButton(onClick = { isEditing = true }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MosqueTheme.colors.textSecondary, modifier=Modifier.size(20.dp))
                             }
-                            IconButton(onClick = { onDelete(item.id) }, modifier = Modifier.size(32.dp)) {
+                            MosqueIconButton(onClick = { onDelete(item.id) }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MosqueTheme.colors.danger, modifier=Modifier.size(20.dp))
                             }
                         }
