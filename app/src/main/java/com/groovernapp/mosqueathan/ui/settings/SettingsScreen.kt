@@ -65,6 +65,10 @@ import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
+import org.koin.androidx.compose.koinViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesEvent
+import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel
 
 @Composable
 fun SettingsScreen(
@@ -545,18 +549,19 @@ fun SettingsScreen(
                                  }
 
                                  SettingsCategory.REMOTE_DEVICES -> {
+                                     val remoteDevicesViewModel: RemoteDevicesViewModel = koinViewModel()
+                                     val remoteDevicesState by remoteDevicesViewModel.uiState.collectAsStateWithLifecycle()
                                      RemoteDevicesSettingsPane(
-                                         config = config,
-                                         isTv = isTv,
-                                         onUpdateShowSettingsOnTv = { show -> viewModel.updateShowSettingsOnTv(show) },
-                                         devices = devices,
-                                         onSetDeviceMaster = { deviceId -> viewModel.setDeviceMaster(deviceId) },
-                                         onDeleteDevice = { deviceId -> viewModel.deleteDevice(deviceId) },
-                                         onUpdateConnectivityMode = { mode -> viewModel.updateConnectivityMode(mode) },
-                                         onUpdateRemoteTvIp = { ip -> viewModel.updateRemoteTvIp(ip) },
-                                         onUpdatePinCode = { pin -> viewModel.updatePinCode(pin) },
-                                         onSyncWithTv = { viewModel.syncWithTvServer(context) },
-                                         isCompact = isCompact
+                                         state = remoteDevicesState,
+                                         onEvent = { event ->
+                                             // Syncing still needs an Android Context, so it stays here
+                                             // rather than moving into the category ViewModel.
+                                             if (event is RemoteDevicesEvent.SyncRequested) {
+                                                 viewModel.syncWithTvServer(context)
+                                             } else {
+                                                 remoteDevicesViewModel.onEvent(event)
+                                             }
+                                         }
                                      )
                                  }
 

@@ -81,6 +81,22 @@ class WindowClassTest {
     }
 
     @Test
+    fun panePaddingGrowsWithRoomAndLeavesTvAlone() {
+        assertTrue(WindowClass.Compact.panePadding < WindowClass.Medium.panePadding)
+        assertTrue(WindowClass.Medium.panePadding < WindowClass.Expanded.panePadding)
+        // The TV value is what already shipped; changing it changes the display.
+        assertEquals(WindowClass.Expanded.panePadding, WindowClass.Tv.panePadding)
+    }
+
+    @Test
+    fun onlyAPhoneStacksSideBySideChoices() {
+        assertTrue(WindowClass.Compact.stacksSideBySideChoices)
+        assertFalse(WindowClass.Medium.stacksSideBySideChoices)
+        assertFalse(WindowClass.Expanded.stacksSideBySideChoices)
+        assertFalse(WindowClass.Tv.stacksSideBySideChoices)
+    }
+
+    @Test
     fun zeroWidthDoesNotThrow() {
         assertEquals(WindowClass.Compact, windowClassFor(0.dp, isTv = false))
     }

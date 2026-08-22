@@ -54,6 +54,29 @@ enum class WindowClass {
 val LocalWindowClass: ProvidableCompositionLocal<WindowClass> =
     staticCompositionLocalOf { WindowClass.Expanded }
 
+/**
+ * Horizontal padding for a settings pane's content.
+ *
+ * [WindowClass.Tv] keeps the value the app already shipped, so the display is
+ * untouched; the phone and tablet tiers are the part that had never been thought
+ * about — before this there was one breakpoint and everything above it got 24dp.
+ */
+val WindowClass.panePadding: Dp
+    get() = when (this) {
+        WindowClass.Compact -> 16.dp
+        WindowClass.Medium -> 20.dp
+        WindowClass.Expanded -> 24.dp
+        WindowClass.Tv -> 24.dp
+    }
+
+/**
+ * Whether a pair of side-by-side choices should stack instead.
+ *
+ * True only on a phone, where two cards in a row leaves each too narrow to read.
+ */
+val WindowClass.stacksSideBySideChoices: Boolean
+    get() = this == WindowClass.Compact
+
 /** Classifies a measured width. Kept separate from measurement so it is testable. */
 fun windowClassFor(width: Dp, isTv: Boolean): WindowClass = when {
     isTv -> WindowClass.Tv

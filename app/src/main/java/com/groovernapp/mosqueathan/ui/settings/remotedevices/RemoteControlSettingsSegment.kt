@@ -27,6 +27,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
@@ -35,14 +36,15 @@ import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
 
 @Composable
 fun RemoteControlSettingsSegment(
-    config: MosqueConfigEntity,
-    onUpdateRemoteTvIp: (String) -> Unit,
-    onUpdatePinCode: (String) -> Unit,
-    onSyncWithTv: () -> Unit,
-    isCompact: Boolean
+    state: RemoteDevicesUiState,
+    onEvent: (RemoteDevicesEvent) -> Unit
 ) {
+    val isCompact = LocalWindowClass.current.isCompact
+    val onUpdateRemoteTvIp: (String) -> Unit = { onEvent(RemoteDevicesEvent.RemoteTvIpEntered(it)) }
+    val onUpdatePinCode: (String) -> Unit = { onEvent(RemoteDevicesEvent.PinCodeEntered(it)) }
+    val onSyncWithTv: () -> Unit = { onEvent(RemoteDevicesEvent.SyncRequested) }
     val context = LocalContext.current
-    var ipText by remember(config.remoteTvIp) { mutableStateOf(config.remoteTvIp) }
+    var ipText by remember(state.remoteTvIp) { mutableStateOf(state.remoteTvIp) }
     var pinText by remember { mutableStateOf("") }
 
     val barcodeLauncher = rememberLauncherForActivityResult(
@@ -191,7 +193,7 @@ fun RemoteControlSettingsSegment(
 
             MosqueTertiaryButton(
                 onClick = {
-                    if (config.remoteTvIp.isEmpty()) {
+                    if (state.remoteTvIp.isEmpty()) {
                         Toast.makeText(context, Lang.get("Hubungkan ke TV terlebih dahulu!", "Hubungkan ke TV terlebih dahulu!"), Toast.LENGTH_SHORT).show()
                     } else {
                         Toast.makeText(context, Lang.get("Menyinkronkan data dengan TV...", "Menyinkronkan data dengan TV..."), Toast.LENGTH_SHORT).show()
@@ -230,7 +232,7 @@ fun RemoteControlSettingsSegment(
                 fontSize = MosqueTheme.typography.labelSmall
             )
 
-            val hasPin = config.pinCode.isNotEmpty()
+            val hasPin = state.pinCode.isNotEmpty()
             val badgeBg = if (hasPin) MosqueTheme.colors.success.copy(alpha = 0.15f) else MosqueTheme.colors.danger.copy(alpha = 0.15f)
             val badgeColor = if (hasPin) MosqueTheme.colors.success else MosqueTheme.colors.danger
             val badgeText = if (hasPin) Lang.get("AKTIF (MEMAKAI PIN)", "AKTIF (MEMAKAI PIN)") else Lang.get("TIDAK AKTIF", "TIDAK AKTIF")

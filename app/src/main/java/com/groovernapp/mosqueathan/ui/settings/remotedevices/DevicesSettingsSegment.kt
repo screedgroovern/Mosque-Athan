@@ -27,11 +27,12 @@ import com.groovernapp.mosqueathan.ui.design.initialFocus
 
 @Composable
 fun DevicesSettingsSegment(
-    config: com.groovernapp.mosqueathan.data.MosqueConfigEntity,
-    devices: List<ConnectedDeviceEntity>,
-    onSetDeviceMaster: (String) -> Unit,
-    onDeleteDevice: (String) -> Unit
+    state: RemoteDevicesUiState,
+    onEvent: (RemoteDevicesEvent) -> Unit
 ) {
+    val devices = state.devices
+    val onSetDeviceMaster: (String) -> Unit = { onEvent(RemoteDevicesEvent.DeviceMadeMaster(it)) }
+    val onDeleteDevice: (String) -> Unit = { onEvent(RemoteDevicesEvent.DeviceRemoved(it)) }
     var showTransferMasterDialog by remember { mutableStateOf<ConnectedDeviceEntity?>(null) }
     var transferPinInput by remember { mutableStateOf("") }
     var pinErrorMsg by remember { mutableStateOf<String?>(null) }
@@ -62,7 +63,7 @@ fun DevicesSettingsSegment(
                         ),
                         color = MosqueTheme.colors.textPrimary
                     )
-                    if (config.pinCode.isNotEmpty()) {
+                    if (state.pinCode.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
                         Text(
                             com.groovernapp.mosqueathan.util.Lang.get("Enter current PIN to confirm:", "Masukkan PIN saat ini untuk konfirmasi:"),
@@ -86,7 +87,7 @@ fun DevicesSettingsSegment(
                 MosquePrimaryButton(
                     modifier = Modifier.initialFocus(),
                     onClick = {
-                        if (config.pinCode.isEmpty() || transferPinInput == config.pinCode) {
+                        if (state.pinCode.isEmpty() || transferPinInput == state.pinCode) {
                             onSetDeviceMaster(targetDevice.deviceId)
                             showTransferMasterDialog = null
                             transferPinInput = ""

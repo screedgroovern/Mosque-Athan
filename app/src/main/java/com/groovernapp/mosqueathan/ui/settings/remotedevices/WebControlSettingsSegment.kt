@@ -24,17 +24,22 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.groovernapp.mosqueathan.server.SettingsServer
 import androidx.core.graphics.set
 import androidx.core.graphics.createBitmap
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.focusHighlight
 import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 
 @Composable
 fun WebControlSettingsSegment(
-    showSettingsOnTv: Boolean,
-    isTv: Boolean,
-    onUpdateShowSettingsOnTv: (Boolean) -> Unit,
-    isCompact: Boolean
+    state: RemoteDevicesUiState,
+    onEvent: (RemoteDevicesEvent) -> Unit
 ) {
+    val windowClass = LocalWindowClass.current
+    val isTv = windowClass.isTv
+    val isCompact = windowClass.isCompact
+    val showSettingsOnTv = state.showSettingsOnTv
+    val onUpdateShowSettingsOnTv: (Boolean) -> Unit =
+        { onEvent(RemoteDevicesEvent.ShowSettingsOnTvToggled(it)) }
     val ipAddress = remember { SettingsServer.getIpAddress() }
     val serverUrl = if (ipAddress != null) "http://$ipAddress:8080" else null
 
