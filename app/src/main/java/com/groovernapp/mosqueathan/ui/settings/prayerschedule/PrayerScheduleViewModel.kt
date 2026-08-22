@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
+import com.groovernapp.mosqueathan.data.remote.pushConfig
 import com.groovernapp.mosqueathan.data.copy
 import com.groovernapp.mosqueathan.domain.PrayerType
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +34,8 @@ import java.net.URLEncoder
  * other category. It belongs to exactly one pane.
  */
 class PrayerScheduleViewModel(
-    private val repository: MosqueConfigRepository
+    private val repository: MosqueConfigRepository,
+    private val remote: RemoteActionSender
 ) : ViewModel() {
 
     private val searchResults = MutableStateFlow<List<KemenagCity>>(emptyList())
@@ -98,8 +101,18 @@ class PrayerScheduleViewModel(
         }
     }
 
+    /**
+     * Writes the change and tells the TV, if this device is controlling one.
+     *
+     * The push is not optional: on a controller, a setting that only lands locally
+     * looks saved and never takes effect.
+     */
     private fun edit(change: (MosqueConfigEntity) -> MosqueConfigEntity) {
-        viewModelScope.launch { repository.updateConfig(change(repository.getConfig())) }
+        viewModelScope.launch {
+            val updated = change(repository.getConfig())
+            repository.updateConfig(updated)
+            remote.send("update_config") { pushConfig(updated) }
+        }
     }
 
     private fun searchCities(query: String) {

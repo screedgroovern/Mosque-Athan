@@ -2,6 +2,7 @@ package com.groovernapp.mosqueathan.di
 
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
 import com.groovernapp.mosqueathan.data.RealmKemenagScheduleSource
+import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import com.groovernapp.mosqueathan.domain.KemenagScheduleSource
 import com.groovernapp.mosqueathan.ui.adzan.AdzanViewModel
 import com.groovernapp.mosqueathan.ui.dashboard.DashboardViewModel
@@ -31,13 +32,14 @@ import org.koin.dsl.module
 val appModule = module {
     single { MosqueConfigRepository() }
     single<KemenagScheduleSource> { RealmKemenagScheduleSource(get()) }
+    single { RemoteActionSender(get()) }
 
     viewModel { AppViewModel(get(), get()) }
     viewModel { DashboardViewModel(get(), get()) }
     viewModel { AdzanViewModel(get()) }
     viewModel { IqomahViewModel(get()) }
     viewModel { SettingsViewModel(get()) }
-    viewModel { RemoteDevicesViewModel(get()) }
-    viewModel { AdzanIqomahViewModel(get()) }
-    viewModel { PrayerScheduleViewModel(get()) }
+    viewModel { RemoteDevicesViewModel(get(), get()) }
+    viewModel { AdzanIqomahViewModel(get(), get()) }
+    viewModel { PrayerScheduleViewModel(get(), get()) }
 }

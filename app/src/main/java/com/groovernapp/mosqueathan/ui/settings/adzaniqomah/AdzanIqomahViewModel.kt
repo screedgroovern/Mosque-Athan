@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
+import com.groovernapp.mosqueathan.data.remote.pushConfig
 import com.groovernapp.mosqueathan.data.copy
 import com.groovernapp.mosqueathan.domain.PrayerType
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,7 +22,8 @@ import kotlinx.coroutines.launch
  * with the caller that already owns that.
  */
 class AdzanIqomahViewModel(
-    private val repository: MosqueConfigRepository
+    private val repository: MosqueConfigRepository,
+    private val remote: RemoteActionSender
 ) : ViewModel() {
 
     val uiState: StateFlow<AdzanIqomahUiState> =
@@ -55,9 +58,17 @@ class AdzanIqomahViewModel(
         }
     }
 
+    /**
+     * Writes the change and tells the TV, if this device is controlling one.
+     *
+     * The push is not optional: on a controller, a setting that only lands locally
+     * looks saved and never takes effect.
+     */
     private fun edit(change: (MosqueConfigEntity) -> MosqueConfigEntity) {
         viewModelScope.launch {
-            repository.updateConfig(change(repository.getConfig()))
+            val updated = change(repository.getConfig())
+            repository.updateConfig(updated)
+            remote.send("update_config") { pushConfig(updated) }
         }
     }
 }

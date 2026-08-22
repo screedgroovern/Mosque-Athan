@@ -3,6 +3,7 @@ package com.groovernapp.mosqueathan.ui.settings.remotedevices
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -22,7 +23,8 @@ import kotlinx.coroutines.launch
  * Moving it needs the Context dependency removed first.
  */
 class RemoteDevicesViewModel(
-    private val repository: MosqueConfigRepository
+    private val repository: MosqueConfigRepository,
+    private val remote: RemoteActionSender
 ) : ViewModel() {
 
     val uiState: StateFlow<RemoteDevicesUiState> =
@@ -48,20 +50,28 @@ class RemoteDevicesViewModel(
             is RemoteDevicesEvent.ModeSelected ->
                 write { repository.updateConnectivityMode(event.mode.wireValue) }
 
-            is RemoteDevicesEvent.ShowSettingsOnTvToggled ->
+            is RemoteDevicesEvent.ShowSettingsOnTvToggled -> {
                 write { repository.updateShowSettingsOnTv(event.show) }
+                remote.send("update_config") { put("showSettingsOnTv", event.show) }
+            }
 
             is RemoteDevicesEvent.RemoteTvIpEntered ->
                 write { repository.updateRemoteTvIp(event.ip) }
 
-            is RemoteDevicesEvent.PinCodeEntered ->
+            is RemoteDevicesEvent.PinCodeEntered -> {
                 write { repository.updatePinCode(event.pin, changerDeviceId = null) }
+                remote.send("update_pin") { put("pin", event.pin) }
+            }
 
-            is RemoteDevicesEvent.DeviceMadeMaster ->
+            is RemoteDevicesEvent.DeviceMadeMaster -> {
                 write { repository.setDeviceMaster(event.deviceId) }
+                remote.send("set_master") { put("deviceId", event.deviceId) }
+            }
 
-            is RemoteDevicesEvent.DeviceRemoved ->
+            is RemoteDevicesEvent.DeviceRemoved -> {
                 write { repository.deleteDevice(event.deviceId) }
+                remote.send("delete_device") { put("deviceId", event.deviceId) }
+            }
 
             RemoteDevicesEvent.SyncRequested -> Unit // handled at the call site
         }
