@@ -25,20 +25,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePreviewButton
 
 @Composable
 fun AdzanSettingsSegment(
-    adzanLeadMinutes: Int,
-    onAdzanLeadMinutesChange: (Int) -> Unit,
-    config: MosqueConfigEntity,
-    onUpdateFooters: (String, String) -> Unit,
-    onPreviewAdzan: () -> Unit,
-    isCompact: Boolean = false
+    state: AdzanIqomahUiState,
+    onEvent: (AdzanIqomahEvent) -> Unit
 ) {
-    val adzanFooters = remember(config.adzanFooterText) {
-        parseFooterTexts(config.adzanFooterText)
+    val isCompact = LocalWindowClass.current.isCompact
+    val adzanLeadMinutes = state.adzanLeadMinutes
+    val onAdzanLeadMinutesChange: (Int) -> Unit =
+        { onEvent(AdzanIqomahEvent.AdzanLeadMinutesChanged(it)) }
+    val onUpdateFooters: (String, String) -> Unit =
+        { adzan, iqomah -> onEvent(AdzanIqomahEvent.FootersChanged(adzan, iqomah)) }
+    val onPreviewAdzan: () -> Unit = { onEvent(AdzanIqomahEvent.PreviewAdzanRequested) }
+    val adzanFooters = remember(state.adzanFooterText) {
+        parseFooterTexts(state.adzanFooterText)
     }
 
     Column(
@@ -70,7 +74,7 @@ fun AdzanSettingsSegment(
             subtitle = Lang.get("Adzan Screen Footer (Running Text)", "Footer Layar Adzan (Teks Berjalan)"),
             items = adzanFooters,
             onItemsChange = { updated ->
-                onUpdateFooters(formatFooterTexts(updated), config.iqomahFooterText)
+                onUpdateFooters(formatFooterTexts(updated), state.iqomahFooterText)
             },
             placeholderText = Lang.get("Type adzan footer...", "Ketik footer adzan..."),
             isCompact = isCompact

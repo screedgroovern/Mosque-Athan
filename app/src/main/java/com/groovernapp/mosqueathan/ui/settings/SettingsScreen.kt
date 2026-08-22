@@ -69,6 +69,8 @@ import org.koin.androidx.compose.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesEvent
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel
+import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahEvent
+import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahViewModel
 
 @Composable
 fun SettingsScreen(
@@ -461,42 +463,19 @@ fun SettingsScreen(
                                 }
 
                                 SettingsCategory.ADZAN_IQOMAH -> {
+                                     val adzanIqomahViewModel: AdzanIqomahViewModel = koinViewModel()
+                                     val adzanIqomahState by adzanIqomahViewModel.uiState.collectAsStateWithLifecycle()
                                      AdzanIqomahSettingsPane(
-                                         adzanLeadMinutes = adzanLeadMinutes,
-                                         onAdzanLeadMinutesChange = {
-                                             adzanLeadMinutes = it
-                                             viewModel.updateConfig(config.copy(adzanLeadMinutes = it))
-                                         },
-                                         iqomahSubuh = iqomahSubuh,
-                                         onIqomahSubuhChange = {
-                                             iqomahSubuh = it
-                                             viewModel.updateConfig(config.copy(iqomahSubuh = it))
-                                         },
-                                         iqomahDzuhur = iqomahDzuhur,
-                                         onIqomahDzuhurChange = {
-                                             iqomahDzuhur = it
-                                             viewModel.updateConfig(config.copy(iqomahDzuhur = it))
-                                         },
-                                         iqomahAshar = iqomahAshar,
-                                         onIqomahAsharChange = {
-                                             iqomahAshar = it
-                                             viewModel.updateConfig(config.copy(iqomahAshar = it))
-                                         },
-                                         iqomahMaghrib = iqomahMaghrib,
-                                         onIqomahMaghribChange = {
-                                             iqomahMaghrib = it
-                                             viewModel.updateConfig(config.copy(iqomahMaghrib = it))
-                                         },
-                                         iqomahIsya = iqomahIsya,
-                                         onIqomahIsyaChange = {
-                                             iqomahIsya = it
-                                             viewModel.updateConfig(config.copy(iqomahIsya = it))
-                                         },
-                                         config = config,
-                                         onUpdateFooters = { adzan, iqomah -> viewModel.updateFooters(adzan, iqomah) },
-                                         onPreviewAdzan = onPreviewAdzan,
-                                         onPreviewIqomah = onPreviewIqomah,
-                                         isCompact = isCompact
+                                         state = adzanIqomahState,
+                                         onEvent = { event ->
+                                             // Preview swaps which screen AppViewModel drives — navigation,
+                                             // not a setting — so it stays with the caller that owns it.
+                                             when (event) {
+                                                 AdzanIqomahEvent.PreviewAdzanRequested -> onPreviewAdzan()
+                                                 AdzanIqomahEvent.PreviewIqomahRequested -> onPreviewIqomah()
+                                                 else -> adzanIqomahViewModel.onEvent(event)
+                                             }
+                                         }
                                      )
                                  }
 

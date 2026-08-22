@@ -34,6 +34,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
@@ -550,6 +551,19 @@ fun AdjustmentRow(
     unitSuffix: String = com.groovernapp.mosqueathan.util.Lang.get("minutes", "menit"),
     onValueChange: (Int) -> Unit
 ) {
+    // The displayed value is buffered locally and re-keyed on [value].
+    //
+    // Without this, two quick taps both read the same incoming `value` — the second
+    // recomputes the same result and is lost, because the new value has not made it
+    // back through Realm and the state flow yet. Buffering belongs here rather than
+    // in each screen: every caller needs it.
+    var shown by remember(value) { mutableIntStateOf(value) }
+
+    fun emit(next: Int) {
+        shown = next
+        onValueChange(next)
+    }
+
     val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
     val isCompact = LocalWindowClass.current.isCompact
 
@@ -574,7 +588,7 @@ fun AdjustmentRow(
                 horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
             ) {
                 MosqueSecondaryButton(
-                    onClick = { if (value > minValue) onValueChange(value - 1) },
+                    onClick = { if (shown > minValue) emit(shown - 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(MosqueTheme.size.controlMd)
@@ -582,9 +596,9 @@ fun AdjustmentRow(
                     Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
      
-                val sign = if (showSign && value > 0) "+" else ""
+                val sign = if (showSign && shown > 0) "+" else ""
                 Text(
-                    text = "$sign$value",
+                    text = "$sign$shown",
                     color = MosqueTheme.colors.textPrimary,
                     fontSize = MosqueTheme.typography.bodyCompact,
                     fontWeight = FontWeight.Bold,
@@ -593,7 +607,7 @@ fun AdjustmentRow(
                 )
      
                 MosqueSecondaryButton(
-                    onClick = { if (value < maxValue) onValueChange(value + 1) },
+                    onClick = { if (shown < maxValue) emit(shown + 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(MosqueTheme.size.controlMd)
@@ -633,7 +647,7 @@ fun AdjustmentRow(
                 horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
             ) {
                 MosqueSecondaryButton(
-                    onClick = { if (value > minValue) onValueChange(value - 1) },
+                    onClick = { if (shown > minValue) emit(shown - 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(MosqueTheme.size.controlMd)
@@ -641,9 +655,9 @@ fun AdjustmentRow(
                     Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
      
-                val sign = if (showSign && value > 0) "+" else ""
+                val sign = if (showSign && shown > 0) "+" else ""
                 Text(
-                    text = "$sign$value",
+                    text = "$sign$shown",
                     color = MosqueTheme.colors.textPrimary,
                     fontSize = MosqueTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
@@ -652,7 +666,7 @@ fun AdjustmentRow(
                 )
      
                 MosqueSecondaryButton(
-                    onClick = { if (value < maxValue) onValueChange(value + 1) },
+                    onClick = { if (shown < maxValue) emit(shown + 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier.size(MosqueTheme.size.controlMd)

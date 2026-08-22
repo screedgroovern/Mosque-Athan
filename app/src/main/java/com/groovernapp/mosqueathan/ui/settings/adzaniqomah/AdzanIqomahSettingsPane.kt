@@ -33,29 +33,16 @@ import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun AdzanIqomahSettingsPane(
-    adzanLeadMinutes: Int,
-    onAdzanLeadMinutesChange: (Int) -> Unit,
-    iqomahSubuh: Int,
-    onIqomahSubuhChange: (Int) -> Unit,
-    iqomahDzuhur: Int,
-    onIqomahDzuhurChange: (Int) -> Unit,
-    iqomahAshar: Int,
-    onIqomahAsharChange: (Int) -> Unit,
-    iqomahMaghrib: Int,
-    onIqomahMaghribChange: (Int) -> Unit,
-    iqomahIsya: Int,
-    onIqomahIsyaChange: (Int) -> Unit,
-    config: MosqueConfigEntity,
-    onUpdateFooters: (String, String) -> Unit,
-    onPreviewAdzan: () -> Unit,
-    onPreviewIqomah: () -> Unit,
-    isCompact: Boolean,
+    state: AdzanIqomahUiState,
+    onEvent: (AdzanIqomahEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isCompact = LocalWindowClass.current.isCompact
     val pagerState = rememberPagerState(initialPage = 0) { 2 }
     val coroutineScope = rememberCoroutineScope()
 
@@ -132,14 +119,7 @@ fun AdzanIqomahSettingsPane(
                     border = BorderStroke(MosqueTheme.stroke.hairline, MosqueTheme.colors.fill)
                 ) {
                     Column(modifier = Modifier.padding(MosqueTheme.spacing.xxxl)) {
-                        AdzanSettingsSegment(
-                            adzanLeadMinutes = adzanLeadMinutes,
-                            onAdzanLeadMinutesChange = onAdzanLeadMinutesChange,
-                            config = config,
-                            onUpdateFooters = onUpdateFooters,
-                            onPreviewAdzan = onPreviewAdzan,
-                            isCompact = isCompact
-                        )
+                        AdzanSettingsSegment(state = state, onEvent = onEvent)
                     }
                 }
             } else {
@@ -152,22 +132,7 @@ fun AdzanIqomahSettingsPane(
                     border = BorderStroke(MosqueTheme.stroke.hairline, MosqueTheme.colors.fill)
                 ) {
                     Column(modifier = Modifier.padding(MosqueTheme.spacing.xxxl)) {
-                        IqomahSettingsSegment(
-                            iqomahSubuh = iqomahSubuh,
-                            onIqomahSubuhChange = onIqomahSubuhChange,
-                            iqomahDzuhur = iqomahDzuhur,
-                            onIqomahDzuhurChange = onIqomahDzuhurChange,
-                            iqomahAshar = iqomahAshar,
-                            onIqomahAsharChange = onIqomahAsharChange,
-                            iqomahMaghrib = iqomahMaghrib,
-                            onIqomahMaghribChange = onIqomahMaghribChange,
-                            iqomahIsya = iqomahIsya,
-                            onIqomahIsyaChange = onIqomahIsyaChange,
-                            config = config,
-                            onUpdateFooters = onUpdateFooters,
-                            onPreviewIqomah = onPreviewIqomah,
-                            isCompact = isCompact
-                        )
+                        IqomahSettingsSegment(state = state, onEvent = onEvent)
                     }
                 }
             }

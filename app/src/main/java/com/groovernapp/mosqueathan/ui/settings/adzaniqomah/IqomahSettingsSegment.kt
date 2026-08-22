@@ -48,29 +48,22 @@ import com.groovernapp.mosqueathan.ui.settings.formatFooterTexts
 import com.groovernapp.mosqueathan.ui.settings.parseFooterTexts
 import com.groovernapp.mosqueathan.ui.settings.RunningTextListSettingsComponent
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosquePreviewButton
 
 @Composable
 fun IqomahSettingsSegment(
-    iqomahSubuh: Int,
-    onIqomahSubuhChange: (Int) -> Unit,
-    iqomahDzuhur: Int,
-    onIqomahDzuhurChange: (Int) -> Unit,
-    iqomahAshar: Int,
-    onIqomahAsharChange: (Int) -> Unit,
-    iqomahMaghrib: Int,
-    onIqomahMaghribChange: (Int) -> Unit,
-    iqomahIsya: Int,
-    onIqomahIsyaChange: (Int) -> Unit,
-    config: MosqueConfigEntity,
-    onUpdateFooters: (String, String) -> Unit,
-    onPreviewIqomah: () -> Unit,
-    isCompact: Boolean = false
+    state: AdzanIqomahUiState,
+    onEvent: (AdzanIqomahEvent) -> Unit
 ) {
-    val iqomahFooters = remember(config.iqomahFooterText) {
-        parseFooterTexts(config.iqomahFooterText)
+    val isCompact = LocalWindowClass.current.isCompact
+    val onUpdateFooters: (String, String) -> Unit =
+        { adzan, iqomah -> onEvent(AdzanIqomahEvent.FootersChanged(adzan, iqomah)) }
+    val onPreviewIqomah: () -> Unit = { onEvent(AdzanIqomahEvent.PreviewIqomahRequested) }
+    val iqomahFooters = remember(state.iqomahFooterText) {
+        parseFooterTexts(state.iqomahFooterText)
     }
 
     Column(
@@ -87,12 +80,20 @@ fun IqomahSettingsSegment(
             fontWeight = FontWeight.Bold
         )
 
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            AdjustmentRow(Lang.get("Fajr", "Subuh"), iqomahSubuh, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahSubuhChange)
-            AdjustmentRow(Lang.get("Dhuhr", "Dzuhur"), iqomahDzuhur, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahDzuhurChange)
-            AdjustmentRow(Lang.get("Asr", "Ashar"), iqomahAshar, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahAsharChange)
-            AdjustmentRow(Lang.get("Maghrib", "Maghrib"), iqomahMaghrib, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahMaghribChange)
-            AdjustmentRow(Lang.get("Isha'", "Isya'"), iqomahIsya, minValue = 0, maxValue = 60, showSign = false, onValueChange = onIqomahIsyaChange)
+        // One row per prayer, from IQOMAH_PRAYERS. This was five near-identical
+        // lines; the label comes from PrayerType.displayName, which already knows
+        // both languages and renders Friday's Dzuhur as JUM'AT.
+        Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
+            IQOMAH_PRAYERS.forEach { prayer ->
+                AdjustmentRow(
+                    title = prayer.displayName,
+                    value = state.iqomahFor(prayer),
+                    minValue = 0,
+                    maxValue = 60,
+                    showSign = false,
+                    onValueChange = { onEvent(AdzanIqomahEvent.IqomahMinutesChanged(prayer, it)) }
+                )
+            }
         }
 
         HorizontalDivider(
@@ -106,7 +107,7 @@ fun IqomahSettingsSegment(
             subtitle = Lang.get("Iqomah Screen Footer (Running Text)", "Footer Layar Iqomah (Teks Berjalan)"),
             items = iqomahFooters,
             onItemsChange = { updated ->
-                onUpdateFooters(config.adzanFooterText, formatFooterTexts(updated))
+                onUpdateFooters(state.adzanFooterText, formatFooterTexts(updated))
             },
             placeholderText = Lang.get("Type iqomah footer...", "Ketik footer iqomah..."),
             isCompact = isCompact
