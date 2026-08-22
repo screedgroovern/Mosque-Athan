@@ -10,6 +10,8 @@ import androidx.compose.ui.unit.dp
 import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.ui.dashboard.PrayerTimesUiModel
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import androidx.compose.ui.unit.Dp
+import com.groovernapp.mosqueathan.ui.design.isShort
 
 @Composable
 fun PrayerTimesPanel(
@@ -21,7 +23,7 @@ fun PrayerTimesPanel(
         modifier = Modifier
             .fillMaxWidth()
             .background(MosqueTheme.colors.scrim.copy(alpha = 0.55f))
-            .padding(vertical = if (isSlideshowActive) 16.dp else 20.dp),
+            .padding(vertical = prayerRowPadding(isSlideshowActive)),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
 
@@ -74,4 +76,21 @@ fun PrayerTimesPanel(
             isSlideshowActive
         )
     }
+}
+
+/**
+ * Vertical padding around the prayer row.
+ *
+ * Tightened hard on a short window rather than merely scaled. On a phone the row
+ * and the running-text bar are the last two things in the column, so every dp of
+ * padding here is a dp the running text does not get — and the running text was
+ * being clipped at the bottom edge even after the type shrank.
+ *
+ * On a television and a tablet this is the 20dp (or 16dp during a slideshow) it has
+ * always been.
+ */
+@Composable
+private fun prayerRowPadding(isSlideshowActive: Boolean): Dp {
+    val base = if (isSlideshowActive) MosqueTheme.spacing.xl else MosqueTheme.spacing.xxl
+    return if (MosqueTheme.window.isShort) MosqueTheme.spacing.xs else base
 }

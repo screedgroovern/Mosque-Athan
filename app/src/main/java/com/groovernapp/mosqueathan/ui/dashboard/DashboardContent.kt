@@ -56,7 +56,10 @@ fun DashboardContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = MosqueTheme.spacing.huge, vertical = MosqueTheme.spacing.xxl),
+                    .padding(
+                        horizontal = MosqueTheme.spacing.huge,
+                        vertical = MosqueTheme.spacing.xxl * MosqueTheme.displayScale
+                    ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 SmallClockCard(
@@ -101,7 +104,10 @@ fun DashboardContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = MosqueTheme.spacing.huge, vertical = MosqueTheme.spacing.xxl),
+                            .padding(
+                        horizontal = MosqueTheme.spacing.huge,
+                        vertical = MosqueTheme.spacing.xxl * MosqueTheme.displayScale
+                    ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         SmallClockCard(

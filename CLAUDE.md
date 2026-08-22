@@ -542,6 +542,45 @@ the web panel — the panel is a client and needs no database. Running
 1 → 2 → 4 → 5 → 6 → 7 → 3 reaches the visible payoff sooner and keeps the only
 risky step off the critical path, at the cost of carrying Realm longer.
 
+### Display screens on a short window
+
+The dashboard, adzan and iqomah screens are built for a television and overflow on
+a phone. The app is locked to landscape, so a phone gives **360dp of height** — and
+`ClockSection` alone stacks 170sp + 32sp + 22sp + 22sp, around 250dp of text. The
+clock filled the screen, the Hijri date was clipped, and the prayer times row
+disappeared entirely. Reported from use, not found by reading.
+
+Two things scale with window height, both provided by `MosqueTheme`:
+
+- **`MosqueTheme.typography`** resolves through a `CompositionLocal`. Display roles
+  (`clockDisplay`, `adzanTitle`, `prayerName`, `prayerLabel`, …) are multiplied by
+  the height factor; settings roles are **not** — they are 11–24sp already, and a
+  phone is held closer, so shrinking body text makes it worse.
+- **`MosqueTheme.displayScale`** is the same factor, for padding and fixed heights
+  on display screens. Scaling type alone was not enough: fixed padding and the
+  running-text bar's `height(controlXl)` came to 136dp of the 360.
+
+**Exactly 1.0 at 600dp of height and above.** The tablet is 711dp and a television
+more, so both render as they shipped. `DisplayTypeScaleTest` asserts that with
+`assertEquals` on the `TextUnit` rather than a tolerance — "approximately
+unchanged" is not good enough for a display already in a mosque.
+
+Rules for display-screen work:
+
+1. Read sizes from `MosqueTheme.typography`; never hard-code `sp` on these screens.
+2. Multiply padding and fixed heights by `MosqueTheme.displayScale`.
+3. A label on a display screen needs a **display** role. `PrayerItem` used
+   `titleMedium`, a settings role, so it stayed at 20sp on a phone and helped push
+   the running text off screen. `prayerLabel` exists for that reason and holds the
+   same 20sp.
+4. Where scaling is not enough, tighten that component on `isShort` specifically
+   rather than steepening the global factor — the clock size is right on a phone,
+   and making everything smaller to fit one row is the wrong trade.
+
+**Known unverified:** the prayer row's tightened padding on a short window has not
+been seen on hardware. The phone is in use as a hotspot and the tablet was in
+standby (02:12, inside the 22:00–04:00 window) when it was last checked.
+
 ### TV navigation — the D-pad rules
 
 The display is driven by four arrow keys and Enter, so **focus visibility is not

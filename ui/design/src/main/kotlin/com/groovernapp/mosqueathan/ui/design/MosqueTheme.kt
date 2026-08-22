@@ -34,7 +34,8 @@ fun MosqueTheme(
     CompositionLocalProvider(
         LocalWindowClass provides windowClass,
         LocalWindowMetrics provides WindowMetrics(windowClass, widthDp, heightDp),
-        LocalTypeScale provides displayTypeScaleFor(heightDp)
+        LocalTypeScale provides displayTypeScaleFor(heightDp),
+        LocalDisplayScale provides displayScaleFor(heightDp)
     ) {
         MaterialTheme(
             colorScheme = darkColorScheme(),
@@ -55,6 +56,15 @@ object MosqueTheme {
      */
     val typography: TypeScale
         @Composable get() = LocalTypeScale.current
+
+    /**
+     * Multiplier for display-screen spacing. 1.0 on a television or tablet.
+     *
+     * Use it for padding and fixed heights on the dashboard, adzan and iqomah
+     * screens, so vertical space shrinks with the type rather than against it.
+     */
+    val displayScale: Float
+        @Composable get() = LocalDisplayScale.current
     val spacing = MosqueSpacing
     val size = MosqueSize
     val radius = MosqueRadius
@@ -72,3 +82,6 @@ object MosqueTheme {
 /** The active type scale. Provided by [MosqueTheme]; read it through `MosqueTheme.typography`. */
 val LocalTypeScale: ProvidableCompositionLocal<TypeScale> =
     staticCompositionLocalOf { MosqueTypography }
+
+/** The active display scale. Read it through `MosqueTheme.displayScale`. */
+val LocalDisplayScale: ProvidableCompositionLocal<Float> = staticCompositionLocalOf { 1f }

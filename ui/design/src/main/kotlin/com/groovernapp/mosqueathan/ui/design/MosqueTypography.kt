@@ -50,6 +50,15 @@ object MosqueTypography : TypeScale {
     override val prayerName: TextUnit = 28.sp
     /** Prayer name while the slideshow is running. */
     override val prayerNameCompact: TextUnit = 22.sp
+    /**
+     * The label above each time in the prayer row.
+     *
+     * Same 20sp it always was, but a *display* role rather than `titleMedium`. It
+     * sits on the dashboard, so it has to scale with the window; while it borrowed a
+     * settings token it stayed at 20sp on a phone and helped push the running text
+     * off screen.
+     */
+    override val prayerLabel: TextUnit = 20.sp
 
     // --- Settings UI --------------------------------------------------------
     override val titleLarge: TextUnit = 24.sp
@@ -85,6 +94,7 @@ interface TypeScale {
     val headline: TextUnit
     val prayerName: TextUnit
     val prayerNameCompact: TextUnit
+    val prayerLabel: TextUnit
     val titleLarge: TextUnit
     val titleMedium: TextUnit
     val titleSmall: TextUnit
@@ -118,6 +128,7 @@ private class ScaledTypeScale(private val factor: Float) : TypeScale {
     override val headline = MosqueTypography.headline.scaled()
     override val prayerName = MosqueTypography.prayerName.scaled()
     override val prayerNameCompact = MosqueTypography.prayerNameCompact.scaled()
+    override val prayerLabel = MosqueTypography.prayerLabel.scaled()
 
     override val titleLarge = MosqueTypography.titleLarge
     override val titleMedium = MosqueTypography.titleMedium
@@ -138,12 +149,19 @@ private class ScaledTypeScale(private val factor: Float) : TypeScale {
  * and up — render byte-identically to before. Below that it tracks the height, with
  * a floor so the clock never becomes unreadable from across a room.
  */
-fun displayTypeScaleFor(height: androidx.compose.ui.unit.Dp): TypeScale =
-    if (height >= FULL_HEIGHT) {
-        MosqueTypography
-    } else {
-        ScaledTypeScale((height / FULL_HEIGHT).coerceIn(MIN_FACTOR, 1f))
-    }
+fun displayTypeScaleFor(height: Dp): TypeScale =
+    if (height >= FULL_HEIGHT) MosqueTypography else ScaledTypeScale(displayScaleFor(height))
+
+/**
+ * How much display-side vertical space to keep at this height.
+ *
+ * The same factor the type uses. Fixed padding and fixed row heights have to shrink
+ * alongside the text or they eat the room the smaller type just freed: at 360dp the
+ * dashboard's paddings and the running-text bar came to 136dp of the 360, which is
+ * why shrinking the clock alone was not enough.
+ */
+fun displayScaleFor(height: Dp): Float =
+    if (height >= FULL_HEIGHT) 1f else (height / FULL_HEIGHT).coerceIn(MIN_FACTOR, 1f)
 
 private val FULL_HEIGHT = 600.dp
 private const val MIN_FACTOR = 0.45f
