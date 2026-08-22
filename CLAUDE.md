@@ -95,12 +95,11 @@ Consistently applied across all six panes — follow it exactly:
 
 Tokens live in `:ui:design` and are reached through `MosqueTheme`:
 
-- `MosqueTheme.colors` — 39 tokens. Accent (`accent`, plus three near-duplicate
-  golds), surfaces (`surfaceDialog`, `surfaceCard`, …, nine near-blacks),
-  foreground on dark (`textPrimary` through `textGhostSoft`, ten emphasis
-  levels), fills and borders (`fill*`, `border*`, eight levels), status
-  (`danger`, `dangerStrong`, `success`, `info`), plus `onAccent`, `scrim`,
-  `transparent`.
+- `MosqueTheme.colors` — 19 tokens. `accent`; surfaces (`surface`,
+  `surfaceRaised`, `backdrop`, `runningTextBackground`); foreground
+  (`textPrimary`, `textSecondary`, `textMuted`, `textDisabled`); fills and
+  borders (`fillSubtle`, `fill`, `fillStrong`, `border`); status (`danger`,
+  `success`, `info`); and `onAccent`, `scrim`, `transparent`.
 - `MosqueTheme.typography` — 22 font sizes. Ten display sizes for the TV
   screens (`clockDisplay` 170sp down to `prayerNameCompact`), twelve for
   settings UI (`titleLarge` down to `captionSmall`). Sizes, not `TextStyle`s:
@@ -109,51 +108,56 @@ Tokens live in `:ui:design` and are reached through `MosqueTheme`:
 - `MosqueTheme.windowClass` / `LocalWindowClass` — `Compact` / `Medium` /
   `Expanded` / `Tv`. **Read this; do not accept an `isCompact` parameter.**
 
-**Use tokens, never literals.** `:app` currently contains zero colour literals
-and zero `.sp` literals. Spacing, radius and stroke are tokenised wherever the
+**Use tokens, never literals.** `:app` contains zero colour literals and zero
+`.sp` literals — verified with complete patterns, including named Compose colour
+constants and fractional values. The two `android.graphics.Color.WHITE/BLACK`
+uses in `WebControlSettingsSegment` are Int colours for QR bitmap generation, a
+different type, and are correctly outside the design system. Spacing, radius and stroke are tokenised wherever the
 call shape made the meaning unambiguous.
 
-Two gaps remain, both deliberate:
+Known gaps:
 
 - **Component sizes.** 246 `dp` literals survive in `size()`, `width()` and
   `height()`. There is no component-size scale yet; deriving one means deciding
   which values are icons, which are containers and which are fixed dialog
   dimensions. Match the surrounding file until that scale exists.
-- **Components.** There are no `App*`-prefixed wrappers, but there *are*
-  wrappers — an earlier note in this file that said otherwise was wrong. They
-  live in `:app`, in `ui/settings/SettingsScreenShared.kt`, under different
-  names:
+- **Components.** Buttons live in `:ui:design`, in
+  `component/MosqueButton.kt`, as six semantic variants. Use them; do not add a
+  parallel set, and do not reach for raw `Button`/`OutlinedButton`/
+  `FilledTonalButton`. Every variant handles D-pad focus — a 3dp border and a
+  1.05 scale — which raw Material3 does not, and which is the whole reason they
+  exist on a television.
 
-  | Existing | Role | References |
+  | Variant | Form | Call sites |
   |---|---|---|
-  | `TvFocusableButton` | secondary / neutral fill | 24 |
-  | `TvFocusablePrimaryButton` | primary, gold | 20 |
-  | `TvFocusablePreviewButton` | adzan/iqomah preview | — |
-  | `TvFocusableDangerButton` | destructive | — |
-  | `SettingsCard` | card | 16 |
-  | `AdjustmentRow` | stepper row | — |
+  | `MosqueSecondaryButton` | neutral fill (`fillStrong`) | 24 |
+  | `MosquePrimaryButton` | gold, `onAccent` content | 18 |
+  | `MosqueTertiaryButton` | bordered, no fill | 4 |
+  | `MosqueDangerButton` | tinted `danger` | 3 |
+  | `MosquePreviewButton` | gold tint, bordered at rest | 2 |
+  | `MosqueSelectableButton` | takes `selected: Boolean` | 2 |
 
-  They should move to `:ui:design` and be renamed, but they are a working system
-  already — they carry D-pad focus handling (border, 1.05 scale) that raw
-  Material3 does not. **Use them; do not add a parallel set.**
+  `mosqueTextFieldColors()` (same package) styles every `OutlinedTextField`.
 
-  What is missing is an outlined/tertiary variant, and 13 call sites bypass the
-  wrappers entirely with raw Material3: 9 `Button` (`Schedule.kt:127`,
-  `FridaySettingsPane.kt:682`/`690`, `RemoteControlSettingsSegment.kt:105`/`127`/
-  `157`/`179`/`205`/`325`), 3 `OutlinedButton`, 1 `FilledTonalButton`. Folding
-  those in moves pixels — the RemoteControl ones pin `height = 48.dp` where the
-  wrappers use the Material default — so it waits for sign-off.
+  Still raw, deliberately: **15 `IconButton`** and **12 `TextButton`**. The
+  `TextButton`s are dialog confirm/dismiss actions, where Material's own is
+  right. The `IconButton`s are the real gap — they have no focus handling, which
+  on a TV means a D-pad user cannot see which icon is selected. That is worth a
+  variant; it has not been written.
 
-  Known defect while you are in there: `TvFocusablePrimaryButton`
-  (`SettingsScreenShared.kt:148`) computes `effectiveColors` from an `if/else`
-  whose branches are identical, so the focus state changes scale and border but
-  not colour. Whether that was meant to brighten is a design question, not a
-  mechanical fix.
+  `SettingsCard` and `AdjustmentRow` are still in
+  `ui/settings/SettingsScreenShared.kt` and should move to `:ui:design` too.
 
-The token set is deliberately redundant — four golds, nine near-blacks, ten text
-emphasis levels, twelve settings font sizes. That is a **1:1 extraction** of what
-was already inlined, so every swap was provably neutral. Collapsing the
-redundancy is a separate, pixel-moving change; see *Consolidation proposal*.
+- **Component sizes.** 246 `dp` literals survive in `size()`, `width()` and
+  `height()`. There is no component-size scale yet; deriving one means deciding
+  which values are icons, which are containers and which are fixed dialog
+  dimensions. Match the surrounding file until that scale exists.
+
+Colour consolidation has landed: 39 tokens became 19, moving 61 call sites.
+Font sizes have **not** been consolidated — 22 tokens remain, and that merge is
+deliberately held back so it can happen in the same pass that assigns
+per-window-class values, rather than moving the same 84 call sites twice. See
+*Consolidation proposal*.
 
 ## Conventions
 
