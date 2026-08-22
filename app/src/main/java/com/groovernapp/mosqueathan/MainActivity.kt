@@ -40,13 +40,14 @@ class MainActivity : ComponentActivity() {
     private val iqomahViewModel: IqomahViewModel by viewModel()
     private val settingsViewModel: SettingsViewModel by viewModel()
 
-    private val settingsSecretSequence = listOf(
-        KeyEvent.KEYCODE_DPAD_UP,
-        KeyEvent.KEYCODE_DPAD_UP,
-        KeyEvent.KEYCODE_DPAD_DOWN,
-        KeyEvent.KEYCODE_DPAD_DOWN
+    private val secretSequence = com.groovernapp.mosqueathan.ui.navigation.SecretSequence(
+        listOf(
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_DPAD_DOWN,
+            KeyEvent.KEYCODE_DPAD_DOWN
+        )
     )
-    private val inputKeyHistory = mutableListOf<Int>()
     private val configRepository: com.groovernapp.mosqueathan.data.MosqueConfigRepository by inject()
     private var settingsServer: com.groovernapp.mosqueathan.server.SettingsServer? = null
 
@@ -195,30 +196,29 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (appViewModel.isStandbyActive.value) {
+        val wasStandby = appViewModel.isStandbyActive.value
+        if (wasStandby) {
             appViewModel.exitStandbyMode()
-            return true
         }
 
+        // The press that wakes the screen still counts towards the sequence.
+        //
+        // It used to return here, and that made settings unreachable for the six
+        // hours standby is scheduled: exitStandbyMode only clears the flag, while
+        // the coordinator loop re-enters standby a second later because the clock is
+        // still inside the window. Every press was swallowed, so UP UP DOWN DOWN
+        // never recorded a single entry — on a device whose only input is a remote.
         if (appViewModel.activeScreen.value is AppViewModel.ActiveScreen.Dashboard) {
-            if (keyCode in listOf(KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN)) {
-                inputKeyHistory.add(keyCode)
-                if (inputKeyHistory.size > settingsSecretSequence.size) {
-                    inputKeyHistory.removeAt(0)
-                }
-                if (inputKeyHistory == settingsSecretSequence) {
-                    inputKeyHistory.clear()
-                    appViewModel.transitionToSettings()
-                    return true
-                }
-            } else {
-                inputKeyHistory.clear()
+            if (secretSequence.accept(keyCode)) {
+                appViewModel.transitionToSettings()
+                return true
             }
         } else {
-            inputKeyHistory.clear()
+            secretSequence.reset()
         }
 
-        return super.onKeyDown(keyCode, event)
+        // Waking from standby should not also act on whatever was pressed.
+        return if (wasStandby) true else super.onKeyDown(keyCode, event)
     }
 
     override fun onDestroy() {
