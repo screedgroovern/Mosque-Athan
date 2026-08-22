@@ -9,6 +9,7 @@ import com.groovernapp.mosqueathan.ui.iqomah.IqomahViewModel
 import com.groovernapp.mosqueathan.ui.navigation.AppViewModel
 import com.groovernapp.mosqueathan.ui.settings.SettingsViewModel
 import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahViewModel
+import com.groovernapp.mosqueathan.ui.settings.prayerschedule.PrayerScheduleViewModel
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -38,4 +39,5 @@ val appModule = module {
     viewModel { SettingsViewModel(get()) }
     viewModel { RemoteDevicesViewModel(get()) }
     viewModel { AdzanIqomahViewModel(get()) }
+    viewModel { PrayerScheduleViewModel(get()) }
 }

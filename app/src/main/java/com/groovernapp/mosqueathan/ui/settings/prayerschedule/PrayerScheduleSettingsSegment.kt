@@ -31,48 +31,18 @@ import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
 
 @Composable
 fun PrayerScheduleSettingsSegment(
-    latText: String,
-    onLatTextChange: (String) -> Unit,
-    lngText: String,
-    onLngTextChange: (String) -> Unit,
-    calculationMethodName: String,
-    kemenagCityId: String,
-    kemenagCityName: String,
-    kemenagDuration: String,
-    kemenagTargetDate: String,
-    citySearchResults: List<Pair<String, String>>,
-    isSearchingCities: Boolean,
-    kemenagSchedules: List<com.groovernapp.mosqueathan.data.KemenagScheduleEntity>,
-    onMethodChange: (String) -> Unit,
-    onKemenagCitySelected: (String, String) -> Unit,
-    onKemenagDurationChange: (String) -> Unit,
-    onKemenagTargetDateChange: (String) -> Unit,
-    onSearchKemenagCities: (String) -> Unit,
-    onDownloadKemenagSchedules: () -> Unit,
-    offsetImsak: Int,
-    offsetSubuh: Int,
-    offsetSyuruq: Int,
-    offsetDzuhur: Int,
-    offsetAshar: Int,
-    offsetMaghrib: Int,
-    offsetIsya: Int,
-    onOffsetImsakChange: (Int) -> Unit,
-    onOffsetSubuhChange: (Int) -> Unit,
-    onOffsetSyuruqChange: (Int) -> Unit,
-    onOffsetDzuhurChange: (Int) -> Unit,
-    onOffsetAsharChange: (Int) -> Unit,
-    onOffsetMaghribChange: (Int) -> Unit,
-    onOffsetIsyaChange: (Int) -> Unit,
-    isCompact: Boolean = false
+    state: PrayerScheduleUiState,
+    onEvent: (PrayerScheduleEvent) -> Unit
 ) {
     val pagerState = rememberPagerState(initialPage = 0) { 2 }
     val coroutineScope = rememberCoroutineScope()
-    val tabHeight = if (isCompact) 72.dp else 48.dp
+    val tabHeight = if (LocalWindowClass.current.isCompact) 72.dp else 48.dp
 
     Column(
         verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl),
@@ -100,7 +70,7 @@ fun PrayerScheduleSettingsSegment(
                         )
                         Text(
                             text = Lang.get("Calculation Method", "Metode Perhitungan"),
-                            fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
+                            fontSize = if (LocalWindowClass.current.isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold,
                             maxLines = 2,
                             modifier = Modifier.padding(vertical = MosqueTheme.spacing.xxs)
@@ -126,7 +96,7 @@ fun PrayerScheduleSettingsSegment(
                         )
                         Text(
                             text = Lang.get("Prayer Time Adjustments", "Koreksi Waktu Shalat"),
-                            fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
+                            fontSize = if (LocalWindowClass.current.isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                             fontWeight = FontWeight.Bold,
                             maxLines = 2,
                             modifier = Modifier.padding(vertical = MosqueTheme.spacing.xxs)
@@ -154,39 +124,16 @@ fun PrayerScheduleSettingsSegment(
                         title = Lang.get("Calculation Method", "Metode Perhitungan"),
                         icon = Icons.Default.Calculate
                     ) {
-                        MethodSettingsSegment(
-                            calculationMethodName = calculationMethodName,
-                            kemenagCityId = kemenagCityId,
-                            kemenagCityName = kemenagCityName,
-                            kemenagDuration = kemenagDuration,
-                            kemenagTargetDate = kemenagTargetDate,
-                            citySearchResults = citySearchResults,
-                            isSearchingCities = isSearchingCities,
-                            kemenagSchedules = kemenagSchedules,
-                            onMethodChange = onMethodChange,
-                            onKemenagCitySelected = onKemenagCitySelected,
-                            onKemenagDurationChange = onKemenagDurationChange,
-                            onKemenagTargetDateChange = onKemenagTargetDateChange,
-                            onSearchKemenagCities = onSearchKemenagCities,
-                            onDownloadKemenagSchedules = onDownloadKemenagSchedules,
-                            isCompact = isCompact
-                        )
+                        MethodSettingsSegment(state = state, onEvent = onEvent)
                     }
 
                     // CARD 2: Lokasi GPS
                     MosqueSectionCard(
                         title = Lang.get("Mosque Coordinates", "Titik Lokasi Masjid"),
                         icon = Icons.Default.LocationOn,
-                        dimmed = calculationMethodName == "KEMENAG"
+                        dimmed = state.calculationMethod == "KEMENAG"
                     ) {
-                        LocationSettingsSegment(
-                            latText = latText,
-                            onLatTextChange = onLatTextChange,
-                            lngText = lngText,
-                            onLngTextChange = onLngTextChange,
-                            calculationMethodName = calculationMethodName,
-                            kemenagCityName = kemenagCityName
-                        )
+                        LocationSettingsSegment(state = state, onEvent = onEvent)
                     }
                 }
             } else {
@@ -200,22 +147,7 @@ fun PrayerScheduleSettingsSegment(
                         title = Lang.get("Prayer Time Adjustments", "Koreksi Waktu Shalat"),
                         icon = Icons.Default.Tune
                     ) {
-                        PrayerOffsetsSettingsSegment(
-                            offsetImsak = offsetImsak,
-                            offsetSubuh = offsetSubuh,
-                            offsetSyuruq = offsetSyuruq,
-                            offsetDzuhur = offsetDzuhur,
-                            offsetAshar = offsetAshar,
-                            offsetMaghrib = offsetMaghrib,
-                            offsetIsya = offsetIsya,
-                            onOffsetImsakChange = onOffsetImsakChange,
-                            onOffsetSubuhChange = onOffsetSubuhChange,
-                            onOffsetSyuruqChange = onOffsetSyuruqChange,
-                            onOffsetDzuhurChange = onOffsetDzuhurChange,
-                            onOffsetAsharChange = onOffsetAsharChange,
-                            onOffsetMaghribChange = onOffsetMaghribChange,
-                            onOffsetIsyaChange = onOffsetIsyaChange
-                        )
+                        PrayerOffsetsSettingsSegment(state = state, onEvent = onEvent)
                     }
                 }
             }

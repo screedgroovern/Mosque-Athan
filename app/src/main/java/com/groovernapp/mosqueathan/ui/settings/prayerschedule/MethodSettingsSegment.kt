@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.data.KemenagScheduleEntity
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
@@ -33,22 +34,29 @@ import com.groovernapp.mosqueathan.ui.design.initialFocus
 
 @Composable
 fun MethodSettingsSegment(
-    calculationMethodName: String,
-    kemenagCityId: String,
-    kemenagCityName: String,
-    kemenagDuration: String,
-    kemenagTargetDate: String,
-    citySearchResults: List<Pair<String, String>>,
-    isSearchingCities: Boolean,
-    kemenagSchedules: List<KemenagScheduleEntity>,
-    onMethodChange: (String) -> Unit,
-    onKemenagCitySelected: (id: String, name: String) -> Unit,
-    onKemenagDurationChange: (String) -> Unit,
-    onKemenagTargetDateChange: (String) -> Unit,
-    onSearchKemenagCities: (String) -> Unit,
-    onDownloadKemenagSchedules: () -> Unit = {},
-    isCompact: Boolean = false
+    state: PrayerScheduleUiState,
+    onEvent: (PrayerScheduleEvent) -> Unit
 ) {
+    val isCompact = LocalWindowClass.current.isCompact
+    val calculationMethodName = state.calculationMethod
+    val kemenagCityId = state.kemenag.cityId
+    val kemenagCityName = state.kemenag.cityName
+    val kemenagDuration = state.kemenag.duration
+    val kemenagTargetDate = state.kemenag.targetDate
+    val citySearchResults = state.kemenag.searchResults.map { it.id to it.name }
+    val isSearchingCities = state.kemenag.isSearching
+    val kemenagSchedules = state.kemenag.schedules
+    val onMethodChange: (String) -> Unit = { onEvent(PrayerScheduleEvent.MethodSelected(it)) }
+    val onKemenagCitySelected: (String, String) -> Unit =
+        { id, name -> onEvent(PrayerScheduleEvent.KemenagCityChosen(KemenagCity(id, name))) }
+    val onKemenagDurationChange: (String) -> Unit =
+        { onEvent(PrayerScheduleEvent.KemenagDurationChosen(it)) }
+    val onKemenagTargetDateChange: (String) -> Unit =
+        { onEvent(PrayerScheduleEvent.KemenagTargetDateChosen(it)) }
+    val onSearchKemenagCities: (String) -> Unit =
+        { onEvent(PrayerScheduleEvent.KemenagCitySearched(it)) }
+    val onDownloadKemenagSchedules: () -> Unit =
+        { onEvent(PrayerScheduleEvent.KemenagDownloadRequested) }
     val calculationMethods = listOf(
         "SINGAPORE", "UMM_AL_QURA", "MUSLIM_WORLD_LEAGUE", "EGYPTIAN",
         "KARACHI", "DUBAI", "KUWAIT", "QATAR", "KEMENAG"

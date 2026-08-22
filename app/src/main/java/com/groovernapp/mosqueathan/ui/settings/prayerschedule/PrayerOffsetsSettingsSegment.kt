@@ -1,43 +1,39 @@
 package com.groovernapp.mosqueathan.ui.settings.prayerschedule
 
-import com.groovernapp.mosqueathan.ui.settings.*
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.domain.PrayerType
+import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
 
+/**
+ * Per-prayer minute corrections.
+ *
+ * Every prayer gets one, Imsak and Syuruq included — unlike iqomah, an offset is
+ * meaningful for a time that is only displayed. So this iterates `PrayerType.entries`
+ * rather than a filtered list, and was previously seven near-identical lines.
+ */
 @Composable
 fun PrayerOffsetsSettingsSegment(
-    offsetImsak: Int,
-    offsetSubuh: Int,
-    offsetSyuruq: Int,
-    offsetDzuhur: Int,
-    offsetAshar: Int,
-    offsetMaghrib: Int,
-    offsetIsya: Int,
-    onOffsetImsakChange: (Int) -> Unit,
-    onOffsetSubuhChange: (Int) -> Unit,
-    onOffsetSyuruqChange: (Int) -> Unit,
-    onOffsetDzuhurChange: (Int) -> Unit,
-    onOffsetAsharChange: (Int) -> Unit,
-    onOffsetMaghribChange: (Int) -> Unit,
-    onOffsetIsyaChange: (Int) -> Unit
+    state: PrayerScheduleUiState,
+    onEvent: (PrayerScheduleEvent) -> Unit
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
         modifier = Modifier.fillMaxWidth()
     ) {
-        AdjustmentRow(Lang.get("Imsak", "Imsyak"), offsetImsak, minValue = -60, maxValue = 60, showSign = true) { onOffsetImsakChange(it) }
-        AdjustmentRow(Lang.get("Fajr", "Subuh"), offsetSubuh, minValue = -60, maxValue = 60, showSign = true) { onOffsetSubuhChange(it) }
-        AdjustmentRow(Lang.get("Sunrise", "Syuruq"), offsetSyuruq, minValue = -60, maxValue = 60, showSign = true) { onOffsetSyuruqChange(it) }
-        AdjustmentRow(Lang.get("Dhuhr", "Dzuhur"), offsetDzuhur, minValue = -60, maxValue = 60, showSign = true) { onOffsetDzuhurChange(it) }
-        AdjustmentRow(Lang.get("Asr", "Ashar"), offsetAshar, minValue = -60, maxValue = 60, showSign = true) { onOffsetAsharChange(it) }
-        AdjustmentRow(Lang.get("Maghrib", "Maghrib"), offsetMaghrib, minValue = -60, maxValue = 60, showSign = true) { onOffsetMaghribChange(it) }
-        AdjustmentRow(Lang.get("Isha'", "Isya'"), offsetIsya, minValue = -60, maxValue = 60, showSign = true) { onOffsetIsyaChange(it) }
+        PrayerType.entries.forEach { prayer ->
+            AdjustmentRow(
+                title = prayer.displayName,
+                value = state.offsetFor(prayer),
+                minValue = -60,
+                maxValue = 60,
+                showSign = true,
+                onValueChange = { onEvent(PrayerScheduleEvent.OffsetChanged(prayer, it)) }
+            )
+        }
     }
 }
-

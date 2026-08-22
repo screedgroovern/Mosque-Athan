@@ -71,6 +71,7 @@ import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesEvent
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel
 import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahEvent
 import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahViewModel
+import com.groovernapp.mosqueathan.ui.settings.prayerschedule.PrayerScheduleViewModel
 
 @Composable
 fun SettingsScreen(
@@ -89,7 +90,6 @@ fun SettingsScreen(
     val devices by viewModel.devicesState.collectAsState()
     val citySearchResults by viewModel.citySearchResults.collectAsState()
     val isSearchingCities by viewModel.isSearchingCities.collectAsState()
-    val kemenagSchedules by viewModel.kemenagSchedulesState.collectAsState()
     val slideshowSchedules by viewModel.slideshowSchedulesState.collectAsState()
     val dashboardBackgrounds by viewModel.dashboardBackgroundsState.collectAsState()
     val standbySchedules by viewModel.standbySchedulesState.collectAsState()
@@ -369,96 +369,11 @@ fun SettingsScreen(
                             // Category specific UI — each segment is in its own file
                             when (selectedCategory) {
                                 SettingsCategory.PRAYER_SCHEDULE -> {
+                                    val prayerScheduleViewModel: PrayerScheduleViewModel = koinViewModel()
+                                    val prayerScheduleState by prayerScheduleViewModel.uiState.collectAsStateWithLifecycle()
                                     PrayerScheduleSettingsSegment(
-                                        latText = latText,
-                                        onLatTextChange = {
-                                            latText = it
-                                            val d = it.toDoubleOrNull()
-                                            if (d != null && d != config.latitude) {
-                                                viewModel.updateConfig(config.copy(latitude = d))
-                                            }
-                                        },
-                                        lngText = lngText,
-                                        onLngTextChange = {
-                                            lngText = it
-                                            val d = it.toDoubleOrNull()
-                                            if (d != null && d != config.longitude) {
-                                                viewModel.updateConfig(config.copy(longitude = d))
-                                            }
-                                        },
-                                        calculationMethodName = calculationMethodName,
-                                        kemenagCityId = kemenagCityId,
-                                        kemenagCityName = kemenagCityName,
-                                        kemenagDuration = kemenagDuration,
-                                        kemenagTargetDate = kemenagTargetDate,
-                                        citySearchResults = citySearchResults,
-                                        isSearchingCities = isSearchingCities,
-                                        kemenagSchedules = kemenagSchedules,
-                                        onMethodChange = {
-                                            calculationMethodName = it
-                                            viewModel.updateConfig(config.copy(calculationMethodName = it))
-                                        },
-                                        onKemenagCitySelected = { id, name ->
-                                            kemenagCityId = id
-                                            kemenagCityName = name
-                                            viewModel.updateConfig(config.copy(kemenagCityId = id, kemenagCityName = name))
-                                        },
-                                        onKemenagDurationChange = {
-                                            kemenagDuration = it
-                                            viewModel.updateConfig(config.copy(kemenagDuration = it))
-                                        },
-                                        onKemenagTargetDateChange = {
-                                            kemenagTargetDate = it
-                                            viewModel.updateConfig(config.copy(kemenagTargetDate = it))
-                                        },
-                                        onSearchKemenagCities = { query -> viewModel.searchKemenagCities(query) },
-                                        onDownloadKemenagSchedules = {
-                                            viewModel.updateConfig(
-                                                config.copy(
-                                                    calculationMethodName = "KEMENAG",
-                                                    kemenagCityId = kemenagCityId,
-                                                    kemenagCityName = kemenagCityName,
-                                                    kemenagDuration = kemenagDuration,
-                                                    kemenagTargetDate = kemenagTargetDate
-                                                )
-                                            )
-                                        },
-                                        offsetImsak = offsetImsak,
-                                        offsetSubuh = offsetSubuh,
-                                        offsetSyuruq = offsetSyuruq,
-                                        offsetDzuhur = offsetDzuhur,
-                                        offsetAshar = offsetAshar,
-                                        offsetMaghrib = offsetMaghrib,
-                                        offsetIsya = offsetIsya,
-                                        onOffsetImsakChange = {
-                                            offsetImsak = it
-                                            viewModel.updateConfig(config.copy(offsetImsak = it))
-                                        },
-                                        onOffsetSubuhChange = {
-                                            offsetSubuh = it
-                                            viewModel.updateConfig(config.copy(offsetSubuh = it))
-                                        },
-                                        onOffsetSyuruqChange = {
-                                            offsetSyuruq = it
-                                            viewModel.updateConfig(config.copy(offsetSyuruq = it))
-                                        },
-                                        onOffsetDzuhurChange = {
-                                            offsetDzuhur = it
-                                            viewModel.updateConfig(config.copy(offsetDzuhur = it))
-                                        },
-                                        onOffsetAsharChange = {
-                                            offsetAshar = it
-                                            viewModel.updateConfig(config.copy(offsetAshar = it))
-                                        },
-                                        onOffsetMaghribChange = {
-                                            offsetMaghrib = it
-                                            viewModel.updateConfig(config.copy(offsetMaghrib = it))
-                                        },
-                                        onOffsetIsyaChange = {
-                                            offsetIsya = it
-                                            viewModel.updateConfig(config.copy(offsetIsya = it))
-                                        },
-                                        isCompact = isCompact
+                                        state = prayerScheduleState,
+                                        onEvent = prayerScheduleViewModel::onEvent
                                     )
                                 }
 
