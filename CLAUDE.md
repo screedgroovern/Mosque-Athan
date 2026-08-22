@@ -104,7 +104,12 @@ Tokens live in `:ui:design` and are reached through `MosqueTheme`:
   screens (`clockDisplay` 170sp down to `prayerNameCompact`), twelve for
   settings UI (`titleLarge` down to `captionSmall`). Sizes, not `TextStyle`s:
   call sites set their own weight and colour.
-- `MosqueTheme.spacing` / `.radius` / `.stroke` — 23 tokens on a 4dp-ish scale.
+- `MosqueTheme.spacing` / `.radius` / `.stroke` — 24 tokens on a 4dp-ish scale.
+- `MosqueTheme.size` — 7 tokens for icons and controls (`iconSm/Md/Lg`,
+  `controlSm/Md/Lg/Xl`). **Kept separate from `spacing` even where the numbers
+  match**: 36dp of control height and 36dp of padding are different decisions, and
+  a later pass scaling spacing per window class must not drag icon sizes with it.
+  A `Spacer`'s width is spacing, not a size.
 - `MosqueTheme.windowClass` / `LocalWindowClass` — `Compact` / `Medium` /
   `Expanded` / `Tv`. **Read this; do not accept an `isCompact` parameter.**
 
@@ -519,6 +524,19 @@ Rules for anything interactive you add:
 
 Current coverage: 100 elements show focus; all 8 dialogs start focused.
 
+**Focus rings do not appear when you tap the screen, and that is correct.**
+Compose keeps `clickable` nodes out of the focus system while in *touch* input
+mode, so that tapping does not leave rings behind. A television is always in
+non-touch mode. Consequences worth knowing:
+
+- Installing on a phone and tapping shows no rings. Use a remote, a D-pad, or an
+  attached keyboard to see them.
+- Any instrumented test that asserts focus must call `RequestDpadInputMode()` at
+  the top of `setContent`, or it fails on a phone while the shipped code is
+  correct. `InputModeFocusTest` exists to make that failure legible — it isolates
+  plain focusability from `clickable` participation, so a future focus failure can
+  be placed in one run.
+
 **Known gaps, wanting a real remote rather than more reading:**
 
 - **Traversal order is undeclared.** No `focusGroup` or `focusProperties`
@@ -527,6 +545,13 @@ Current coverage: 100 elements show focus; all 8 dialogs start focused.
 - **Dialogs do not trap focus**, so arrows can in principle walk out to the
   screen behind them.
 - One clickable row in `ui/component/Schedule.kt` still has no ring.
+
+Covered by tests: `FocusHighlightTest` captures rendered pixels and asserts the
+ring appears on focus and leaves with it; `InitialFocusTest` asserts a dialog's
+confirm action holds focus, including when the dialog is composed after the
+screen behind it. Run with `./gradlew :ui:design:connectedDebugAndroidTest` — the
+Xiaomi test device rejects the APK with `INSTALL_FAILED_USER_RESTRICTED` on
+roughly every other attempt; re-running is enough.
 
 ### Consolidation proposal (phase B — awaiting sign-off)
 
