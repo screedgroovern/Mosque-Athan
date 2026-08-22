@@ -493,6 +493,41 @@ the web panel — the panel is a client and needs no database. Running
 1 → 2 → 4 → 5 → 6 → 7 → 3 reaches the visible payoff sooner and keeps the only
 risky step off the critical path, at the cost of carrying Realm longer.
 
+### TV navigation — the D-pad rules
+
+The display is driven by four arrow keys and Enter, so **focus visibility is not
+polish here, it is whether a control is reachable at all.** Material3 indicates
+*press* with a ripple, which a D-pad hover never fires — so a stock Material
+control on this app looks identical whether or not the remote has landed on it.
+That was the reported discomfort in 1.4.x.
+
+Rules for anything interactive you add:
+
+1. **Use a `Mosque*Button` variant.** All eight carry the focus treatment.
+2. **Anything else focusable gets `Modifier.focusHighlight(shape, scaleUp)`**
+   (`:ui:design`). Pass the element's own shape or the ring will not sit on its
+   edge. Set `scaleUp = false` inside lists and tight rows, where a growing item
+   shoves its neighbours.
+3. **Every dialog needs `Modifier.initialFocus()`** on its confirm action.
+   Without it the dialog opens with nothing focused, so the first arrow press and
+   Enter both do nothing.
+4. `OutlinedTextField` needs neither — `mosqueTextFieldColors` already turns the
+   border gold on focus.
+5. The dashboard and countdown screens are exempt. Their taps are a full-screen
+   dismiss and direct actions, and the dashboard reserves D-pad up/down for the
+   settings entry sequence, so there is no traversal to indicate.
+
+Current coverage: 100 elements show focus; all 8 dialogs start focused.
+
+**Known gaps, wanting a real remote rather than more reading:**
+
+- **Traversal order is undeclared.** No `focusGroup` or `focusProperties`
+  anywhere, so moving between the settings sidebar and the content pane is
+  whatever Compose's default 2D focus search decides.
+- **Dialogs do not trap focus**, so arrows can in principle walk out to the
+  screen behind them.
+- One clickable row in `ui/component/Schedule.kt` still has no ring.
+
 ### Consolidation proposal (phase B — awaiting sign-off)
 
 Phase A was a 1:1 extraction, so the token set is deliberately redundant. Phase B
