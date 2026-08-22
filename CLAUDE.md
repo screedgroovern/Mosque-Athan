@@ -513,6 +513,39 @@ That last one is worth doing for its own sake: it is the root cause of the
 *Persistence*, and a plain `data class` gets `copy()` from the compiler —
 deleting the hand-written `copy(...)` extension entirely.
 
+### Step 6 groundwork: what Compose Multiplatform actually provides
+
+Checked empirically with a throwaway probe module, not from memory, because 53
+files have to switch from `androidx.compose` to `org.jetbrains.compose` in one
+atomic change — the two artifact sets export the same class names from different
+packages, so a module uses one or the other. Discovering a missing component after
+that switch would mean unwinding all of it.
+
+**Every Material3 component this app uses exists in Compose Multiplatform 1.9.0**
+and compiles for `wasmJs`, `iosSimulatorArm64` and `jvm`: `SecondaryTabRow`,
+`DatePicker` + `rememberDatePickerState`, `HorizontalPager`, `BadgedBox`/`Badge`,
+`ModalNavigationDrawer` + `rememberDrawerState`, `AlertDialog`, `DropdownMenu`.
+So the UI surface is not the obstacle.
+
+What *is* Android-only, with occurrence counts:
+
+| API | Uses | What it needs |
+|---|---|---|
+| `ActivityResultContracts` | 15 | an `expect` file picker |
+| `rememberLauncherForActivityResult` | 14 | same |
+| `android.net.Uri` | 21 | a platform-neutral picked-file handle |
+| `BitmapFactory` / `asImageBitmap` | 11 / 11 | `expect` image decoding |
+| `LocalContext` | 7 | mostly removable; already gone from ViewModels |
+| `PickVisualMediaRequest` | 7 | part of the file picker |
+| `UiModeManager` | 4 | `expect` TV detection (`rememberIsTv`) |
+| `AndroidView` | 1 | `expect` video player — the `VideoView` in DashboardScreen |
+
+`MediaFileStore` and `rememberIsTv` were built as the seams for two of these.
+
+**Practical cost to plan around:** the iOS target takes about 8½ minutes to
+compile from cold. Expect a much slower edit-build loop than the Android-only
+work so far.
+
 ### Migration order
 
 Each step is independently reviewable. Steps 1–6 stay Android-only and remain
