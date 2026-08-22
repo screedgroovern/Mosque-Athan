@@ -47,7 +47,16 @@ data class FridayUiState(
     val warningText: String = "",
     val murottal: MurottalSettings = MurottalSettings(),
     val slideshow: FridaySlideshowSettings = FridaySlideshowSettings()
-)
+) {
+    /**
+     * Whether Friday's visual and audio features do anything.
+     *
+     * [standbyOnly] blacks the screen out for the whole service, so murottal and the
+     * Friday slideshow have nothing to play on. The pane asked
+     * `enabled && !standbyOnly` in nine places; it is one rule, so it lives here.
+     */
+    val visualsEnabled: Boolean get() = enabled && !standbyOnly
+}
 
 sealed interface FridayEvent {
     // Friday hours

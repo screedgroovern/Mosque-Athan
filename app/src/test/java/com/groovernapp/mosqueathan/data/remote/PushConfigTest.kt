@@ -40,6 +40,45 @@ class PushConfigTest {
     }
 
     @Test
+    fun everyFridaySettingIsPresent() {
+        // The Friday category edits sixteen config fields and nothing else, so this
+        // list is the whole contract between the Friday pane and the display. It is
+        // spelled out rather than covered by the summary above because the pane was
+        // the last one migrated, and a missing field here would look exactly like a
+        // working save.
+        val payload = payloadFor(MosqueConfigEntity())
+        listOf(
+            "jumatEnabled", "jumatStartTime", "jumatEndTime", "offsetJumat",
+            "jumatStandbyOnly", "jumatWarningText",
+            "murottalEnabled", "murottalStartDelay", "murottalAudioPaths",
+            "jumatSlideshowEnabled", "includeGlobalSlideshow", "selectedGlobalSlideIds",
+            "jumatTransitionType", "jumatSlideIntervalSeconds", "jumatSlideIntervalUnit",
+            "jumatVideoWaitUntilEnd"
+        ).forEach {
+            assertTrue("`$it` missing from update_config", payload.has(it))
+        }
+    }
+
+    @Test
+    fun fridayValuesAreCarriedRatherThanDefaulted() {
+        val config = MosqueConfigEntity().apply {
+            jumatEnabled = true
+            offsetJumat = -4
+            jumatStandbyOnly = true
+            murottalStartDelay = 12
+            jumatSlideIntervalUnit = "MINUTES"
+            selectedGlobalSlideIds = "id-1,id-2"
+        }
+        val payload = payloadFor(config)
+        assertTrue(payload.getBoolean("jumatEnabled"))
+        assertEquals(-4, payload.getInt("offsetJumat"))
+        assertTrue(payload.getBoolean("jumatStandbyOnly"))
+        assertEquals(12, payload.getInt("murottalStartDelay"))
+        assertEquals("MINUTES", payload.getString("jumatSlideIntervalUnit"))
+        assertEquals("id-1,id-2", payload.getString("selectedGlobalSlideIds"))
+    }
+
+    @Test
     fun valuesAreCarriedRatherThanDefaulted() {
         val config = MosqueConfigEntity().apply {
             latitude = -6.2

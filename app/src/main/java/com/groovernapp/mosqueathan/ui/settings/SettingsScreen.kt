@@ -74,6 +74,8 @@ import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahViewModel
 import com.groovernapp.mosqueathan.ui.settings.prayerschedule.PrayerScheduleViewModel
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.DisplayMediaEvent
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.DisplayMediaViewModel
+import com.groovernapp.mosqueathan.ui.settings.fridaysettings.FridayEvent
+import com.groovernapp.mosqueathan.ui.settings.fridaysettings.FridayViewModel
 
 @Composable
 fun SettingsScreen(
@@ -88,7 +90,6 @@ fun SettingsScreen(
     val config by viewModel.configState.collectAsState()
     val announcements by viewModel.announcementsState.collectAsState()
     val mediaList by viewModel.mediaListState.collectAsState()
-    val fridayMediaList by viewModel.fridayMediaListState.collectAsState()
     val devices by viewModel.devicesState.collectAsState()
     val citySearchResults by viewModel.citySearchResults.collectAsState()
     val isSearchingCities by viewModel.isSearchingCities.collectAsState()
@@ -134,24 +135,6 @@ fun SettingsScreen(
 
     // Standby States
     var standbyModeEnabled by remember(config.standbyModeEnabled) { mutableStateOf(config.standbyModeEnabled) }
-
-    // Friday States
-    var jumatEnabled by remember(config.jumatEnabled) { mutableStateOf(config.jumatEnabled) }
-    var jumatStartTime by remember(config.jumatStartTime) { mutableStateOf(config.jumatStartTime) }
-    var jumatEndTime by remember(config.jumatEndTime) { mutableStateOf(config.jumatEndTime) }
-    var offsetJumat by remember(config.offsetJumat) { mutableStateOf(config.offsetJumat) }
-    var jumatStandbyOnly by remember(config.jumatStandbyOnly) { mutableStateOf(config.jumatStandbyOnly) }
-    var jumatWarningText by remember(config.jumatWarningText) { mutableStateOf(config.jumatWarningText) }
-    var murottalEnabled by remember(config.murottalEnabled) { mutableStateOf(config.murottalEnabled) }
-    var murottalStartDelay by remember(config.murottalStartDelay) { mutableStateOf(config.murottalStartDelay) }
-    var murottalAudioPaths by remember(config.murottalAudioPaths) { mutableStateOf(config.murottalAudioPaths) }
-    var jumatSlideshowEnabled by remember(config.jumatSlideshowEnabled) { mutableStateOf(config.jumatSlideshowEnabled) }
-    var includeGlobalSlideshow by remember(config.includeGlobalSlideshow) { mutableStateOf(config.includeGlobalSlideshow) }
-    var selectedGlobalSlideIds by remember(config.selectedGlobalSlideIds) { mutableStateOf(config.selectedGlobalSlideIds) }
-    var jumatTransitionType by remember(config.jumatTransitionType) { mutableStateOf(config.jumatTransitionType) }
-    var jumatSlideIntervalSeconds by remember(config.jumatSlideIntervalSeconds) { mutableStateOf(config.jumatSlideIntervalSeconds) }
-    var jumatSlideIntervalUnit by remember(config.jumatSlideIntervalUnit) { mutableStateOf(config.jumatSlideIntervalUnit) }
-    var jumatVideoWaitUntilEnd by remember(config.jumatVideoWaitUntilEnd) { mutableStateOf(config.jumatVideoWaitUntilEnd) }
 
     val customBgBitmap = remember(config.customBackgroundPath) {
         if (config.customBackgroundPath.isNotEmpty() && java.io.File(config.customBackgroundPath).exists()) {
@@ -431,95 +414,19 @@ fun SettingsScreen(
                                  }
 
                                  SettingsCategory.FRIDAY_SETTINGS -> {
+                                     val fridayViewModel: FridayViewModel = koinViewModel()
+                                     val fridayState by fridayViewModel.uiState.collectAsStateWithLifecycle()
                                      FridaySettingsPane(
-                                         jumatEnabled = jumatEnabled,
-                                         onJumatEnabledChange = {
-                                             jumatEnabled = it
-                                             viewModel.updateConfig(config.copy(jumatEnabled = it))
-                                         },
-                                         jumatStartTime = jumatStartTime,
-                                         onJumatStartTimeChange = {
-                                             jumatStartTime = it
-                                             viewModel.updateConfig(config.copy(jumatStartTime = it))
-                                         },
-                                         jumatEndTime = jumatEndTime,
-                                         onJumatEndTimeChange = {
-                                             jumatEndTime = it
-                                             viewModel.updateConfig(config.copy(jumatEndTime = it))
-                                         },
-                                         offsetJumat = offsetJumat,
-                                         onOffsetJumatChange = {
-                                             offsetJumat = it
-                                             viewModel.updateConfig(config.copy(offsetJumat = it))
-                                         },
-                                         jumatStandbyOnly = jumatStandbyOnly,
-                                         onJumatStandbyOnlyChange = {
-                                             jumatStandbyOnly = it
-                                             viewModel.updateConfig(config.copy(jumatStandbyOnly = it))
-                                         },
-                                         jumatWarningText = jumatWarningText,
-                                         onJumatWarningTextChange = {
-                                             jumatWarningText = it
-                                             viewModel.updateConfig(config.copy(jumatWarningText = it))
-                                         },
-                                         murottalEnabled = murottalEnabled,
-                                         onMurottalEnabledChange = {
-                                             murottalEnabled = it
-                                             viewModel.updateConfig(config.copy(murottalEnabled = it))
-                                         },
-                                         murottalStartDelay = murottalStartDelay,
-                                         onMurottalStartDelayChange = {
-                                             murottalStartDelay = it
-                                             viewModel.updateConfig(config.copy(murottalStartDelay = it))
-                                         },
-                                         murottalAudioPaths = murottalAudioPaths,
-                                         onMurottalAudioPathsChange = {
-                                             murottalAudioPaths = it
-                                             viewModel.updateConfig(config.copy(murottalAudioPaths = it))
-                                         },
-                                         jumatSlideshowEnabled = jumatSlideshowEnabled,
-                                         onJumatSlideshowEnabledChange = {
-                                             jumatSlideshowEnabled = it
-                                             viewModel.updateConfig(config.copy(jumatSlideshowEnabled = it))
-                                         },
-                                         includeGlobalSlideshow = includeGlobalSlideshow,
-                                         onIncludeGlobalSlideshowChange = {
-                                             includeGlobalSlideshow = it
-                                             viewModel.updateConfig(config.copy(includeGlobalSlideshow = it))
-                                         },
-                                         selectedGlobalSlideIds = selectedGlobalSlideIds,
-                                         onSelectedGlobalSlideIdsChange = {
-                                             selectedGlobalSlideIds = it
-                                             viewModel.updateConfig(config.copy(selectedGlobalSlideIds = it))
-                                         },
-                                         jumatTransitionType = jumatTransitionType,
-                                         onJumatTransitionTypeChange = {
-                                             jumatTransitionType = it
-                                             viewModel.updateConfig(config.copy(jumatTransitionType = it))
-                                         },
-                                         jumatSlideIntervalSeconds = jumatSlideIntervalSeconds,
-                                         onJumatSlideIntervalSecondsChange = {
-                                             jumatSlideIntervalSeconds = it
-                                             viewModel.updateConfig(config.copy(jumatSlideIntervalSeconds = it))
-                                         },
-                                         jumatSlideIntervalUnit = jumatSlideIntervalUnit,
-                                         onJumatSlideIntervalUnitChange = {
-                                             jumatSlideIntervalUnit = it
-                                             viewModel.updateConfig(config.copy(jumatSlideIntervalUnit = it))
-                                         },
-                                         jumatVideoWaitUntilEnd = jumatVideoWaitUntilEnd,
-                                         onJumatVideoWaitUntilEndChange = {
-                                             jumatVideoWaitUntilEnd = it
-                                             viewModel.updateConfig(config.copy(jumatVideoWaitUntilEnd = it))
-                                         },
-                                         fridayMediaList = fridayMediaList,
-                                         mediaList = mediaList,
-                                         onAddFridayMediaItems = { uris -> viewModel.addFridayMediaItems(uris, context) },
-                                         onUpdateFridayMediaItemPath = { id, uri -> viewModel.updateFridayMediaItemPath(id, uri, context) },
-                                         onDeleteFridayMediaItem = { item -> viewModel.deleteFridayMediaItem(item) },
-                                         onReorderFridayMediaItems = { ids -> viewModel.updateFridayMediaOrder(ids) },
-                                         onPreviewFridaySlideshow = onPreviewFridaySlideshow,
-                                         isCompact = isCompact
+                                         state = fridayState,
+                                         onEvent = { event ->
+                                             // Preview is navigation, not a setting; the pane handles its own
+                                             // picker requests. Everything else is the category's business.
+                                             if (event is FridayEvent.SlideshowPreviewRequested) {
+                                                 onPreviewFridaySlideshow()
+                                             } else {
+                                                 fridayViewModel.onEvent(event)
+                                             }
+                                         }
                                      )
                                  }
 

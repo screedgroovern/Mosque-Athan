@@ -32,6 +32,24 @@ class MediaFileStore(private val context: Context) {
 
     fun storeDashboardBackground(uri: Uri): StoredMedia? = copy(uri, DASHBOARD_DIR)
 
+    /** Friday slides live in their own directory: they are a separate library, not a subset. */
+    fun storeFridayMedia(uri: Uri): StoredMedia? = copy(uri, FRIDAY_DIR)
+
+    /**
+     * Deletes a file this store owns.
+     *
+     * The repository removes the row; nothing else removes the bytes. Friday slides
+     * can be videos, so leaving them behind fills a television's internal storage
+     * with files no screen will ever show again.
+     */
+    fun delete(path: String): Boolean = try {
+        val file = File(path)
+        !file.exists() || file.delete()
+    } catch (e: Exception) {
+        Log.e(TAG, "Could not delete $path", e)
+        false
+    }
+
     /** Overwrites an existing entry's file, keeping its path so the database row stands. */
     fun replaceFile(path: String, uri: Uri): Boolean {
         val target = File(path)
@@ -104,6 +122,7 @@ class MediaFileStore(private val context: Context) {
         const val TAG = "MediaFileStore"
         const val PRESENTATION_DIR = "presentation"
         const val DASHBOARD_DIR = "dashboard"
+        const val FRIDAY_DIR = "friday_media"
         const val CUSTOM_BACKGROUND = "custom_background.jpg"
         const val LARGE_BYTES = 2L * 1024 * 1024
     }

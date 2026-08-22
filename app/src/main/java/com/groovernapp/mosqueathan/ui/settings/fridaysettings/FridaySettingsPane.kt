@@ -1,113 +1,87 @@
 package com.groovernapp.mosqueathan.ui.settings.fridaysettings
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
-import com.groovernapp.mosqueathan.data.FridayMediaEntity
-import com.groovernapp.mosqueathan.data.MediaEntity
-import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
-import com.groovernapp.mosqueathan.util.Lang
-import kotlinx.coroutines.launch
+import androidx.compose.ui.tooling.preview.Preview
+import com.groovernapp.mosqueathan.ui.component.SlideshowComponent
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
-import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
+import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
-import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
+import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 import com.groovernapp.mosqueathan.ui.design.focusHighlight
-import com.groovernapp.mosqueathan.ui.design.MosqueRadius
-import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
+import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
+import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
+import com.groovernapp.mosqueathan.util.Lang
+import kotlinx.coroutines.launch
 
 @Composable
 fun FridaySettingsPane(
-    jumatEnabled: Boolean,
-    onJumatEnabledChange: (Boolean) -> Unit,
-    jumatStartTime: String,
-    onJumatStartTimeChange: (String) -> Unit,
-    jumatEndTime: String,
-    onJumatEndTimeChange: (String) -> Unit,
-    offsetJumat: Int,
-    onOffsetJumatChange: (Int) -> Unit,
-    jumatStandbyOnly: Boolean,
-    onJumatStandbyOnlyChange: (Boolean) -> Unit,
-    jumatWarningText: String,
-    onJumatWarningTextChange: (String) -> Unit,
-    murottalEnabled: Boolean,
-    onMurottalEnabledChange: (Boolean) -> Unit,
-    murottalStartDelay: Int,
-    onMurottalStartDelayChange: (Int) -> Unit,
-    murottalAudioPaths: String,
-    onMurottalAudioPathsChange: (String) -> Unit,
-    jumatSlideshowEnabled: Boolean,
-    onJumatSlideshowEnabledChange: (Boolean) -> Unit,
-    includeGlobalSlideshow: Boolean,
-    onIncludeGlobalSlideshowChange: (Boolean) -> Unit,
-    selectedGlobalSlideIds: String,
-    onSelectedGlobalSlideIdsChange: (String) -> Unit,
-    jumatTransitionType: String,
-    onJumatTransitionTypeChange: (String) -> Unit,
-    jumatSlideIntervalSeconds: Int,
-    onJumatSlideIntervalSecondsChange: (Int) -> Unit,
-    jumatSlideIntervalUnit: String,
-    onJumatSlideIntervalUnitChange: (String) -> Unit,
-    jumatVideoWaitUntilEnd: Boolean,
-    onJumatVideoWaitUntilEndChange: (Boolean) -> Unit,
-    fridayMediaList: List<FridayMediaEntity> = emptyList(),
-    mediaList: List<MediaEntity> = emptyList(),
-    onAddFridayMediaItems: (List<android.net.Uri>) -> Unit = {},
-    onUpdateFridayMediaItemPath: (String, android.net.Uri) -> Unit = { _, _ -> },
-    onDeleteFridayMediaItem: (FridayMediaEntity) -> Unit = {},
-    onReorderFridayMediaItems: (List<String>) -> Unit = {},
-    onPreviewFridaySlideshow: () -> Unit = {},
-    isCompact: Boolean = false,
+    state: FridayUiState,
+    onEvent: (FridayEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
     val mediaPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris: List<android.net.Uri> ->
         if (uris.isNotEmpty()) {
-            onAddFridayMediaItems(uris)
+            onEvent(FridayEvent.MediaAdded(uris))
         }
     }
 
-    var mediaIdToUpdate by remember { mutableStateOf<String?>(null) }
-    val updateMediaLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+    var editingMediaId by remember { mutableStateOf<String?>(null) }
+    val mediaEditLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
     ) { uri: android.net.Uri? ->
-        if (uri != null && mediaIdToUpdate != null) {
-            onUpdateFridayMediaItemPath(mediaIdToUpdate!!, uri)
-            mediaIdToUpdate = null
+        val id = editingMediaId
+        if (id != null && uri != null) {
+            onEvent(FridayEvent.MediaFileReplaced(id, uri))
+        }
+        editingMediaId = null
+    }
+
+    /**
+     * Opens a picker for the request events and passes everything else on.
+     *
+     * The launchers have to live here — `rememberLauncherForActivityResult` is a
+     * composable — so the pane is the only place that can act on a "pick a file"
+     * request. Children stay on `state` + `onEvent` and never see a launcher.
+     */
+    val handleEvent: (FridayEvent) -> Unit = { event ->
+        when (event) {
+            FridayEvent.MediaPickRequested ->
+                mediaPickerLauncher.launch(
+                    androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                    )
+                )
+
+            is FridayEvent.MediaFilePickRequested -> {
+                editingMediaId = event.id
+                mediaEditLauncher.launch(
+                    androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                    )
+                )
+            }
+
+            else -> onEvent(event)
         }
     }
 
@@ -117,55 +91,36 @@ fun FridaySettingsPane(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
     ) {
-        // Card 1: Friday Core Settings
-        MosqueSectionCard(
-            title = "", // No title
-            icon = null
-        ) {
+        // Card 1: Friday Core Settings — the enable switch needs no heading above it
+        MosqueSectionCard(title = "", icon = null) {
             Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = Lang.get("Enable Friday Mode", "Aktifkan Mode Jum'at"),
-                            color = MosqueTheme.colors.textPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = MosqueTheme.typography.body
-                        )
-                        Text(
-                            text = Lang.get("Enable Friday features and layout adjustments", "Aktifkan fitur khusus dan penyesuaian tata letak untuk hari Jum'at"),
-                            color = MosqueTheme.colors.textSecondary,
-                            fontSize = MosqueTheme.typography.labelSmall
-                        )
-                    }
-                    Switch(
-                        modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
-                        checked = jumatEnabled,
-                        onCheckedChange = onJumatEnabledChange,
-                        colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
-                    )
-                }
+                SettingSwitchRow(
+                    title = Lang.get("Enable Friday Mode", "Aktifkan Mode Jum'at"),
+                    description = Lang.get(
+                        "Enable Friday features and layout adjustments",
+                        "Aktifkan fitur khusus dan penyesuaian tata letak untuk hari Jum'at"
+                    ),
+                    checked = state.enabled,
+                    onCheckedChange = { handleEvent(FridayEvent.EnabledChanged(it)) }
+                )
 
-                if (jumatEnabled) {
+                if (state.enabled) {
                     Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
                     ) {
                         OutlinedTextField(
-                            value = jumatStartTime,
-                            onValueChange = onJumatStartTimeChange,
+                            value = state.startTime,
+                            onValueChange = { handleEvent(FridayEvent.StartTimeChanged(it)) },
                             label = { Text(Lang.get("Start Time (HH:mm)", "Waktu Mulai (HH:mm)")) },
                             colors = mosqueTextFieldColors(),
                             singleLine = true,
                             modifier = Modifier.weight(1f)
                         )
                         OutlinedTextField(
-                            value = jumatEndTime,
-                            onValueChange = onJumatEndTimeChange,
+                            value = state.endTime,
+                            onValueChange = { handleEvent(FridayEvent.EndTimeChanged(it)) },
                             label = { Text(Lang.get("End Time (HH:mm)", "Waktu Selesai (HH:mm)")) },
                             colors = mosqueTextFieldColors(),
                             singleLine = true,
@@ -175,53 +130,34 @@ fun FridaySettingsPane(
 
                     AdjustmentRow(
                         title = Lang.get("Friday Adzan Offset", "Koreksi Waktu Adzan Jum'at"),
-                        value = offsetJumat,
+                        value = state.dzuhurOffsetMinutes,
                         minValue = -60,
                         maxValue = 60,
                         showSign = true,
-                        onValueChange = onOffsetJumatChange
+                        onValueChange = { handleEvent(FridayEvent.DzuhurOffsetChanged(it)) }
                     )
                 }
             }
         }
 
-        if (jumatEnabled) {
+        if (state.enabled) {
             // Card 2: Silence & Warning Text
             MosqueSectionCard(
                 title = Lang.get("Friday Silence Mode", "Mode Ibadah & Khutbah"),
-                icon = Icons.Default.Settings,
-                dimmed = !jumatEnabled
+                icon = Icons.Default.Settings
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = Lang.get("Standby Mode Only", "Mode Standby Saja"),
-                                color = if (jumatEnabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textDisabled,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = MosqueTheme.typography.body
-                            )
-                            Text(
-                                text = Lang.get("Turn screen completely black after Friday Adzan until Friday service ends", "Layar TV akan padam total setelah adzan Jum'at sampai ibadah Jum'at selesai"),
-                                color = if (jumatEnabled) MosqueTheme.colors.textSecondary else MosqueTheme.colors.border,
-                                fontSize = MosqueTheme.typography.labelSmall
-                            )
-                        }
-                        Switch(
-                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
-                            checked = jumatStandbyOnly,
-                            onCheckedChange = onJumatStandbyOnlyChange,
-                            enabled = jumatEnabled
-                        ,
-                            colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
-                        )
-                    }
+                    SettingSwitchRow(
+                        title = Lang.get("Standby Mode Only", "Mode Standby Saja"),
+                        description = Lang.get(
+                            "Turn screen completely black after Friday Adzan until Friday service ends",
+                            "Layar TV akan padam total setelah adzan Jum'at sampai ibadah Jum'at selesai"
+                        ),
+                        checked = state.standbyOnly,
+                        onCheckedChange = { handleEvent(FridayEvent.StandbyOnlyChanged(it)) }
+                    )
 
-                    if (jumatStandbyOnly && jumatEnabled) {
+                    if (state.standbyOnly) {
                         Text(
                             text = Lang.get(
                                 "Note: Other Friday visual features are disabled because Standby Mode is active.",
@@ -240,51 +176,41 @@ fun FridaySettingsPane(
             MosqueSectionCard(
                 title = Lang.get("Pre-Adzan Murottal Quran", "Murottal Sebelum Adzan"),
                 icon = Icons.Default.Settings,
-                dimmed = !jumatEnabled || jumatStandbyOnly
+                dimmed = !state.visualsEnabled
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = Lang.get("Auto Play Murottal", "Putar Murottal Otomatis"),
-                                color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textDisabled,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = MosqueTheme.typography.body
-                            )
-                            Text(
-                                text = Lang.get("Automatically play Quran audio files before adzan", "Putar berkas audio Al-Qur'an secara otomatis menjelang adzan"),
-                                color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textSecondary else MosqueTheme.colors.border,
-                                fontSize = MosqueTheme.typography.labelSmall
-                            )
-                        }
-                        Switch(
-                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
-                            checked = murottalEnabled,
-                            onCheckedChange = onMurottalEnabledChange,
-                            enabled = jumatEnabled && !jumatStandbyOnly
-                        ,
-                            colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
-                        )
-                    }
+                    SettingSwitchRow(
+                        title = Lang.get("Auto Play Murottal", "Putar Murottal Otomatis"),
+                        description = Lang.get(
+                            "Automatically play Quran audio files before adzan",
+                            "Putar berkas audio Al-Qur'an secara otomatis menjelang adzan"
+                        ),
+                        checked = state.murottal.enabled,
+                        onCheckedChange = { handleEvent(FridayEvent.MurottalEnabledChanged(it)) },
+                        enabled = state.visualsEnabled
+                    )
 
-                    if (murottalEnabled) {
+                    if (state.murottal.enabled) {
                         AdjustmentRow(
-                            title = Lang.get("Start Delay (Minutes)", "Jeda Mulai (Menit setelah Waktu Mulai)"),
-                            value = murottalStartDelay,
+                            title = Lang.get(
+                                "Start Delay (Minutes)",
+                                "Jeda Mulai (Menit setelah Waktu Mulai)"
+                            ),
+                            value = state.murottal.startDelayMinutes,
                             minValue = 0,
                             maxValue = 120,
                             showSign = false,
-                            onValueChange = { if (jumatEnabled && !jumatStandbyOnly) onMurottalStartDelayChange(it) }
+                            onValueChange = {
+                                if (state.visualsEnabled) {
+                                    handleEvent(FridayEvent.MurottalStartDelayChanged(it))
+                                }
+                            }
                         )
 
                         MurottalAudioPathsManager(
-                            audioPaths = murottalAudioPaths,
-                            onAudioPathsChange = onMurottalAudioPathsChange,
-                            enabled = jumatEnabled && !jumatStandbyOnly
+                            state = state.murottal,
+                            onEvent = handleEvent,
+                            enabled = state.visualsEnabled
                         )
                     }
                 }
@@ -294,303 +220,307 @@ fun FridaySettingsPane(
             MosqueSectionCard(
                 title = Lang.get("Friday Specific Slideshow", "Slideshow Khusus Jum'at"),
                 icon = Icons.Default.Settings,
-                dimmed = !jumatEnabled || jumatStandbyOnly
+                dimmed = !state.visualsEnabled
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = Lang.get("Enable Friday Slideshow", "Aktifkan Slideshow Jum'at"),
-                                color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textDisabled,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = MosqueTheme.typography.body
-                            )
-                            Text(
-                                text = Lang.get("Display different backgrounds/slides on Friday", "Tampilkan gambar/slideshow khusus di hari Jum'at"),
-                                color = if (jumatEnabled && !jumatStandbyOnly) MosqueTheme.colors.textSecondary else MosqueTheme.colors.border,
-                                fontSize = MosqueTheme.typography.labelSmall
-                            )
-                        }
-                        Switch(
-                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
-                            checked = jumatSlideshowEnabled,
-                            onCheckedChange = onJumatSlideshowEnabledChange,
-                            enabled = jumatEnabled && !jumatStandbyOnly
-                        ,
-                            colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = Lang.get("Include Global Slideshow", "Sertakan Slideshow Global"),
-                                color = if (jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textDisabled,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = MosqueTheme.typography.body
-                            )
-                            Text(
-                                text = Lang.get("Mix global slideshow images in rotation", "Sertakan gambar dari slideshow reguler dalam putaran"),
-                                color = if (jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled) MosqueTheme.colors.textSecondary else MosqueTheme.colors.border,
-                                fontSize = MosqueTheme.typography.labelSmall
-                            )
-                        }
-                        Switch(
-                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
-                            checked = includeGlobalSlideshow,
-                            onCheckedChange = onIncludeGlobalSlideshowChange,
-                            enabled = jumatEnabled && !jumatStandbyOnly && jumatSlideshowEnabled
-                        ,
-                            colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
-                        )
-                    }
-
-                    if (jumatSlideshowEnabled) {
-                        if (includeGlobalSlideshow) {
-                            val pagerState = rememberPagerState(initialPage = 0) { 2 }
-                            val coroutineScope = rememberCoroutineScope()
-                            
-                            SecondaryTabRow(
-                                selectedTabIndex = pagerState.currentPage,
-                                containerColor = MosqueTheme.colors.transparent,
-                                contentColor = MosqueTheme.colors.accent,
-                                divider = {}
-                            ) {
-                                Tab(
-                                    selected = pagerState.currentPage == 0,
-                                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
-                                    text = {
-                                        Text(
-                                            text = Lang.get("Slideshow", "Slideshow"),
-                                            fontSize = MosqueTheme.typography.bodyCompact,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    },
-                                    selectedContentColor = MosqueTheme.colors.accent,
-                                    unselectedContentColor = MosqueTheme.colors.textSecondary
-                                )
-                                Tab(
-                                    selected = pagerState.currentPage == 1,
-                                    onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
-                                    text = {
-                                        Text(
-                                            text = Lang.get("Global Slideshow", "Slideshow Global"),
-                                            fontSize = MosqueTheme.typography.bodyCompact,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    },
-                                    selectedContentColor = MosqueTheme.colors.accent,
-                                    unselectedContentColor = MosqueTheme.colors.textSecondary
-                                )
-                            }
-                            HorizontalPager(
-                                state = pagerState,
-                                modifier = Modifier.fillMaxWidth()
-                            ) { page ->
-                                if (page == 0) {
-                                    FridayMediaListSection(
-                                        fridayMediaList = fridayMediaList,
-                                        onAddFridayMediaItems = {
-                                        mediaPickerLauncher.launch(
-                                            androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                                        )
-                                    },
-                                        onUpdateFridayMediaItemPath = { id ->
-                                        mediaIdToUpdate = id
-                                        updateMediaLauncher.launch(
-                                            androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                                        )
-                                    },
-                                        onDeleteFridayMediaItem = onDeleteFridayMediaItem,
-                                        onReorderFridayMediaItems = onReorderFridayMediaItems
-                                    )
-                                } else {
-                                    GlobalSlideshowSelectionSection(
-                                        mediaList = mediaList,
-                                        selectedGlobalSlideIds = selectedGlobalSlideIds,
-                                        onSelectedGlobalSlideIdsChange = onSelectedGlobalSlideIdsChange
-                                    )
-                                }
-                            }
-                        } else {
-                            FridayMediaListSection(
-                                fridayMediaList = fridayMediaList,
-                                onAddFridayMediaItems = {
-                                        mediaPickerLauncher.launch(
-                                            androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                                        )
-                                    },
-                                onUpdateFridayMediaItemPath = { id ->
-                                        mediaIdToUpdate = id
-                                        updateMediaLauncher.launch(
-                                            androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                                        )
-                                    },
-                                onDeleteFridayMediaItem = onDeleteFridayMediaItem,
-                                onReorderFridayMediaItems = onReorderFridayMediaItems
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
-                        
-                        // Transition Settings
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(Lang.get("Transition Type", "Tipe Transisi"), color = MosqueTheme.colors.textPrimary, fontWeight = FontWeight.Bold)
-                            var expanded by remember { mutableStateOf(false) }
-                            Box {
-                                MosqueTertiaryButton(
-                                    onClick = { expanded = true },
-                                ) {
-                                    Text(jumatTransitionType)
-                                }
-                                DropdownMenu(
-                                    expanded = expanded,
-                                    onDismissRequest = { expanded = false },
-                                    modifier = Modifier.background(MosqueTheme.colors.surfaceRaised)
-                                ) {
-                                    listOf("FADE", "SLIDE", "ZOOM", "NONE").forEach { type ->
-                                        DropdownMenuItem(
-                                            modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false),
-                                            text = { Text(type, color = MosqueTheme.colors.textPrimary) },
-                                            onClick = {
-                                                onJumatTransitionTypeChange(type)
-                                                expanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(modifier = Modifier.weight(1f)) {
-                                AdjustmentRow(
-                                    title = Lang.get("Slide Duration", "Durasi Slide"),
-                                    value = jumatSlideIntervalSeconds,
-                                    minValue = 1,
-                                    maxValue = 300,
-                                    showSign = false,
-                                    unitSuffix = "",
-                                    onValueChange = onJumatSlideIntervalSecondsChange
-                                )
-                            }
-                            var unitExpanded by remember { mutableStateOf(false) }
-                            Box {
-                                MosqueTertiaryButton(
-                                    onClick = { unitExpanded = true },
-                                ) {
-                                    Text(if (jumatSlideIntervalUnit == "MINUTES") Lang.get("Minutes", "Menit") else Lang.get("Seconds", "Detik"))
-                                }
-                                DropdownMenu(
-                                    expanded = unitExpanded,
-                                    onDismissRequest = { unitExpanded = false },
-                                    modifier = Modifier.background(MosqueTheme.colors.surfaceRaised)
-                                ) {
-                                    DropdownMenuItem(
-                                        modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false),
-                                        text = { Text(Lang.get("Seconds", "Detik"), color = MosqueTheme.colors.textPrimary) },
-                                        onClick = {
-                                            onJumatSlideIntervalUnitChange("SECONDS")
-                                            unitExpanded = false
-                                        }
-                                    )
-                                    DropdownMenuItem(
-                                        modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.sm), scaleUp = false),
-                                        text = { Text(Lang.get("Minutes", "Menit"), color = MosqueTheme.colors.textPrimary) },
-                                        onClick = {
-                                            onJumatSlideIntervalUnitChange("MINUTES")
-                                            unitExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = Lang.get("Wait Video End", "Tunggu Video Selesai"),
-                                    color = MosqueTheme.colors.textPrimary,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = MosqueTheme.typography.body
-                                )
-                                Text(
-                                    text = Lang.get("Wait for video to finish before next slide", "Tunggu video selesai sebelum lanjut slide berikutnya"),
-                                    color = MosqueTheme.colors.textSecondary,
-                                    fontSize = MosqueTheme.typography.labelSmall
-                                )
-                            }
-                            Switch(
-                                modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
-                                checked = jumatVideoWaitUntilEnd,
-                                onCheckedChange = onJumatVideoWaitUntilEndChange,
-                                colors = SwitchDefaults.colors(checkedThumbColor = MosqueTheme.colors.accent, checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f))
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
-                        MosquePrimaryButton(
-                            onClick = onPreviewFridaySlideshow,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = Lang.get("Preview Slideshow", "Pratinjau Slideshow"),
-                                fontWeight = FontWeight.Bold,
-                                color = MosqueTheme.colors.onAccent
-                            )
-                        }
-                    }
-                }
+                FridaySlideshowSection(
+                    state = state.slideshow,
+                    visualsEnabled = state.visualsEnabled,
+                    onEvent = handleEvent
+                )
             }
         }
     }
 }
 
+/**
+ * The Friday slideshow card's contents: what to show, in what order, and for how
+ * long.
+ */
 @Composable
-fun FridayMediaListSection(
-    fridayMediaList: List<FridayMediaEntity>,
-    onAddFridayMediaItems: () -> Unit,
-    onUpdateFridayMediaItemPath: (String) -> Unit,
-    onDeleteFridayMediaItem: (FridayMediaEntity) -> Unit,
-    onReorderFridayMediaItems: (List<String>) -> Unit
+private fun FridaySlideshowSection(
+    state: FridaySlideshowSettings,
+    visualsEnabled: Boolean,
+    onEvent: (FridayEvent) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)) {
+        SettingSwitchRow(
+            title = Lang.get("Enable Friday Slideshow", "Aktifkan Slideshow Jum'at"),
+            description = Lang.get(
+                "Display different backgrounds/slides on Friday",
+                "Tampilkan gambar/slideshow khusus di hari Jum'at"
+            ),
+            checked = state.enabled,
+            onCheckedChange = { onEvent(FridayEvent.SlideshowEnabledChanged(it)) },
+            enabled = visualsEnabled
+        )
+
+        SettingSwitchRow(
+            title = Lang.get("Include Global Slideshow", "Sertakan Slideshow Global"),
+            description = Lang.get(
+                "Mix global slideshow images in rotation",
+                "Sertakan gambar dari slideshow reguler dalam putaran"
+            ),
+            checked = state.includeGlobalMedia,
+            onCheckedChange = { onEvent(FridayEvent.IncludeGlobalMediaChanged(it)) },
+            enabled = visualsEnabled && state.enabled
+        )
+
+        if (state.enabled) {
+            if (state.includeGlobalMedia) {
+                val pagerState = rememberPagerState(initialPage = 0) { 2 }
+                val coroutineScope = rememberCoroutineScope()
+
+                SecondaryTabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    containerColor = MosqueTheme.colors.transparent,
+                    contentColor = MosqueTheme.colors.accent,
+                    divider = {}
+                ) {
+                    Tab(
+                        selected = pagerState.currentPage == 0,
+                        onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
+                        text = {
+                            Text(
+                                text = Lang.get("Slideshow", "Slideshow"),
+                                fontSize = MosqueTheme.typography.bodyCompact,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        selectedContentColor = MosqueTheme.colors.accent,
+                        unselectedContentColor = MosqueTheme.colors.textSecondary
+                    )
+                    Tab(
+                        selected = pagerState.currentPage == 1,
+                        onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
+                        text = {
+                            Text(
+                                text = Lang.get("Global Slideshow", "Slideshow Global"),
+                                fontSize = MosqueTheme.typography.bodyCompact,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        selectedContentColor = MosqueTheme.colors.accent,
+                        unselectedContentColor = MosqueTheme.colors.textSecondary
+                    )
+                }
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth()
+                ) { page ->
+                    if (page == 0) {
+                        FridayMediaListSection(state = state, onEvent = onEvent)
+                    } else {
+                        GlobalSlideshowSelectionSection(state = state, onEvent = onEvent)
+                    }
+                }
+            } else {
+                FridayMediaListSection(state = state, onEvent = onEvent)
+            }
+
+            Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
+
+            // Transition Settings
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = Lang.get("Transition Type", "Tipe Transisi"),
+                    color = MosqueTheme.colors.textPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                var expanded by remember { mutableStateOf(false) }
+                Box {
+                    MosqueTertiaryButton(onClick = { expanded = true }) {
+                        Text(state.transitionType)
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.background(MosqueTheme.colors.surfaceRaised)
+                    ) {
+                        listOf("FADE", "SLIDE", "ZOOM", "NONE").forEach { type ->
+                            DropdownMenuItem(
+                                modifier = Modifier.focusHighlight(
+                                    shape = RoundedCornerShape(MosqueRadius.sm),
+                                    scaleUp = false
+                                ),
+                                text = { Text(type, color = MosqueTheme.colors.textPrimary) },
+                                onClick = {
+                                    onEvent(FridayEvent.TransitionTypeChanged(type))
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    AdjustmentRow(
+                        title = Lang.get("Slide Duration", "Durasi Slide"),
+                        value = state.intervalSeconds,
+                        minValue = 1,
+                        maxValue = 300,
+                        showSign = false,
+                        unitSuffix = "",
+                        onValueChange = { onEvent(FridayEvent.IntervalSecondsChanged(it)) }
+                    )
+                }
+                var unitExpanded by remember { mutableStateOf(false) }
+                Box {
+                    MosqueTertiaryButton(onClick = { unitExpanded = true }) {
+                        Text(
+                            if (state.intervalUnit == "MINUTES") {
+                                Lang.get("Minutes", "Menit")
+                            } else {
+                                Lang.get("Seconds", "Detik")
+                            }
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = unitExpanded,
+                        onDismissRequest = { unitExpanded = false },
+                        modifier = Modifier.background(MosqueTheme.colors.surfaceRaised)
+                    ) {
+                        DropdownMenuItem(
+                            modifier = Modifier.focusHighlight(
+                                shape = RoundedCornerShape(MosqueRadius.sm),
+                                scaleUp = false
+                            ),
+                            text = {
+                                Text(
+                                    text = Lang.get("Seconds", "Detik"),
+                                    color = MosqueTheme.colors.textPrimary
+                                )
+                            },
+                            onClick = {
+                                onEvent(FridayEvent.IntervalUnitChanged("SECONDS"))
+                                unitExpanded = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            modifier = Modifier.focusHighlight(
+                                shape = RoundedCornerShape(MosqueRadius.sm),
+                                scaleUp = false
+                            ),
+                            text = {
+                                Text(
+                                    text = Lang.get("Minutes", "Menit"),
+                                    color = MosqueTheme.colors.textPrimary
+                                )
+                            },
+                            onClick = {
+                                onEvent(FridayEvent.IntervalUnitChanged("MINUTES"))
+                                unitExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            SettingSwitchRow(
+                title = Lang.get("Wait Video End", "Tunggu Video Selesai"),
+                description = Lang.get(
+                    "Wait for video to finish before next slide",
+                    "Tunggu video selesai sebelum lanjut slide berikutnya"
+                ),
+                checked = state.videoWaitUntilEnd,
+                onCheckedChange = { onEvent(FridayEvent.VideoWaitUntilEndChanged(it)) }
+            )
+
+            Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
+            MosquePrimaryButton(
+                onClick = { onEvent(FridayEvent.SlideshowPreviewRequested) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = Lang.get("Preview Slideshow", "Pratinjau Slideshow"),
+                    fontWeight = FontWeight.Bold,
+                    color = MosqueTheme.colors.onAccent
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A titled switch with a line of explanation — the shape this pane repeats seven
+ * times, previously written out in full each time.
+ */
+@Composable
+private fun SettingSwitchRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                color = if (enabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textDisabled,
+                fontWeight = FontWeight.Bold,
+                fontSize = MosqueTheme.typography.body
+            )
+            Text(
+                text = description,
+                color = if (enabled) MosqueTheme.colors.textSecondary else MosqueTheme.colors.border,
+                fontSize = MosqueTheme.typography.labelSmall
+            )
+        }
+        Switch(
+            modifier = Modifier.focusHighlight(
+                shape = RoundedCornerShape(MosqueRadius.pill),
+                scaleUp = false
+            ),
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MosqueTheme.colors.accent,
+                checkedTrackColor = MosqueTheme.colors.accent.copy(alpha = 0.5f)
+            )
+        )
+    }
+}
+
+@Composable
+private fun FridayMediaListSection(
+    state: FridaySlideshowSettings,
+    onEvent: (FridayEvent) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
-        com.groovernapp.mosqueathan.ui.component.SlideshowComponent(
-            items = fridayMediaList,
+        SlideshowComponent(
+            items = state.media,
             keySelector = { it.id },
             filePathSelector = { it.filePath },
             isVideoSelector = { it.isVideo },
             isUsedSelector = null, // No checkbox for Friday specific media
             showAddButton = true,
             addText = Lang.get("Add Image / Video", "Tambah Gambar / Video"),
-            onAddClicked = onAddFridayMediaItems,
-            onReorderItems = onReorderFridayMediaItems,
-            onEditItem = { onUpdateFridayMediaItemPath(it.id) },
-            onDeleteItem = { onDeleteFridayMediaItem(it) },
-            emptyText = Lang.get("No media added. Slideshow is empty.", "Belum ada media. Slideshow kosong."),
+            onAddClicked = { onEvent(FridayEvent.MediaPickRequested) },
+            onReorderItems = { ids -> onEvent(FridayEvent.MediaReordered(ids)) },
+            onEditItem = { onEvent(FridayEvent.MediaFilePickRequested(it.id)) },
+            onDeleteItem = { onEvent(FridayEvent.MediaDeleted(it)) },
+            emptyText = Lang.get(
+                "No media added. Slideshow is empty.",
+                "Belum ada media. Slideshow kosong."
+            ),
             showTransitionAnimation = false,
             showTransitionInterval = false
         )
@@ -598,32 +528,27 @@ fun FridayMediaListSection(
 }
 
 @Composable
-fun GlobalSlideshowSelectionSection(
-    mediaList: List<MediaEntity>,
-    selectedGlobalSlideIds: String,
-    onSelectedGlobalSlideIdsChange: (String) -> Unit
+private fun GlobalSlideshowSelectionSection(
+    state: FridaySlideshowSettings,
+    onEvent: (FridayEvent) -> Unit
 ) {
-    val selectedIdsSet = remember(selectedGlobalSlideIds) {
-        selectedGlobalSlideIds.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+    val selectedIdsSet = remember(state.selectedGlobalMediaIds) {
+        state.selectedGlobalMediaIds.split(",").map { it.trim() }.filter { it.isNotEmpty() }.toSet()
     }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
     ) {
-        com.groovernapp.mosqueathan.ui.component.SlideshowComponent(
-            items = mediaList,
+        SlideshowComponent(
+            items = state.globalMedia,
             keySelector = { it.id },
             filePathSelector = { it.filePath },
             isVideoSelector = { it.isVideo },
             isUsedSelector = { selectedIdsSet.contains(it.id) },
             onUpdateUseStatus = { item, isUsed ->
-                val newSet = if (isUsed) {
-                    selectedIdsSet + item.id
-                } else {
-                    selectedIdsSet - item.id
-                }
-                onSelectedGlobalSlideIdsChange(newSet.joinToString(","))
+                val newSet = if (isUsed) selectedIdsSet + item.id else selectedIdsSet - item.id
+                onEvent(FridayEvent.SelectedGlobalMediaChanged(newSet.joinToString(",")))
             },
             showAddButton = false, // Not adding/editing from this view, just selecting
             onReorderItems = { /* No reorder from here */ },
@@ -637,33 +562,43 @@ fun GlobalSlideshowSelectionSection(
 }
 
 @Composable
-fun MurottalAudioPathsManager(
-    audioPaths: String,
-    onAudioPathsChange: (String) -> Unit,
+private fun MurottalAudioPathsManager(
+    state: MurottalSettings,
+    onEvent: (FridayEvent) -> Unit,
     enabled: Boolean
 ) {
-    val paths = remember(audioPaths) {
-        audioPaths.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+    val paths = remember(state.audioPaths) {
+        state.audioPaths.split(",").map { it.trim() }.filter { it.isNotEmpty() }
     }
-    
+
+    // Audio is picked with OpenMultipleDocuments rather than the visual-media
+    // picker, and the chosen URIs are the setting itself, so this launcher stays
+    // local: there is no file to copy and nothing for the ViewModel to resolve.
     val audioPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments()
     ) { uris: List<android.net.Uri> ->
         if (uris.isNotEmpty()) {
             val newPaths = (paths + uris.map { it.toString() }).distinct()
-            onAudioPathsChange(newPaths.joinToString(","))
+            onEvent(FridayEvent.MurottalAudioPathsChanged(newPaths.joinToString(",")))
         }
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
-        Text(Lang.get("Murottal Audio Files", "File Audio Murottal"), color = if (enabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textMuted, fontSize = MosqueTheme.typography.label)
-        
+        Text(
+            text = Lang.get("Murottal Audio Files", "File Audio Murottal"),
+            color = if (enabled) MosqueTheme.colors.textPrimary else MosqueTheme.colors.textMuted,
+            fontSize = MosqueTheme.typography.label
+        )
+
         if (paths.isNotEmpty()) {
-            paths.take(5).forEach { path ->
+            paths.take(MAX_LISTED_AUDIO_PATHS).forEach { path ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MosqueTheme.colors.fillSubtle, RoundedCornerShape(MosqueTheme.radius.md))
+                        .background(
+                            MosqueTheme.colors.fillSubtle,
+                            RoundedCornerShape(MosqueTheme.radius.md)
+                        )
                         .padding(MosqueTheme.spacing.md),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -678,33 +613,68 @@ fun MurottalAudioPathsManager(
                     MosqueIconButton(
                         onClick = {
                             val newPaths = paths.filter { it != path }
-                            onAudioPathsChange(newPaths.joinToString(","))
+                            onEvent(FridayEvent.MurottalAudioPathsChanged(newPaths.joinToString(",")))
                         },
                         modifier = Modifier.size(MosqueTheme.size.iconLg)
                     ) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove", tint = MosqueTheme.colors.danger.copy(alpha = 0.8f))
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Remove",
+                            tint = MosqueTheme.colors.danger.copy(alpha = 0.8f)
+                        )
                     }
                 }
             }
         } else {
-            Text(Lang.get("No audio files selected", "Belum ada file audio"), color = MosqueTheme.colors.textDisabled, fontSize = MosqueTheme.typography.caption)
+            Text(
+                text = Lang.get("No audio files selected", "Belum ada file audio"),
+                color = MosqueTheme.colors.textDisabled,
+                fontSize = MosqueTheme.typography.caption
+            )
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
             MosqueSecondaryButton(
                 onClick = { audioPickerLauncher.launch(arrayOf("audio/*")) },
-                enabled = enabled,
+                enabled = enabled
             ) {
                 Text(Lang.get("Add Audio", "Tambah Audio"))
             }
-            if (paths.size > 5) {
+            if (paths.size > MAX_LISTED_AUDIO_PATHS) {
                 MosqueSecondaryButton(
                     onClick = { /* Open full list dialog or expand */ },
-                    enabled = enabled,
+                    enabled = enabled
                 ) {
-                    Text(Lang.get("List Audio (${paths.size})", "Daftar Audio (${paths.size})"))
+                    Text(
+                        Lang.get(
+                            "List Audio (${paths.size})",
+                            "Daftar Audio (${paths.size})"
+                        )
+                    )
                 }
             }
         }
+    }
+}
+
+/** Beyond this the list is summarised behind a button rather than scrolled. */
+private const val MAX_LISTED_AUDIO_PATHS = 5
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000, widthDp = 1280, heightDp = 720)
+@Composable
+fun FridaySettingsPanePreview() {
+    // Forty-one arguments became two, so the preview is now readable: it says what
+    // it is showing rather than restating the whole signature.
+    MosqueAthanTheme {
+        FridaySettingsPane(
+            state = FridayUiState(
+                enabled = true,
+                startTime = "11:00",
+                endTime = "13:00",
+                murottal = MurottalSettings(enabled = true, startDelayMinutes = 15),
+                slideshow = FridaySlideshowSettings(enabled = true, transitionType = "FADE", intervalSeconds = 10)
+            ),
+            onEvent = {}
+        )
     }
 }

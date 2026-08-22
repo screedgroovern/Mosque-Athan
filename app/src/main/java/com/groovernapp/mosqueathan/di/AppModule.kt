@@ -12,6 +12,7 @@ import com.groovernapp.mosqueathan.ui.navigation.AppViewModel
 import com.groovernapp.mosqueathan.ui.settings.SettingsViewModel
 import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahViewModel
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.DisplayMediaViewModel
+import com.groovernapp.mosqueathan.ui.settings.fridaysettings.FridayViewModel
 import com.groovernapp.mosqueathan.ui.settings.prayerschedule.PrayerScheduleViewModel
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel
 import org.koin.android.ext.koin.androidContext
@@ -47,4 +48,5 @@ val appModule = module {
     viewModel { AdzanIqomahViewModel(get(), get()) }
     viewModel { PrayerScheduleViewModel(get(), get()) }
     viewModel { DisplayMediaViewModel(get(), get(), get()) }
+    viewModel { FridayViewModel(get(), get(), get()) }
 }
