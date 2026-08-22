@@ -45,12 +45,13 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import com.groovernapp.mosqueathan.ui.design.LocalWindowMetrics
+import com.groovernapp.mosqueathan.ui.design.isShort
 import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
 import com.groovernapp.mosqueathan.ui.design.focusHighlight
 import com.groovernapp.mosqueathan.ui.design.panePadding
-import com.groovernapp.mosqueathan.ui.design.stacksSideBySideChoices
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 
@@ -189,7 +190,7 @@ private fun ModeSelector(
 ) {
     val gap = Arrangement.spacedBy(MosqueTheme.spacing.xl)
 
-    if (LocalWindowClass.current.stacksSideBySideChoices) {
+    if (LocalWindowMetrics.current.isShort) {
         Column(modifier = modifier, verticalArrangement = gap) {
             ModeCard(ConnectivityMode.Server, state, onEvent, Modifier.fillMaxWidth())
             ModeCard(ConnectivityMode.Remote, state, onEvent, Modifier.fillMaxWidth())

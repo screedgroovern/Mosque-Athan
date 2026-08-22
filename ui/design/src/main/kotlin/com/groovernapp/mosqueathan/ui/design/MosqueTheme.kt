@@ -24,11 +24,14 @@ fun MosqueTheme(
     // shift anything. It is also the same measurement the settings screens already
     // perform, and it survives the move to commonMain.
     val density = LocalDensity.current
-    val containerWidth = LocalWindowInfo.current.containerSize.width
-    val widthDp = with(density) { containerWidth.toDp() }
+    val container = LocalWindowInfo.current.containerSize
+    val widthDp = with(density) { container.width.toDp() }
+    val heightDp = with(density) { container.height.toDp() }
+    val windowClass = windowClassFor(widthDp, rememberIsTv())
 
     CompositionLocalProvider(
-        LocalWindowClass provides windowClassFor(widthDp, rememberIsTv())
+        LocalWindowClass provides windowClass,
+        LocalWindowMetrics provides WindowMetrics(windowClass, widthDp, heightDp)
     ) {
         MaterialTheme(
             colorScheme = darkColorScheme(),
@@ -49,4 +52,8 @@ object MosqueTheme {
     /** The current window class. Shorthand for [LocalWindowClass]. */
     val windowClass: WindowClass
         @Composable get() = LocalWindowClass.current
+
+    /** The measured window, including height. */
+    val window: WindowMetrics
+        @Composable get() = LocalWindowMetrics.current
 }

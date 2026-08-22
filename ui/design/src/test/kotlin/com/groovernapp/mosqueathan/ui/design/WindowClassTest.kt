@@ -88,12 +88,29 @@ class WindowClassTest {
         assertEquals(WindowClass.Expanded.panePadding, WindowClass.Tv.panePadding)
     }
 
+    /**
+     * Both figures are measured, not chosen: a Realme RMX2061 and a Xiaomi
+     * 25040RP0AG, in the landscape the app locks itself to.
+     */
     @Test
-    fun onlyAPhoneStacksSideBySideChoices() {
-        assertTrue(WindowClass.Compact.stacksSideBySideChoices)
-        assertFalse(WindowClass.Medium.stacksSideBySideChoices)
-        assertFalse(WindowClass.Expanded.stacksSideBySideChoices)
-        assertFalse(WindowClass.Tv.stacksSideBySideChoices)
+    fun aLandscapePhoneIsShortButNeverNarrow() {
+        val phone = WindowMetrics(windowClassFor(800.dp, isTv = false), 800.dp, 360.dp)
+        val tablet = WindowMetrics(windowClassFor(1137.dp, isTv = false), 1137.dp, 711.dp)
+
+        assertTrue("a phone in landscape is short", phone.isShort)
+        assertFalse("a tablet in landscape is not", tablet.isShort)
+
+        // The point of measuring height at all: width does not separate them, and
+        // never reaches Compact, so anything keyed on Compact is dead code.
+        assertEquals(WindowClass.Medium, phone.windowClass)
+        assertEquals(WindowClass.Expanded, tablet.windowClass)
+        assertFalse(phone.isCompact)
+    }
+
+    @Test
+    fun theShortThresholdSitsBetweenTheTwoRealDevices() {
+        assertTrue(WindowMetrics(WindowClass.Medium, 800.dp, 479.dp).isShort)
+        assertFalse(WindowMetrics(WindowClass.Medium, 800.dp, 480.dp).isShort)
     }
 
     @Test

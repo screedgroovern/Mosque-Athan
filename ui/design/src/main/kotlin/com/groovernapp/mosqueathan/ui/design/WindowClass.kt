@@ -54,12 +54,17 @@ enum class WindowClass {
 val LocalWindowClass: ProvidableCompositionLocal<WindowClass> =
     staticCompositionLocalOf { WindowClass.Expanded }
 
+/** The measured window, for the decisions [WindowClass] alone cannot express. */
+val LocalWindowMetrics: ProvidableCompositionLocal<WindowMetrics> =
+    staticCompositionLocalOf {
+        WindowMetrics(WindowClass.Expanded, 1280.dp, 800.dp)
+    }
+
 /**
  * Horizontal padding for a settings pane's content.
  *
  * [WindowClass.Tv] keeps the value the app already shipped, so the display is
- * untouched; the phone and tablet tiers are the part that had never been thought
- * about — before this there was one breakpoint and everything above it got 24dp.
+ * untouched.
  */
 val WindowClass.panePadding: Dp
     get() = when (this) {
@@ -70,12 +75,52 @@ val WindowClass.panePadding: Dp
     }
 
 /**
+ * Whether vertical space is scarce.
+ *
+ * **This, not width, is what actually separates a phone from a tablet here.** The
+ * app is locked to landscape, so measuring width alone is close to useless:
+ *
+ * | device            | width  | height |
+ * |-------------------|--------|--------|
+ * | Realme RMX2061    | 800dp  | 360dp  |
+ * | Xiaomi 25040RP0AG | 1137dp | 711dp  |
+ *
+ * Width differs by 1.4x and never drops below 600dp, so [WindowClass.Compact] is
+ * unreachable on a landscape phone — as was the `isCompact` boolean this replaced,
+ * which means the app's "phone layout" has most likely never been seen. Height
+ * differs by 2x, and 360dp is where a heading plus a few rows stops fitting.
+ *
+ * Measured on both devices rather than assumed.
+ */
+val WindowMetrics.isShort: Boolean
+    get() = height < SHORT_HEIGHT
+
+/**
  * Whether a pair of side-by-side choices should stack instead.
  *
- * True only on a phone, where two cards in a row leaves each too narrow to read.
+ * Driven by height, not width: at 800dp there is ample room for two cards abreast,
+ * and stacking them is what would run out of vertical space.
  */
-val WindowClass.stacksSideBySideChoices: Boolean
-    get() = this == WindowClass.Compact
+val WindowMetrics.stacksSideBySideChoices: Boolean
+    get() = windowClass == WindowClass.Compact
+
+/**
+ * What the app knows about the space it has been given.
+ *
+ * Carries height as well as class because, landscape-locked, height is the
+ * dimension that actually varies — see [isShort].
+ */
+data class WindowMetrics(
+    val windowClass: WindowClass,
+    val width: Dp,
+    val height: Dp
+) {
+    val isCompact: Boolean get() = windowClass.isCompact
+    val isTv: Boolean get() = windowClass.isTv
+    val panePadding: Dp get() = windowClass.panePadding
+}
+
+private val SHORT_HEIGHT = 480.dp
 
 /** Classifies a measured width. Kept separate from measurement so it is testable. */
 fun windowClassFor(width: Dp, isTv: Boolean): WindowClass = when {
