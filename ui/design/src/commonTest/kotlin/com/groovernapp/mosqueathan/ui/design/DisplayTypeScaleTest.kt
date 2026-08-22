@@ -1,9 +1,9 @@
 package com.groovernapp.mosqueathan.ui.design
 
 import androidx.compose.ui.unit.dp
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 /**
  * Display type shrinks on a short window.
@@ -38,11 +38,11 @@ class DisplayTypeScaleTest {
     @Test
     fun aShortWindowShrinksTheClockEnoughToLeaveRoom() {
         val clock = phone.clockDisplay.value
-        assertTrue("clock should shrink from 170sp, saw $clock", clock < 170f)
+        assertTrue(clock < 170f, "clock should shrink from 170sp, saw $clock")
         // The four lines of ClockSection came to roughly 250dp before, in a 360dp
         // window. Everything below was pushed off screen.
         val block = clock + phone.clockMedium.value + phone.prayerNameCompact.value * 2
-        assertTrue("the clock block must leave room for the prayer times, saw $block", block < 200f)
+        assertTrue(block < 200f, "the clock block must leave room for the prayer times, saw $block")
     }
 
     @Test

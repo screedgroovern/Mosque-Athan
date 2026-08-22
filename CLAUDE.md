@@ -513,21 +513,32 @@ That last one is worth doing for its own sake: it is the root cause of the
 *Persistence*, and a plain `data class` gets `copy()` from the compiler —
 deleting the hand-written `copy(...)` extension entirely.
 
-### Step 6 groundwork: what Compose Multiplatform actually provides
+### Step 6: moving the UI to Compose Multiplatform
 
-Checked empirically with a throwaway probe module, not from memory, because 53
-files have to switch from `androidx.compose` to `org.jetbrains.compose` in one
-atomic change — the two artifact sets export the same class names from different
-packages, so a module uses one or the other. Discovering a missing component after
-that switch would mean unwinding all of it.
+**Compose Multiplatform keeps the `androidx.compose.*` package names.** CMP is built
+from the AndroidX sources; only the Maven coordinates differ. So moving a module to
+Compose Multiplatform changes its *dependencies* and touches *no imports at all* —
+`ui:design` moved with 15 of its 17 source files byte-identical. There is no atomic
+53-file import swap, and no need to sequence the migration around one.
 
-**Every Material3 component this app uses exists in Compose Multiplatform 1.9.0**
-and compiles for `wasmJs`, `iosSimulatorArm64` and `jvm`: `SecondaryTabRow`,
-`DatePicker` + `rememberDatePickerState`, `HorizontalPager`, `BadgedBox`/`Badge`,
+Two things were verified rather than assumed, because both are easy to get wrong:
+
+**Every Material3 component this app uses exists in CMP** and compiles for `wasmJs`,
+`iosSimulatorArm64` and `jvm`: `SecondaryTabRow`, `DatePicker` +
+`rememberDatePickerState`, `HorizontalPager`, `BadgedBox`/`Badge`,
 `ModalNavigationDrawer` + `rememberDrawerState`, `AlertDialog`, `DropdownMenu`.
-So the UI surface is not the obstacle.
 
-What *is* Android-only, with occurrence counts:
+**Use the `compose.*` dependency accessors, never hand-written coordinates.** CMP
+version numbers are not uniform across artifacts: under the 1.9.0 plugin, `runtime`
+and `foundation` resolve to 1.9.1 while `material3` resolves to **1.8.2**, and
+`org.jetbrains.compose.material3:material3:1.9.1` does not exist at all. Declaring the
+artifacts in the version catalog against a single version therefore fails to resolve.
+The plugin knows its own mapping. This is why `ui/design/build.gradle.kts` re-applies
+`id("org.jetbrains.compose")` in its own `plugins` block even though the convention
+plugin already applied it — the redundant application is what makes Gradle generate
+the accessors.
+
+### What is actually Android-only
 
 | API | Uses | What it needs |
 |---|---|---|
@@ -537,14 +548,21 @@ What *is* Android-only, with occurrence counts:
 | `BitmapFactory` / `asImageBitmap` | 11 / 11 | `expect` image decoding |
 | `LocalContext` | 7 | mostly removable; already gone from ViewModels |
 | `PickVisualMediaRequest` | 7 | part of the file picker |
-| `UiModeManager` | 4 | `expect` TV detection (`rememberIsTv`) |
+| `UiModeManager` | 4 | `expect` TV detection — **done**, see below |
 | `AndroidView` | 1 | `expect` video player — the `VideoView` in DashboardScreen |
 
 `MediaFileStore` and `rememberIsTv` were built as the seams for two of these.
 
-**Practical cost to plan around:** the iOS target takes about 8½ minutes to
-compile from cold. Expect a much slower edit-build loop than the Android-only
-work so far.
+**`ui:design` is migrated.** It needed exactly one `expect`: `rememberIsTv()`. The
+`jvmMain` actual returns `false` permanently — a desktop build is a controller, never
+the mosque display — which is a decision, not a stub. Unit tests moved to `commonTest`
+and were converted from JUnit to `kotlin.test` so they run on the `jvm` guardrail
+target as well as Android; note that `kotlin.test` takes its assertion message **last**
+where `org.junit.Assert` takes it first. Focus tests stay in `androidInstrumentedTest`,
+because whether a focus ring draws depends on modifier order at runtime.
+
+**Practical cost to plan around:** the iOS target takes about 8½ minutes to compile
+from cold. Expect a much slower edit-build loop than the Android-only work so far.
 
 ### Migration order
 

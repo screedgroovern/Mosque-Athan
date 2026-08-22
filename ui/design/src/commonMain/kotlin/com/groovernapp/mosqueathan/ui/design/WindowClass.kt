@@ -1,13 +1,9 @@
 package com.groovernapp.mosqueathan.ui.design
 
-import android.app.UiModeManager
-import android.content.Context
-import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -133,16 +129,10 @@ fun windowClassFor(width: Dp, isTv: Boolean): WindowClass = when {
 /**
  * Whether this device reports itself as a television.
  *
- * Android-only today. When `ui:design` becomes multiplatform in step 6 this is the one
- * piece here that needs `expect`/`actual`.
+ * A television is its own window class rather than just a wide one, because what makes
+ * it different is viewing distance, not pixels — a 15" monitor and a 55" TV can report
+ * the same width and still need different type sizes. No multiplatform API exposes
+ * this, so it is the one `expect` this module needs.
  */
 @Composable
-fun rememberIsTv(): Boolean {
-    val context = LocalContext.current
-    return remember(context) { context.isTelevision() }
-}
-
-private fun Context.isTelevision(): Boolean {
-    val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? UiModeManager
-    return uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
-}
+expect fun rememberIsTv(): Boolean

@@ -1,8 +1,8 @@
 package com.groovernapp.mosqueathan.ui.design
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 /**
  * These do not test behaviour — they pin down the shape of the token set, so that
@@ -16,7 +16,7 @@ class TokenInvariantsTest {
             listOf(none, hairline, xxs, xs, sm, md, lg, xl, xxl, xxxl, huge, xhuge, xxhuge)
         }
         scale.zipWithNext { a, b ->
-            assertTrue("spacing must increase: $a then $b", b > a)
+            assertTrue(b > a, "spacing must increase: $a then $b")
         }
     }
 
@@ -24,7 +24,7 @@ class TokenInvariantsTest {
     fun radiusIsAMonotonicScale() {
         val scale = with(MosqueRadius) { listOf(xs, sm, md, lg, xl, xxl, pill) }
         scale.zipWithNext { a, b ->
-            assertTrue("radius must increase: $a then $b", b > a)
+            assertTrue(b > a, "radius must increase: $a then $b")
         }
     }
 
@@ -32,7 +32,7 @@ class TokenInvariantsTest {
     fun strokeIsAMonotonicScale() {
         val scale = with(MosqueStroke) { listOf(hairline, medium, thin, thick) }
         scale.zipWithNext { a, b ->
-            assertTrue("stroke must increase: $a then $b", b > a)
+            assertTrue(b > a, "stroke must increase: $a then $b")
         }
     }
 
@@ -53,8 +53,8 @@ class TokenInvariantsTest {
             listOf(clockDisplay, countdownDigitsLarge, iqomahCountdown, countdownDigits,
                 adzanTitle, clockLarge).forEach {
                 assertTrue(
-                    "$it should exceed the largest settings size ($largestSettings)",
-                    it.value > largestSettings.value
+                    it.value > largestSettings.value,
+                    "$it should exceed the largest settings size ($largestSettings)"
                 )
             }
         }
@@ -85,7 +85,7 @@ class TokenInvariantsTest {
                 label, labelSmall, caption, captionSmall)
         }
         scale.zipWithNext { a, b ->
-            assertTrue("settings sizes must descend: $a then $b", b.value < a.value)
+            assertTrue(b.value < a.value, "settings sizes must descend: $a then $b")
         }
     }
 
@@ -93,7 +93,7 @@ class TokenInvariantsTest {
     fun theFocusScaleIsAVisibleLift() {
         // 1.0 would mean the focus treatment silently does nothing.
         assertTrue(FOCUS_SCALE > 1.0f)
-        assertTrue("a lift this large would shove neighbours", FOCUS_SCALE < 1.2f)
+        assertTrue(FOCUS_SCALE < 1.2f, "a lift this large would shove neighbours")
     }
 
     @Test
@@ -107,7 +107,7 @@ class TokenInvariantsTest {
             listOf(textPrimary, textSecondary, textMuted, textDisabled)
         }
         scale.zipWithNext { a, b ->
-            assertTrue("emphasis must descend: ${a.alpha} then ${b.alpha}", b.alpha < a.alpha)
+            assertTrue(b.alpha < a.alpha, "emphasis must descend: ${a.alpha} then ${b.alpha}")
         }
     }
 

@@ -1,10 +1,10 @@
 package com.groovernapp.mosqueathan.ui.design
 
 import androidx.compose.ui.unit.dp
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 /**
  * `windowClassFor` decides every adaptive choice in the app, so its boundaries are
@@ -97,8 +97,8 @@ class WindowClassTest {
         val phone = WindowMetrics(windowClassFor(800.dp, isTv = false), 800.dp, 360.dp)
         val tablet = WindowMetrics(windowClassFor(1137.dp, isTv = false), 1137.dp, 711.dp)
 
-        assertTrue("a phone in landscape is short", phone.isShort)
-        assertFalse("a tablet in landscape is not", tablet.isShort)
+        assertTrue(phone.isShort, "a phone in landscape is short")
+        assertFalse(tablet.isShort, "a tablet in landscape is not")
 
         // The point of measuring height at all: width does not separate them, and
         // never reaches Compact, so anything keyed on Compact is dead code.
