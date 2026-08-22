@@ -31,6 +31,7 @@ class InitialFocusTest {
     @Test
     fun theTaggedElementHoldsFocusOnFirstComposition() {
         compose.setContent {
+            RequestDpadInputMode()
             Column {
                 Box(Modifier.testTag("first").size(48.dp).clickable { })
                 Box(Modifier.testTag("confirm").size(48.dp).initialFocus().clickable { })
@@ -50,6 +51,7 @@ class InitialFocusTest {
         // A dialog is composed after the screen behind it, which is the case that
         // matters: the requester must fire when the node attaches, not at startup.
         compose.setContent {
+            RequestDpadInputMode()
             val shown = remember { mutableStateOf(false) }
             Column {
                 Box(

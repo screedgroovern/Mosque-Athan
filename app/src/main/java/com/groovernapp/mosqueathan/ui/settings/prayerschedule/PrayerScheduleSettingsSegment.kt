@@ -96,7 +96,7 @@ fun PrayerScheduleSettingsSegment(
                         Icon(
                             imageVector = Icons.Default.Calculate,
                             contentDescription = "Method",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                         Text(
                             text = Lang.get("Calculation Method", "Metode Perhitungan"),
@@ -122,7 +122,7 @@ fun PrayerScheduleSettingsSegment(
                         Icon(
                             imageVector = Icons.Default.Tune,
                             contentDescription = "Adjustments",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                         Text(
                             text = Lang.get("Prayer Time Adjustments", "Koreksi Waktu Shalat"),

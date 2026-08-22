@@ -46,3 +46,30 @@ object MosqueStroke {
     val thin: Dp = 2.dp
     val thick: Dp = 3.dp
 }
+
+/**
+ * Sizes for icons and controls.
+ *
+ * Distinct from [MosqueSpacing] even where the numbers coincide: 36dp of control
+ * height and 36dp of padding are different decisions, and a later pass that scales
+ * spacing per window class must not drag icon sizes along with it.
+ *
+ * `Spacer(Modifier.width(8.dp))` is spacing, not a size — use [MosqueSpacing] there.
+ */
+object MosqueSize {
+    /** Inline icon, beside text. */
+    val iconSm: Dp = 16.dp
+    /** Icon in a list row. */
+    val iconMd: Dp = 20.dp
+    /** Standard action icon. */
+    val iconLg: Dp = 24.dp
+
+    /** Compact control — a chip or a segmented option. */
+    val controlSm: Dp = 32.dp
+    /** The app's default control height. */
+    val controlMd: Dp = 36.dp
+    /** Touch target, and the height used across the remote-control pane. */
+    val controlLg: Dp = 48.dp
+    /** A tall row or field. */
+    val controlXl: Dp = 56.dp
+}

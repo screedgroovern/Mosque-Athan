@@ -143,9 +143,9 @@ fun Schedule(
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(MosqueTheme.size.iconMd)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                     Text(
                         text = addButtonText,
                         fontWeight = FontWeight.Bold,
@@ -159,7 +159,7 @@ fun Schedule(
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp)
+                    .height(MosqueTheme.size.controlLg)
             ) {
                 Text(
                     text = scheduleListButtonText,
@@ -342,7 +342,7 @@ fun ScheduleListItem(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit Time",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                     }
 
@@ -356,7 +356,7 @@ fun ScheduleListItem(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                     }
                 }
@@ -408,7 +408,7 @@ fun ScheduleListItem(
                         val isActive = activeDaysList.contains(englishName)
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(MosqueTheme.size.controlMd)
                                     .clip(RoundedCornerShape(10))
                                 .background(if (isActive) MosqueTheme.colors.accent else MosqueTheme.colors.fill)
                                 .border(
@@ -467,10 +467,10 @@ fun ScheduleListItem(
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp),
+                                modifier = Modifier.size(MosqueTheme.size.iconSm),
                                 tint = MosqueTheme.colors.accent
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(MosqueTheme.spacing.sm))
                             Text(
                                 text = Lang.get("Schedule", "Jadwal Tanggal"),
                                 fontSize = MosqueTheme.typography.caption,
@@ -575,7 +575,7 @@ fun TimeStepperField(
 ) {
     Column {
         Text(text = label, color = MosqueTheme.colors.textSecondary, fontSize = MosqueTheme.typography.labelSmall)
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(MosqueTheme.spacing.xs))
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xs)
@@ -584,7 +584,7 @@ fun TimeStepperField(
                 onClick = { onHourChange((hour - 1 + 24) % 24) },
                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(MosqueTheme.size.controlMd)
             ) {
                 Text("−", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
@@ -593,14 +593,14 @@ fun TimeStepperField(
                 color = MosqueTheme.colors.accent,
                 fontSize = MosqueTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.width(36.dp),
+                modifier = Modifier.width(MosqueTheme.size.controlMd),
                 textAlign = TextAlign.Center
             )
             MosqueSecondaryButton(
                 onClick = { onHourChange((hour + 1) % 24) },
                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(MosqueTheme.size.controlMd)
             ) {
                 Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
@@ -617,7 +617,7 @@ fun TimeStepperField(
                 onClick = { onMinuteChange((minute - 1 + 60) % 60) },
                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(MosqueTheme.size.controlMd)
             ) {
                 Text("−", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
@@ -626,14 +626,14 @@ fun TimeStepperField(
                 color = MosqueTheme.colors.accent,
                 fontSize = MosqueTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.width(36.dp),
+                modifier = Modifier.width(MosqueTheme.size.controlMd),
                 textAlign = TextAlign.Center
             )
             MosqueSecondaryButton(
                 onClick = { onMinuteChange((minute + 1) % 60) },
                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                 contentPadding = PaddingValues(0.dp),
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(MosqueTheme.size.controlMd)
             ) {
                 Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             }
@@ -716,13 +716,13 @@ fun MultiDatePickerDialog(
                                 Text(text = dateString, color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.label)
                                 MosqueIconButton(
                                     onClick = { datesList.remove(dateString) },
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(MosqueTheme.size.iconLg)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
                                         contentDescription = "Delete",
                                         tint = MosqueTheme.colors.danger.copy(alpha = 0.8f),
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(MosqueTheme.size.iconSm)
                                     )
                                 }
                             }

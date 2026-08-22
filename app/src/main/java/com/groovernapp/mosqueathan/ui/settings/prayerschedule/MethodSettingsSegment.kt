@@ -99,21 +99,21 @@ fun MethodSettingsSegment(
 
         if (calculationMethodName == "KEMENAG") {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                 Text(
                     text = com.groovernapp.mosqueathan.util.Lang.get("Selected City: ", "Kota Terpilih: ") + kemenagCityName,
                     color = MosqueTheme.colors.textPrimary,
                     fontSize = MosqueTheme.typography.body,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                 Text(
                     text = com.groovernapp.mosqueathan.util.Lang.get("Schedule Duration: ", "Periode Waktu Jadwal: "),
                     color = MosqueTheme.colors.textPrimary,
                     fontSize = MosqueTheme.typography.body,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
 
                 var durationExpanded by remember { mutableStateOf(false) }
                 val durationList = listOf(
@@ -132,7 +132,7 @@ fun MethodSettingsSegment(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
+                        .height(MosqueTheme.size.controlXl)
                         .clip(RoundedCornerShape(MosqueTheme.radius.md))
                         .background(MosqueTheme.colors.fillSubtle)
                         .focusHighlight(shape = RoundedCornerShape(MosqueRadius.md), scaleUp = false)
@@ -159,7 +159,7 @@ fun MethodSettingsSegment(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
@@ -212,7 +212,7 @@ fun MethodSettingsSegment(
                 var isDownloading by remember { mutableStateOf(false) }
 
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                 MosquePrimaryButton(
                     onClick = {
                         isDownloading = true
@@ -226,7 +226,7 @@ fun MethodSettingsSegment(
                 ) {
                     if (isDownloading) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(MosqueTheme.size.iconLg),
                             color = MosqueTheme.colors.onAccent,
                             strokeWidth = MosqueTheme.stroke.thin
                         )
@@ -240,7 +240,7 @@ fun MethodSettingsSegment(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                 MosquePrimaryButton(
                     onClick = { showSchedulesDialog = true },
                     modifier = Modifier.fillMaxWidth().height(44.dp)
@@ -252,7 +252,7 @@ fun MethodSettingsSegment(
                         fontSize = MosqueTheme.typography.label
                     )
                 }
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.xxxl))
             }
         }
     }
@@ -286,7 +286,7 @@ fun MethodSettingsSegment(
                         trailingIcon = {
                             if (isSearchingCities) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
+                                    modifier = Modifier.size(MosqueTheme.size.iconMd),
                                     color = MosqueTheme.colors.accent,
                                     strokeWidth = MosqueTheme.stroke.thin
                                 )
@@ -296,7 +296,7 @@ fun MethodSettingsSegment(
                         singleLine = true
                     )
                     
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                     
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth().height(250.dp),
@@ -393,7 +393,7 @@ fun MethodSettingsSegment(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = MosqueTheme.typography.label
                                         )
-                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Spacer(modifier = Modifier.height(MosqueTheme.spacing.xs))
                                         Text(
                                             text = "Imsak: ${sch.imsak} | Subuh: ${sch.subuh} | Terbit: ${sch.terbit}",
                                             color = MosqueTheme.colors.textSecondary,

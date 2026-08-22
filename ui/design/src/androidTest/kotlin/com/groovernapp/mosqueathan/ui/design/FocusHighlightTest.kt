@@ -52,6 +52,7 @@ class FocusHighlightTest {
     @Test
     fun theRingIsNotDrawnBeforeFocusAndIsDrawnAfter() {
         compose.setContent {
+            RequestDpadInputMode()
             Box(
                 Modifier
                     .testTag(TAG)
@@ -78,6 +79,7 @@ class FocusHighlightTest {
     @Test
     fun theRingDisappearsWhenFocusLeaves() {
         compose.setContent {
+            RequestDpadInputMode()
             Box(Modifier.size(40.dp).testTag("other").focusHighlight().clickable { })
             Box(
                 Modifier
@@ -104,6 +106,7 @@ class FocusHighlightTest {
         // focus entirely, making the control unreachable by D-pad.
         var clicked = false
         compose.setContent {
+            RequestDpadInputMode()
             Box(
                 Modifier
                     .testTag(TAG)

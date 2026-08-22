@@ -227,7 +227,7 @@ fun <T> SlideshowComponent(
                                     colors = IconButtonDefaults.iconButtonColors(
                                         containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.6f)
                                     ),
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,
@@ -242,7 +242,7 @@ fun <T> SlideshowComponent(
                                     colors = IconButtonDefaults.iconButtonColors(
                                         containerColor = MosqueTheme.colors.scrim.copy(alpha = 0.6f)
                                     ),
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
@@ -260,7 +260,7 @@ fun <T> SlideshowComponent(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(bottom = MosqueTheme.spacing.lg)
-                            .height(16.dp),
+                            .height(MosqueTheme.size.iconSm),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -299,7 +299,7 @@ fun <T> SlideshowComponent(
                                     uncheckedColor = MosqueTheme.colors.textSecondary
                                 )
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(MosqueTheme.spacing.sm))
                             Text(
                                 text = Lang.get("Use", "Gunakan"),
                                 color = MosqueTheme.colors.textPrimary,
@@ -333,14 +333,14 @@ fun <T> SlideshowComponent(
                 onClick = onAddClicked,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(MosqueTheme.size.controlLg)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = null, tint = MosqueTheme.colors.onAccent)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                     Text(
                         text = addText,
                         color = MosqueTheme.colors.onAccent,

@@ -81,7 +81,7 @@ fun AdzanIqomahSettingsPane(
                         Icon(
                             imageVector = Icons.Default.Campaign,
                             contentDescription = "Adzan",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                         Text(
                             text = Lang.get("Adzan", "Adzan"),
@@ -104,7 +104,7 @@ fun AdzanIqomahSettingsPane(
                         Icon(
                             imageVector = Icons.Default.AccessTime,
                             contentDescription = "Iqomah",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                         Text(
                             text = Lang.get("Iqomah", "Iqomah"),

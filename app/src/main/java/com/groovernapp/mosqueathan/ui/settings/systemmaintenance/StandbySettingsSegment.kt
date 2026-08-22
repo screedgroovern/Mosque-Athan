@@ -45,7 +45,7 @@ fun StandbySettingsSegment(
                     fontWeight = FontWeight.Bold,
                     fontSize = MosqueTheme.typography.body
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.xs))
                 Text(
                     text = Lang.get(
                         "Put the TV in standby mode (black screen) outside operational hours.",

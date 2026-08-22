@@ -42,6 +42,7 @@ object MosqueTheme {
     val colors = MosqueColors
     val typography = MosqueTypography
     val spacing = MosqueSpacing
+    val size = MosqueSize
     val radius = MosqueRadius
     val stroke = MosqueStroke
 

@@ -116,10 +116,10 @@ fun RemoteControlSettingsSegment(
                             }
                         },
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
-                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                        modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
                     ) {
                         Icon(imageVector = Icons.Default.Tv, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                         Text(Lang.get("Hubungkan", "Hubungkan"), fontWeight = FontWeight.Bold)
                     }
 
@@ -136,10 +136,10 @@ fun RemoteControlSettingsSegment(
                             barcodeLauncher.launch(options)
                         },
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
-                        modifier = Modifier.fillMaxWidth().height(48.dp)
+                        modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
                     ) {
                         Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                         Text(Lang.get("Pindai QR", "Pindai QR"), fontWeight = FontWeight.Bold)
                     }
                 }
@@ -160,10 +160,10 @@ fun RemoteControlSettingsSegment(
                             }
                         },
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
-                        modifier = Modifier.weight(1f).height(48.dp)
+                        modifier = Modifier.weight(1f).height(MosqueTheme.size.controlLg)
                     ) {
                         Icon(imageVector = Icons.Default.Tv, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                         Text(Lang.get("Hubungkan", "Hubungkan"), fontWeight = FontWeight.Bold)
                     }
 
@@ -180,10 +180,10 @@ fun RemoteControlSettingsSegment(
                             barcodeLauncher.launch(options)
                         },
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
-                        modifier = Modifier.weight(1f).height(48.dp)
+                        modifier = Modifier.weight(1f).height(MosqueTheme.size.controlLg)
                     ) {
                         Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                         Text(Lang.get("Pindai QR", "Pindai QR"), fontWeight = FontWeight.Bold)
                     }
                 }
@@ -199,10 +199,10 @@ fun RemoteControlSettingsSegment(
                     }
                 },
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
-                modifier = Modifier.fillMaxWidth().height(48.dp)
+                modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
             ) {
                 Icon(imageVector = Icons.Default.Sync, contentDescription = null, tint = MosqueTheme.colors.accent)
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                 Text(Lang.get("Sinkronkan Sekarang", "Sinkronkan Sekarang"), fontWeight = FontWeight.Bold)
             }
         }
@@ -312,13 +312,13 @@ fun RemoteControlSettingsSegment(
                 },
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = if (isCompact) {
-                    Modifier.fillMaxWidth().height(48.dp)
+                    Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
                 } else {
-                    Modifier.align(Alignment.Start).height(48.dp)
+                    Modifier.align(Alignment.Start).height(MosqueTheme.size.controlLg)
                 }
             ) {
                 Icon(imageVector = Icons.Default.Lock, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                 Text(Lang.get("Simpan PIN", "Simpan PIN"), fontWeight = FontWeight.Bold)
             }
         }

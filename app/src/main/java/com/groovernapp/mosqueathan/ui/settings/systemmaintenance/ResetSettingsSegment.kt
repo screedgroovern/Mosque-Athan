@@ -26,7 +26,7 @@ fun ResetSettingsSegment(onResetToDefaults: () -> Unit) {
             onClick = onResetToDefaults,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier
-                .height(56.dp)
+                .height(MosqueTheme.size.controlXl)
                 .padding(horizontal = MosqueTheme.spacing.huge)
         ) {
             Text(

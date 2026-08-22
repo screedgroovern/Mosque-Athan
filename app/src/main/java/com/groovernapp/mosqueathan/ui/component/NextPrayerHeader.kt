@@ -57,7 +57,7 @@ fun NextPrayerHeader(
             }
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(MosqueTheme.spacing.lg))
 
         Text(
             text = "•",
@@ -65,7 +65,7 @@ fun NextPrayerHeader(
             fontSize = MosqueTheme.typography.titleLarge
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(MosqueTheme.spacing.lg))
 
         Text(
             text = nextPrayer.countdown,

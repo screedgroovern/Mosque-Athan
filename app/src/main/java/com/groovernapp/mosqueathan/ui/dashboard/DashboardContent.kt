@@ -255,7 +255,7 @@ fun SmallClockCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(MosqueTheme.spacing.xxs))
 
             val nextPrayerName = nextPrayer.prayerType.displayName.lowercase().replaceFirstChar { it.uppercase() }
             Text(
@@ -266,7 +266,7 @@ fun SmallClockCard(
             )
 
             if (onStartAdzanNow != null) {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
                 val cardModifier = if (isFridayBeforeAdzan) {
                     Modifier
                         .background(MosqueTheme.colors.accent.copy(alpha = 0.2f), shape = RoundedCornerShape(MosqueTheme.radius.xs))

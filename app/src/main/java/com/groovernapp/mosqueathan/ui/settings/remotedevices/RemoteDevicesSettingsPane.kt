@@ -213,7 +213,7 @@ fun RemoteDevicesSettingsPane(
             modifier = Modifier.padding(horizontal = if (isCompact) 16.dp else 24.dp)
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
 
         SecondaryTabRow(
             selectedTabIndex = selectedTabIndex,
@@ -232,7 +232,7 @@ fun RemoteDevicesSettingsPane(
                         Icon(
                             imageVector = if (isServer) Icons.Default.Dns else Icons.Default.Sync,
                             contentDescription = if (isServer) "Server Web Remote" else "Sinkronisasi",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                         Text(
                             text = if (isServer) Lang.get("Web Control Server", "Server Web Remote") else Lang.get("Sinkronisasi", "Sinkronisasi"),
@@ -255,7 +255,7 @@ fun RemoteDevicesSettingsPane(
                         Icon(
                             imageVector = Icons.Default.Devices,
                             contentDescription = "Perangkat Terhubung",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                         Text(
                             text = Lang.get("Connected Devices", "Perangkat Terhubung"),

@@ -101,7 +101,7 @@ fun CountdownScreen(
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(MosqueTheme.spacing.xxxl))
 
                     CountdownPanel(value = countdownValue)
                 }

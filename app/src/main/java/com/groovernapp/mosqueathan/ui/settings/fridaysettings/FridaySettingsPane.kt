@@ -150,7 +150,7 @@ fun FridaySettingsPane(
                 }
 
                 if (jumatEnabled) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xl)
@@ -439,7 +439,7 @@ fun FridaySettingsPane(
                             )
                         }
                         
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                         
                         // Transition Settings
                         Row(
@@ -548,7 +548,7 @@ fun FridaySettingsPane(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
                         MosquePrimaryButton(
                             onClick = onPreviewFridaySlideshow,
                             modifier = Modifier.fillMaxWidth()
@@ -680,7 +680,7 @@ fun MurottalAudioPathsManager(
                             val newPaths = paths.filter { it != path }
                             onAudioPathsChange(newPaths.joinToString(","))
                         },
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(MosqueTheme.size.iconLg)
                     ) {
                         Icon(imageVector = Icons.Default.Delete, contentDescription = "Remove", tint = MosqueTheme.colors.danger.copy(alpha = 0.8f))
                     }

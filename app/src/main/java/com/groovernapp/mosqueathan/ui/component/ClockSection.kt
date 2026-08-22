@@ -42,7 +42,7 @@ fun ClockSection(state: DashboardUiState.Dashboard) {
             fontSize = MosqueTheme.typography.clockMedium
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
 
         Text(
             text = state.gregorianDate,

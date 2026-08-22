@@ -63,7 +63,7 @@ fun DevicesSettingsSegment(
                         color = MosqueTheme.colors.textPrimary
                     )
                     if (config.pinCode.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
                         Text(
                             com.groovernapp.mosqueathan.util.Lang.get("Enter current PIN to confirm:", "Masukkan PIN saat ini untuk konfirmasi:"),
                             color = MosqueTheme.colors.accent,
@@ -209,7 +209,7 @@ fun DevicesSettingsSegment(
                                     },
                                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                                     contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
-                                    modifier = Modifier.height(32.dp)
+                                    modifier = Modifier.height(MosqueTheme.size.controlSm)
                                 ) {
                                     Text("Jadikan Master", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.caption)
                                 }
@@ -220,7 +220,7 @@ fun DevicesSettingsSegment(
                                     onClick = { onDeleteDevice(device.deviceId) },
                                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                                     contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
-                                    modifier = Modifier.height(32.dp)
+                                    modifier = Modifier.height(MosqueTheme.size.controlSm)
                                 ) {
                                     Text("Hapus", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.caption)
                                 }

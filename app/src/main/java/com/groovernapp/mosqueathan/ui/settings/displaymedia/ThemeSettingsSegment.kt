@@ -147,7 +147,7 @@ fun ThemeSettingsSegment(
                         Icon(
                             imageVector = Icons.Default.Image,
                             contentDescription = "Dashboard",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                         Text(
                             text = Lang.get("Dashboard", "Dashboard"),
@@ -170,7 +170,7 @@ fun ThemeSettingsSegment(
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
                             contentDescription = "Slideshow",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconMd)
                         )
                         Text(
                             text = Lang.get("Slideshow", "Slideshow"),
@@ -358,7 +358,7 @@ fun DashboardTabContent(
         )
 
         // Running Text Management
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
         RunningTextSettingsCard(
             announcements = announcements,
             onAdd = onAddAnnouncement,
@@ -472,7 +472,7 @@ fun SlideshowTabContent(
         )
 
         // Slideshow Schedule section with enable/disable toggle
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -539,11 +539,11 @@ fun SlideshowTabContent(
         )
 
         // Preview Slideshow button
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
         MosqueSecondaryButton(
             onClick = onPreviewSlideshow,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
-            modifier = Modifier.fillMaxWidth().height(48.dp)
+            modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
         ) {
             Text(
                 text = Lang.get("Preview Slideshow", "Preview Slideshow"),
@@ -554,7 +554,7 @@ fun SlideshowTabContent(
         }
 
         // Include Default Image switch (Placed at the very bottom, default off)
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -574,7 +574,7 @@ fun SlideshowTabContent(
                     fontSize = MosqueTheme.typography.bodyCompact,
                     fontWeight = FontWeight.SemiBold
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.xxs))
                 Text(
                     text = Lang.get(
                         "Include or exclude the default image in the slideshow rotation",
@@ -584,7 +584,7 @@ fun SlideshowTabContent(
                     fontSize = MosqueTheme.typography.caption
                 )
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(MosqueTheme.spacing.xl))
             Switch(
                 modifier = Modifier.focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
                 checked = includeDefaultImage,
@@ -639,7 +639,7 @@ fun TransitionAnimationRow(
                         selected = isSelected,
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
-                        modifier = Modifier.height(32.dp)
+                        modifier = Modifier.height(MosqueTheme.size.controlSm)
                     ) {
                         Text(
                             type,
@@ -675,7 +675,7 @@ fun TransitionAnimationRow(
                         selected = isSelected,
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
-                        modifier = Modifier.height(32.dp)
+                        modifier = Modifier.height(MosqueTheme.size.controlSm)
                     ) {
                         Text(
                             type,
@@ -729,7 +729,7 @@ fun DropdownAdjustmentRow(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                 ) {
                     Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
@@ -739,7 +739,7 @@ fun DropdownAdjustmentRow(
                     color = MosqueTheme.colors.textPrimary,
                     fontSize = MosqueTheme.typography.bodyCompact,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(36.dp),
+                    modifier = Modifier.width(MosqueTheme.size.controlMd),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
      
@@ -747,7 +747,7 @@ fun DropdownAdjustmentRow(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                 ) {
                     Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
@@ -757,7 +757,7 @@ fun DropdownAdjustmentRow(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
-                        modifier = Modifier.height(32.dp)
+                        modifier = Modifier.height(MosqueTheme.size.controlSm)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -828,7 +828,7 @@ fun DropdownAdjustmentRow(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                 ) {
                     Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
@@ -838,7 +838,7 @@ fun DropdownAdjustmentRow(
                     color = MosqueTheme.colors.textPrimary,
                     fontSize = MosqueTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(36.dp),
+                    modifier = Modifier.width(MosqueTheme.size.controlMd),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
      
@@ -846,7 +846,7 @@ fun DropdownAdjustmentRow(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                 ) {
                     Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
@@ -856,7 +856,7 @@ fun DropdownAdjustmentRow(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.sm),
-                        modifier = Modifier.height(36.dp)
+                        modifier = Modifier.height(MosqueTheme.size.controlMd)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -872,7 +872,7 @@ fun DropdownAdjustmentRow(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = "Dropdown",
                                 tint = MosqueTheme.colors.textPrimary,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(MosqueTheme.size.iconSm)
                             )
                         }
                     }
@@ -1059,7 +1059,7 @@ fun RunningTextSettingsCard(
                         newText = ""
                     }
                 },
-                modifier = Modifier.height(56.dp),
+                modifier = Modifier.height(MosqueTheme.size.controlXl),
                 shape = RoundedCornerShape(MosqueTheme.radius.md)
             ) {
                 Text(Lang.get("Add", "Tambah"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
@@ -1110,11 +1110,11 @@ fun RunningTextSettingsCard(
                                 modifier = Modifier.weight(1f),
                                 fontSize = MosqueTheme.typography.label
                             )
-                            MosqueIconButton(onClick = { isEditing = true }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MosqueTheme.colors.textSecondary, modifier=Modifier.size(20.dp))
+                            MosqueIconButton(onClick = { isEditing = true }, modifier = Modifier.size(MosqueTheme.size.controlSm)) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MosqueTheme.colors.textSecondary, modifier=Modifier.size(MosqueTheme.size.iconMd))
                             }
-                            MosqueIconButton(onClick = { onDelete(item.id) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MosqueTheme.colors.danger, modifier=Modifier.size(20.dp))
+                            MosqueIconButton(onClick = { onDelete(item.id) }, modifier = Modifier.size(MosqueTheme.size.controlSm)) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MosqueTheme.colors.danger, modifier=Modifier.size(MosqueTheme.size.iconMd))
                             }
                         }
                     }

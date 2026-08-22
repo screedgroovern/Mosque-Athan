@@ -747,7 +747,7 @@ fun SideSheetContent(
                             imageVector = Icons.Default.Settings,
                             contentDescription = null,
                             tint = MosqueTheme.colors.accent,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(MosqueTheme.size.iconLg)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
@@ -764,7 +764,7 @@ fun SideSheetContent(
                                 imageVector = Icons.AutoMirrored.Filled.MenuOpen,
                                 contentDescription = "Collapse Menu",
                                 tint = MosqueTheme.colors.accent,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(MosqueTheme.size.iconLg)
                             )
                         }
                     }
@@ -803,7 +803,7 @@ fun SideSheetContent(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
+                            .height(MosqueTheme.size.controlXl)
                             .border(
                                 width = borderWidth,
                                 color = borderColor,
@@ -827,14 +827,14 @@ fun SideSheetContent(
                                     imageVector = category.icon,
                                     contentDescription = category.getDisplayName(),
                                     tint = tintColor,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(MosqueTheme.size.iconLg)
                                 )
                             } else if (category.icon is Int) {
                                 Icon(
                                     painter = androidx.compose.ui.res.painterResource(id = category.icon),
                                     contentDescription = category.getDisplayName(),
                                     tint = tintColor,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(MosqueTheme.size.iconLg)
                                 )
                             }
                         } else {
@@ -849,17 +849,17 @@ fun SideSheetContent(
                                         imageVector = category.icon,
                                         contentDescription = null,
                                         tint = tintColor,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(MosqueTheme.size.iconLg)
                                     )
                                 } else if (category.icon is Int) {
                                     Icon(
                                         painter = androidx.compose.ui.res.painterResource(id = category.icon),
                                         contentDescription = null,
                                         tint = tintColor,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(MosqueTheme.size.iconLg)
                                     )
                                 }
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(MosqueTheme.spacing.lg))
                                 Text(
                                     text = category.getDisplayName(),
                                     color = tintColor,
@@ -896,14 +896,14 @@ fun SideSheetContent(
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
+                    .height(MosqueTheme.size.controlLg)
             ) {
                 if (isCollapsed) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = Lang.get("Back", "Kembali"),
                         tint = MosqueTheme.colors.textPrimary,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(MosqueTheme.size.iconLg)
                     )
                 } else {
                     Text(

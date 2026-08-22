@@ -20,7 +20,7 @@ fun RunningTextBar(text: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
+            .height(MosqueTheme.size.controlXl)
             .background(MosqueTheme.colors.runningTextBackground)
             .padding(horizontal = MosqueTheme.spacing.xxxl),
         contentAlignment = Alignment.CenterStart

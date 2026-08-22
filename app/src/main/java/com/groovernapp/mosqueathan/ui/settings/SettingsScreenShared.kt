@@ -193,7 +193,7 @@ fun RunningTextListSettingsComponent(
                 fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                 fontWeight = FontWeight.SemiBold
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
             if (isCompact) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -206,7 +206,7 @@ fun RunningTextListSettingsComponent(
                             MosqueSecondaryButton(
                                 onClick = { isReorderMode = !isReorderMode },
                                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                                modifier = Modifier.height(36.dp),
+                                modifier = Modifier.height(MosqueTheme.size.controlMd),
                                 contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg)
                             ) {
                                 Text(
@@ -224,7 +224,7 @@ fun RunningTextListSettingsComponent(
                             isAddingNew = true
                             addTextValue = ""
                         },
-                        modifier = Modifier.height(36.dp),
+                        modifier = Modifier.height(MosqueTheme.size.controlMd),
                         shape = RoundedCornerShape(MosqueTheme.radius.sm)
                     ) {
                         Text(
@@ -256,7 +256,7 @@ fun RunningTextListSettingsComponent(
                                 newText = ""
                             }
                         },
-                        modifier = Modifier.height(56.dp)
+                        modifier = Modifier.height(MosqueTheme.size.controlXl)
                     ) {
                         Text(com.groovernapp.mosqueathan.util.Lang.get("Add", "Tambah"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
                     }
@@ -296,7 +296,7 @@ fun RunningTextListSettingsComponent(
                                     contentDescription = "Drag Handle",
                                     tint = MosqueTheme.colors.textMuted,
                                     modifier = Modifier
-                                        .size(24.dp)
+                                        .size(MosqueTheme.size.iconLg)
                                         .pointerInput(Unit) {
                                             detectDragGestures(
                                                 onDragStart = { offset ->
@@ -360,7 +360,7 @@ fun RunningTextListSettingsComponent(
                                             )
                                         }
                                 )
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Spacer(modifier = Modifier.width(MosqueTheme.spacing.lg))
                                 Text(
                                     text = itemText,
                                     color = MosqueTheme.colors.textPrimary,
@@ -376,7 +376,7 @@ fun RunningTextListSettingsComponent(
                                     fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                                     modifier = Modifier.fillMaxWidth()
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.End,
@@ -388,15 +388,15 @@ fun RunningTextListSettingsComponent(
                                             editingIndex = index
                                         },
                                         contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
-                                        modifier = Modifier.height(32.dp)
+                                        modifier = Modifier.height(MosqueTheme.size.controlSm)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.Edit,
                                             contentDescription = "Edit",
                                             tint = MosqueTheme.colors.info,
-                                            modifier = Modifier.size(16.dp)
+                                            modifier = Modifier.size(MosqueTheme.size.iconSm)
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Spacer(modifier = Modifier.width(MosqueTheme.spacing.xs))
                                         Text(
                                             text = com.groovernapp.mosqueathan.util.Lang.get("Edit", "Edit"),
                                             color = MosqueTheme.colors.info,
@@ -404,22 +404,22 @@ fun RunningTextListSettingsComponent(
                                             fontWeight = FontWeight.Medium
                                         )
                                     }
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                                     MosqueTextButton(
                                         onClick = {
                                             val updated = items.toMutableList().apply { removeAt(index) }
                                             onItemsChange(updated)
                                         },
                                         contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
-                                        modifier = Modifier.height(32.dp)
+                                        modifier = Modifier.height(MosqueTheme.size.controlSm)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.Delete,
                                             contentDescription = "Remove",
                                             tint = MosqueTheme.colors.danger,
-                                            modifier = Modifier.size(16.dp)
+                                            modifier = Modifier.size(MosqueTheme.size.iconSm)
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Spacer(modifier = Modifier.width(MosqueTheme.spacing.xs))
                                         Text(
                                             text = com.groovernapp.mosqueathan.util.Lang.get("Delete", "Hapus"),
                                             color = MosqueTheme.colors.danger,
@@ -440,7 +440,7 @@ fun RunningTextListSettingsComponent(
                                 contentDescription = "Drag Handle",
                                 tint = MosqueTheme.colors.textMuted,
                                 modifier = Modifier
-                                    .size(24.dp)
+                                    .size(MosqueTheme.size.iconLg)
                                     .pointerInput(Unit) {
                                         detectDragGestures(
                                             onDragStart = { offset ->
@@ -504,14 +504,14 @@ fun RunningTextListSettingsComponent(
                                         )
                                     }
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(MosqueTheme.spacing.lg))
                             Text(
                                 text = itemText,
                                 color = MosqueTheme.colors.textPrimary,
                                 fontSize = MosqueTheme.typography.bodyCompact,
                                 modifier = Modifier.weight(1f)
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
                             MosqueIconButton(onClick = {
                                 editTextValue = itemText
                                 editingIndex = index
@@ -577,7 +577,7 @@ fun AdjustmentRow(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                 ) {
                     Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
@@ -588,7 +588,7 @@ fun AdjustmentRow(
                     color = MosqueTheme.colors.textPrimary,
                     fontSize = MosqueTheme.typography.bodyCompact,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(36.dp),
+                    modifier = Modifier.width(MosqueTheme.size.controlMd),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
      
@@ -596,7 +596,7 @@ fun AdjustmentRow(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                 ) {
                     Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
@@ -636,7 +636,7 @@ fun AdjustmentRow(
                     onClick = { if (value > minValue) onValueChange(value - 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                 ) {
                     Text("-", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
@@ -647,7 +647,7 @@ fun AdjustmentRow(
                     color = MosqueTheme.colors.textPrimary,
                     fontSize = MosqueTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.width(36.dp),
+                    modifier = Modifier.width(MosqueTheme.size.controlMd),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
      
@@ -655,7 +655,7 @@ fun AdjustmentRow(
                     onClick = { if (value < maxValue) onValueChange(value + 1) },
                     shape = RoundedCornerShape(MosqueTheme.radius.sm),
                     contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier.size(MosqueTheme.size.controlMd)
                 ) {
                     Text("+", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 }
