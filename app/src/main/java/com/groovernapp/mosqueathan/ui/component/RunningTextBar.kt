@@ -28,7 +28,7 @@ fun RunningTextBar(text: String) {
 
         Text(
             text = text,
-            color = MosqueTheme.colors.accentAmber,
+            color = MosqueTheme.colors.accent,
             fontSize = MosqueTheme.typography.headline,
             maxLines = 1,
             softWrap = false,

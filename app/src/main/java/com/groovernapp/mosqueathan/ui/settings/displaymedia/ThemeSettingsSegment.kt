@@ -154,7 +154,7 @@ fun ThemeSettingsSegment(
                     }
                 },
                 selectedContentColor = MosqueTheme.colors.accent,
-                unselectedContentColor = MosqueTheme.colors.textTertiary
+                unselectedContentColor = MosqueTheme.colors.textSecondary
             )
             Tab(
                 selected = pagerState.currentPage == 1,
@@ -177,7 +177,7 @@ fun ThemeSettingsSegment(
                     }
                 },
                 selectedContentColor = MosqueTheme.colors.accent,
-                unselectedContentColor = MosqueTheme.colors.textTertiary
+                unselectedContentColor = MosqueTheme.colors.textSecondary
             )
         }
 
@@ -262,7 +262,7 @@ fun DashboardTabContent(
         ) {
             Text(
                 text = Lang.get("Dashboard Background List", "Daftar Latar Belakang Dashboard"),
-                color = MosqueTheme.colors.textTertiary,
+                color = MosqueTheme.colors.textSecondary,
                 fontSize = MosqueTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold
             )
@@ -398,7 +398,7 @@ fun SlideshowTabContent(
     ) {
         Text(
             text = Lang.get("Slideshow Media Items", "Daftar Media Slideshow"),
-            color = MosqueTheme.colors.textTertiary,
+            color = MosqueTheme.colors.textSecondary,
             fontSize = MosqueTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold
         )
@@ -576,7 +576,7 @@ fun SlideshowTabContent(
                         "Include or exclude the default image in the slideshow rotation",
                         "Sertakan atau kecualikan gambar default dalam rotasi slideshow"
                     ),
-                    color = MosqueTheme.colors.textTertiary,
+                    color = MosqueTheme.colors.textSecondary,
                     fontSize = MosqueTheme.typography.caption
                 )
             }
@@ -756,7 +756,7 @@ fun DropdownAdjustmentRow(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MosqueTheme.colors.fillSoft
+                            containerColor = MosqueTheme.colors.fill
                         ),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(32.dp)
@@ -783,7 +783,7 @@ fun DropdownAdjustmentRow(
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(MosqueTheme.colors.surfaceNeutral)
+                        modifier = Modifier.background(MosqueTheme.colors.surfaceRaised)
                     ) {
                         unitLabels.forEachIndexed { index, label ->
                             DropdownMenuItem(
@@ -857,7 +857,7 @@ fun DropdownAdjustmentRow(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MosqueTheme.colors.fillSoft
+                            containerColor = MosqueTheme.colors.fill
                         ),
                         contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.sm),
                         modifier = Modifier.height(36.dp)
@@ -884,7 +884,7 @@ fun DropdownAdjustmentRow(
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(MosqueTheme.colors.surfaceNeutral)
+                        modifier = Modifier.background(MosqueTheme.colors.surfaceRaised)
                     ) {
                         unitLabels.forEachIndexed { index, label ->
                             DropdownMenuItem(
@@ -1032,7 +1032,7 @@ fun RunningTextSettingsCard(
                     "Add running text messages that will scroll periodically at the bottom of the main dashboard screen.",
                     "Tambahkan pesan running text yang akan bergulir secara berkala di bagian bawah dashboard layar utama masjid."
                 ),
-                color = MosqueTheme.colors.textTertiary,
+                color = MosqueTheme.colors.textSecondary,
                 fontSize = MosqueTheme.typography.caption
             )
         }

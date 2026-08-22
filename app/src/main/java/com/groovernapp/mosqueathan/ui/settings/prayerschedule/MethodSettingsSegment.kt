@@ -138,7 +138,7 @@ fun MethodSettingsSegment(
                     DropdownMenu(
                         expanded = durationExpanded,
                         onDismissRequest = { durationExpanded = false },
-                        modifier = Modifier.background(MosqueTheme.colors.surfaceSunken)
+                        modifier = Modifier.background(MosqueTheme.colors.surface)
                     ) {
                         durationList.forEach { (value, label) ->
                             DropdownMenuItem(
@@ -174,7 +174,7 @@ fun MethodSettingsSegment(
                         label = {
                             Text(
                                 text = com.groovernapp.mosqueathan.util.Lang.get("City", "Kota"),
-                                color = MosqueTheme.colors.textTertiary
+                                color = MosqueTheme.colors.textSecondary
                             )
                         },
                         colors = OutlinedTextFieldDefaults.colors(
@@ -439,8 +439,8 @@ fun DatePickerField(
         onValueChange = {},
         readOnly = true,
         interactionSource = interactionSource,
-        label = { Text(label, color = MosqueTheme.colors.textTertiary) },
-        placeholder = { Text(placeholder, color = MosqueTheme.colors.textGhost) },
+        label = { Text(label, color = MosqueTheme.colors.textSecondary) },
+        placeholder = { Text(placeholder, color = MosqueTheme.colors.textDisabled) },
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MosqueTheme.colors.accent,
             unfocusedBorderColor = MosqueTheme.colors.border,
@@ -496,14 +496,14 @@ fun DatePickerField(
                     Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             },
-            colors = DatePickerDefaults.colors(containerColor = MosqueTheme.colors.surfaceDialog)
+            colors = DatePickerDefaults.colors(containerColor = MosqueTheme.colors.surface)
         ) {
             DatePicker(
                 state = datePickerState,
                 colors = DatePickerDefaults.colors(
                     titleContentColor = MosqueTheme.colors.textPrimary,
                     headlineContentColor = MosqueTheme.colors.textPrimary,
-                    weekdayContentColor = MosqueTheme.colors.textTertiary,
+                    weekdayContentColor = MosqueTheme.colors.textSecondary,
                     navigationContentColor = MosqueTheme.colors.textPrimary,
                     yearContentColor = MosqueTheme.colors.textPrimary,
                     currentYearContentColor = MosqueTheme.colors.accent,
@@ -553,7 +553,7 @@ private fun CalculationMethodItem(
                 .size(radioSize)
                 .border(
                     width = 2.dp,
-                    color = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.textFaint,
+                    color = if (isSelected) MosqueTheme.colors.accent else MosqueTheme.colors.textMuted,
                     shape = androidx.compose.foundation.shape.CircleShape
                 )
                 .padding(radioInnerPadding)

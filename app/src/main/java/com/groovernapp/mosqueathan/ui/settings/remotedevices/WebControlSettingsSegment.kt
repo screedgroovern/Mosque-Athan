@@ -125,7 +125,7 @@ fun WebControlSettingsSegment(
                                     )
                                     Text(
                                         text = "Tampilkan/sembunyikan menu pengaturan di TV",
-                                        color = MosqueTheme.colors.textTertiary,
+                                        color = MosqueTheme.colors.textSecondary,
                                         fontSize = MosqueTheme.typography.captionSmall
                                     )
                                 }
@@ -233,7 +233,7 @@ fun WebControlSettingsSegment(
                                     )
                                     Text(
                                         text = "Tampilkan/sembunyikan menu pengaturan di TV",
-                                        color = MosqueTheme.colors.textTertiary,
+                                        color = MosqueTheme.colors.textSecondary,
                                         fontSize = MosqueTheme.typography.captionSmall
                                     )
                                 }

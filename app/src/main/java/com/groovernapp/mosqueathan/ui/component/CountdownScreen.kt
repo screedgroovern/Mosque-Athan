@@ -42,7 +42,7 @@ fun CountdownScreen(
     footerText: String,
     gradientColors: List<Color> = listOf(
         MosqueTheme.colors.scrim.copy(alpha = 0.76f),
-        MosqueTheme.colors.backdropIqomah.copy(alpha = 0.86f),
+        MosqueTheme.colors.backdrop.copy(alpha = 0.86f),
         MosqueTheme.colors.scrim.copy(alpha = 0.80f)
     ),
     onDismiss: () -> Unit = {}
@@ -85,7 +85,7 @@ fun CountdownScreen(
                 ) {
                     Text(
                         text = titleText,
-                        color = MosqueTheme.colors.accentMuted,
+                        color = MosqueTheme.colors.accent,
                         fontSize = MosqueTheme.typography.countdownCaption,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center
@@ -122,7 +122,7 @@ private fun CountdownPanel(value: String) {
             .background(MosqueTheme.colors.scrim.copy(alpha = 0.40f))
             .border(
                 width = 1.dp,
-                color = MosqueTheme.colors.textGhostSoft,
+                color = MosqueTheme.colors.textDisabled,
                 shape = RoundedCornerShape(MosqueTheme.radius.md)
             )
             .padding(horizontal = 56.dp, vertical = 28.dp),

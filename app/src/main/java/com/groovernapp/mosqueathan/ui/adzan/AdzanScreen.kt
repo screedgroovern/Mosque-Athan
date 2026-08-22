@@ -17,7 +17,7 @@ fun AdzanScreen(state: AdzanUiModel, onDismiss: () -> Unit = {}) {
         footerText = state.footerText,
         gradientColors = listOf(
             MosqueTheme.colors.scrim.copy(alpha = 0.70f),
-            MosqueTheme.colors.backdropAdzan.copy(alpha = 0.82f),
+            MosqueTheme.colors.backdrop.copy(alpha = 0.82f),
             MosqueTheme.colors.scrim.copy(alpha = 0.78f)
         ),
         onDismiss = onDismiss

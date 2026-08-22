@@ -142,11 +142,11 @@ fun RemoteDevicesSettingsPane(
                         imageVector = Icons.Default.Dns,
                         contentDescription = null,
                         modifier = Modifier.size(44.dp),
-                        tint = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary
+                        tint = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textSecondary
                     )
                     Text(
                         text = Lang.get("Mode Server", "Mode Server"),
-                        color = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary,
+                        color = if (isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textSecondary,
                         fontSize = MosqueTheme.typography.label,
                         fontWeight = FontWeight.Bold
                     )
@@ -179,11 +179,11 @@ fun RemoteDevicesSettingsPane(
                         imageVector = Icons.Default.Devices,
                         contentDescription = null,
                         modifier = Modifier.size(44.dp),
-                        tint = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary
+                        tint = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textSecondary
                     )
                     Text(
                         text = Lang.get("Mode Remote Control", "Mode Remote Control"),
-                        color = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textTertiary,
+                        color = if (!isServer) MosqueTheme.colors.accent else MosqueTheme.colors.textSecondary,
                         fontSize = MosqueTheme.typography.label,
                         fontWeight = FontWeight.Bold
                     )
@@ -204,7 +204,7 @@ fun RemoteDevicesSettingsPane(
                     "Aplikasi berfungsi sebagai remote kontrol untuk mengendalikan, mengubah pengaturan, dan menyinkronkan data dengan TV / server MosqueAthan utama."
                 )
             },
-            color = MosqueTheme.colors.textTertiary,
+            color = MosqueTheme.colors.textSecondary,
             fontSize = MosqueTheme.typography.labelSmall,
             modifier = Modifier.padding(horizontal = if (isCompact) 16.dp else 24.dp)
         )
@@ -238,7 +238,7 @@ fun RemoteDevicesSettingsPane(
                     }
                 },
                 selectedContentColor = MosqueTheme.colors.accent,
-                unselectedContentColor = MosqueTheme.colors.textTertiary
+                unselectedContentColor = MosqueTheme.colors.textSecondary
             )
             Tab(
                 selected = selectedTabIndex == 1,
@@ -261,7 +261,7 @@ fun RemoteDevicesSettingsPane(
                     }
                 },
                 selectedContentColor = MosqueTheme.colors.accent,
-                unselectedContentColor = MosqueTheme.colors.textTertiary
+                unselectedContentColor = MosqueTheme.colors.textSecondary
             )
         }
 

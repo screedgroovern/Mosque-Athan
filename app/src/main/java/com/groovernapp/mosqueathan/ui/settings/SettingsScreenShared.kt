@@ -52,12 +52,12 @@ fun textFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTextColor = MosqueTheme.colors.textPrimary,
     unfocusedTextColor = MosqueTheme.colors.textPrimary,
     focusedBorderColor = MosqueTheme.colors.accent,
-    unfocusedBorderColor = MosqueTheme.colors.borderStrong,
+    unfocusedBorderColor = MosqueTheme.colors.border,
     focusedLabelColor = MosqueTheme.colors.accent,
-    unfocusedLabelColor = MosqueTheme.colors.textTertiary,
+    unfocusedLabelColor = MosqueTheme.colors.textSecondary,
     cursorColor = MosqueTheme.colors.accent,
     disabledTextColor = MosqueTheme.colors.textDisabled,
-    disabledBorderColor = MosqueTheme.colors.fillMedium,
+    disabledBorderColor = MosqueTheme.colors.fill,
     disabledLabelColor = MosqueTheme.colors.textDisabled,
     disabledLeadingIconColor = MosqueTheme.colors.textDisabled,
     disabledTrailingIconColor = MosqueTheme.colors.textDisabled
@@ -146,7 +146,7 @@ fun TvFocusablePrimaryButton(
     val focusScale = if (isFocusedOrHovered) 1.05f else 1.0f
 
     val effectiveColors = if (isFocusedOrHovered) {
-        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.accentLight)
+        ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.accent)
     } else {
         ButtonDefaults.buttonColors(containerColor = MosqueTheme.colors.accent)
     }
@@ -519,7 +519,7 @@ fun RunningTextListSettingsComponent(
         Column {
             Text(
                 text = subtitle,
-                color = MosqueTheme.colors.textStrong,
+                color = MosqueTheme.colors.textPrimary,
                 fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.bodyCompact,
                 fontWeight = FontWeight.SemiBold
             )
@@ -538,7 +538,7 @@ fun RunningTextListSettingsComponent(
                                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
                                 modifier = Modifier.height(36.dp),
                                 colors = ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = MosqueTheme.colors.fillMedium,
+                                    containerColor = MosqueTheme.colors.fill,
                                     contentColor = MosqueTheme.colors.accent
                                 ),
                                 contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg)
@@ -628,7 +628,7 @@ fun RunningTextListSettingsComponent(
                                 Icon(
                                     imageVector = Icons.Default.Menu,
                                     contentDescription = "Drag Handle",
-                                    tint = MosqueTheme.colors.textFaint,
+                                    tint = MosqueTheme.colors.textMuted,
                                     modifier = Modifier
                                         .size(24.dp)
                                         .pointerInput(Unit) {
@@ -772,7 +772,7 @@ fun RunningTextListSettingsComponent(
                             Icon(
                                 imageVector = Icons.Default.Menu,
                                 contentDescription = "Drag Handle",
-                                tint = MosqueTheme.colors.textFaint,
+                                tint = MosqueTheme.colors.textMuted,
                                 modifier = Modifier
                                     .size(24.dp)
                                     .pointerInput(Unit) {

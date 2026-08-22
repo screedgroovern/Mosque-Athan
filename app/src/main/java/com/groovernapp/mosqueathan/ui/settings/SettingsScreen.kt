@@ -207,7 +207,7 @@ fun SettingsScreen(
                     Brush.verticalGradient(
                         colors = listOf(
                             MosqueTheme.colors.scrim.copy(alpha = 0.85f),
-                            MosqueTheme.colors.surfaceDialog.copy(alpha = 0.90f),
+                            MosqueTheme.colors.surface.copy(alpha = 0.90f),
                             MosqueTheme.colors.scrim.copy(alpha = 0.92f)
                         )
                     )
@@ -220,7 +220,7 @@ fun SettingsScreen(
             drawerContent = {
                 if (isCompact) {
                     ModalDrawerSheet(
-                        drawerContainerColor = MosqueTheme.colors.surfaceDrawer,
+                        drawerContainerColor = MosqueTheme.colors.surface,
                         modifier = Modifier.width(280.dp)
                     ) {
                         SideSheetContent(
@@ -328,7 +328,7 @@ fun SettingsScreen(
                 if (!isCompact) {
                     Text(
                         text = selectedCategory.getDescription(),
-                        color = MosqueTheme.colors.textTertiary,
+                        color = MosqueTheme.colors.textSecondary,
                         fontSize = MosqueTheme.typography.bodyCompact,
                         modifier = Modifier.padding(bottom = MosqueTheme.spacing.xxxl)
                     )
@@ -793,7 +793,7 @@ fun SideSheetContent(
                     val backgroundColor = when {
                         isSelected && isFocusedOrHovered -> MosqueTheme.colors.accent.copy(alpha = 0.25f)
                         isSelected -> MosqueTheme.colors.accent.copy(alpha = 0.15f)
-                        isFocusedOrHovered -> MosqueTheme.colors.fillMedium
+                        isFocusedOrHovered -> MosqueTheme.colors.fill
                         else -> MosqueTheme.colors.transparent
                     }
                     val tintColor = if (isSelected || isFocusedOrHovered) MosqueTheme.colors.accent else MosqueTheme.colors.textPrimary

@@ -107,7 +107,7 @@ fun PrayerScheduleSettingsSegment(
                     }
                 },
                 selectedContentColor = MosqueTheme.colors.accent,
-                unselectedContentColor = MosqueTheme.colors.textTertiary
+                unselectedContentColor = MosqueTheme.colors.textSecondary
             )
             Tab(
                 selected = pagerState.currentPage == 1,
@@ -133,7 +133,7 @@ fun PrayerScheduleSettingsSegment(
                     }
                 },
                 selectedContentColor = MosqueTheme.colors.accent,
-                unselectedContentColor = MosqueTheme.colors.textTertiary
+                unselectedContentColor = MosqueTheme.colors.textSecondary
             )
         }
 

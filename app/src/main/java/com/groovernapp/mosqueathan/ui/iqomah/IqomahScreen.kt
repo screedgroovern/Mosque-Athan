@@ -17,7 +17,7 @@ fun IqomahScreen(state: IqomahUiModel, onDismiss: () -> Unit = {}) {
         footerText = state.footerText,
         gradientColors = listOf(
             MosqueTheme.colors.scrim.copy(alpha = 0.76f),
-            MosqueTheme.colors.backdropIqomah.copy(alpha = 0.86f),
+            MosqueTheme.colors.backdrop.copy(alpha = 0.86f),
             MosqueTheme.colors.scrim.copy(alpha = 0.80f)
         ),
         onDismiss = onDismiss

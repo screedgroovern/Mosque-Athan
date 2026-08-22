@@ -54,7 +54,7 @@ fun DevicesSettingsSegment(
                             "WARNING: Master access privileges will be transferred to '${targetDevice.deviceName}'. Once transferred, you can no longer change the PIN or assign Master from this device.",
                             "PERINGATAN: Hak akses Master akan dialihkan ke '${targetDevice.deviceName}'. Setelah dipindahkan, Anda tidak dapat lagi mengubah PIN atau menunjuk Master dari perangkat ini."
                         ),
-                        color = MosqueTheme.colors.textStrong
+                        color = MosqueTheme.colors.textPrimary
                     )
                     if (config.pinCode.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
@@ -108,7 +108,7 @@ fun DevicesSettingsSegment(
                     Text(com.groovernapp.mosqueathan.util.Lang.get("Cancel", "Batal"), color = MosqueTheme.colors.textPrimary)
                 }
             },
-            containerColor = MosqueTheme.colors.surfaceDialog,
+            containerColor = MosqueTheme.colors.surface,
             shape = RoundedCornerShape(MosqueTheme.radius.lg)
         )
     }
@@ -173,7 +173,7 @@ fun DevicesSettingsSegment(
                                 )
                                 Text(
                                     text = if (device.isOnline) "Terhubung" else "Terputus",
-                                    color = MosqueTheme.colors.textTertiary,
+                                    color = MosqueTheme.colors.textSecondary,
                                     fontSize = MosqueTheme.typography.caption
                                 )
                             }

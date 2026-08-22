@@ -188,7 +188,7 @@ fun <T> SlideshowComponent(
                                     )
                                     Text(
                                         text = Lang.get("Video Slide", "Video Slide"),
-                                        color = MosqueTheme.colors.textTertiary,
+                                        color = MosqueTheme.colors.textSecondary,
                                         modifier = Modifier
                                             .align(Alignment.BottomCenter)
                                             .padding(bottom = MosqueTheme.spacing.lg)
@@ -262,7 +262,7 @@ fun <T> SlideshowComponent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         repeat(items.size) { iteration ->
-                            val color = if (pagerState.currentPage == iteration) MosqueTheme.colors.accent else MosqueTheme.colors.textFaint
+                            val color = if (pagerState.currentPage == iteration) MosqueTheme.colors.accent else MosqueTheme.colors.textMuted
                             Box(
                                 modifier = Modifier
                                     .padding(horizontal = 3.dp)
@@ -291,7 +291,7 @@ fun <T> SlideshowComponent(
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = MosqueTheme.colors.accent,
                                     checkmarkColor = MosqueTheme.colors.onAccent,
-                                    uncheckedColor = MosqueTheme.colors.textTertiary
+                                    uncheckedColor = MosqueTheme.colors.textSecondary
                                 )
                             )
                             Spacer(modifier = Modifier.width(6.dp))

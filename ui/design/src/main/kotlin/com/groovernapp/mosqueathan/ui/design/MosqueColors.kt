@@ -3,104 +3,82 @@ package com.groovernapp.mosqueathan.ui.design
 import androidx.compose.ui.graphics.Color
 
 /**
- * Every colour currently used by the app, named.
+ * The app's palette: nineteen tokens.
  *
- * This is a **1:1 extraction**: each token holds the exact value that was previously
- * inlined, so swapping a literal for its token cannot change a pixel. The names
- * describe how each value is actually used today, not how it ideally would be.
+ * Phase A named all thirty-nine values that were inlined in the code, 1:1, so that
+ * every literal-for-token swap was provably neutral. That made the redundancy
+ * countable — four golds, ten near-blacks, ten levels of white, eight fill alphas —
+ * and phase B collapsed it.
  *
- * That means some tokens are near-duplicates of each other — four golds, nine dark
- * surfaces, seventeen white-alpha steps. That duplication is real and inherited, and
- * collapsing it is a separate, pixel-moving change that needs sign-off. The value of
- * naming first is that the duplication becomes countable.
+ * Unlike phase A, this set **is not** value-identical to what came before: 61 call
+ * sites now draw a slightly different colour. What each merged value used to be is
+ * recorded per token, so any single merge can be reverted on its own.
  */
-@Suppress("MemberVisibilityCanBePrivate")
 object MosqueColors {
 
     // --- Accent -------------------------------------------------------------
-    /** The app's gold. By far the most-used colour: 135 inlined occurrences. */
+    /**
+     * The app's gold, and its only accent. 135 of 138 accent uses were already this
+     * value; the three that were not — #FFE082, #FFC107, #FFE7C66A — appeared once
+     * each and now resolve here.
+     *
+     * The #FFC107 case is the one to check by eye: it sat on the running-text bar,
+     * which scrolls across the dashboard all day, and it was the most genuinely
+     * different of the three. If it looked deliberate, restore it as its own token.
+     */
     val accent = Color(0xFFFFD54F)
-    /** A lighter gold, used for exactly one button container. */
-    val accentLight = Color(0xFFFFE082)
-    /** Amber, used for the running-text bar's text. */
-    val accentAmber = Color(0xFFFFC107)
-    /** A muted gold, used for one countdown caption. */
-    val accentMuted = Color(0xFFE7C66A)
 
     // --- Surfaces -----------------------------------------------------------
-    // Nine distinct near-blacks. They read as elevation levels that were each
-    // invented at the call site rather than chosen from a scale.
-    /** Dialog and date-picker containers. */
-    val surfaceDialog = Color(0xFF101915)
-    /** Card containers in schedule lists. */
-    val surfaceCard = Color(0xFF181C1A)
-    /** Raised containers in the calculation-method pane. */
+    /** Dialogs, cards, drawers, recessed backgrounds. Was #101915 / #181C1A / #0C120F / #121212. */
+    val surface = Color(0xFF101915)
+    /** Anything sitting above [surface]. Was #1E2622 / #1E1E1E / #2A2A2A. */
     val surfaceRaised = Color(0xFF1E2622)
-    /** The settings navigation drawer. */
-    val surfaceDrawer = Color(0xFF121212)
-    /** Recessed background behind the method dropdown. */
-    val surfaceSunken = Color(0xFF0C120F)
-    /** Neutral background in the theme pane. */
-    val surfaceNeutral = Color(0xFF1E1E1E)
-    /** Neutral raised background in the Friday pane. */
-    val surfaceNeutralRaised = Color(0xFF2A2A2A)
-
-    /** Adzan screen backdrop; always drawn at 82% alpha. */
-    val backdropAdzan = Color(0xFF142018)
-    /** Iqomah and countdown backdrop; always drawn at 86% alpha. */
-    val backdropIqomah = Color(0xFF18231B)
-    /** The running-text bar's green background. */
+    /**
+     * Full-screen backdrop behind adzan, iqomah and countdown. Was #18231B / #142018.
+     * Call sites keep their own alpha — 0.82 on adzan, 0.86 elsewhere — which
+     * preserves most of the difference the two colours used to carry.
+     */
+    val backdrop = Color(0xFF18231B)
+    /** The running-text bar's green. Distinct in kind, not a surface level. */
     val runningTextBackground = Color(0xFF0F3316)
 
-    // --- Status -------------------------------------------------------------
-    /** Destructive actions — delete icons and labels. */
-    val danger = Color(0xFFE57373)
-    /** A second, more saturated red used only for the unpaired-device badge. */
-    val dangerStrong = Color(0xFFEF4444)
-    /** Success — the paired-device badge. */
-    val success = Color(0xFF10B981)
-    /** Informational icons and labels. */
-    val info = Color(0xFF90CAF9)
-
     // --- Foreground on dark -------------------------------------------------
-    // Derived from Color.White at seventeen distinct alpha levels (296 occurrences).
-    // Grouped by the role each level actually plays.
+    // Ten alpha levels became four. Full white and 0.6 already carried 185 of the
+    // 228 uses between them.
+    /** Body and heading text. Was 1.0 / 0.8. */
     val textPrimary = Color.White
-    val textStrong = Color.White.copy(alpha = 0.8f)
-    val textSecondary = Color.White.copy(alpha = 0.7f)
-    val textTertiary = Color.White.copy(alpha = 0.6f)
-    val textMuted = Color.White.copy(alpha = 0.5f)
-    val textFaint = Color.White.copy(alpha = 0.4f)
+    /** Supporting text and inactive icons. Was 0.7 / 0.6. */
+    val textSecondary = Color.White.copy(alpha = 0.6f)
+    /** De-emphasised text. Was 0.5 / 0.4. */
+    val textMuted = Color.White.copy(alpha = 0.4f)
+    /** Disabled state — Material's value, which is why it survives next to [textMuted]. Was 0.38 / 0.35 / 0.3 / 0.28. */
     val textDisabled = Color.White.copy(alpha = 0.38f)
-    val textVeryFaint = Color.White.copy(alpha = 0.35f)
-    val textGhost = Color.White.copy(alpha = 0.3f)
-    val textGhostSoft = Color.White.copy(alpha = 0.28f)
 
     // --- Fills and borders on dark -----------------------------------------
-    val borderStrong = Color.White.copy(alpha = 0.25f)
-    val border = Color.White.copy(alpha = 0.2f)
-    val fillStrong = Color.White.copy(alpha = 0.15f)
-    val fillMedium = Color.White.copy(alpha = 0.12f)
-    val fill = Color.White.copy(alpha = 0.1f)
-    val fillSoft = Color.White.copy(alpha = 0.08f)
+    /** Barely-there surface tint. Was 0.05 / 0.03. */
     val fillSubtle = Color.White.copy(alpha = 0.05f)
-    val fillFaint = Color.White.copy(alpha = 0.03f)
+    /** Standard fill. Was 0.1 / 0.08 / 0.12. */
+    val fill = Color.White.copy(alpha = 0.1f)
+    /** Emphasised fill — selected rows, active chips. */
+    val fillStrong = Color.White.copy(alpha = 0.15f)
+    /** Edges and dividers. Was 0.2 / 0.25. */
+    val border = Color.White.copy(alpha = 0.2f)
+
+    // --- Status -------------------------------------------------------------
+    /** Destructive actions and error states. Was #E57373 / #EF4444. */
+    val danger = Color(0xFFE57373)
+    val success = Color(0xFF10B981)
+    val info = Color(0xFF90CAF9)
 
     // --- On accent ----------------------------------------------------------
-    /**
-     * Foreground on the gold accent — black text and icons on a gold button.
-     * Distinct from [scrim] despite the same underlying colour: this one is a
-     * foreground role, and 35 call sites use it that way.
-     */
+    /** Foreground on gold — black text and icons on a gold button. */
     val onAccent = Color.Black
 
     // --- Absolutes ----------------------------------------------------------
     /**
-     * Overlays and gradient stops. Call sites keep their own `.copy(alpha = …)`:
-     * the thirteen black alpha levels in this app are almost all one-off gradient
-     * stops rather than reusable steps, so naming each would invent a scale that
-     * does not exist. The white alpha levels above *are* named, because those are
-     * genuinely reused — 0.6f alone appears 41 times as secondary text.
+     * Overlays and gradient stops; call sites keep their own alpha. The thirteen
+     * black alpha levels in this app are one-off gradient stops rather than a reused
+     * scale, so naming each would invent a scale that does not exist.
      */
     val scrim = Color.Black
     val transparent = Color.Transparent

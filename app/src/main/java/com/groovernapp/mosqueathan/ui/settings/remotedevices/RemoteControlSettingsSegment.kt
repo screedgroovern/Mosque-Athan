@@ -82,7 +82,7 @@ fun RemoteControlSettingsSegment(
                     "Hubungkan ke Android TV untuk sinkronisasi setelan jadwal, adzan, dan tampilan media secara realtime.",
                     "Hubungkan ke Android TV untuk sinkronisasi setelan jadwal, adzan, dan tampilan media secara realtime."
                 ),
-                color = MosqueTheme.colors.textTertiary,
+                color = MosqueTheme.colors.textSecondary,
                 fontSize = MosqueTheme.typography.labelSmall
             )
 
@@ -244,13 +244,13 @@ fun RemoteControlSettingsSegment(
                     "Gunakan PIN keamanan untuk membatasi perangkat remote control lain agar tidak dapat mengubah setelan sembarangan.",
                     "Gunakan PIN keamanan untuk membatasi perangkat remote control lain agar tidak dapat mengubah setelan sembarangan."
                 ),
-                color = MosqueTheme.colors.textTertiary,
+                color = MosqueTheme.colors.textSecondary,
                 fontSize = MosqueTheme.typography.labelSmall
             )
 
             val hasPin = config.pinCode.isNotEmpty()
-            val badgeBg = if (hasPin) MosqueTheme.colors.success.copy(alpha = 0.15f) else MosqueTheme.colors.dangerStrong.copy(alpha = 0.15f)
-            val badgeColor = if (hasPin) MosqueTheme.colors.success else MosqueTheme.colors.dangerStrong
+            val badgeBg = if (hasPin) MosqueTheme.colors.success.copy(alpha = 0.15f) else MosqueTheme.colors.danger.copy(alpha = 0.15f)
+            val badgeColor = if (hasPin) MosqueTheme.colors.success else MosqueTheme.colors.danger
             val badgeText = if (hasPin) Lang.get("AKTIF (MEMAKAI PIN)", "AKTIF (MEMAKAI PIN)") else Lang.get("TIDAK AKTIF", "TIDAK AKTIF")
 
             val statusBadgeContent = @Composable {
@@ -281,7 +281,7 @@ fun RemoteControlSettingsSegment(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(MosqueTheme.radius.md))
-                        .background(MosqueTheme.colors.fillFaint)
+                        .background(MosqueTheme.colors.fillSubtle)
                         .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
                     verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
                     horizontalAlignment = Alignment.Start
@@ -293,7 +293,7 @@ fun RemoteControlSettingsSegment(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(MosqueTheme.radius.md))
-                        .background(MosqueTheme.colors.fillFaint)
+                        .background(MosqueTheme.colors.fillSubtle)
                         .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -318,7 +318,7 @@ fun RemoteControlSettingsSegment(
                     "Kosongkan PIN lalu simpan untuk menghapus pengaman PIN.",
                     "Kosongkan PIN lalu simpan untuk menghapus pengaman PIN."
                 ),
-                color = MosqueTheme.colors.textFaint,
+                color = MosqueTheme.colors.textMuted,
                 fontSize = MosqueTheme.typography.captionSmall
             )
 

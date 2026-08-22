@@ -48,7 +48,7 @@ fun StandbySettingsSegment(
                         "Put the TV in standby mode (black screen) outside operational hours.",
                         "Masuk ke mode standby (layar hitam) di luar jam operasional."
                     ),
-                    color = MosqueTheme.colors.textTertiary,
+                    color = MosqueTheme.colors.textSecondary,
                     fontSize = MosqueTheme.typography.labelSmall
                 )
             }
