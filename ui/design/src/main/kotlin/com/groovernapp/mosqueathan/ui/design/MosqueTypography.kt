@@ -10,7 +10,10 @@ import androidx.compose.ui.unit.sp
  * alongside their own `fontWeight`, `color` and `letterSpacing`; swapping a full
  * `TextStyle` in would change rendering. Replacing only the size cannot.
  *
- * The twenty sizes split cleanly in two:
+ * The sizes split in two — though not quite cleanly: `prayerNameCompact` (22sp)
+ * sits just under `titleLarge` (24sp), so the families overlap by one step at the
+ * boundary. What distinguishes them is that the display family reaches sizes the
+ * settings scale never does.
  *
  * - **Display** — the large sizes on the TV screens. Each appears exactly once and is
  *   deliberate: these *are* the mockup and must not move.
