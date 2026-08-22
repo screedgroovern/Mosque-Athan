@@ -119,12 +119,36 @@ Two gaps remain, both deliberate:
   `height()`. There is no component-size scale yet; deriving one means deciding
   which values are icons, which are containers and which are fixed dialog
   dimensions. Match the surrounding file until that scale exists.
-- **Components.** There are still no `App*` wrappers. Screens use raw Material3
-  directly — 13 `Button`, 12 `TextButton`, 3 `OutlinedButton`, 1
-  `FilledTonalButton`, 15 `IconButton`, 9 `Card`, 15 `OutlinedTextField`, 12
-  `Switch`, each styled inline. Introducing six semantic button variants means
-  choosing which of those stylings wins, which moves pixels, so it waits for
-  sign-off.
+- **Components.** There are no `App*`-prefixed wrappers, but there *are*
+  wrappers — an earlier note in this file that said otherwise was wrong. They
+  live in `:app`, in `ui/settings/SettingsScreenShared.kt`, under different
+  names:
+
+  | Existing | Role | References |
+  |---|---|---|
+  | `TvFocusableButton` | secondary / neutral fill | 24 |
+  | `TvFocusablePrimaryButton` | primary, gold | 20 |
+  | `TvFocusablePreviewButton` | adzan/iqomah preview | — |
+  | `TvFocusableDangerButton` | destructive | — |
+  | `SettingsCard` | card | 16 |
+  | `AdjustmentRow` | stepper row | — |
+
+  They should move to `:ui:design` and be renamed, but they are a working system
+  already — they carry D-pad focus handling (border, 1.05 scale) that raw
+  Material3 does not. **Use them; do not add a parallel set.**
+
+  What is missing is an outlined/tertiary variant, and 13 call sites bypass the
+  wrappers entirely with raw Material3: 9 `Button` (`Schedule.kt:127`,
+  `FridaySettingsPane.kt:682`/`690`, `RemoteControlSettingsSegment.kt:105`/`127`/
+  `157`/`179`/`205`/`325`), 3 `OutlinedButton`, 1 `FilledTonalButton`. Folding
+  those in moves pixels — the RemoteControl ones pin `height = 48.dp` where the
+  wrappers use the Material default — so it waits for sign-off.
+
+  Known defect while you are in there: `TvFocusablePrimaryButton`
+  (`SettingsScreenShared.kt:148`) computes `effectiveColors` from an `if/else`
+  whose branches are identical, so the focus state changes scale and border but
+  not colour. Whether that was meant to brighten is a design question, not a
+  mechanical fix.
 
 The token set is deliberately redundant — four golds, nine near-blacks, ten text
 emphasis levels, twelve settings font sizes. That is a **1:1 extraction** of what
@@ -494,11 +518,14 @@ Visual version, with swatches and type specimens at true size:
 - **Still unresolved:** `10.dp`, used 11 times as spacing, sits between
   `spacing.md` (8) and `spacing.lg` (12); nine off-scale component sizes (6, 10,
   14, 18, 28, 40, 44, 56, 64) each need an individual call.
-- **`App*` components are explicitly not proposed.** The 44 buttons — 13 `Button`,
-  12 `TextButton`, 3 `OutlinedButton`, 1 `FilledTonalButton`, 15 `IconButton` —
-  are each styled inline and have not been catalogued. Assigning six semantic
-  variants without that audit would restyle buttons whose appearance may be
-  deliberate.
+- **Buttons: audited, and smaller than feared.** The variants already exist as
+  `TvFocusable*` wrappers (see *Design system*), and the raw call sites are
+  consistent about which look they use: accent+onAccent+`radius.md` for primary,
+  `fill`+`textPrimary` for secondary, `fill`+accent for preview, bordered for
+  tertiary. So the work is not "design six variants" but "move four wrappers to
+  `:ui:design`, add a tertiary, and fold in the 13 sites that bypass them". The
+  only pixel movement is button height: `RemoteControlSettingsSegment` pins
+  `48.dp` while the wrappers use the Material default.
 
 ### Do not
 
