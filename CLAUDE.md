@@ -81,15 +81,55 @@ The panel's HTML/CSS/JS is generated as Kotlin raw strings, split across files p
 
 External CDN assets (Leaflet, flatpickr, html5-qrcode, Google Fonts) are referenced by URL, so parts of the panel degrade without internet; `WebPageJsOffline.kt` handles that path.
 
-### Settings UI pattern (follow this for new settings)
+### Settings UI — the pattern described here did not exist
 
-Consistently applied across all six panes — follow it exactly:
+An earlier revision of this file described one standalone ViewModel per settings
+category, each exposing a single `uiState: StateFlow<XUiState>` and one
+`onEvent(XEvent)`, with composables receiving "exactly `state` + `onEvent`" and
+"never a long parameter list of individual values and callbacks".
 
-- One **standalone ViewModel per settings category**, not additions to `SettingsViewModel`. Each exposes a single `uiState: StateFlow<XUiState>` and one `onEvent(XEvent)` entry point, with `XEvent` a sealed interface. It is obtained inside `SettingsScreen`'s `when (selectedCategory)` via `viewModel()` — so it is scoped to the composable, and adding a category means adding a `SettingsCategory` enum entry plus a branch there.
-- Composables receive exactly `state` + `onEvent` (+ `isCompact`). Never a long parameter list of individual values and callbacks.
-- Layers: `XSettingsPane` (tabs via `AppTabbedLayout`) → `XSettingsSegment` (form content) → shared components.
-- High-frequency text input is buffered in local `remember { mutableStateOf(...) }` inside the leaf composable and only emitted upward when parsed/valid, to avoid a Realm write per keystroke.
-- `isCompact` (screen width < 600dp and not a TV) drives the phone layout; `isTv` is detected via `UiModeManager`.
+**None of that is in the code.** What is actually there:
+
+- **One `SettingsViewModel`**, 1028 lines, 70→48 public functions, exposing **11
+  separate `StateFlow`s** (`configState`, `announcementsState`, `devicesState`,
+  `mediaListState`, …). There are no per-category ViewModels.
+- **No `XUiState` or `XEvent` types for settings at all.** The only sealed
+  interfaces in `ui/` are `AppUiState`, `AppViewModel.ActiveScreen` and
+  `DashboardUiState`.
+- **Long parameter lists everywhere** — exactly the thing the old text forbade.
+  20 composables take 6 or more parameters, 318 in total:
+
+  | Composable | Parameters |
+  |---|---|
+  | `FridaySettingsPane` | 41 |
+  | `ThemeSettingsSegment` | 35 |
+  | `PrayerScheduleSettingsSegment` | 33 |
+  | `DisplayMediaSettingsPane` | 32 |
+  | `SlideshowTabContent` | 21 |
+  | `AdzanIqomahSettingsPane` | 18 |
+
+- Composables receive `viewModel: SettingsViewModel` directly, or those parameter
+  lists. `SettingsScreen` does not obtain per-category ViewModels via
+  `viewModel()`; there are none to obtain.
+
+**This is not a KMP blocker** — a ViewModel with eleven flows still moves to
+`commonMain`, and a 41-parameter composable compiles there fine. It is
+maintenance debt, and it is the largest remaining piece of it. Anyone who was
+told the state layer is "already the right shape for KMP" was told something this
+file made up.
+
+**Until it is restructured, match the surrounding file.** Do not add a
+half-migrated `XEvent` to one pane; a single pane in a different style is worse
+than a consistent bad style. Restructuring is a decision that has not been taken.
+
+What *is* real and worth keeping:
+
+- Settings auto-save: every change writes to Realm immediately, and
+  `getConfigFlow()` fans it back out to all screens and web clients.
+- High-frequency text input is buffered in local `remember { mutableStateOf(...) }`
+  inside leaf composables and only emitted when parsed and valid, so typing does
+  not cause a Realm write per keystroke.
+- `LocalWindowClass` drives the phone layout; see *TV navigation*.
 
 ### Design system
 
@@ -216,10 +256,13 @@ manage.
 This branch has broad licence to restructure, but three things are assets, not
 debt, and must survive unchanged:
 
-- **The state pattern** — one standalone ViewModel per settings category, single
-  `uiState: StateFlow`, single `onEvent(XEvent)`. This is the entire reason a
-  shared UI is feasible; it is already the KMP-idiomatic shape. Rewriting it to
-  formal MVI reducers, or to anything else, buys nothing.
+- ~~The state pattern.~~ **Retracted.** This claimed the settings layer was
+  already the KMP-idiomatic shape — one ViewModel per category, single `uiState`,
+  single `onEvent`. It is not; see *Settings UI* above. One 1028-line ViewModel
+  with eleven flows, and composables taking up to 41 parameters. It is still not a
+  *blocker* for moving to `commonMain`, so the migration order does not change,
+  but it is real debt and restructuring it is a live option rather than something
+  to protect.
 - **The `when (AppUiState)` screen state machine.** Deliberate, works, portable.
 - **`PrayerCalculator` and its tests.** The logic is correct; only its hidden
   repository dependency needs fixing.
@@ -431,9 +474,10 @@ Multiplatform needs a ViewModel factory in common code regardless.
 **Server — Android target only.** Browsers cannot open listening sockets and iOS
 suspends background sockets. Do not attempt to port `SettingsServer`.
 
-**Pattern — MVVM with unidirectional data flow (MVI-shaped).** Keep the existing
-single `uiState` + `onEvent` per settings category exactly as documented above.
-**Do not introduce formal reducers** — the ceremony is not worth it here.
+**Pattern — unidirectional data flow is the target, not the current state.** The
+display screens (`AppUiState`, `DashboardUiState`) do follow it. Settings does
+not — see *Settings UI* above. If settings is restructured, the display screens
+are the model to copy, and formal MVI reducers are still not worth the ceremony.
 
 **Version catalog.** Declare `kotlinx-datetime` and `kotlinx-coroutines`
 explicitly (see the warning under *Build & test* — the current transitive
