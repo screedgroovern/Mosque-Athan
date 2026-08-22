@@ -2,6 +2,7 @@ package com.groovernapp.mosqueathan.di
 
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
 import com.groovernapp.mosqueathan.data.RealmKemenagScheduleSource
+import com.groovernapp.mosqueathan.data.media.MediaFileStore
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import com.groovernapp.mosqueathan.domain.KemenagScheduleSource
 import com.groovernapp.mosqueathan.ui.adzan.AdzanViewModel
@@ -10,8 +11,10 @@ import com.groovernapp.mosqueathan.ui.iqomah.IqomahViewModel
 import com.groovernapp.mosqueathan.ui.navigation.AppViewModel
 import com.groovernapp.mosqueathan.ui.settings.SettingsViewModel
 import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahViewModel
+import com.groovernapp.mosqueathan.ui.settings.displaymedia.DisplayMediaViewModel
 import com.groovernapp.mosqueathan.ui.settings.prayerschedule.PrayerScheduleViewModel
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel
+import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -33,6 +36,7 @@ val appModule = module {
     single { MosqueConfigRepository() }
     single<KemenagScheduleSource> { RealmKemenagScheduleSource(get()) }
     single { RemoteActionSender(get()) }
+    single { MediaFileStore(androidContext()) }
 
     viewModel { AppViewModel(get(), get()) }
     viewModel { DashboardViewModel(get(), get()) }
@@ -42,4 +46,5 @@ val appModule = module {
     viewModel { RemoteDevicesViewModel(get(), get()) }
     viewModel { AdzanIqomahViewModel(get(), get()) }
     viewModel { PrayerScheduleViewModel(get(), get()) }
+    viewModel { DisplayMediaViewModel(get(), get(), get()) }
 }

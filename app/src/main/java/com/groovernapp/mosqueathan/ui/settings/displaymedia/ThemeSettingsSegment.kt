@@ -86,42 +86,64 @@ import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 
 @Composable
 fun ThemeSettingsSegment(
-    config: MosqueConfigEntity,
-    transitionType: String,
-    slideIntervalSeconds: Int,
-    videoWaitUntilEnd: Boolean,
-    includeDefaultImage: Boolean,
-    mediaList: List<MediaEntity>,
-    slideshowSchedules: List<SlideshowScheduleEntity>,
-    dashboardBackgrounds: List<DashboardBackgroundEntity>,
-    announcements: List<com.groovernapp.mosqueathan.data.AnnouncementEntity>,
-    onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit,
-    onAddMediaItem: () -> Unit,
-    onUpdateMediaItemPath: (String) -> Unit,
-    onUpdateMediaItemUsed: (String, Boolean) -> Unit,
-    onDeleteMediaItem: (MediaEntity) -> Unit,
-    onReorderMediaItems: (List<String>) -> Unit,
-    onSelectCustomBackground: () -> Unit,
-    onClearCustomBackground: () -> Unit,
-    onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit,
-    onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit,
-    onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit,
-    onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit,
-    onDeleteSlideshowSchedule: (String) -> Unit,
-    onPreviewSlideshow: () -> Unit,
-    onAddDashboardBackground: () -> Unit,
-    onUpdateDashboardBackgroundPath: (String) -> Unit,
-    onDeleteDashboardBackground: (String) -> Unit,
-    onUpdateDashboardBackgroundUsed: (String, Boolean) -> Unit,
-    onUpdateDashboardBackgroundOrder: (List<String>) -> Unit,
-    onUpdateDashboardSettings: (Boolean, String, Int) -> Unit,
-    onUpdateSlideshowEnabled: (Boolean) -> Unit,
-    onAddAnnouncement: (String) -> Unit,
-    onUpdateAnnouncement: (String, String) -> Unit,
-    onDeleteAnnouncement: (String) -> Unit,
-    onReorderAnnouncements: (List<String>) -> Unit,
-    isCompact: Boolean
+    state: DisplayMediaUiState,
+    onEvent: (DisplayMediaEvent) -> Unit
 ) {
+    val isCompact = LocalWindowClass.current.isCompact
+    val transitionType = state.slideshow.transitionType
+    val slideIntervalSeconds = state.slideshow.intervalSeconds
+    val videoWaitUntilEnd = state.slideshow.videoWaitUntilEnd
+    val includeDefaultImage = state.slideshow.includeDefaultImage
+    val mediaList = state.slideshow.media
+    val slideshowSchedules = state.slideshow.schedules
+    val dashboardBackgrounds = state.dashboard.backgrounds
+    val announcements = state.announcements
+    val onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit = { t, i2, v, d ->
+        onEvent(DisplayMediaEvent.ThemeChanged(t, i2, v, d))
+    }
+    val onUpdateMediaItemUsed: (String, Boolean) -> Unit = { id, used ->
+        onEvent(DisplayMediaEvent.MediaUsedToggled(id, used))
+    }
+    val onDeleteMediaItem: (MediaEntity) -> Unit = { onEvent(DisplayMediaEvent.MediaDeleted(it)) }
+    val onReorderMediaItems: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.MediaReordered(it)) }
+    val onClearCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundCleared) }
+    val onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit = { d, sp, st, en ->
+        onEvent(DisplayMediaEvent.ScheduleAdded(d, sp, st, en))
+    }
+    val onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit =
+        { sc, st, en -> onEvent(DisplayMediaEvent.ScheduleTimeChanged(sc, st, en)) }
+    val onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+        { sc, d -> onEvent(DisplayMediaEvent.ScheduleDaysChanged(sc, d)) }
+    val onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+        { sc, d -> onEvent(DisplayMediaEvent.ScheduleDatesChanged(sc, d)) }
+    val onDeleteSlideshowSchedule: (String) -> Unit = { onEvent(DisplayMediaEvent.ScheduleDeleted(it)) }
+    val onPreviewSlideshow: () -> Unit = { onEvent(DisplayMediaEvent.SlideshowPreviewRequested) }
+    val onDeleteDashboardBackground: (String) -> Unit = { onEvent(DisplayMediaEvent.BackgroundDeleted(it)) }
+    val onUpdateDashboardBackgroundUsed: (String, Boolean) -> Unit = { id, used ->
+        onEvent(DisplayMediaEvent.BackgroundUsedToggled(id, used))
+    }
+    val onUpdateDashboardBackgroundOrder: (List<String>) -> Unit =
+        { onEvent(DisplayMediaEvent.BackgroundsReordered(it)) }
+    val onUpdateDashboardSettings: (Boolean, String, Int) -> Unit = { r, t, i2 ->
+        onEvent(DisplayMediaEvent.DashboardSettingsChanged(r, t, i2))
+    }
+    val onUpdateSlideshowEnabled: (Boolean) -> Unit =
+        { onEvent(DisplayMediaEvent.SlideshowEnabledChanged(it)) }
+    val onAddAnnouncement: (String) -> Unit = { onEvent(DisplayMediaEvent.AnnouncementAdded(it)) }
+    val onUpdateAnnouncement: (String, String) -> Unit = { id, c ->
+        onEvent(DisplayMediaEvent.AnnouncementEdited(id, c))
+    }
+    val onDeleteAnnouncement: (String) -> Unit = { onEvent(DisplayMediaEvent.AnnouncementDeleted(it)) }
+    val onReorderAnnouncements: (List<String>) -> Unit =
+        { onEvent(DisplayMediaEvent.AnnouncementsReordered(it)) }
+    val onAddMediaItem: () -> Unit = { onEvent(DisplayMediaEvent.MediaPickRequested) }
+    val onUpdateMediaItemPath: (String) -> Unit =
+        { onEvent(DisplayMediaEvent.MediaFilePickRequested(it)) }
+    val onSelectCustomBackground: () -> Unit =
+        { onEvent(DisplayMediaEvent.CustomBackgroundPickRequested) }
+    val onAddDashboardBackground: () -> Unit = { onEvent(DisplayMediaEvent.BackgroundPickRequested) }
+    val onUpdateDashboardBackgroundPath: (String) -> Unit =
+        { onEvent(DisplayMediaEvent.BackgroundFilePickRequested(it)) }
     val pagerState = rememberPagerState(initialPage = 0) { 2 }
     val coroutineScope = rememberCoroutineScope()
 
@@ -189,46 +211,9 @@ fun ThemeSettingsSegment(
             modifier = Modifier.fillMaxWidth()
         ) { page ->
             if (page == 0) {
-                DashboardTabContent(
-                    config = config,
-                    dashboardBackgrounds = dashboardBackgrounds,
-                    announcements = announcements,
-                    onAddDashboardBackground = onAddDashboardBackground,
-                    onUpdateDashboardBackgroundPath = onUpdateDashboardBackgroundPath,
-                    onDeleteDashboardBackground = onDeleteDashboardBackground,
-                    onUpdateDashboardBackgroundUsed = onUpdateDashboardBackgroundUsed,
-                    onUpdateDashboardBackgroundOrder = onUpdateDashboardBackgroundOrder,
-                    onUpdateDashboardSettings = onUpdateDashboardSettings,
-                    onAddAnnouncement = onAddAnnouncement,
-                    onUpdateAnnouncement = onUpdateAnnouncement,
-                    onDeleteAnnouncement = onDeleteAnnouncement,
-                    onReorderAnnouncements = onReorderAnnouncements,
-                    isCompact = isCompact
-                )
+                DashboardTabContent(state = state, onEvent = onEvent)
             } else {
-                SlideshowTabContent(
-                    transitionType = transitionType,
-                    slideIntervalSeconds = slideIntervalSeconds,
-                    videoWaitUntilEnd = videoWaitUntilEnd,
-                    includeDefaultImage = includeDefaultImage,
-                    mediaList = mediaList,
-                    slideshowSchedules = slideshowSchedules,
-                    slideshowEnabled = config.slideshowEnabled,
-                    onUpdateThemeSettings = onUpdateThemeSettings,
-                    onAddMediaItem = onAddMediaItem,
-                    onUpdateMediaItemPath = onUpdateMediaItemPath,
-                    onUpdateMediaItemUsed = onUpdateMediaItemUsed,
-                    onDeleteMediaItem = onDeleteMediaItem,
-                    onReorderMediaItems = onReorderMediaItems,
-                    onAddSlideshowSchedule = onAddSlideshowSchedule,
-                    onUpdateSlideshowScheduleTime = onUpdateSlideshowScheduleTime,
-                    onUpdateSlideshowScheduleDays = onUpdateSlideshowScheduleDays,
-                    onUpdateSlideshowScheduleDates = onUpdateSlideshowScheduleDates,
-                    onDeleteSlideshowSchedule = onDeleteSlideshowSchedule,
-                    onUpdateSlideshowEnabled = onUpdateSlideshowEnabled,
-                    onPreviewSlideshow = onPreviewSlideshow,
-                    isCompact = isCompact
-                )
+                SlideshowTabContent(state = state, onEvent = onEvent)
             }
         }
     }
@@ -236,21 +221,52 @@ fun ThemeSettingsSegment(
 
 @Composable
 fun DashboardTabContent(
-    config: MosqueConfigEntity,
-    dashboardBackgrounds: List<DashboardBackgroundEntity>,
-    announcements: List<com.groovernapp.mosqueathan.data.AnnouncementEntity>,
-    onAddDashboardBackground: () -> Unit,
-    onUpdateDashboardBackgroundPath: (String) -> Unit,
-    onDeleteDashboardBackground: (String) -> Unit,
-    onUpdateDashboardBackgroundUsed: (String, Boolean) -> Unit,
-    onUpdateDashboardBackgroundOrder: (List<String>) -> Unit,
-    onUpdateDashboardSettings: (Boolean, String, Int) -> Unit,
-    onAddAnnouncement: (String) -> Unit,
-    onUpdateAnnouncement: (String, String) -> Unit,
-    onDeleteAnnouncement: (String) -> Unit,
-    onReorderAnnouncements: (List<String>) -> Unit,
-    isCompact: Boolean
+    state: DisplayMediaUiState,
+    onEvent: (DisplayMediaEvent) -> Unit
 ) {
+    val isCompact = LocalWindowClass.current.isCompact
+    val dashboardBackgrounds = state.dashboard.backgrounds
+    val announcements = state.announcements
+    val mediaList = state.slideshow.media
+    val slideshowSchedules = state.slideshow.schedules
+    val transitionType = state.slideshow.transitionType
+    val slideIntervalSeconds = state.slideshow.intervalSeconds
+    val videoWaitUntilEnd = state.slideshow.videoWaitUntilEnd
+    val includeDefaultImage = state.slideshow.includeDefaultImage
+    val slideshowEnabled = state.slideshow.enabled
+    val onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit = { t, i, v, d ->
+        onEvent(DisplayMediaEvent.ThemeChanged(t, i, v, d))
+    }
+    val onAddMediaItem: () -> Unit = { onEvent(DisplayMediaEvent.MediaPickRequested) }
+    val onUpdateMediaItemPath: (String) -> Unit = { onEvent(DisplayMediaEvent.MediaFilePickRequested(it)) }
+    val onUpdateMediaItemUsed: (String, Boolean) -> Unit = { id, u -> onEvent(DisplayMediaEvent.MediaUsedToggled(id, u)) }
+    val onDeleteMediaItem: (MediaEntity) -> Unit = { onEvent(DisplayMediaEvent.MediaDeleted(it)) }
+    val onReorderMediaItems: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.MediaReordered(it)) }
+    val onSelectCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundPickRequested) }
+    val onClearCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundCleared) }
+    val onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit = { d, sp, st, en ->
+        onEvent(DisplayMediaEvent.ScheduleAdded(d, sp, st, en))
+    }
+    val onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit =
+        { sc, st, en -> onEvent(DisplayMediaEvent.ScheduleTimeChanged(sc, st, en)) }
+    val onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+        { sc, d -> onEvent(DisplayMediaEvent.ScheduleDaysChanged(sc, d)) }
+    val onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+        { sc, d -> onEvent(DisplayMediaEvent.ScheduleDatesChanged(sc, d)) }
+    val onDeleteSlideshowSchedule: (String) -> Unit = { onEvent(DisplayMediaEvent.ScheduleDeleted(it)) }
+    val onPreviewSlideshow: () -> Unit = { onEvent(DisplayMediaEvent.SlideshowPreviewRequested) }
+    val onUpdateSlideshowEnabled: (Boolean) -> Unit = { onEvent(DisplayMediaEvent.SlideshowEnabledChanged(it)) }
+    val onAddDashboardBackground: () -> Unit = { onEvent(DisplayMediaEvent.BackgroundPickRequested) }
+    val onUpdateDashboardBackgroundPath: (String) -> Unit = { onEvent(DisplayMediaEvent.BackgroundFilePickRequested(it)) }
+    val onDeleteDashboardBackground: (String) -> Unit = { onEvent(DisplayMediaEvent.BackgroundDeleted(it)) }
+    val onUpdateDashboardBackgroundUsed: (String, Boolean) -> Unit = { id, u -> onEvent(DisplayMediaEvent.BackgroundUsedToggled(id, u)) }
+    val onUpdateDashboardBackgroundOrder: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.BackgroundsReordered(it)) }
+    val onUpdateDashboardSettings: (Boolean, String, Int) -> Unit = { r, t, i -> onEvent(DisplayMediaEvent.DashboardSettingsChanged(r, t, i)) }
+    val onAddAnnouncement: (String) -> Unit = { onEvent(DisplayMediaEvent.AnnouncementAdded(it)) }
+    val onUpdateAnnouncement: (String, String) -> Unit = { id, c -> onEvent(DisplayMediaEvent.AnnouncementEdited(id, c)) }
+    val onDeleteAnnouncement: (String) -> Unit = { onEvent(DisplayMediaEvent.AnnouncementDeleted(it)) }
+    val onReorderAnnouncements: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.AnnouncementsReordered(it)) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -280,12 +296,12 @@ fun DashboardTabContent(
                 )
                 Switch(
                     modifier = Modifier.scale(0.8f).focusHighlight(shape = RoundedCornerShape(MosqueRadius.pill), scaleUp = false),
-                    checked = config.dashboardRandomize,
+                    checked = state.dashboard.randomize,
                     onCheckedChange = { checked ->
                         onUpdateDashboardSettings(
                             checked,
-                            config.dashboardTransitionType,
-                            config.dashboardTransitionInterval
+                            state.dashboard.transitionType,
+                            state.dashboard.transitionIntervalSeconds
                         )
                     },
                     colors = SwitchDefaults.colors(
@@ -296,8 +312,8 @@ fun DashboardTabContent(
             }
         }
 
-        val (displayValue, unitIndex) = remember(config.dashboardTransitionInterval) {
-            val interval = config.dashboardTransitionInterval
+        val (displayValue, unitIndex) = remember(state.dashboard.transitionIntervalSeconds) {
+            val interval = state.dashboard.transitionIntervalSeconds
             when {
                 interval % 86400 == 0 -> Pair(interval / 86400, 3) // Hari
                 interval % 3600 == 0 -> Pair(interval / 3600, 2)  // Jam
@@ -322,12 +338,12 @@ fun DashboardTabContent(
             onDeleteItem = { onDeleteDashboardBackground(it.id) },
             emptyText = Lang.get("Using Default Background", "Menggunakan Latar Belakang Default"),
             showTransitionAnimation = true,
-            transitionType = config.dashboardTransitionType,
+            transitionType = state.dashboard.transitionType,
             onTransitionTypeChange = { type ->
                 onUpdateDashboardSettings(
-                    config.dashboardRandomize,
+                    state.dashboard.randomize,
                     type,
-                    config.dashboardTransitionInterval
+                    state.dashboard.transitionIntervalSeconds
                 )
             },
             showTransitionInterval = true,
@@ -335,8 +351,8 @@ fun DashboardTabContent(
             transitionIntervalUnitIndex = unitIndex,
             onTransitionIntervalValueChange = { newVal ->
                 onUpdateDashboardSettings(
-                    config.dashboardRandomize,
-                    config.dashboardTransitionType,
+                    state.dashboard.randomize,
+                    state.dashboard.transitionType,
                     newVal * multipliers[unitIndex]
                 )
             },
@@ -349,8 +365,8 @@ fun DashboardTabContent(
                     else -> 60
                 })
                 onUpdateDashboardSettings(
-                    config.dashboardRandomize,
-                    config.dashboardTransitionType,
+                    state.dashboard.randomize,
+                    state.dashboard.transitionType,
                     clampedVal * multipliers[index]
                 )
             },
@@ -371,28 +387,52 @@ fun DashboardTabContent(
 
 @Composable
 fun SlideshowTabContent(
-    transitionType: String,
-    slideIntervalSeconds: Int,
-    videoWaitUntilEnd: Boolean,
-    includeDefaultImage: Boolean,
-    mediaList: List<MediaEntity>,
-    slideshowSchedules: List<SlideshowScheduleEntity>,
-    slideshowEnabled: Boolean,
-    onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit,
-    onAddMediaItem: () -> Unit,
-    onUpdateMediaItemPath: (String) -> Unit,
-    onUpdateMediaItemUsed: (String, Boolean) -> Unit,
-    onDeleteMediaItem: (MediaEntity) -> Unit,
-    onReorderMediaItems: (List<String>) -> Unit,
-    onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit,
-    onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit,
-    onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit,
-    onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit,
-    onDeleteSlideshowSchedule: (String) -> Unit,
-    onUpdateSlideshowEnabled: (Boolean) -> Unit,
-    onPreviewSlideshow: () -> Unit,
-    isCompact: Boolean
+    state: DisplayMediaUiState,
+    onEvent: (DisplayMediaEvent) -> Unit
 ) {
+    val isCompact = LocalWindowClass.current.isCompact
+    val dashboardBackgrounds = state.dashboard.backgrounds
+    val announcements = state.announcements
+    val mediaList = state.slideshow.media
+    val slideshowSchedules = state.slideshow.schedules
+    val transitionType = state.slideshow.transitionType
+    val slideIntervalSeconds = state.slideshow.intervalSeconds
+    val videoWaitUntilEnd = state.slideshow.videoWaitUntilEnd
+    val includeDefaultImage = state.slideshow.includeDefaultImage
+    val slideshowEnabled = state.slideshow.enabled
+    val onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit = { t, i, v, d ->
+        onEvent(DisplayMediaEvent.ThemeChanged(t, i, v, d))
+    }
+    val onAddMediaItem: () -> Unit = { onEvent(DisplayMediaEvent.MediaPickRequested) }
+    val onUpdateMediaItemPath: (String) -> Unit = { onEvent(DisplayMediaEvent.MediaFilePickRequested(it)) }
+    val onUpdateMediaItemUsed: (String, Boolean) -> Unit = { id, u -> onEvent(DisplayMediaEvent.MediaUsedToggled(id, u)) }
+    val onDeleteMediaItem: (MediaEntity) -> Unit = { onEvent(DisplayMediaEvent.MediaDeleted(it)) }
+    val onReorderMediaItems: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.MediaReordered(it)) }
+    val onSelectCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundPickRequested) }
+    val onClearCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundCleared) }
+    val onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit = { d, sp, st, en ->
+        onEvent(DisplayMediaEvent.ScheduleAdded(d, sp, st, en))
+    }
+    val onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit =
+        { sc, st, en -> onEvent(DisplayMediaEvent.ScheduleTimeChanged(sc, st, en)) }
+    val onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+        { sc, d -> onEvent(DisplayMediaEvent.ScheduleDaysChanged(sc, d)) }
+    val onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+        { sc, d -> onEvent(DisplayMediaEvent.ScheduleDatesChanged(sc, d)) }
+    val onDeleteSlideshowSchedule: (String) -> Unit = { onEvent(DisplayMediaEvent.ScheduleDeleted(it)) }
+    val onPreviewSlideshow: () -> Unit = { onEvent(DisplayMediaEvent.SlideshowPreviewRequested) }
+    val onUpdateSlideshowEnabled: (Boolean) -> Unit = { onEvent(DisplayMediaEvent.SlideshowEnabledChanged(it)) }
+    val onAddDashboardBackground: () -> Unit = { onEvent(DisplayMediaEvent.BackgroundPickRequested) }
+    val onUpdateDashboardBackgroundPath: (String) -> Unit = { onEvent(DisplayMediaEvent.BackgroundFilePickRequested(it)) }
+    val onDeleteDashboardBackground: (String) -> Unit = { onEvent(DisplayMediaEvent.BackgroundDeleted(it)) }
+    val onUpdateDashboardBackgroundUsed: (String, Boolean) -> Unit = { id, u -> onEvent(DisplayMediaEvent.BackgroundUsedToggled(id, u)) }
+    val onUpdateDashboardBackgroundOrder: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.BackgroundsReordered(it)) }
+    val onUpdateDashboardSettings: (Boolean, String, Int) -> Unit = { r, t, i -> onEvent(DisplayMediaEvent.DashboardSettingsChanged(r, t, i)) }
+    val onAddAnnouncement: (String) -> Unit = { onEvent(DisplayMediaEvent.AnnouncementAdded(it)) }
+    val onUpdateAnnouncement: (String, String) -> Unit = { id, c -> onEvent(DisplayMediaEvent.AnnouncementEdited(id, c)) }
+    val onDeleteAnnouncement: (String) -> Unit = { onEvent(DisplayMediaEvent.AnnouncementDeleted(it)) }
+    val onReorderAnnouncements: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.AnnouncementsReordered(it)) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -907,94 +947,15 @@ fun DropdownAdjustmentRow(
 
 
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Preview(showBackground = true, backgroundColor = 0xFF000000, widthDp = 1280, heightDp = 720)
 @Composable
 fun ThemeSettingsSegmentPreview() {
-    val mockConfig = MosqueConfigEntity().apply {
-        transitionType = "FADE"
-        slideIntervalSeconds = 10
-        videoWaitUntilEnd = false
-        includeDefaultImage = true
-        dashboardRandomize = false
-        dashboardTransitionType = "FADE"
-        dashboardTransitionInterval = 86400
-    }
-
-    val mockMediaList = listOf(
-        MediaEntity().apply {
-            id = "1"
-            filePath = "path/to/image1.jpg"
-            isVideo = false
-        },
-        MediaEntity().apply {
-            id = "2"
-            filePath = "path/to/video1.mp4"
-            isVideo = true
-        }
-    )
-
-    val mockSlideshowSchedules = listOf(
-        SlideshowScheduleEntity().apply {
-            id = "1"
-            day = "Monday"
-            isSpecificDate = false
-            startTime = "08:00"
-            endTime = "17:00"
-        }
-    )
-
-    val mockDashboardBackgrounds = listOf(
-        DashboardBackgroundEntity().apply {
-            id = "bg1"
-            filePath = "path/to/bg1.jpg"
-            isUsed = true
-            sortOrder = 0
-        },
-        DashboardBackgroundEntity().apply {
-            id = "bg2"
-            filePath = "path/to/bg2.jpg"
-            isUsed = false
-            sortOrder = 1
-        }
-    )
-
     MosqueAthanTheme {
         ThemeSettingsSegment(
-            config = mockConfig,
-            transitionType = "FADE",
-            slideIntervalSeconds = 10,
-            videoWaitUntilEnd = false,
-            includeDefaultImage = true,
-            mediaList = mockMediaList,
-            slideshowSchedules = emptyList(),
-            dashboardBackgrounds = emptyList(),
-            announcements = emptyList(),
-            onUpdateThemeSettings = { _, _, _, _ -> },
-            onAddMediaItem = {},
-            onUpdateMediaItemPath = {},
-            onUpdateMediaItemUsed = { _, _ -> },
-            onDeleteMediaItem = {},
-            onReorderMediaItems = {},
-            onSelectCustomBackground = {},
-            onClearCustomBackground = {},
-            onAddSlideshowSchedule = { _, _, _, _ -> },
-            onUpdateSlideshowScheduleTime = { _, _, _ -> },
-            onUpdateSlideshowScheduleDays = { _, _ -> },
-            onUpdateSlideshowScheduleDates = { _, _ -> },
-            onDeleteSlideshowSchedule = {},
-            onUpdateSlideshowEnabled = {},
-            onPreviewSlideshow = {},
-            onAddDashboardBackground = {},
-            onUpdateDashboardBackgroundPath = {},
-            onDeleteDashboardBackground = {},
-            onUpdateDashboardBackgroundUsed = { _, _ -> },
-            onUpdateDashboardBackgroundOrder = {},
-            onUpdateDashboardSettings = { _, _, _ -> },
-            onAddAnnouncement = {},
-            onUpdateAnnouncement = { _, _ -> },
-            onDeleteAnnouncement = {},
-            onReorderAnnouncements = {},
-            isCompact = false
+            state = DisplayMediaUiState(
+                slideshow = SlideshowSettings(transitionType = "FADE", intervalSeconds = 8)
+            ),
+            onEvent = {}
         )
     }
 }

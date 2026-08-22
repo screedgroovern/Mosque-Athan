@@ -72,6 +72,8 @@ import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewMo
 import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahEvent
 import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahViewModel
 import com.groovernapp.mosqueathan.ui.settings.prayerschedule.PrayerScheduleViewModel
+import com.groovernapp.mosqueathan.ui.settings.displaymedia.DisplayMediaEvent
+import com.groovernapp.mosqueathan.ui.settings.displaymedia.DisplayMediaViewModel
 
 @Composable
 fun SettingsScreen(
@@ -395,50 +397,19 @@ fun SettingsScreen(
                                  }
 
                                  SettingsCategory.DISPLAY_MEDIA -> {
+                                     val displayMediaViewModel: DisplayMediaViewModel = koinViewModel()
+                                     val displayMediaState by displayMediaViewModel.uiState.collectAsStateWithLifecycle()
                                      DisplayMediaSettingsPane(
-                                         config = config,
-                                         announcements = announcements,
-                                         mediaList = mediaList,
-                                         slideshowSchedules = slideshowSchedules,
-                                         dashboardBackgrounds = dashboardBackgrounds,
-                                         onUpdateThemeSettings = { type, interval, videoWait, defaultImg ->
-                                             viewModel.updateThemeSettings(type, interval, videoWait, defaultImg)
-                                         },
-                                         onAddMediaItems = { uris -> viewModel.addMediaItems(uris, context) },
-                                         onUpdateMediaItemPath = { id, uri -> viewModel.updateMediaItemPath(id, uri, context) },
-                                         onUpdateMediaItemUsed = { id, isUsed -> viewModel.updateMediaItemUsed(id, isUsed) },
-                                         onDeleteMediaItem = { item -> viewModel.deleteMediaItem(item) },
-                                         onReorderMediaItems = { ids -> viewModel.updateMediaListOrder(ids) },
-                                         onSelectCustomBackground = { uri -> viewModel.updateCustomBackground(uri, context) },
-                                         onClearCustomBackground = { viewModel.clearCustomBackground(context) },
-                                         onAddSlideshowSchedule = { day, isSpecific, start, end ->
-                                             viewModel.addSlideshowSchedule(day, isSpecific, start, end)
-                                         },
-                                         onUpdateSlideshowScheduleTime = { schedule, startTime, endTime ->
-                                             viewModel.updateSlideshowScheduleTime(schedule.id, startTime, endTime)
-                                         },
-                                         onUpdateSlideshowScheduleDays = { schedule, activeDays ->
-                                             viewModel.updateSlideshowScheduleDays(schedule.id, activeDays)
-                                         },
-                                         onUpdateSlideshowScheduleDates = { schedule, specificDates ->
-                                             viewModel.updateSlideshowScheduleDates(schedule.id, specificDates)
-                                         },
-                                         onDeleteSlideshowSchedule = { id -> viewModel.deleteSlideshowSchedule(id) },
-                                         onUpdateSlideshowEnabled = { enabled -> viewModel.updateSlideshowEnabled(enabled) },
-                                         onPreviewSlideshow = onPreviewSlideshow,
-                                         onAddDashboardBackground = { uris -> viewModel.addDashboardBackgrounds(uris, context) },
-                                         onUpdateDashboardBackgroundPath = { id, uri -> viewModel.updateDashboardBackgroundPath(id, uri, context) },
-                                         onDeleteDashboardBackground = { id -> viewModel.deleteDashboardBackground(id) },
-                                         onUpdateDashboardBackgroundUsed = { id, isUsed -> viewModel.updateDashboardBackgroundUsed(id, isUsed) },
-                                         onUpdateDashboardBackgroundOrder = { ids -> viewModel.updateDashboardBackgroundOrder(ids) },
-                                         onUpdateDashboardSettings = { randomize, transitionType, intervalSeconds ->
-                                             viewModel.updateDashboardSettings(randomize, transitionType, intervalSeconds)
-                                         },
-                                         onAddAnnouncement = { content -> viewModel.addAnnouncement(content) },
-                                         onUpdateAnnouncement = { id, content -> viewModel.editAnnouncement(id, content) },
-                                         onDeleteAnnouncement = { id -> viewModel.deleteAnnouncement(id) },
-                                         onReorderAnnouncements = { ids -> viewModel.reorderAnnouncements(ids) },
-                                         isCompact = isCompact
+                                         state = displayMediaState,
+                                         onEvent = { event ->
+                                             // Preview is navigation, not a setting; the pane handles its own
+                                             // picker requests. Everything else is the category's business.
+                                             if (event is DisplayMediaEvent.SlideshowPreviewRequested) {
+                                                 onPreviewSlideshow()
+                                             } else {
+                                                 displayMediaViewModel.onEvent(event)
+                                             }
+                                         }
                                      )
                                  }
 

@@ -15,48 +15,20 @@ import com.groovernapp.mosqueathan.data.MediaEntity
 import com.groovernapp.mosqueathan.data.MosqueConfigEntity
 import com.groovernapp.mosqueathan.data.SlideshowScheduleEntity
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 
 @Composable
 fun DisplayMediaSettingsPane(
-    config: MosqueConfigEntity,
-    mediaList: List<MediaEntity>,
-    slideshowSchedules: List<SlideshowScheduleEntity>,
-    dashboardBackgrounds: List<com.groovernapp.mosqueathan.data.DashboardBackgroundEntity>,
-    announcements: List<com.groovernapp.mosqueathan.data.AnnouncementEntity>,
-    onUpdateThemeSettings: (String, Int, Boolean, Boolean) -> Unit,
-    onAddMediaItems: (List<android.net.Uri>) -> Unit,
-    onUpdateMediaItemPath: (String, android.net.Uri) -> Unit,
-    onUpdateMediaItemUsed: (String, Boolean) -> Unit,
-    onDeleteMediaItem: (MediaEntity) -> Unit,
-    onReorderMediaItems: (List<String>) -> Unit,
-    onSelectCustomBackground: (android.net.Uri) -> Unit,
-    onClearCustomBackground: () -> Unit,
-    onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit,
-    onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit,
-    onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit,
-    onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit,
-    onDeleteSlideshowSchedule: (String) -> Unit,
-    onPreviewSlideshow: () -> Unit,
-    onAddDashboardBackground: (List<android.net.Uri>) -> Unit,
-    onUpdateDashboardBackgroundPath: (String, android.net.Uri) -> Unit,
-    onDeleteDashboardBackground: (String) -> Unit,
-    onUpdateDashboardBackgroundUsed: (String, Boolean) -> Unit,
-    onUpdateDashboardBackgroundOrder: (List<String>) -> Unit,
-    onUpdateDashboardSettings: (Boolean, String, Int) -> Unit,
-    onUpdateSlideshowEnabled: (Boolean) -> Unit,
-    onAddAnnouncement: (String) -> Unit,
-    onUpdateAnnouncement: (String, String) -> Unit,
-    onDeleteAnnouncement: (String) -> Unit,
-    onReorderAnnouncements: (List<String>) -> Unit,
-    isCompact: Boolean,
+    state: DisplayMediaUiState,
+    onEvent: (DisplayMediaEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val mediaPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris: List<android.net.Uri> ->
         if (uris.isNotEmpty()) {
-            onAddMediaItems(uris)
+            onEvent(DisplayMediaEvent.MediaAdded(uris))
         }
     }
 
@@ -64,7 +36,7 @@ fun DisplayMediaSettingsPane(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
     ) { uri: android.net.Uri? ->
         if (uri != null) {
-            onSelectCustomBackground(uri)
+            onEvent(DisplayMediaEvent.CustomBackgroundSelected(uri))
         }
     }
 
@@ -72,7 +44,7 @@ fun DisplayMediaSettingsPane(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris: List<android.net.Uri> ->
         if (uris.isNotEmpty()) {
-            onAddDashboardBackground(uris)
+            onEvent(DisplayMediaEvent.BackgroundsAdded(uris))
         }
     }
 
@@ -82,7 +54,7 @@ fun DisplayMediaSettingsPane(
     ) { uri: android.net.Uri? ->
         val id = editingBgId
         if (id != null && uri != null) {
-            onUpdateDashboardBackgroundPath(id, uri)
+            onEvent(DisplayMediaEvent.BackgroundFileReplaced(id, uri))
         }
         editingBgId = null
     }
@@ -93,9 +65,61 @@ fun DisplayMediaSettingsPane(
     ) { uri: android.net.Uri? ->
         val id = editingMediaId
         if (id != null && uri != null) {
-            onUpdateMediaItemPath(id, uri)
+            onEvent(DisplayMediaEvent.MediaFileReplaced(id, uri))
         }
         editingMediaId = null
+    }
+
+    /**
+     * Opens a picker for the request events and passes everything else on.
+     *
+     * The launchers have to live here — `rememberLauncherForActivityResult` is a
+     * composable — so the pane is the only place that can act on a "pick a file"
+     * request. Children stay on `state` + `onEvent` and never see a launcher.
+     */
+    val handleEvent: (DisplayMediaEvent) -> Unit = { event ->
+        when (event) {
+            DisplayMediaEvent.MediaPickRequested ->
+                mediaPickerLauncher.launch(
+                    androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                    )
+                )
+
+            is DisplayMediaEvent.MediaFilePickRequested -> {
+                editingMediaId = event.id
+                mediaEditLauncher.launch(
+                    androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                    )
+                )
+            }
+
+            DisplayMediaEvent.CustomBackgroundPickRequested ->
+                backgroundPickerLauncher.launch(
+                    androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                    )
+                )
+
+            DisplayMediaEvent.BackgroundPickRequested ->
+                dashboardBackgroundAddLauncher.launch(
+                    androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                    )
+                )
+
+            is DisplayMediaEvent.BackgroundFilePickRequested -> {
+                editingBgId = event.id
+                dashboardBackgroundEditLauncher.launch(
+                    androidx.activity.result.PickVisualMediaRequest(
+                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
+                    )
+                )
+            }
+
+            else -> onEvent(event)
+        }
     }
 
     Column(
@@ -104,146 +128,26 @@ fun DisplayMediaSettingsPane(
         verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxxl)
     ) {
         Column {
-            ThemeSettingsSegment(
-                config = config,
-                transitionType = config.transitionType,
-                slideIntervalSeconds = config.slideIntervalSeconds,
-                videoWaitUntilEnd = config.videoWaitUntilEnd,
-                includeDefaultImage = config.includeDefaultImage,
-                mediaList = mediaList,
-                slideshowSchedules = slideshowSchedules,
-                dashboardBackgrounds = dashboardBackgrounds,
-                announcements = announcements,
-                onUpdateThemeSettings = onUpdateThemeSettings,
-                onAddMediaItem = {
-                    mediaPickerLauncher.launch(
-                        androidx.activity.result.PickVisualMediaRequest(
-                            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                        )
-                    )
-                },
-                onUpdateMediaItemPath = { id ->
-                    editingMediaId = id
-                    mediaEditLauncher.launch(
-                        androidx.activity.result.PickVisualMediaRequest(
-                            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                        )
-                    )
-                },
-                onUpdateMediaItemUsed = onUpdateMediaItemUsed,
-                onDeleteMediaItem = onDeleteMediaItem,
-                onReorderMediaItems = onReorderMediaItems,
-                onSelectCustomBackground = {
-                    backgroundPickerLauncher.launch(
-                        androidx.activity.result.PickVisualMediaRequest(
-                            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
-                        )
-                    )
-                },
-                onClearCustomBackground = onClearCustomBackground,
-                onAddSlideshowSchedule = onAddSlideshowSchedule,
-                onUpdateSlideshowScheduleTime = onUpdateSlideshowScheduleTime,
-                onUpdateSlideshowScheduleDays = onUpdateSlideshowScheduleDays,
-                onUpdateSlideshowScheduleDates = onUpdateSlideshowScheduleDates,
-                onDeleteSlideshowSchedule = onDeleteSlideshowSchedule,
-                onPreviewSlideshow = onPreviewSlideshow,
-                onAddDashboardBackground = {
-                    dashboardBackgroundAddLauncher.launch(
-                        androidx.activity.result.PickVisualMediaRequest(
-                            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
-                        )
-                    )
-                },
-                onUpdateDashboardBackgroundPath = { id ->
-                    editingBgId = id
-                    dashboardBackgroundEditLauncher.launch(
-                        androidx.activity.result.PickVisualMediaRequest(
-                            androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
-                        )
-                    )
-                },
-                onDeleteDashboardBackground = onDeleteDashboardBackground,
-                onUpdateDashboardBackgroundUsed = onUpdateDashboardBackgroundUsed,
-                onUpdateDashboardBackgroundOrder = onUpdateDashboardBackgroundOrder,
-                onUpdateDashboardSettings = onUpdateDashboardSettings,
-                onUpdateSlideshowEnabled = onUpdateSlideshowEnabled,
-                onAddAnnouncement = onAddAnnouncement,
-                onUpdateAnnouncement = onUpdateAnnouncement,
-                onDeleteAnnouncement = onDeleteAnnouncement,
-                onReorderAnnouncements = onReorderAnnouncements,
-                isCompact = isCompact
-            )
+            ThemeSettingsSegment(state = state, onEvent = handleEvent)
         }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Preview(showBackground = true, backgroundColor = 0xFF000000, widthDp = 1280, heightDp = 720)
 @Composable
 fun DisplayMediaSettingsPanePreview() {
-    val mockConfig = MosqueConfigEntity().apply {
-        transitionType = "FADE"
-        slideIntervalSeconds = 10
-        videoWaitUntilEnd = false
-        includeDefaultImage = true
-    }
-
-    val mockMediaList = listOf(
-        MediaEntity().apply {
-            id = "1"
-            filePath = "path/to/image1.jpg"
-            isVideo = false
-        },
-        MediaEntity().apply {
-            id = "2"
-            filePath = "path/to/video1.mp4"
-            isVideo = true
-        }
-    )
-
-    val mockSlideshowSchedules = listOf(
-        SlideshowScheduleEntity().apply {
-            id = "1"
-            day = "Monday"
-            isSpecificDate = false
-            startTime = "08:00"
-            endTime = "17:00"
-        }
-    )
-
-
+    // A preview is now four lines rather than a hand-built list of thirty-two
+    // arguments — the clearest single demonstration of what state + onEvent buys.
     MosqueAthanTheme {
         DisplayMediaSettingsPane(
-            config = mockConfig,
-            mediaList = mockMediaList,
-            slideshowSchedules = mockSlideshowSchedules,
-            dashboardBackgrounds = emptyList(),
-            announcements = emptyList(),
-            onUpdateThemeSettings = { _, _, _, _ -> },
-            onAddMediaItems = {},
-            onUpdateMediaItemPath = { _, _ -> },
-            onUpdateMediaItemUsed = { _, _ -> },
-            onDeleteMediaItem = {},
-            onReorderMediaItems = {},
-            onSelectCustomBackground = {},
-            onClearCustomBackground = {},
-            onAddSlideshowSchedule = { _, _, _, _ -> },
-            onUpdateSlideshowScheduleTime = { _, _, _ -> },
-            onUpdateSlideshowScheduleDays = { _, _ -> },
-            onUpdateSlideshowScheduleDates = { _, _ -> },
-            onDeleteSlideshowSchedule = {},
-            onUpdateSlideshowEnabled = {},
-            onPreviewSlideshow = {},
-            onAddDashboardBackground = {},
-            onUpdateDashboardBackgroundPath = { _, _ -> },
-            onDeleteDashboardBackground = {},
-            onUpdateDashboardBackgroundUsed = { _, _ -> },
-            onUpdateDashboardBackgroundOrder = {},
-            onUpdateDashboardSettings = { _, _, _ -> },
-            onAddAnnouncement = {},
-            onUpdateAnnouncement = { _, _ -> },
-            onDeleteAnnouncement = {},
-            onReorderAnnouncements = {},
-            isCompact = false
+            state = DisplayMediaUiState(
+                slideshow = SlideshowSettings(
+                    enabled = true,
+                    transitionType = "FADE",
+                    intervalSeconds = 8
+                )
+            ),
+            onEvent = {}
         )
     }
 }

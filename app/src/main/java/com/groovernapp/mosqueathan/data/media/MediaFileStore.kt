@@ -1,0 +1,110 @@
+package com.groovernapp.mosqueathan.data.media
+
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
+import android.util.Log
+import com.groovernapp.mosqueathan.util.ImageUtils
+import java.io.File
+import java.util.UUID
+
+/** A file the app now owns, copied out of whatever the picker handed over. */
+data class StoredMedia(val path: String, val isVideo: Boolean, val wasLarge: Boolean)
+
+/**
+ * Copies picked media into the app's own storage.
+ *
+ * Extracted so that ViewModels stop taking an Android `Context` as a method
+ * parameter. Six settings actions did — adding slideshow media, replacing a media
+ * file, the custom background, and the three dashboard-background operations — which
+ * meant every one of them had to be routed back through the screen.
+ *
+ * This is also the seam for step 6: picking and copying files is the part of the
+ * settings flow that genuinely cannot be shared, so this class is what becomes
+ * `expect`/`actual`.
+ *
+ * Images are downscaled in place after copying; a phone camera photo is several
+ * megabytes and would be decoded in full on every slideshow tick otherwise.
+ */
+class MediaFileStore(private val context: Context) {
+
+    fun storePresentationMedia(uri: Uri): StoredMedia? = copy(uri, PRESENTATION_DIR)
+
+    fun storeDashboardBackground(uri: Uri): StoredMedia? = copy(uri, DASHBOARD_DIR)
+
+    /** Overwrites an existing entry's file, keeping its path so the database row stands. */
+    fun replaceFile(path: String, uri: Uri): Boolean {
+        val target = File(path)
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                target.outputStream().use { input.copyTo(it) }
+            } ?: return false
+            if (!target.isVideoByExtension()) ImageUtils.downscaleImageInPlace(target)
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Could not replace $path", e)
+            false
+        }
+    }
+
+    fun storeCustomBackground(uri: Uri): StoredMedia? {
+        val target = File(context.filesDir, CUSTOM_BACKGROUND)
+        return try {
+            val large = isLarge(uri)
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                target.outputStream().use { input.copyTo(it) }
+            } ?: return null
+            ImageUtils.downscaleImageInPlace(target)
+            StoredMedia(target.absolutePath, isVideo = false, wasLarge = large)
+        } catch (e: Exception) {
+            Log.e(TAG, "Could not store the custom background", e)
+            null
+        }
+    }
+
+    private fun copy(uri: Uri, dirName: String): StoredMedia? {
+        return try {
+            val isVideo = context.contentResolver.getType(uri)?.startsWith("video") == true
+            val large = !isVideo && isLarge(uri)
+
+            val dir = File(context.filesDir, dirName).apply { if (!exists()) mkdirs() }
+            val name = "${dirName}_${System.currentTimeMillis()}_${UUID.randomUUID().toString().take(5)}" +
+                if (isVideo) ".mp4" else ".jpg"
+            val target = File(dir, name)
+
+            val copied = context.contentResolver.openInputStream(uri)?.use { input ->
+                target.outputStream().use { input.copyTo(it) }
+                true
+            } ?: false
+            if (!copied) return null
+
+            if (!isVideo) ImageUtils.downscaleImageInPlace(target)
+            StoredMedia(target.absolutePath, isVideo, large)
+        } catch (e: Exception) {
+            Log.e(TAG, "Could not store $uri", e)
+            null
+        }
+    }
+
+    /** Above this, downscaling is worth telling the user about. */
+    private fun isLarge(uri: Uri): Boolean = sizeOf(uri) > LARGE_BYTES
+
+    private fun sizeOf(uri: Uri): Long = try {
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val column = cursor.getColumnIndex(OpenableColumns.SIZE)
+            if (cursor.moveToFirst() && column != -1) cursor.getLong(column) else 0L
+        } ?: 0L
+    } catch (_: Exception) {
+        0L
+    }
+
+    private fun File.isVideoByExtension() = extension.equals("mp4", ignoreCase = true)
+
+    private companion object {
+        const val TAG = "MediaFileStore"
+        const val PRESENTATION_DIR = "presentation"
+        const val DASHBOARD_DIR = "dashboard"
+        const val CUSTOM_BACKGROUND = "custom_background.jpg"
+        const val LARGE_BYTES = 2L * 1024 * 1024
+    }
+}
