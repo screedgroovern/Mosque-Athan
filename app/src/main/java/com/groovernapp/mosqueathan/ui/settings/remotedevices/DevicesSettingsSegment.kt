@@ -23,6 +23,7 @@ import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
+import com.groovernapp.mosqueathan.ui.design.initialFocus
 
 @Composable
 fun DevicesSettingsSegment(
@@ -83,6 +84,7 @@ fun DevicesSettingsSegment(
             },
             confirmButton = {
                 MosquePrimaryButton(
+                    modifier = Modifier.initialFocus(),
                     onClick = {
                         if (config.pinCode.isEmpty() || transferPinInput == config.pinCode) {
                             onSetDeviceMaster(targetDevice.deviceId)

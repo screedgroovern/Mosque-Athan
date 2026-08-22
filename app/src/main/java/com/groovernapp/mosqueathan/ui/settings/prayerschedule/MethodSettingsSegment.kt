@@ -29,6 +29,7 @@ import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
 import com.groovernapp.mosqueathan.ui.design.focusHighlight
 import com.groovernapp.mosqueathan.ui.design.MosqueRadius
+import com.groovernapp.mosqueathan.ui.design.initialFocus
 
 @Composable
 fun MethodSettingsSegment(
@@ -321,7 +322,7 @@ fun MethodSettingsSegment(
                 }
             },
             confirmButton = {
-                MosqueTextButton(onClick = { showCitySearchDialog = false }) {
+                MosqueTextButton(onClick = { showCitySearchDialog = false }, modifier = Modifier.initialFocus()) {
                     Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = MosqueTheme.colors.accent)
                 }
             }
@@ -411,7 +412,7 @@ fun MethodSettingsSegment(
                 }
             },
             confirmButton = {
-                MosqueTextButton(onClick = { showSchedulesDialog = false }) {
+                MosqueTextButton(onClick = { showSchedulesDialog = false }, modifier = Modifier.initialFocus()) {
                     Text(com.groovernapp.mosqueathan.util.Lang.get("Close", "Tutup"), color = MosqueTheme.colors.accent)
                 }
             }
@@ -493,7 +494,7 @@ fun DatePickerField(
                         onValueChange("$y-$m-$d")
                     }
                     showDialog = false
-                }) {
+                }, modifier = Modifier.initialFocus()) {
                     Text(com.groovernapp.mosqueathan.util.Lang.get("OK", "OK"), color = MosqueTheme.colors.accent)
                 }
             },

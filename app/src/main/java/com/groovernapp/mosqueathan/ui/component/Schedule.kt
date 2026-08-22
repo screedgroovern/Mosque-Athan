@@ -41,6 +41,7 @@ import com.groovernapp.mosqueathan.ui.design.focusHighlight
 import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
+import com.groovernapp.mosqueathan.ui.design.initialFocus
 
 @Composable
 fun Schedule(
@@ -227,7 +228,8 @@ fun Schedule(
             },
             confirmButton = {
                 MosquePrimaryButton(
-                    onClick = { showAllSchedulesDialog = false }
+                    onClick = { showAllSchedulesDialog = false },
+                    modifier = Modifier.initialFocus()
                 ) {
                     Text(Lang.get("Close", "Tutup"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
                 }
@@ -774,7 +776,7 @@ fun MultiDatePickerDialog(
                         }
                     }
                     showSingleDatePicker = false
-                }) {
+                }, modifier = Modifier.initialFocus()) {
                     Text(Lang.get("OK", "OK"), color = MosqueTheme.colors.accent)
                 }
             },

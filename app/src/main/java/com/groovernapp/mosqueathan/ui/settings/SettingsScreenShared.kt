@@ -52,6 +52,7 @@ import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
+import com.groovernapp.mosqueathan.ui.design.initialFocus
 
 
 fun parseFooterTexts(raw: String): List<String> {
@@ -107,6 +108,7 @@ fun RunningTextListSettingsComponent(
             },
             confirmButton = {
                 MosquePrimaryButton(
+                    modifier = Modifier.initialFocus(),
                     onClick = {
                         editingIndex?.let { index ->
                             if (editTextValue.isNotBlank()) {
@@ -144,6 +146,7 @@ fun RunningTextListSettingsComponent(
             },
             confirmButton = {
                 MosquePrimaryButton(
+                    modifier = Modifier.initialFocus(),
                     onClick = {
                         if (addTextValue.isNotBlank()) {
                             onItemsChange(items + addTextValue.trim())
