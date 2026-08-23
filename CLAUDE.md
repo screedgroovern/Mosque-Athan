@@ -63,7 +63,8 @@ Per-prayer minute offsets are applied on top of whichever source wins. Imsak def
 Realm, accessed only through the singleton `data.MosqueConfigRepository.getInstance()`. All settings live in one row of `MosqueConfigEntity` (`id == "config"`), plus side tables for announcements, media, Friday media, connected devices, Kemenag schedules, slideshow/standby schedules, and dashboard backgrounds.
 
 Two things to know before touching the schema:
-- The config is a wide, flat Realm object, so `MosqueConfigEntity.kt` also hand-writes a `copy(...)` extension (Realm objects are not data classes) and `MosqueConfigRepository.updateConfig` copies field-by-field. **Adding a config field means editing all three places** — the entity, the `copy` extension, and the update path — or the value silently never persists.
+- Settings exist twice on purpose: `MosqueConfigEntity` (a Realm object, in `:app`) and `domain.MosqueConfig` (a `data class` in `core:model`). The repository maps between them at its own boundary, in `data/EntityMappers.kt`, so nothing above the repository sees Realm. **Adding a config field means editing the entity, the domain class, and the mapper** — and `MosqueConfigRepository.updateConfig` too if the field should be part of a whole-config write. The mapper is the one the compiler will not catch on its own, because every domain field has a default: a field left out of `toDomain()` still compiles and then reads back as its default no matter what is on disk. `EntityMappersTest` fails on exactly that, so add the field and run `./gradlew :app:test`.
+- `updateConfig` deliberately copies **47 of the 55** config fields. The other eight belong to dedicated setters (`updateThemeSettings`, `updateCustomBackground`, `updateShowSettingsOnTv`, the PIN), so a whole-object write would clobber a theme the caller never touched. Do not "fix" it by generating a total write.
 - `RealmConfiguration` uses `deleteRealmIfMigrationNeeded()` with an explicit `schemaVersion`. Bump the version when the schema changes and expect existing device data to be wiped; there are no migrations.
 
 Settings auto-save — there is no Save button. Every event writes to Realm immediately, and `getConfigFlow()` fans the change back out to all screens and web clients.
@@ -506,7 +507,7 @@ Line references are against `v.1.4.4`; re-check them before acting.
 | `zxing` is JVM/Android-only | device-pairing QR | per-platform implementation |
 | `BitmapFactory` | `util/ImageUtils.kt` | `expect`/`actual` |
 | `BootReceiver`, Manifest, leanback launcher | `app/` | stays Android-only, never shared |
-| `MosqueConfigEntity` is simultaneously the domain model and the Realm entity | `data/MosqueConfigEntity.kt` (191 LOC) | split into a `MosqueConfig` `data class` in `core:model` + a Room entity + a mapper |
+| ~~`MosqueConfigEntity` is simultaneously the domain model and the Realm entity~~ | ~~`data/MosqueConfigEntity.kt`~~ | **done** — nine plain data classes in `core:model`, mapped in `data/EntityMappers.kt`; the entity dropped 191 → 76 LOC and the hand-written `copy(...)` is gone |
 
 That last one is worth doing for its own sake: it is the root cause of the
 "adding a config field means editing all three places" problem documented under
@@ -564,6 +565,29 @@ because whether a focus ring draws depends on modifier order at runtime.
 **Practical cost to plan around:** the iOS target takes about 8½ minutes to compile
 from cold. Expect a much slower edit-build loop than the Android-only work so far.
 
+### Step 2, measured: the repository does not want one interface
+
+`ui:display` and `ui:settings` still cannot leave `:app`, because their ViewModels
+take `MosqueConfigRepository` — a concrete Realm class. That is step 2, and counting
+the call sites changes what step 2 should build.
+
+The repository has **70 public members**. Of those:
+
+| Consumer | Members used |
+|---|---|
+| the display screens (Dashboard/Adzan/Iqomah + `AppViewModel`) | **9**, all reads |
+| settings | 56 |
+| `SettingsServer` | 56 |
+
+So a single 70-member `ConfigRepository` interface would force the display screens to
+depend on 61 members they never call, and every one of those is a mutation. Two
+interfaces is the better shape, and the split falls out of the roles the app already
+has: the display is a pure function of state, the controller edits it.
+
+The nine the display needs: `getConfigFlow`, `getConfig`, `getMediaListFlow`,
+`getDashboardBackgroundsFlow`, `observeFridayMedia`, `getActiveAnnouncementsFlow`,
+`getStandbySchedules`, `getSlideshowSchedules`, `getIqomahMinutes`.
+
 ### Migration order
 
 Each step is independently reviewable. Steps 1–6 stay Android-only and remain
@@ -574,6 +598,7 @@ shippable throughout.
 | ~~1~~ | ~~`build-logic` + `core:model` + `core:prayer`; fix `PrayerCalculator` purity~~ **done** | yes |
 | 2 | Extract `ConfigRepository` interface + Koin; delete `getInstance()` | yes |
 | 3 | Realm → Room in `data`, shared entity/wire classes, `MosqueSnapshot` (see data-loss warning) | yes |
+| 3a | ~~Split the Realm entities from the domain model~~ **done**, ahead of the rest of step 3 — it touches no schema, so it carries none of step 3's data-loss risk, and both UI modules were blocked on it | yes |
 | 4 | `core:protocol`; `org.json` → kotlinx.serialization on both sides | yes |
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
 | 6 | `ui:settings` + `ui:display` into `commonMain` | yes |
