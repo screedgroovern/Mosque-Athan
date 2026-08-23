@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
+import com.groovernapp.mosqueathan.domain.ConnectedDevice
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
@@ -33,7 +33,7 @@ fun DevicesSettingsSegment(
     val devices = state.devices
     val onSetDeviceMaster: (String) -> Unit = { onEvent(RemoteDevicesEvent.DeviceMadeMaster(it)) }
     val onDeleteDevice: (String) -> Unit = { onEvent(RemoteDevicesEvent.DeviceRemoved(it)) }
-    var showTransferMasterDialog by remember { mutableStateOf<ConnectedDeviceEntity?>(null) }
+    var showTransferMasterDialog by remember { mutableStateOf<ConnectedDevice?>(null) }
     var transferPinInput by remember { mutableStateOf("") }
     var pinErrorMsg by remember { mutableStateOf<String?>(null) }
 
@@ -143,7 +143,7 @@ fun DevicesSettingsSegment(
         } else {
             val sortedDevices = remember(devices) {
                 devices.sortedWith(
-                    compareByDescending<ConnectedDeviceEntity> { it.isOnline }
+                    compareByDescending<ConnectedDevice> { it.isOnline }
                         .thenByDescending { it.lastSeen }
                 )
             }

@@ -10,7 +10,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.groovernapp.mosqueathan.domain.PrayerType
+import com.groovernapp.mosqueathan.domain.Announcement
+import com.groovernapp.mosqueathan.domain.ConnectedDevice
+import com.groovernapp.mosqueathan.domain.DashboardBackground
+import com.groovernapp.mosqueathan.domain.FridayMedia
+import com.groovernapp.mosqueathan.domain.KemenagSchedule
+import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.MosqueConfigDefaults
+import com.groovernapp.mosqueathan.domain.SlideshowSchedule
+import com.groovernapp.mosqueathan.domain.StandbySchedule
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
 import kotlinx.datetime.toLocalDateTime
@@ -70,17 +79,17 @@ class MosqueConfigRepository {
         }
     }
 
-    fun getConfigFlow(): Flow<MosqueConfigEntity> {
+    fun getConfigFlow(): Flow<MosqueConfig> {
         return realm.query<MosqueConfigEntity>("id == 'config'")
             .asFlow()
-            .map { it.list.firstOrNull() ?: MosqueConfigEntity() }
+            .map { it.list.firstOrNull()?.toDomain() ?: MosqueConfig() }
     }
 
-    fun getConfig(): MosqueConfigEntity {
-        return realm.query<MosqueConfigEntity>("id == 'config'").first().find() ?: MosqueConfigEntity()
+    fun getConfig(): MosqueConfig {
+        return realm.query<MosqueConfigEntity>("id == 'config'").first().find()?.toDomain() ?: MosqueConfig()
     }
 
-    suspend fun updateConfig(config: MosqueConfigEntity) {
+    suspend fun updateConfig(config: MosqueConfig) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -306,15 +315,15 @@ class MosqueConfigRepository {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
-                entity.latitude = MosqueConfig.DEFAULT_LATITUDE
-                entity.longitude = MosqueConfig.DEFAULT_LONGITUDE
-                entity.iqomahSubuh = MosqueConfig.IQOMAH_SUBUH
-                entity.iqomahDzuhur = MosqueConfig.IQOMAH_DZUHUR
-                entity.iqomahAshar = MosqueConfig.IQOMAH_ASHAR
-                entity.iqomahMaghrib = MosqueConfig.IQOMAH_MAGHRIB
-                entity.iqomahIsya = MosqueConfig.IQOMAH_ISYA
-                entity.calculationMethodName = MosqueConfig.DEFAULT_CALCULATION_METHOD
-                entity.adzanLeadMinutes = MosqueConfig.DEFAULT_ADZAN_LEAD_MINUTES
+                entity.latitude = MosqueConfigDefaults.DEFAULT_LATITUDE
+                entity.longitude = MosqueConfigDefaults.DEFAULT_LONGITUDE
+                entity.iqomahSubuh = MosqueConfigDefaults.IQOMAH_SUBUH
+                entity.iqomahDzuhur = MosqueConfigDefaults.IQOMAH_DZUHUR
+                entity.iqomahAshar = MosqueConfigDefaults.IQOMAH_ASHAR
+                entity.iqomahMaghrib = MosqueConfigDefaults.IQOMAH_MAGHRIB
+                entity.iqomahIsya = MosqueConfigDefaults.IQOMAH_ISYA
+                entity.calculationMethodName = MosqueConfigDefaults.DEFAULT_CALCULATION_METHOD
+                entity.adzanLeadMinutes = MosqueConfigDefaults.DEFAULT_ADZAN_LEAD_MINUTES
                 entity.customBackgroundPath = ""
                 entity.transitionType = "FADE"
                 entity.slideIntervalSeconds = 10
@@ -335,9 +344,9 @@ class MosqueConfigRepository {
                 entity.kemenagTargetDate = ""
                 entity.adzanFooterText = "Mohon bersiap dan hentikan aktivitas sementara."
                 entity.iqomahFooterText = "Mari merapatkan dan meluruskan shaf."
-                entity.standbyModeEnabled = MosqueConfig.DEFAULT_STANDBY_ENABLED
-                entity.standbyStartTime = MosqueConfig.DEFAULT_STANDBY_START_TIME
-                entity.standbyEndTime = MosqueConfig.DEFAULT_STANDBY_END_TIME
+                entity.standbyModeEnabled = MosqueConfigDefaults.DEFAULT_STANDBY_ENABLED
+                entity.standbyStartTime = MosqueConfigDefaults.DEFAULT_STANDBY_START_TIME
+                entity.standbyEndTime = MosqueConfigDefaults.DEFAULT_STANDBY_END_TIME
 
                 // Friday settings defaults
                 entity.jumatEnabled = false
@@ -397,14 +406,14 @@ class MosqueConfigRepository {
         }
     }
 
-    fun getMediaListFlow(): Flow<List<MediaEntity>> {
+    fun getMediaListFlow(): Flow<List<Media>> {
         return realm.query<MediaEntity>()
             .asFlow()
-            .map { it.list.sortedBy { media -> media.sortOrder } }
+            .map { result -> result.list.sortedBy { media -> media.sortOrder }.map { it.toDomain() } }
     }
 
-    fun getMediaList(): List<MediaEntity> {
-        return realm.query<MediaEntity>().find().sortedBy { it.sortOrder }
+    fun getMediaList(): List<Media> {
+        return realm.query<MediaEntity>().find().sortedBy { it.sortOrder }.map { it.toDomain() }
     }
 
     suspend fun addMediaItem(filePath: String, isVideo: Boolean) {
@@ -457,14 +466,14 @@ class MosqueConfigRepository {
         }
     }
 
-    fun observeFridayMedia(): Flow<List<FridayMediaEntity>> {
+    fun observeFridayMedia(): Flow<List<FridayMedia>> {
         return realm.query<FridayMediaEntity>()
             .asFlow()
-            .map { it.list.sortedBy { media -> media.sortOrder } }
+            .map { result -> result.list.sortedBy { media -> media.sortOrder }.map { it.toDomain() } }
     }
 
-    fun getFridayMedia(): List<FridayMediaEntity> {
-        return realm.query<FridayMediaEntity>().find().sortedBy { it.sortOrder }
+    fun getFridayMedia(): List<FridayMedia> {
+        return realm.query<FridayMediaEntity>().find().sortedBy { it.sortOrder }.map { it.toDomain() }
     }
 
     suspend fun addFridayMedia(filePath: String, isVideo: Boolean) {
@@ -568,14 +577,14 @@ class MosqueConfigRepository {
     }
 
 
-    fun getSlideshowSchedulesFlow(): Flow<List<SlideshowScheduleEntity>> {
+    fun getSlideshowSchedulesFlow(): Flow<List<SlideshowSchedule>> {
         return realm.query<SlideshowScheduleEntity>()
             .asFlow()
-            .map { it.list.sortedBy { s -> s.startTime } }
+            .map { result -> result.list.sortedBy { s -> s.startTime }.map { it.toDomain() } }
     }
 
-    fun getSlideshowSchedules(): List<SlideshowScheduleEntity> {
-        return realm.query<SlideshowScheduleEntity>().find().sortedBy { it.startTime }
+    fun getSlideshowSchedules(): List<SlideshowSchedule> {
+        return realm.query<SlideshowScheduleEntity>().find().sortedBy { it.startTime }.map { it.toDomain() }
     }
 
     suspend fun addSlideshowSchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String, customId: String = "") {
@@ -652,14 +661,14 @@ class MosqueConfigRepository {
         }
     }
 
-    fun getStandbySchedulesFlow(): Flow<List<StandbyScheduleEntity>> {
+    fun getStandbySchedulesFlow(): Flow<List<StandbySchedule>> {
         return realm.query<StandbyScheduleEntity>()
             .asFlow()
-            .map { it.list.sortedBy { s -> s.startTime } }
+            .map { result -> result.list.sortedBy { s -> s.startTime }.map { it.toDomain() } }
     }
 
-    fun getStandbySchedules(): List<StandbyScheduleEntity> {
-        return realm.query<StandbyScheduleEntity>().find().sortedBy { it.startTime }
+    fun getStandbySchedules(): List<StandbySchedule> {
+        return realm.query<StandbyScheduleEntity>().find().sortedBy { it.startTime }.map { it.toDomain() }
     }
 
     suspend fun addStandbySchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String, customId: String = "") {
@@ -740,15 +749,15 @@ class MosqueConfigRepository {
     }
 
     // Announcement methods
-    fun getActiveAnnouncementsFlow(): Flow<List<AnnouncementEntity>> {
+    fun getActiveAnnouncementsFlow(): Flow<List<Announcement>> {
         return realm.query<AnnouncementEntity>("isActive == true")
             .asFlow()
-            .map { it.list.sortedBy { ann -> ann.position } }
+            .map { result -> result.list.sortedBy { ann -> ann.position }.map { it.toDomain() } }
     }
 
-    fun getActiveAnnouncements(): List<AnnouncementEntity> {
+    fun getActiveAnnouncements(): List<Announcement> {
         return realm.query<AnnouncementEntity>("isActive == true").find()
-            .sortedBy { it.position }
+            .sortedBy { it.position }.map { it.toDomain() }
     }
 
     suspend fun addAnnouncement(content: String, customId: String = "") {
@@ -801,17 +810,17 @@ class MosqueConfigRepository {
     }
 
     // Device and PIN management
-    fun getConnectedDevicesFlow(): Flow<List<ConnectedDeviceEntity>> {
+    fun getConnectedDevicesFlow(): Flow<List<ConnectedDevice>> {
         return realm.query<ConnectedDeviceEntity>()
             .asFlow()
-            .map { it.list }
+            .map { result -> result.list.map { it.toDomain() } }
     }
 
-    fun getConnectedDevices(): List<ConnectedDeviceEntity> {
-        return realm.query<ConnectedDeviceEntity>().find()
+    fun getConnectedDevices(): List<ConnectedDevice> {
+        return realm.query<ConnectedDeviceEntity>().find().map { it.toDomain() }
     }
 
-    suspend fun registerDevice(id: String, name: String): ConnectedDeviceEntity {
+    suspend fun registerDevice(id: String, name: String): ConnectedDevice {
         return realm.write {
             val existing = query<ConnectedDeviceEntity>("deviceId == $0", id).first().find()
             if (existing != null) {
@@ -831,7 +840,7 @@ class MosqueConfigRepository {
                     lastSeen = System.currentTimeMillis()
                     isOnline = true
                 })
-            }
+            }.toDomain()
         }
     }
 
@@ -989,11 +998,11 @@ class MosqueConfigRepository {
         }
     }
 
-    fun getKemenagSchedule(cityId: String, dateString: String): KemenagScheduleEntity? {
-        return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString == $1", cityId, dateString).first().find()
+    fun getKemenagSchedule(cityId: String, dateString: String): KemenagSchedule? {
+        return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString == $1", cityId, dateString).first().find()?.toDomain()
     }
 
-    suspend fun saveKemenagSchedule(schedule: KemenagScheduleEntity) {
+    suspend fun saveKemenagSchedule(schedule: KemenagSchedule) {
         realm.write {
             val existing = query<KemenagScheduleEntity>("dateString == $0 AND cityId == $1", schedule.dateString, schedule.cityId).first().find()
             if (existing != null) {
@@ -1006,12 +1015,12 @@ class MosqueConfigRepository {
                 existing.maghrib = schedule.maghrib
                 existing.isya = schedule.isya
             } else {
-                copyToRealm(schedule)
+                copyToRealm(schedule.toEntity())
             }
         }
     }
 
-    suspend fun saveKemenagSchedules(schedules: List<KemenagScheduleEntity>) {
+    suspend fun saveKemenagSchedules(schedules: List<KemenagSchedule>) {
         realm.write {
             for (schedule in schedules) {
                 val existing = query<KemenagScheduleEntity>("dateString == $0 AND cityId == $1", schedule.dateString, schedule.cityId).first().find()
@@ -1025,30 +1034,30 @@ class MosqueConfigRepository {
                     existing.maghrib = schedule.maghrib
                     existing.isya = schedule.isya
                 } else {
-                    copyToRealm(schedule)
+                    copyToRealm(schedule.toEntity())
                 }
             }
         }
     }
 
-    fun getKemenagSchedulesFlow(cityId: String): Flow<List<KemenagScheduleEntity>> {
+    fun getKemenagSchedulesFlow(cityId: String): Flow<List<KemenagSchedule>> {
         val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
         return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString >= $1", cityId, todayStr)
             .asFlow()
-            .map { it.list.sortedBy { s -> s.dateString } }
+            .map { result -> result.list.sortedBy { s -> s.dateString }.map { it.toDomain() } }
     }
 
-    fun getKemenagSchedules(cityId: String): List<KemenagScheduleEntity> {
+    fun getKemenagSchedules(cityId: String): List<KemenagSchedule> {
         val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-        return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString >= $1", cityId, todayStr).find().sortedBy { it.dateString }
+        return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString >= $1", cityId, todayStr).find().sortedBy { it.dateString }.map { it.toDomain() }
     }
 
-    fun getDashboardBackgrounds(): List<DashboardBackgroundEntity> {
-        return realm.query<DashboardBackgroundEntity>().find().sortedBy { it.sortOrder }
+    fun getDashboardBackgrounds(): List<DashboardBackground> {
+        return realm.query<DashboardBackgroundEntity>().find().sortedBy { it.sortOrder }.map { it.toDomain() }
     }
 
-    fun getDashboardBackgroundsFlow(): Flow<List<DashboardBackgroundEntity>> {
-        return realm.query<DashboardBackgroundEntity>().asFlow().map { it.list.sortedBy { s -> s.sortOrder } }
+    fun getDashboardBackgroundsFlow(): Flow<List<DashboardBackground>> {
+        return realm.query<DashboardBackgroundEntity>().asFlow().map { result -> result.list.sortedBy { s -> s.sortOrder }.map { it.toDomain() } }
     }
 
     suspend fun addDashboardBackground(filePath: String, customId: String = "") {

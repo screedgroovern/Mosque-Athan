@@ -3,11 +3,10 @@ package com.groovernapp.mosqueathan.ui.settings.prayerschedule
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
+import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import com.groovernapp.mosqueathan.data.remote.pushConfig
-import com.groovernapp.mosqueathan.data.copy
 import com.groovernapp.mosqueathan.domain.PrayerType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -107,7 +106,7 @@ class PrayerScheduleViewModel(
      * The push is not optional: on a controller, a setting that only lands locally
      * looks saved and never takes effect.
      */
-    private fun edit(change: (MosqueConfigEntity) -> MosqueConfigEntity) {
+    private fun edit(change: (MosqueConfig) -> MosqueConfig) {
         viewModelScope.launch {
             val updated = change(repository.getConfig())
             repository.updateConfig(updated)
@@ -162,7 +161,7 @@ class PrayerScheduleViewModel(
     }
 }
 
-private fun MosqueConfigEntity.offsetFor(prayer: PrayerType): Int = when (prayer) {
+private fun MosqueConfig.offsetFor(prayer: PrayerType): Int = when (prayer) {
     PrayerType.IMSAK -> offsetImsak
     PrayerType.SUBUH -> offsetSubuh
     PrayerType.SYURUQ -> offsetSyuruq
@@ -172,7 +171,7 @@ private fun MosqueConfigEntity.offsetFor(prayer: PrayerType): Int = when (prayer
     PrayerType.ISYA -> offsetIsya
 }
 
-private fun MosqueConfigEntity.withOffset(prayer: PrayerType, minutes: Int): MosqueConfigEntity =
+private fun MosqueConfig.withOffset(prayer: PrayerType, minutes: Int): MosqueConfig =
     when (prayer) {
         PrayerType.IMSAK -> copy(offsetImsak = minutes)
         PrayerType.SUBUH -> copy(offsetSubuh = minutes)

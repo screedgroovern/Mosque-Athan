@@ -3,11 +3,11 @@ package com.groovernapp.mosqueathan.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
-import com.groovernapp.mosqueathan.data.AnnouncementEntity
-import com.groovernapp.mosqueathan.data.MediaEntity
-import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
-import com.groovernapp.mosqueathan.data.FridayMediaEntity
+import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.Announcement
+import com.groovernapp.mosqueathan.domain.Media
+import com.groovernapp.mosqueathan.domain.ConnectedDevice
+import com.groovernapp.mosqueathan.domain.FridayMedia
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -20,22 +20,22 @@ class SettingsViewModel(
 ) : ViewModel() {
 
 
-    private val _configState = MutableStateFlow(MosqueConfigEntity())
+    private val _configState = MutableStateFlow(MosqueConfig())
     val configState = _configState.asStateFlow()
 
-    private val _announcementsState = MutableStateFlow<List<AnnouncementEntity>>(emptyList())
+    private val _announcementsState = MutableStateFlow<List<Announcement>>(emptyList())
     val announcementsState = _announcementsState.asStateFlow()
 
-    private val _devicesState = MutableStateFlow<List<ConnectedDeviceEntity>>(emptyList())
+    private val _devicesState = MutableStateFlow<List<ConnectedDevice>>(emptyList())
     val devicesState = _devicesState.asStateFlow()
 
-    private val _mediaListState = MutableStateFlow<List<MediaEntity>>(emptyList())
+    private val _mediaListState = MutableStateFlow<List<Media>>(emptyList())
     val mediaListState = _mediaListState.asStateFlow()
 
-    private val _fridayMediaListState = MutableStateFlow<List<FridayMediaEntity>>(emptyList())
+    private val _fridayMediaListState = MutableStateFlow<List<FridayMedia>>(emptyList())
     val fridayMediaListState = _fridayMediaListState.asStateFlow()
 
-    private val _kemenagSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.KemenagScheduleEntity>>(emptyList())
+    private val _kemenagSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.domain.KemenagSchedule>>(emptyList())
     val kemenagSchedulesState = _kemenagSchedulesState.asStateFlow()
 
     init {
@@ -134,7 +134,7 @@ class SettingsViewModel(
         }
     }
 
-    fun updateConfig(config: MosqueConfigEntity) {
+    fun updateConfig(config: MosqueConfig) {
         viewModelScope.launch {
             repository.updateConfig(config)
         }
@@ -372,7 +372,7 @@ class SettingsViewModel(
         }
     }
 
-    fun deleteMediaItem(item: MediaEntity) {
+    fun deleteMediaItem(item: Media) {
         viewModelScope.launch {
             try {
                 val file = java.io.File(item.filePath)
@@ -384,13 +384,13 @@ class SettingsViewModel(
         }
     }
 
-    private val _slideshowSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.SlideshowScheduleEntity>>(emptyList())
+    private val _slideshowSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.domain.SlideshowSchedule>>(emptyList())
     val slideshowSchedulesState = _slideshowSchedulesState.asStateFlow()
 
-    private val _dashboardBackgroundsState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.DashboardBackgroundEntity>>(emptyList())
+    private val _dashboardBackgroundsState = MutableStateFlow<List<com.groovernapp.mosqueathan.domain.DashboardBackground>>(emptyList())
     val dashboardBackgroundsState = _dashboardBackgroundsState.asStateFlow()
 
-    private val _standbySchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.data.StandbyScheduleEntity>>(emptyList())
+    private val _standbySchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.domain.StandbySchedule>>(emptyList())
     val standbySchedulesState = _standbySchedulesState.asStateFlow()
 
     init {
@@ -957,7 +957,7 @@ class SettingsViewModel(
         }
     }
 
-    fun deleteFridayMediaItem(item: FridayMediaEntity) {
+    fun deleteFridayMediaItem(item: FridayMedia) {
         viewModelScope.launch {
             try {
                 val file = java.io.File(item.filePath)

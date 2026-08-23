@@ -39,11 +39,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.R
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
-import com.groovernapp.mosqueathan.data.copy
-import com.groovernapp.mosqueathan.data.AnnouncementEntity
-import com.groovernapp.mosqueathan.data.MediaEntity
-import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
+import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.Announcement
+import com.groovernapp.mosqueathan.domain.Media
+import com.groovernapp.mosqueathan.domain.ConnectedDevice
 import com.groovernapp.mosqueathan.server.SettingsServer
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay

@@ -10,7 +10,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.util.Lang
-import com.groovernapp.mosqueathan.data.StandbyScheduleEntity
+import com.groovernapp.mosqueathan.domain.StandbySchedule
 import com.groovernapp.mosqueathan.ui.component.Schedule
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.focusHighlight
@@ -21,12 +21,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 fun StandbySettingsSegment(
     standbyModeEnabled: Boolean,
     onStandbyModeEnabledChange: (Boolean) -> Unit,
-    standbySchedules: List<StandbyScheduleEntity>,
+    standbySchedules: List<StandbySchedule>,
     onAddStandbySchedule: (day: String, isSpecificDate: Boolean, startTime: String, endTime: String) -> Unit,
     onDeleteStandbySchedule: (String) -> Unit,
-    onUpdateStandbyScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit,
-    onUpdateStandbyScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit,
-    onUpdateStandbyScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit
+    onUpdateStandbyScheduleTime: (com.groovernapp.mosqueathan.domain.ScheduleItem, String, String) -> Unit,
+    onUpdateStandbyScheduleDays: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit,
+    onUpdateStandbyScheduleDates: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.xxl),

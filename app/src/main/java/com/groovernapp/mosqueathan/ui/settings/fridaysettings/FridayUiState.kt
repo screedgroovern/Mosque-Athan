@@ -1,8 +1,8 @@
 package com.groovernapp.mosqueathan.ui.settings.fridaysettings
 
 import android.net.Uri
-import com.groovernapp.mosqueathan.data.FridayMediaEntity
-import com.groovernapp.mosqueathan.data.MediaEntity
+import com.groovernapp.mosqueathan.domain.FridayMedia
+import com.groovernapp.mosqueathan.domain.Media
 
 /** The Quran recitation played before the Friday sermon. */
 data class MurottalSettings(
@@ -26,8 +26,8 @@ data class FridaySlideshowSettings(
     val intervalSeconds: Int = 0,
     val intervalUnit: String = "",
     val videoWaitUntilEnd: Boolean = false,
-    val media: List<FridayMediaEntity> = emptyList(),
-    val globalMedia: List<MediaEntity> = emptyList()
+    val media: List<FridayMedia> = emptyList(),
+    val globalMedia: List<Media> = emptyList()
 )
 
 /**
@@ -84,7 +84,7 @@ sealed interface FridayEvent {
     // Friday media
     data class MediaAdded(val uris: List<Uri>) : FridayEvent
     data class MediaFileReplaced(val id: String, val uri: Uri) : FridayEvent
-    data class MediaDeleted(val item: FridayMediaEntity) : FridayEvent
+    data class MediaDeleted(val item: FridayMedia) : FridayEvent
     data class MediaReordered(val ids: List<String>) : FridayEvent
 
     /** Opens the picker; handled by the pane, which owns the launcher. */

@@ -2,9 +2,8 @@ package com.groovernapp.mosqueathan.ui.settings.fridaysettings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
+import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
-import com.groovernapp.mosqueathan.data.copy
 import com.groovernapp.mosqueathan.data.media.MediaFileStore
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import com.groovernapp.mosqueathan.data.remote.pushConfig
@@ -130,7 +129,7 @@ class FridayViewModel(
      * looks saved and never takes effect. `pushConfig` carries every `jumat*` and
      * `murottal*` field, so one call covers this whole category.
      */
-    private fun edit(change: (MosqueConfigEntity) -> MosqueConfigEntity) {
+    private fun edit(change: (MosqueConfig) -> MosqueConfig) {
         viewModelScope.launch {
             val updated = change(repository.getConfig())
             repository.updateConfig(updated)

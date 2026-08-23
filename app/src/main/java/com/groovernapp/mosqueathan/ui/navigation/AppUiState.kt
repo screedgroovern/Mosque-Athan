@@ -9,8 +9,8 @@ sealed interface AppUiState {
     data class Dashboard(
         val state: DashboardUiState.Dashboard,
         val customBackgroundPath: String,
-        val mediaList: List<com.groovernapp.mosqueathan.data.MediaEntity>,
-        val dashboardBackgrounds: List<com.groovernapp.mosqueathan.data.DashboardBackgroundEntity> = emptyList(),
+        val mediaList: List<com.groovernapp.mosqueathan.domain.Media>,
+        val dashboardBackgrounds: List<com.groovernapp.mosqueathan.domain.DashboardBackground> = emptyList(),
         val transitionType: String,
         val slideIntervalSeconds: Int,
         val videoWaitUntilEnd: Boolean,
@@ -34,8 +34,8 @@ sealed interface AppUiState {
     ) : AppUiState
 
     data class Settings(
-        val config: com.groovernapp.mosqueathan.data.MosqueConfigEntity,
-        val announcements: List<com.groovernapp.mosqueathan.data.AnnouncementEntity>,
-        val mediaList: List<com.groovernapp.mosqueathan.data.MediaEntity>
+        val config: com.groovernapp.mosqueathan.domain.MosqueConfig,
+        val announcements: List<com.groovernapp.mosqueathan.domain.Announcement>,
+        val mediaList: List<com.groovernapp.mosqueathan.domain.Media>
     ) : AppUiState
 }

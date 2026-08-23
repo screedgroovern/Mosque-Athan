@@ -3,7 +3,6 @@ package com.groovernapp.mosqueathan.ui.settings.displaymedia
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
-import com.groovernapp.mosqueathan.data.copy
 import com.groovernapp.mosqueathan.data.media.MediaFileStore
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import kotlinx.coroutines.flow.MutableStateFlow

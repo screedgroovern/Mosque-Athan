@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
-import com.groovernapp.mosqueathan.data.StandbyScheduleEntity
+import com.groovernapp.mosqueathan.domain.StandbySchedule
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
@@ -21,12 +21,12 @@ import com.groovernapp.mosqueathan.ui.design.component.MosqueSectionCard
 fun SystemMaintenanceSettingsPane(
     standbyModeEnabled: Boolean,
     onStandbyModeEnabledChange: (Boolean) -> Unit,
-    standbySchedules: List<StandbyScheduleEntity>,
+    standbySchedules: List<StandbySchedule>,
     onAddStandbySchedule: (String, Boolean, String, String) -> Unit,
     onDeleteStandbySchedule: (String) -> Unit,
-    onUpdateStandbyScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit,
-    onUpdateStandbyScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit,
-    onUpdateStandbyScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit,
+    onUpdateStandbyScheduleTime: (com.groovernapp.mosqueathan.domain.ScheduleItem, String, String) -> Unit,
+    onUpdateStandbyScheduleDays: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit,
+    onUpdateStandbyScheduleDates: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit,
     onResetToDefaults: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -65,20 +65,8 @@ fun SystemMaintenanceSettingsPane(
 @Composable
 fun SystemMaintenanceSettingsPanePreview() {
     val mockSchedules = listOf(
-        StandbyScheduleEntity().apply {
-            id = "1"
-            day = "Monday"
-            isSpecificDate = false
-            startTime = "22:00"
-            endTime = "04:00"
-        },
-        StandbyScheduleEntity().apply {
-            id = "2"
-            day = "2026-06-18"
-            isSpecificDate = true
-            startTime = "12:00"
-            endTime = "13:00"
-        }
+        StandbySchedule(id = "1", day = "Monday", isSpecificDate = false, startTime = "22:00", endTime = "04:00"),
+        StandbySchedule(id = "2", day = "2026-06-18", isSpecificDate = true, startTime = "12:00", endTime = "13:00")
     )
     SystemMaintenanceSettingsPane(
         standbyModeEnabled = true,

@@ -87,18 +87,7 @@ class RealmRepositoryTest {
         val cityId = "58a2fc6ed39fd083f55d4182bf88826d"
 
         repository.saveKemenagSchedule(
-            com.groovernapp.mosqueathan.data.KemenagScheduleEntity().apply {
-                this.dateString = "2026-06-05"
-                this.cityId = cityId
-                this.imsak = "04:27"
-                this.subuh = "04:37"
-                this.terbit = "05:54"
-                this.dhuha = "06:24"
-                this.dzuhur = "11:55"
-                this.ashar = "15:16"
-                this.maghrib = "17:48"
-                this.isya = "19:02"
-            }
+            com.groovernapp.mosqueathan.domain.KemenagSchedule(dateString = "2026-06-05", cityId = cityId, imsak = "04:27", subuh = "04:37", terbit = "05:54", dhuha = "06:24", dzuhur = "11:55", ashar = "15:16", maghrib = "17:48", isya = "19:02")
         )
 
         val source = com.groovernapp.mosqueathan.data.RealmKemenagScheduleSource(repository)

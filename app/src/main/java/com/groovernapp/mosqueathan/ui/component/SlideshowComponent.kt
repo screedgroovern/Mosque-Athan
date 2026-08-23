@@ -31,7 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.groovernapp.mosqueathan.data.MediaEntity
+import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.TransitionAnimationRow
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.DropdownAdjustmentRow
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
@@ -395,24 +395,9 @@ fun <T> SlideshowComponent(
 @Composable
 fun SlideshowComponentPreview() {
     val mockMediaList = listOf(
-        MediaEntity().apply {
-            id = "1"
-            filePath = "path/to/image1.jpg"
-            isVideo = false
-            isUsed = true
-        },
-        MediaEntity().apply {
-            id = "2"
-            filePath = "path/to/video1.mp4"
-            isVideo = true
-            isUsed = false
-        },
-        MediaEntity().apply {
-            id = "3"
-            filePath = "path/to/image2.jpg"
-            isVideo = false
-            isUsed = true
-        }
+        Media(id = "1", filePath = "path/to/image1.jpg", isVideo = false, isUsed = true),
+        Media(id = "2", filePath = "path/to/video1.mp4", isVideo = true, isUsed = false),
+        Media(id = "3", filePath = "path/to/image2.jpg", isVideo = false, isUsed = true)
     )
 
     MosqueAthanTheme {
@@ -442,7 +427,7 @@ fun SlideshowComponentPreview() {
 fun SlideshowComponentEmptyPreview() {
     MosqueAthanTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
-            SlideshowComponent<MediaEntity>(
+            SlideshowComponent<Media>(
                 items = emptyList(),
                 keySelector = { it.id },
                 filePathSelector = { it.filePath },

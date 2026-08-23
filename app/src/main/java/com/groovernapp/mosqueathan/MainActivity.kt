@@ -20,7 +20,6 @@ import com.groovernapp.mosqueathan.ui.navigation.AppViewModel
 import com.groovernapp.mosqueathan.ui.settings.SettingsScreen
 import com.groovernapp.mosqueathan.ui.settings.SettingsViewModel
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
-import com.groovernapp.mosqueathan.data.copy
 import android.view.KeyEvent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box

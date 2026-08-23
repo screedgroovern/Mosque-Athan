@@ -5,7 +5,7 @@ import com.batoulapps.adhan2.Coordinates
 import com.batoulapps.adhan2.PrayerTimes
 import com.batoulapps.adhan2.data.DateComponents
 import com.groovernapp.mosqueathan.domain.PrayerType
-import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.MosqueConfigDefaults
 import com.groovernapp.mosqueathan.domain.KemenagScheduleSource
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
@@ -38,9 +38,9 @@ object PrayerCalculator {
 
     fun calculate(
         now: Instant = Clock.System.now(),
-        latitude: Double = MosqueConfig.DEFAULT_LATITUDE,
-        longitude: Double = MosqueConfig.DEFAULT_LONGITUDE,
-        calculationMethodName: String = MosqueConfig.DEFAULT_CALCULATION_METHOD,
+        latitude: Double = MosqueConfigDefaults.DEFAULT_LATITUDE,
+        longitude: Double = MosqueConfigDefaults.DEFAULT_LONGITUDE,
+        calculationMethodName: String = MosqueConfigDefaults.DEFAULT_CALCULATION_METHOD,
         offsetImsak: Int = 0,
         offsetSubuh: Int = 0,
         offsetSyuruq: Int = 0,

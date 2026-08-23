@@ -15,8 +15,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.groovernapp.mosqueathan.R
-import com.groovernapp.mosqueathan.data.DashboardBackgroundEntity
-import com.groovernapp.mosqueathan.data.MediaEntity
+import com.groovernapp.mosqueathan.domain.DashboardBackground
+import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import androidx.compose.ui.input.pointer.pointerInput
@@ -31,8 +31,8 @@ import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 fun DashboardScreen(
     state: DashboardUiState,
     customBackgroundPath: String,
-    mediaList: List<MediaEntity>,
-    dashboardBackgrounds: List<DashboardBackgroundEntity> = emptyList(),
+    mediaList: List<Media>,
+    dashboardBackgrounds: List<DashboardBackground> = emptyList(),
     transitionType: String,
     slideIntervalSeconds: Int,
     videoWaitUntilEnd: Boolean,
@@ -52,11 +52,7 @@ fun DashboardScreen(
     val slideshowList = remember(mediaList, includeDefaultImage) {
         val list = mediaList.toMutableList()
         if (includeDefaultImage) {
-            val defaultMedia = MediaEntity().apply {
-                id = "default_bg"
-                filePath = ""
-                isVideo = false
-            }
+            val defaultMedia = Media(id = "default_bg", filePath = "", isVideo = false)
             list.add(0, defaultMedia)
         }
         list
@@ -285,7 +281,7 @@ private fun DashboardBgSlide(filePath: String) {
 
 @Composable
 private fun MediaSlide(
-    media: MediaEntity,
+    media: Media,
     videoWaitUntilEnd: Boolean,
     onVideoEnded: () -> Unit
 ) {

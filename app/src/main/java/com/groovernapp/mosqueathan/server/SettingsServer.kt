@@ -5,9 +5,8 @@ import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
-import com.groovernapp.mosqueathan.data.KemenagScheduleEntity
-import com.groovernapp.mosqueathan.data.DashboardBackgroundEntity
-import com.groovernapp.mosqueathan.data.copy
+import com.groovernapp.mosqueathan.domain.KemenagSchedule
+import com.groovernapp.mosqueathan.domain.DashboardBackground
 import kotlinx.coroutines.*
 import org.json.JSONArray
 import org.json.JSONObject
@@ -874,7 +873,7 @@ class SettingsServer(
         val devices = repository.getConnectedDevices()
         val devicesArray = JSONArray()
         val onlineIds = connectionDeviceMap.values.toSet()
-        val sortedDevices = devices.sortedWith(compareByDescending<com.groovernapp.mosqueathan.data.ConnectedDeviceEntity> { onlineIds.contains(it.deviceId) }
+        val sortedDevices = devices.sortedWith(compareByDescending<com.groovernapp.mosqueathan.domain.ConnectedDevice> { onlineIds.contains(it.deviceId) }
             .thenByDescending { it.lastSeen })
 
         for (dev in sortedDevices) {
@@ -1159,24 +1158,26 @@ class SettingsServer(
                     if (schedulesArray != null) {
                         scope.launch(Dispatchers.IO) {
                             try {
-                                val list = mutableListOf<KemenagScheduleEntity>()
+                                val list = mutableListOf<KemenagSchedule>()
                                 for (i in 0 until schedulesArray.length()) {
                                     val dayObj = schedulesArray.getJSONObject(i)
                                     val dateStr = dayObj.optString("dateString")
                                     val cityId = dayObj.optString("cityId")
                                     if (dateStr.isNotEmpty() && cityId.isNotEmpty()) {
-                                        list.add(KemenagScheduleEntity().apply {
-                                            this.dateString = dateStr
-                                            this.cityId = cityId
-                                            this.imsak = dayObj.optString("imsak")
-                                            this.subuh = dayObj.optString("subuh")
-                                            this.terbit = dayObj.optString("terbit")
-                                            this.dhuha = dayObj.optString("dhuha")
-                                            this.dzuhur = dayObj.optString("dzuhur")
-                                            this.ashar = dayObj.optString("ashar")
-                                            this.maghrib = dayObj.optString("maghrib")
-                                            this.isya = dayObj.optString("isya")
-                                        })
+                                        list.add(
+                                            KemenagSchedule(
+                                                dateString = dateStr,
+                                                cityId = cityId,
+                                                imsak = dayObj.optString("imsak"),
+                                                subuh = dayObj.optString("subuh"),
+                                                terbit = dayObj.optString("terbit"),
+                                                dhuha = dayObj.optString("dhuha"),
+                                                dzuhur = dayObj.optString("dzuhur"),
+                                                ashar = dayObj.optString("ashar"),
+                                                maghrib = dayObj.optString("maghrib"),
+                                                isya = dayObj.optString("isya")
+                                            )
+                                        )
                                     }
                                 }
                                 repository.saveKemenagSchedules(list)

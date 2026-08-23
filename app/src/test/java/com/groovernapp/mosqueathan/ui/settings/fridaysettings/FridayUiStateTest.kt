@@ -1,6 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings.fridaysettings
 
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
+import com.groovernapp.mosqueathan.domain.MosqueConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -74,24 +74,7 @@ class FridayUiStateTest {
         // The pane is auto-save, so each of these must map to a stored field. This
         // is the list the ViewModel reads, spelled out: if a rename drops one, the
         // setting silently stops persisting.
-        val config = MosqueConfigEntity().apply {
-            jumatEnabled = true
-            jumatStartTime = "11:15"
-            jumatEndTime = "13:05"
-            offsetJumat = -4
-            jumatStandbyOnly = false
-            jumatWarningText = "Khutbah dimulai"
-            murottalEnabled = true
-            murottalStartDelay = 12
-            murottalAudioPaths = "content://a,content://b"
-            jumatSlideshowEnabled = true
-            includeGlobalSlideshow = true
-            selectedGlobalSlideIds = "id-1,id-2"
-            jumatTransitionType = "ZOOM"
-            jumatSlideIntervalSeconds = 25
-            jumatSlideIntervalUnit = "MINUTES"
-            jumatVideoWaitUntilEnd = false
-        }
+        val config = MosqueConfig(jumatEnabled = true, jumatStartTime = "11:15", jumatEndTime = "13:05", offsetJumat = -4, jumatStandbyOnly = false, jumatWarningText = "Khutbah dimulai", murottalEnabled = true, murottalStartDelay = 12, murottalAudioPaths = "content://a,content://b", jumatSlideshowEnabled = true, includeGlobalSlideshow = true, selectedGlobalSlideIds = "id-1,id-2", jumatTransitionType = "ZOOM", jumatSlideIntervalSeconds = 25, jumatSlideIntervalUnit = "MINUTES", jumatVideoWaitUntilEnd = false)
 
         val state = FridayUiState(
             enabled = config.jumatEnabled,

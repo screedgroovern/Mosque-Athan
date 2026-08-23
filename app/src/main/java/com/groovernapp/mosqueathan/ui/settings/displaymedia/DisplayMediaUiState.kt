@@ -1,11 +1,11 @@
 package com.groovernapp.mosqueathan.ui.settings.displaymedia
 
 import android.net.Uri
-import com.groovernapp.mosqueathan.data.AnnouncementEntity
-import com.groovernapp.mosqueathan.data.DashboardBackgroundEntity
-import com.groovernapp.mosqueathan.data.MediaEntity
-import com.groovernapp.mosqueathan.data.ScheduleItem
-import com.groovernapp.mosqueathan.data.SlideshowScheduleEntity
+import com.groovernapp.mosqueathan.domain.Announcement
+import com.groovernapp.mosqueathan.domain.DashboardBackground
+import com.groovernapp.mosqueathan.domain.Media
+import com.groovernapp.mosqueathan.domain.ScheduleItem
+import com.groovernapp.mosqueathan.domain.SlideshowSchedule
 
 /** The slideshow that replaces the dashboard on a schedule. */
 data class SlideshowSettings(
@@ -14,8 +14,8 @@ data class SlideshowSettings(
     val intervalSeconds: Int = 0,
     val videoWaitUntilEnd: Boolean = false,
     val includeDefaultImage: Boolean = true,
-    val media: List<MediaEntity> = emptyList(),
-    val schedules: List<SlideshowScheduleEntity> = emptyList()
+    val media: List<Media> = emptyList(),
+    val schedules: List<SlideshowSchedule> = emptyList()
 )
 
 /** The dashboard's rotating background images. */
@@ -23,7 +23,7 @@ data class DashboardSettings(
     val randomize: Boolean = false,
     val transitionType: String = "",
     val transitionIntervalSeconds: Int = 0,
-    val backgrounds: List<DashboardBackgroundEntity> = emptyList()
+    val backgrounds: List<DashboardBackground> = emptyList()
 )
 
 /**
@@ -36,7 +36,7 @@ data class DashboardSettings(
 data class DisplayMediaUiState(
     val slideshow: SlideshowSettings = SlideshowSettings(),
     val dashboard: DashboardSettings = DashboardSettings(),
-    val announcements: List<AnnouncementEntity> = emptyList(),
+    val announcements: List<Announcement> = emptyList(),
     /** A one-shot message for the user; cleared by [DisplayMediaEvent.NoticeShown]. */
     val notice: String? = null
 )
@@ -65,7 +65,7 @@ sealed interface DisplayMediaEvent {
     data class MediaAdded(val uris: List<Uri>) : DisplayMediaEvent
     data class MediaFileReplaced(val id: String, val uri: Uri) : DisplayMediaEvent
     data class MediaUsedToggled(val id: String, val used: Boolean) : DisplayMediaEvent
-    data class MediaDeleted(val item: MediaEntity) : DisplayMediaEvent
+    data class MediaDeleted(val item: Media) : DisplayMediaEvent
     data class MediaReordered(val ids: List<String>) : DisplayMediaEvent
 
     // Slideshow schedules

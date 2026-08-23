@@ -65,10 +65,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.groovernapp.mosqueathan.R
-import com.groovernapp.mosqueathan.data.DashboardBackgroundEntity
-import com.groovernapp.mosqueathan.data.MediaEntity
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
-import com.groovernapp.mosqueathan.data.SlideshowScheduleEntity
+import com.groovernapp.mosqueathan.domain.DashboardBackground
+import com.groovernapp.mosqueathan.domain.Media
+import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.SlideshowSchedule
 import com.groovernapp.mosqueathan.ui.component.Schedule
 import com.groovernapp.mosqueathan.ui.component.SlideshowComponent
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
@@ -104,17 +104,17 @@ fun ThemeSettingsSegment(
     val onUpdateMediaItemUsed: (String, Boolean) -> Unit = { id, used ->
         onEvent(DisplayMediaEvent.MediaUsedToggled(id, used))
     }
-    val onDeleteMediaItem: (MediaEntity) -> Unit = { onEvent(DisplayMediaEvent.MediaDeleted(it)) }
+    val onDeleteMediaItem: (Media) -> Unit = { onEvent(DisplayMediaEvent.MediaDeleted(it)) }
     val onReorderMediaItems: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.MediaReordered(it)) }
     val onClearCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundCleared) }
     val onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit = { d, sp, st, en ->
         onEvent(DisplayMediaEvent.ScheduleAdded(d, sp, st, en))
     }
-    val onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit =
+    val onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.domain.ScheduleItem, String, String) -> Unit =
         { sc, st, en -> onEvent(DisplayMediaEvent.ScheduleTimeChanged(sc, st, en)) }
-    val onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+    val onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit =
         { sc, d -> onEvent(DisplayMediaEvent.ScheduleDaysChanged(sc, d)) }
-    val onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+    val onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit =
         { sc, d -> onEvent(DisplayMediaEvent.ScheduleDatesChanged(sc, d)) }
     val onDeleteSlideshowSchedule: (String) -> Unit = { onEvent(DisplayMediaEvent.ScheduleDeleted(it)) }
     val onPreviewSlideshow: () -> Unit = { onEvent(DisplayMediaEvent.SlideshowPreviewRequested) }
@@ -240,18 +240,18 @@ fun DashboardTabContent(
     val onAddMediaItem: () -> Unit = { onEvent(DisplayMediaEvent.MediaPickRequested) }
     val onUpdateMediaItemPath: (String) -> Unit = { onEvent(DisplayMediaEvent.MediaFilePickRequested(it)) }
     val onUpdateMediaItemUsed: (String, Boolean) -> Unit = { id, u -> onEvent(DisplayMediaEvent.MediaUsedToggled(id, u)) }
-    val onDeleteMediaItem: (MediaEntity) -> Unit = { onEvent(DisplayMediaEvent.MediaDeleted(it)) }
+    val onDeleteMediaItem: (Media) -> Unit = { onEvent(DisplayMediaEvent.MediaDeleted(it)) }
     val onReorderMediaItems: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.MediaReordered(it)) }
     val onSelectCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundPickRequested) }
     val onClearCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundCleared) }
     val onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit = { d, sp, st, en ->
         onEvent(DisplayMediaEvent.ScheduleAdded(d, sp, st, en))
     }
-    val onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit =
+    val onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.domain.ScheduleItem, String, String) -> Unit =
         { sc, st, en -> onEvent(DisplayMediaEvent.ScheduleTimeChanged(sc, st, en)) }
-    val onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+    val onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit =
         { sc, d -> onEvent(DisplayMediaEvent.ScheduleDaysChanged(sc, d)) }
-    val onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+    val onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit =
         { sc, d -> onEvent(DisplayMediaEvent.ScheduleDatesChanged(sc, d)) }
     val onDeleteSlideshowSchedule: (String) -> Unit = { onEvent(DisplayMediaEvent.ScheduleDeleted(it)) }
     val onPreviewSlideshow: () -> Unit = { onEvent(DisplayMediaEvent.SlideshowPreviewRequested) }
@@ -406,18 +406,18 @@ fun SlideshowTabContent(
     val onAddMediaItem: () -> Unit = { onEvent(DisplayMediaEvent.MediaPickRequested) }
     val onUpdateMediaItemPath: (String) -> Unit = { onEvent(DisplayMediaEvent.MediaFilePickRequested(it)) }
     val onUpdateMediaItemUsed: (String, Boolean) -> Unit = { id, u -> onEvent(DisplayMediaEvent.MediaUsedToggled(id, u)) }
-    val onDeleteMediaItem: (MediaEntity) -> Unit = { onEvent(DisplayMediaEvent.MediaDeleted(it)) }
+    val onDeleteMediaItem: (Media) -> Unit = { onEvent(DisplayMediaEvent.MediaDeleted(it)) }
     val onReorderMediaItems: (List<String>) -> Unit = { onEvent(DisplayMediaEvent.MediaReordered(it)) }
     val onSelectCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundPickRequested) }
     val onClearCustomBackground: () -> Unit = { onEvent(DisplayMediaEvent.CustomBackgroundCleared) }
     val onAddSlideshowSchedule: (String, Boolean, String, String) -> Unit = { d, sp, st, en ->
         onEvent(DisplayMediaEvent.ScheduleAdded(d, sp, st, en))
     }
-    val onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.data.ScheduleItem, String, String) -> Unit =
+    val onUpdateSlideshowScheduleTime: (com.groovernapp.mosqueathan.domain.ScheduleItem, String, String) -> Unit =
         { sc, st, en -> onEvent(DisplayMediaEvent.ScheduleTimeChanged(sc, st, en)) }
-    val onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+    val onUpdateSlideshowScheduleDays: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit =
         { sc, d -> onEvent(DisplayMediaEvent.ScheduleDaysChanged(sc, d)) }
-    val onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.data.ScheduleItem, String) -> Unit =
+    val onUpdateSlideshowScheduleDates: (com.groovernapp.mosqueathan.domain.ScheduleItem, String) -> Unit =
         { sc, d -> onEvent(DisplayMediaEvent.ScheduleDatesChanged(sc, d)) }
     val onDeleteSlideshowSchedule: (String) -> Unit = { onEvent(DisplayMediaEvent.ScheduleDeleted(it)) }
     val onPreviewSlideshow: () -> Unit = { onEvent(DisplayMediaEvent.SlideshowPreviewRequested) }
@@ -962,7 +962,7 @@ fun ThemeSettingsSegmentPreview() {
 
 @Composable
 fun RunningTextSettingsCard(
-    announcements: List<com.groovernapp.mosqueathan.data.AnnouncementEntity>,
+    announcements: List<com.groovernapp.mosqueathan.domain.Announcement>,
     onAdd: (String) -> Unit,
     onEdit: (String, String) -> Unit,
     onDelete: (String) -> Unit,

@@ -1,6 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings.prayerschedule
 
-import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.MosqueConfigDefaults
 import com.groovernapp.mosqueathan.domain.PrayerType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -54,9 +54,9 @@ class PrayerScheduleUiStateTest {
     @Test
     fun defaultsComeFromTheAppDefaults() {
         val state = PrayerScheduleUiState()
-        assertEquals(MosqueConfig.DEFAULT_LATITUDE, state.latitude, 0.0)
-        assertEquals(MosqueConfig.DEFAULT_LONGITUDE, state.longitude, 0.0)
-        assertEquals(MosqueConfig.DEFAULT_CALCULATION_METHOD, state.calculationMethod)
+        assertEquals(MosqueConfigDefaults.DEFAULT_LATITUDE, state.latitude, 0.0)
+        assertEquals(MosqueConfigDefaults.DEFAULT_LONGITUDE, state.longitude, 0.0)
+        assertEquals(MosqueConfigDefaults.DEFAULT_CALCULATION_METHOD, state.calculationMethod)
     }
 
     @Test

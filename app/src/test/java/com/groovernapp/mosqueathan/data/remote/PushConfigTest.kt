@@ -1,6 +1,6 @@
 package com.groovernapp.mosqueathan.data.remote
 
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
+import com.groovernapp.mosqueathan.domain.MosqueConfig
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -17,12 +17,12 @@ import org.junit.Test
  */
 class PushConfigTest {
 
-    private fun payloadFor(config: MosqueConfigEntity) =
+    private fun payloadFor(config: MosqueConfig) =
         JSONObject().apply { pushConfig(config) }
 
     @Test
     fun theSettingsEveryCategoryEditsAreAllPresent() {
-        val payload = payloadFor(MosqueConfigEntity())
+        val payload = payloadFor(MosqueConfig())
         listOf(
             // prayer schedule
             "latitude", "longitude", "calculationMethodName",
@@ -46,7 +46,7 @@ class PushConfigTest {
         // spelled out rather than covered by the summary above because the pane was
         // the last one migrated, and a missing field here would look exactly like a
         // working save.
-        val payload = payloadFor(MosqueConfigEntity())
+        val payload = payloadFor(MosqueConfig())
         listOf(
             "jumatEnabled", "jumatStartTime", "jumatEndTime", "offsetJumat",
             "jumatStandbyOnly", "jumatWarningText",
@@ -61,14 +61,7 @@ class PushConfigTest {
 
     @Test
     fun fridayValuesAreCarriedRatherThanDefaulted() {
-        val config = MosqueConfigEntity().apply {
-            jumatEnabled = true
-            offsetJumat = -4
-            jumatStandbyOnly = true
-            murottalStartDelay = 12
-            jumatSlideIntervalUnit = "MINUTES"
-            selectedGlobalSlideIds = "id-1,id-2"
-        }
+        val config = MosqueConfig(jumatEnabled = true, offsetJumat = -4, jumatStandbyOnly = true, murottalStartDelay = 12, jumatSlideIntervalUnit = "MINUTES", selectedGlobalSlideIds = "id-1,id-2")
         val payload = payloadFor(config)
         assertTrue(payload.getBoolean("jumatEnabled"))
         assertEquals(-4, payload.getInt("offsetJumat"))
@@ -80,13 +73,7 @@ class PushConfigTest {
 
     @Test
     fun valuesAreCarriedRatherThanDefaulted() {
-        val config = MosqueConfigEntity().apply {
-            latitude = -6.2
-            iqomahMaghrib = 7
-            offsetSubuh = -3
-            calculationMethodName = "KEMENAG"
-            adzanLeadMinutes = 5
-        }
+        val config = MosqueConfig(latitude = -6.2, iqomahMaghrib = 7, offsetSubuh = -3, calculationMethodName = "KEMENAG", adzanLeadMinutes = 5)
         val payload = payloadFor(config)
         assertEquals(-6.2, payload.getDouble("latitude"), 0.0)
         assertEquals(7, payload.getInt("iqomahMaghrib"))
@@ -99,6 +86,6 @@ class PushConfigTest {
     fun thePayloadIsNotEmpty() {
         // Guards the whole mechanism: an empty pushConfig would make every test
         // above pass vacuously if they only checked for absence.
-        assertTrue(payloadFor(MosqueConfigEntity()).length() > 30)
+        assertTrue(payloadFor(MosqueConfig()).length() > 30)
     }
 }

@@ -59,7 +59,7 @@ import kotlinx.coroutines.launch
  * Remote & Devices.
  *
  * The first pane restructured to `state` + `onEvent`. It previously took eleven
- * parameters — a whole `MosqueConfigEntity` plus nine callbacks plus `isCompact` —
+ * parameters — a whole `MosqueConfig` plus nine callbacks plus `isCompact` —
  * and the whole category now reads from one state and reports through one channel.
  *
  * Screen size comes from [LocalWindowClass] rather than a threaded `isCompact`

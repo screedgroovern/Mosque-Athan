@@ -1,6 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings.adzaniqomah
 
-import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.MosqueConfigDefaults
 import com.groovernapp.mosqueathan.domain.PrayerType
 
 /**
@@ -27,7 +27,7 @@ val IQOMAH_PRAYERS: List<PrayerType> = listOf(
  * parameters.
  */
 data class AdzanIqomahUiState(
-    val adzanLeadMinutes: Int = MosqueConfig.DEFAULT_ADZAN_LEAD_MINUTES,
+    val adzanLeadMinutes: Int = MosqueConfigDefaults.DEFAULT_ADZAN_LEAD_MINUTES,
     val iqomahMinutes: Map<PrayerType, Int> = emptyMap(),
     val adzanFooterText: String = "",
     val iqomahFooterText: String = ""

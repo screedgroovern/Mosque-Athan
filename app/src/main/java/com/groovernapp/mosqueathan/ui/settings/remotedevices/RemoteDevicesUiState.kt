@@ -1,6 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings.remotedevices
 
-import com.groovernapp.mosqueathan.data.ConnectedDeviceEntity
+import com.groovernapp.mosqueathan.domain.ConnectedDevice
 
 /** Whether this device drives the display or controls another one. */
 enum class ConnectivityMode(val wireValue: String) {
@@ -16,7 +16,7 @@ enum class ConnectivityMode(val wireValue: String) {
 /**
  * Everything the Remote & Devices pane draws.
  *
- * Replaces eleven separate parameters. The pane took `config: MosqueConfigEntity`
+ * Replaces eleven separate parameters. The pane took `config: MosqueConfig`
  * and used four of its fifty-five fields, so it recomposed on every unrelated
  * setting change; this state carries only those four.
  */
@@ -25,7 +25,7 @@ data class RemoteDevicesUiState(
     val showSettingsOnTv: Boolean = false,
     val remoteTvIp: String = "",
     val pinCode: String = "",
-    val devices: List<ConnectedDeviceEntity> = emptyList()
+    val devices: List<ConnectedDevice> = emptyList()
 ) {
     val isServer: Boolean get() = mode == ConnectivityMode.Server
 }

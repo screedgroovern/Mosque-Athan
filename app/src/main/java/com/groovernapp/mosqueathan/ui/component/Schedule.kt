@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.groovernapp.mosqueathan.data.ScheduleItem
+import com.groovernapp.mosqueathan.domain.ScheduleItem
 import com.groovernapp.mosqueathan.util.Lang
 import java.util.Calendar
 import java.util.TimeZone

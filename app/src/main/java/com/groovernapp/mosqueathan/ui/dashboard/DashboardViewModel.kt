@@ -232,7 +232,7 @@ class DashboardViewModel(
         return hour * 60 + minute
     }
 
-    private fun isFridayBeforeAdzan(config: com.groovernapp.mosqueathan.data.MosqueConfigEntity, result: PrayerResult, now: LocalDateTime): Boolean {
+    private fun isFridayBeforeAdzan(config: com.groovernapp.mosqueathan.domain.MosqueConfig, result: PrayerResult, now: LocalDateTime): Boolean {
         if (!config.jumatEnabled) return false
         if (now.dayOfWeek != kotlinx.datetime.DayOfWeek.FRIDAY) return false
         val currentMinutes = now.hour * 60 + now.minute
@@ -241,7 +241,7 @@ class DashboardViewModel(
         return currentMinutes in startMins until adzanMins
     }
 
-    private fun isFridayModeActive(config: com.groovernapp.mosqueathan.data.MosqueConfigEntity, now: LocalDateTime): Boolean {
+    private fun isFridayModeActive(config: com.groovernapp.mosqueathan.domain.MosqueConfig, now: LocalDateTime): Boolean {
         if (!config.jumatEnabled) return false
         if (now.dayOfWeek != kotlinx.datetime.DayOfWeek.FRIDAY) return false
         val currentMinutes = now.hour * 60 + now.minute

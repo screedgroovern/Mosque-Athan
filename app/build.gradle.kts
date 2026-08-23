@@ -71,6 +71,9 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.koin.test)
     testImplementation(libs.json)
+    // The mapper test enumerates entity fields reflectively, so a field added to an
+    // entity but forgotten in the mapper fails rather than reading back as a default.
+    testImplementation(kotlin("reflect"))
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 

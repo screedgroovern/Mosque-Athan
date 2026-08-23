@@ -1,21 +1,21 @@
 package com.groovernapp.mosqueathan.data
 
-import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.MosqueConfigDefaults
 import io.realm.kotlin.types.RealmObject
 import io.realm.kotlin.types.annotations.PrimaryKey
 
 class MosqueConfigEntity : RealmObject {
     @PrimaryKey
     var id: String = "config"
-    var latitude: Double = MosqueConfig.DEFAULT_LATITUDE
-    var longitude: Double = MosqueConfig.DEFAULT_LONGITUDE
-    var iqomahSubuh: Int = MosqueConfig.IQOMAH_SUBUH
-    var iqomahDzuhur: Int = MosqueConfig.IQOMAH_DZUHUR
-    var iqomahAshar: Int = MosqueConfig.IQOMAH_ASHAR
-    var iqomahMaghrib: Int = MosqueConfig.IQOMAH_MAGHRIB
-    var iqomahIsya: Int = MosqueConfig.IQOMAH_ISYA
-    var calculationMethodName: String = MosqueConfig.DEFAULT_CALCULATION_METHOD
-    var adzanLeadMinutes: Int = MosqueConfig.DEFAULT_ADZAN_LEAD_MINUTES
+    var latitude: Double = MosqueConfigDefaults.DEFAULT_LATITUDE
+    var longitude: Double = MosqueConfigDefaults.DEFAULT_LONGITUDE
+    var iqomahSubuh: Int = MosqueConfigDefaults.IQOMAH_SUBUH
+    var iqomahDzuhur: Int = MosqueConfigDefaults.IQOMAH_DZUHUR
+    var iqomahAshar: Int = MosqueConfigDefaults.IQOMAH_ASHAR
+    var iqomahMaghrib: Int = MosqueConfigDefaults.IQOMAH_MAGHRIB
+    var iqomahIsya: Int = MosqueConfigDefaults.IQOMAH_ISYA
+    var calculationMethodName: String = MosqueConfigDefaults.DEFAULT_CALCULATION_METHOD
+    var adzanLeadMinutes: Int = MosqueConfigDefaults.DEFAULT_ADZAN_LEAD_MINUTES
     var customBackgroundPath: String = ""
     var transitionType: String = "FADE"
     var slideIntervalSeconds: Int = 10
@@ -36,9 +36,9 @@ class MosqueConfigEntity : RealmObject {
     var kemenagTargetDate: String = ""
     var adzanFooterText: String = "Mohon bersiap dan hentikan aktivitas sementara."
     var iqomahFooterText: String = "Mari merapatkan dan meluruskan shaf."
-    var standbyModeEnabled: Boolean = MosqueConfig.DEFAULT_STANDBY_ENABLED
-    var standbyStartTime: String = MosqueConfig.DEFAULT_STANDBY_START_TIME
-    var standbyEndTime: String = MosqueConfig.DEFAULT_STANDBY_END_TIME
+    var standbyModeEnabled: Boolean = MosqueConfigDefaults.DEFAULT_STANDBY_ENABLED
+    var standbyStartTime: String = MosqueConfigDefaults.DEFAULT_STANDBY_START_TIME
+    var standbyEndTime: String = MosqueConfigDefaults.DEFAULT_STANDBY_END_TIME
 
     // Connectivity & Remote settings
     var connectivityMode: String = "SERVER" // "SERVER" or "REMOTE"
@@ -73,119 +73,4 @@ class MosqueConfigEntity : RealmObject {
     var jumatSlideIntervalSeconds: Int = 10
     var jumatSlideIntervalUnit: String = "SECONDS"
     var jumatVideoWaitUntilEnd: Boolean = true
-}
-fun MosqueConfigEntity.copy(
-    id: String = this.id,
-    latitude: Double = this.latitude,
-    longitude: Double = this.longitude,
-    iqomahSubuh: Int = this.iqomahSubuh,
-    iqomahDzuhur: Int = this.iqomahDzuhur,
-    iqomahAshar: Int = this.iqomahAshar,
-    iqomahMaghrib: Int = this.iqomahMaghrib,
-    iqomahIsya: Int = this.iqomahIsya,
-    calculationMethodName: String = this.calculationMethodName,
-    adzanLeadMinutes: Int = this.adzanLeadMinutes,
-    customBackgroundPath: String = this.customBackgroundPath,
-    transitionType: String = this.transitionType,
-    slideIntervalSeconds: Int = this.slideIntervalSeconds,
-    videoWaitUntilEnd: Boolean = this.videoWaitUntilEnd,
-    showSettingsOnTv: Boolean = this.showSettingsOnTv,
-    pinCode: String = this.pinCode,
-    offsetImsak: Int = this.offsetImsak,
-    offsetSubuh: Int = this.offsetSubuh,
-    offsetSyuruq: Int = this.offsetSyuruq,
-    offsetDzuhur: Int = this.offsetDzuhur,
-    offsetAshar: Int = this.offsetAshar,
-    offsetMaghrib: Int = this.offsetMaghrib,
-    offsetIsya: Int = this.offsetIsya,
-    includeDefaultImage: Boolean = this.includeDefaultImage,
-    kemenagCityId: String = this.kemenagCityId,
-    kemenagCityName: String = this.kemenagCityName,
-    kemenagDuration: String = this.kemenagDuration,
-    kemenagTargetDate: String = this.kemenagTargetDate,
-    adzanFooterText: String = this.adzanFooterText,
-    iqomahFooterText: String = this.iqomahFooterText,
-    standbyModeEnabled: Boolean = this.standbyModeEnabled,
-    standbyStartTime: String = this.standbyStartTime,
-    standbyEndTime: String = this.standbyEndTime,
-    connectivityMode: String = this.connectivityMode,
-    remoteTvIp: String = this.remoteTvIp,
-    dashboardRandomize: Boolean = this.dashboardRandomize,
-    dashboardTransitionType: String = this.dashboardTransitionType,
-    dashboardTransitionInterval: Int = this.dashboardTransitionInterval,
-    slideshowEnabled: Boolean = this.slideshowEnabled,
-    jumatEnabled: Boolean = this.jumatEnabled,
-    jumatStartTime: String = this.jumatStartTime,
-    jumatEndTime: String = this.jumatEndTime,
-    offsetJumat: Int = this.offsetJumat,
-    jumatStandbyOnly: Boolean = this.jumatStandbyOnly,
-    jumatWarningText: String = this.jumatWarningText,
-    murottalEnabled: Boolean = this.murottalEnabled,
-    murottalStartDelay: Int = this.murottalStartDelay,
-    murottalAudioPaths: String = this.murottalAudioPaths,
-    jumatSlideshowEnabled: Boolean = this.jumatSlideshowEnabled,
-    includeGlobalSlideshow: Boolean = this.includeGlobalSlideshow,
-    selectedGlobalSlideIds: String = this.selectedGlobalSlideIds,
-    jumatTransitionType: String = this.jumatTransitionType,
-    jumatSlideIntervalSeconds: Int = this.jumatSlideIntervalSeconds,
-    jumatSlideIntervalUnit: String = this.jumatSlideIntervalUnit,
-    jumatVideoWaitUntilEnd: Boolean = this.jumatVideoWaitUntilEnd
-): MosqueConfigEntity {
-    val newEntity = MosqueConfigEntity()
-    newEntity.id = id
-    newEntity.latitude = latitude
-    newEntity.longitude = longitude
-    newEntity.iqomahSubuh = iqomahSubuh
-    newEntity.iqomahDzuhur = iqomahDzuhur
-    newEntity.iqomahAshar = iqomahAshar
-    newEntity.iqomahMaghrib = iqomahMaghrib
-    newEntity.iqomahIsya = iqomahIsya
-    newEntity.calculationMethodName = calculationMethodName
-    newEntity.adzanLeadMinutes = adzanLeadMinutes
-    newEntity.customBackgroundPath = customBackgroundPath
-    newEntity.transitionType = transitionType
-    newEntity.slideIntervalSeconds = slideIntervalSeconds
-    newEntity.videoWaitUntilEnd = videoWaitUntilEnd
-    newEntity.showSettingsOnTv = showSettingsOnTv
-    newEntity.pinCode = pinCode
-    newEntity.offsetImsak = offsetImsak
-    newEntity.offsetSubuh = offsetSubuh
-    newEntity.offsetSyuruq = offsetSyuruq
-    newEntity.offsetDzuhur = offsetDzuhur
-    newEntity.offsetAshar = offsetAshar
-    newEntity.offsetMaghrib = offsetMaghrib
-    newEntity.offsetIsya = offsetIsya
-    newEntity.includeDefaultImage = includeDefaultImage
-    newEntity.kemenagCityId = kemenagCityId
-    newEntity.kemenagCityName = kemenagCityName
-    newEntity.kemenagDuration = kemenagDuration
-    newEntity.kemenagTargetDate = kemenagTargetDate
-    newEntity.adzanFooterText = adzanFooterText
-    newEntity.iqomahFooterText = iqomahFooterText
-    newEntity.standbyModeEnabled = standbyModeEnabled
-    newEntity.standbyStartTime = standbyStartTime
-    newEntity.standbyEndTime = standbyEndTime
-    newEntity.connectivityMode = connectivityMode
-    newEntity.remoteTvIp = remoteTvIp
-    newEntity.dashboardRandomize = dashboardRandomize
-    newEntity.dashboardTransitionType = dashboardTransitionType
-    newEntity.dashboardTransitionInterval = dashboardTransitionInterval
-    newEntity.slideshowEnabled = slideshowEnabled
-    newEntity.jumatEnabled = jumatEnabled
-    newEntity.jumatStartTime = jumatStartTime
-    newEntity.jumatEndTime = jumatEndTime
-    newEntity.offsetJumat = offsetJumat
-    newEntity.jumatStandbyOnly = jumatStandbyOnly
-    newEntity.jumatWarningText = jumatWarningText
-    newEntity.murottalEnabled = murottalEnabled
-    newEntity.murottalStartDelay = murottalStartDelay
-    newEntity.murottalAudioPaths = murottalAudioPaths
-    newEntity.jumatSlideshowEnabled = jumatSlideshowEnabled
-    newEntity.includeGlobalSlideshow = includeGlobalSlideshow
-    newEntity.selectedGlobalSlideIds = selectedGlobalSlideIds
-    newEntity.jumatTransitionType = jumatTransitionType
-    newEntity.jumatSlideIntervalSeconds = jumatSlideIntervalSeconds
-    newEntity.jumatSlideIntervalUnit = jumatSlideIntervalUnit
-    newEntity.jumatVideoWaitUntilEnd = jumatVideoWaitUntilEnd
-    return newEntity
 }

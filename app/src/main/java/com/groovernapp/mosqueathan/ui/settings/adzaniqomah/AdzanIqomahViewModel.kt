@@ -2,11 +2,10 @@ package com.groovernapp.mosqueathan.ui.settings.adzaniqomah
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
+import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import com.groovernapp.mosqueathan.data.remote.pushConfig
-import com.groovernapp.mosqueathan.data.copy
 import com.groovernapp.mosqueathan.domain.PrayerType
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -64,7 +63,7 @@ class AdzanIqomahViewModel(
      * The push is not optional: on a controller, a setting that only lands locally
      * looks saved and never takes effect.
      */
-    private fun edit(change: (MosqueConfigEntity) -> MosqueConfigEntity) {
+    private fun edit(change: (MosqueConfig) -> MosqueConfig) {
         viewModelScope.launch {
             val updated = change(repository.getConfig())
             repository.updateConfig(updated)
@@ -73,7 +72,7 @@ class AdzanIqomahViewModel(
     }
 }
 
-private fun MosqueConfigEntity.iqomahFor(prayer: PrayerType): Int = when (prayer) {
+private fun MosqueConfig.iqomahFor(prayer: PrayerType): Int = when (prayer) {
     PrayerType.SUBUH -> iqomahSubuh
     PrayerType.DZUHUR -> iqomahDzuhur
     PrayerType.ASHAR -> iqomahAshar
@@ -82,7 +81,7 @@ private fun MosqueConfigEntity.iqomahFor(prayer: PrayerType): Int = when (prayer
     PrayerType.IMSAK, PrayerType.SYURUQ -> 0
 }
 
-private fun MosqueConfigEntity.withIqomah(prayer: PrayerType, minutes: Int): MosqueConfigEntity =
+private fun MosqueConfig.withIqomah(prayer: PrayerType, minutes: Int): MosqueConfig =
     when (prayer) {
         PrayerType.SUBUH -> copy(iqomahSubuh = minutes)
         PrayerType.DZUHUR -> copy(iqomahDzuhur = minutes)

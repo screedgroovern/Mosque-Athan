@@ -57,7 +57,7 @@ class AdzanIqomahUiStateTest {
     @Test
     fun theDefaultLeadTimeMatchesTheAppDefault() {
         assertEquals(
-            com.groovernapp.mosqueathan.domain.MosqueConfig.DEFAULT_ADZAN_LEAD_MINUTES,
+            com.groovernapp.mosqueathan.domain.MosqueConfigDefaults.DEFAULT_ADZAN_LEAD_MINUTES,
             AdzanIqomahUiState().adzanLeadMinutes
         )
     }

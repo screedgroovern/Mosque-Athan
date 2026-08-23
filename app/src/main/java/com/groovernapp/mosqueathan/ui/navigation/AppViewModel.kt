@@ -2,7 +2,7 @@ package com.groovernapp.mosqueathan.ui.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.groovernapp.mosqueathan.data.MosqueConfigEntity
+import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.ui.adzan.AdzanViewModel
 import com.groovernapp.mosqueathan.ui.dashboard.DashboardUiState
@@ -61,7 +61,7 @@ class AppViewModel(
     private var lastAdzanBeepedSecond = -1
     var isPreviewMode = false
         private set
-    private var currentConfig = MosqueConfigEntity()
+    private var currentConfig = MosqueConfig()
 
     private val _appState = MutableStateFlow<AppUiState>(
         AppUiState.Dashboard(
@@ -226,7 +226,7 @@ class AppViewModel(
         }
     }
 
-    private fun getIqomahMinutesFromConfig(prayerType: PrayerType, config: MosqueConfigEntity): Int {
+    private fun getIqomahMinutesFromConfig(prayerType: PrayerType, config: MosqueConfig): Int {
         return when (prayerType) {
             PrayerType.SUBUH -> config.iqomahSubuh
             PrayerType.DZUHUR -> config.iqomahDzuhur
@@ -366,14 +366,9 @@ class AppViewModel(
         _activeScreen.value = ActiveScreen.Dashboard
         isPreviewMode = false
 
-        val mappedFridayMediaFlow = repository.observeFridayMedia().map { fmList: List<com.groovernapp.mosqueathan.data.FridayMediaEntity> ->
+        val mappedFridayMediaFlow = repository.observeFridayMedia().map { fmList: List<com.groovernapp.mosqueathan.domain.FridayMedia> ->
             fmList.map { fm ->
-                com.groovernapp.mosqueathan.data.MediaEntity().apply {
-                    id = fm.id
-                    filePath = fm.filePath
-                    isVideo = fm.isVideo
-                    sortOrder = fm.sortOrder
-                }
+                com.groovernapp.mosqueathan.domain.Media(id = fm.id, filePath = fm.filePath, isVideo = fm.isVideo, sortOrder = fm.sortOrder)
             }
         }
 
@@ -541,12 +536,7 @@ class AppViewModel(
 
         val mappedFridayMediaFlow = repository.observeFridayMedia().map { fmList ->
             fmList.map { fm ->
-                com.groovernapp.mosqueathan.data.MediaEntity().apply {
-                    id = fm.id
-                    filePath = fm.filePath
-                    isVideo = fm.isVideo
-                    sortOrder = fm.sortOrder
-                }
+                com.groovernapp.mosqueathan.domain.Media(id = fm.id, filePath = fm.filePath, isVideo = fm.isVideo, sortOrder = fm.sortOrder)
             }
         }
 
@@ -600,7 +590,7 @@ class AppViewModel(
         transitionToSettings()
     }
 
-    private fun isFridayModeActive(config: MosqueConfigEntity, now: LocalDateTime): Boolean {
+    private fun isFridayModeActive(config: MosqueConfig, now: LocalDateTime): Boolean {
         if (!config.jumatEnabled) return false
         if (now.dayOfWeek != kotlinx.datetime.DayOfWeek.FRIDAY) return false
         val currentMinutes = now.hour * 60 + now.minute

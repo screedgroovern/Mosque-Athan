@@ -84,7 +84,7 @@ class RemoteActionSender(
  * controller and silently does not on the TV — which is exactly the failure that
  * hand-copying this list into each ViewModel would have produced.
  */
-fun JSONObject.pushConfig(config: com.groovernapp.mosqueathan.data.MosqueConfigEntity) {
+fun JSONObject.pushConfig(config: com.groovernapp.mosqueathan.domain.MosqueConfig) {
     put("latitude", config.latitude)
     put("longitude", config.longitude)
     put("iqomahSubuh", config.iqomahSubuh)

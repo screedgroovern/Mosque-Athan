@@ -38,11 +38,11 @@ enum class PrayerType {
 
     val iqomahMinutes: Int
         get() = when (this) {
-            SUBUH -> MosqueConfig.IQOMAH_SUBUH
-            DZUHUR -> MosqueConfig.IQOMAH_DZUHUR
-            ASHAR -> MosqueConfig.IQOMAH_ASHAR
-            MAGHRIB -> MosqueConfig.IQOMAH_MAGHRIB
-            ISYA -> MosqueConfig.IQOMAH_ISYA
+            SUBUH -> MosqueConfigDefaults.IQOMAH_SUBUH
+            DZUHUR -> MosqueConfigDefaults.IQOMAH_DZUHUR
+            ASHAR -> MosqueConfigDefaults.IQOMAH_ASHAR
+            MAGHRIB -> MosqueConfigDefaults.IQOMAH_MAGHRIB
+            ISYA -> MosqueConfigDefaults.IQOMAH_ISYA
             IMSAK, SYURUQ -> 0
     }
 }

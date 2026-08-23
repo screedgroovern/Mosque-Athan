@@ -1,7 +1,7 @@
 package com.groovernapp.mosqueathan.ui.settings.prayerschedule
 
-import com.groovernapp.mosqueathan.data.KemenagScheduleEntity
-import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.KemenagSchedule
+import com.groovernapp.mosqueathan.domain.MosqueConfigDefaults
 import com.groovernapp.mosqueathan.domain.PrayerType
 
 /** The calculation-method name that means "use pre-fetched Kemenag schedules". */
@@ -23,7 +23,7 @@ data class KemenagState(
     val targetDate: String = "",
     val searchResults: List<KemenagCity> = emptyList(),
     val isSearching: Boolean = false,
-    val schedules: List<KemenagScheduleEntity> = emptyList()
+    val schedules: List<KemenagSchedule> = emptyList()
 )
 
 /**
@@ -37,9 +37,9 @@ data class KemenagState(
  * itself, so this state only ever holds a coordinate that is real.
  */
 data class PrayerScheduleUiState(
-    val latitude: Double = MosqueConfig.DEFAULT_LATITUDE,
-    val longitude: Double = MosqueConfig.DEFAULT_LONGITUDE,
-    val calculationMethod: String = MosqueConfig.DEFAULT_CALCULATION_METHOD,
+    val latitude: Double = MosqueConfigDefaults.DEFAULT_LATITUDE,
+    val longitude: Double = MosqueConfigDefaults.DEFAULT_LONGITUDE,
+    val calculationMethod: String = MosqueConfigDefaults.DEFAULT_CALCULATION_METHOD,
     val offsets: Map<PrayerType, Int> = emptyMap(),
     val kemenag: KemenagState = KemenagState()
 ) {
