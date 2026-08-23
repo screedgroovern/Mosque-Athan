@@ -565,13 +565,10 @@ because whether a focus ring draws depends on modifier order at runtime.
 **Practical cost to plan around:** the iOS target takes about 8½ minutes to compile
 from cold. Expect a much slower edit-build loop than the Android-only work so far.
 
-### Step 2, measured: the repository does not want one interface
+### Step 2: the repository does not want one interface
 
-`ui:display` and `ui:settings` still cannot leave `:app`, because their ViewModels
-take `MosqueConfigRepository` — a concrete Realm class. That is step 2, and counting
-the call sites changes what step 2 should build.
-
-The repository has **70 public members**. Of those:
+Counting the call sites changed what step 2 should build. The repository has **70
+public members**. Of those:
 
 | Consumer | Members used |
 |---|---|
@@ -584,9 +581,25 @@ depend on 61 members they never call, and every one of those is a mutation. Two
 interfaces is the better shape, and the split falls out of the roles the app already
 has: the display is a pure function of state, the controller edits it.
 
-The nine the display needs: `getConfigFlow`, `getConfig`, `getMediaListFlow`,
-`getDashboardBackgroundsFlow`, `observeFridayMedia`, `getActiveAnnouncementsFlow`,
-`getStandbySchedules`, `getSlideshowSchedules`, `getIqomahMinutes`.
+**`DisplayDataSource` is those nine**, in `core:model`: `getConfigFlow`, `getConfig`,
+`getMediaListFlow`, `getDashboardBackgroundsFlow`, `observeFridayMedia`,
+`getActiveAnnouncementsFlow`, `getStandbySchedules`, `getSlideshowSchedules`,
+`getIqomahMinutes`. `MosqueConfigRepository` implements it, and Koin binds the same
+singleton twice — `single<DisplayDataSource> { get<MosqueConfigRepository>() }` — so
+there is no second Realm. `DashboardViewModel`, `AdzanViewModel`, `IqomahViewModel`
+and `AppViewModel` now take the interface.
+
+The payoff beyond portability: a display bug can no longer be a stray write, and a
+reader can see that from the type rather than having to check.
+
+**The other 56 members still have no interface.** That one waits for step 7, when the
+WebSocket-backed remote implementation exists and shows which of them can actually be
+served over a network. An interface with one implementor is indirection without a
+second point of view.
+
+Koin resolves at runtime, so `AppModuleTest.everyDependencyInTheGraphCanBeResolved`
+is what catches a missing binding — verified by deleting the `DisplayDataSource` line
+and watching it fail.
 
 ### Migration order
 

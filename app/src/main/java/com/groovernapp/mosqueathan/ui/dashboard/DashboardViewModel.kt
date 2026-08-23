@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.dashboard
 
+import com.groovernapp.mosqueathan.domain.DisplayDataSource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.PrayerType
@@ -21,7 +22,7 @@ import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 
 class DashboardViewModel(
-    private val repository: com.groovernapp.mosqueathan.data.MosqueConfigRepository,
+    private val repository: DisplayDataSource,
     private val kemenagSource: com.groovernapp.mosqueathan.domain.KemenagScheduleSource
 ) : ViewModel() {
 

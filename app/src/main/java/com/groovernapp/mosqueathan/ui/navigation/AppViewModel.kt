@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.navigation
 
+import com.groovernapp.mosqueathan.domain.DisplayDataSource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
@@ -32,7 +33,7 @@ import kotlinx.datetime.todayIn
 import kotlin.time.Duration.Companion.seconds
 
 class AppViewModel(
-    private val repository: com.groovernapp.mosqueathan.data.MosqueConfigRepository,
+    private val repository: DisplayDataSource,
     private val kemenagSource: com.groovernapp.mosqueathan.domain.KemenagScheduleSource
 ) : ViewModel() {
 

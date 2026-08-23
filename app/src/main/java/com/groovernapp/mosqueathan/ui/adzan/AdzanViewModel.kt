@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.adzan
 
+import com.groovernapp.mosqueathan.domain.DisplayDataSource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.PrayerType
@@ -16,7 +17,7 @@ import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 class AdzanViewModel(
-    private val repository: com.groovernapp.mosqueathan.data.MosqueConfigRepository
+    private val repository: DisplayDataSource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(

@@ -13,6 +13,7 @@ import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.domain.Announcement
 import com.groovernapp.mosqueathan.domain.ConnectedDevice
 import com.groovernapp.mosqueathan.domain.DashboardBackground
+import com.groovernapp.mosqueathan.domain.DisplayDataSource
 import com.groovernapp.mosqueathan.domain.FridayMedia
 import com.groovernapp.mosqueathan.domain.KemenagSchedule
 import com.groovernapp.mosqueathan.domain.Media
@@ -35,7 +36,7 @@ import kotlin.time.Clock
  * nothing touching settings could be constructed in a test without opening a real
  * database — which is why the Kemenag calculation test used to need one.
  */
-class MosqueConfigRepository {
+class MosqueConfigRepository : DisplayDataSource {
     private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, FridayMediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class, DashboardBackgroundEntity::class))
         .name("mosque_athan.realm")
         .schemaVersion(18)
@@ -79,13 +80,13 @@ class MosqueConfigRepository {
         }
     }
 
-    fun getConfigFlow(): Flow<MosqueConfig> {
+    override fun getConfigFlow(): Flow<MosqueConfig> {
         return realm.query<MosqueConfigEntity>("id == 'config'")
             .asFlow()
             .map { it.list.firstOrNull()?.toDomain() ?: MosqueConfig() }
     }
 
-    fun getConfig(): MosqueConfig {
+    override fun getConfig(): MosqueConfig {
         return realm.query<MosqueConfigEntity>("id == 'config'").first().find()?.toDomain() ?: MosqueConfig()
     }
 
@@ -406,7 +407,7 @@ class MosqueConfigRepository {
         }
     }
 
-    fun getMediaListFlow(): Flow<List<Media>> {
+    override fun getMediaListFlow(): Flow<List<Media>> {
         return realm.query<MediaEntity>()
             .asFlow()
             .map { result -> result.list.sortedBy { media -> media.sortOrder }.map { it.toDomain() } }
@@ -466,7 +467,7 @@ class MosqueConfigRepository {
         }
     }
 
-    fun observeFridayMedia(): Flow<List<FridayMedia>> {
+    override fun observeFridayMedia(): Flow<List<FridayMedia>> {
         return realm.query<FridayMediaEntity>()
             .asFlow()
             .map { result -> result.list.sortedBy { media -> media.sortOrder }.map { it.toDomain() } }
@@ -583,7 +584,7 @@ class MosqueConfigRepository {
             .map { result -> result.list.sortedBy { s -> s.startTime }.map { it.toDomain() } }
     }
 
-    fun getSlideshowSchedules(): List<SlideshowSchedule> {
+    override fun getSlideshowSchedules(): List<SlideshowSchedule> {
         return realm.query<SlideshowScheduleEntity>().find().sortedBy { it.startTime }.map { it.toDomain() }
     }
 
@@ -667,7 +668,7 @@ class MosqueConfigRepository {
             .map { result -> result.list.sortedBy { s -> s.startTime }.map { it.toDomain() } }
     }
 
-    fun getStandbySchedules(): List<StandbySchedule> {
+    override fun getStandbySchedules(): List<StandbySchedule> {
         return realm.query<StandbyScheduleEntity>().find().sortedBy { it.startTime }.map { it.toDomain() }
     }
 
@@ -736,7 +737,7 @@ class MosqueConfigRepository {
         }
     }
 
-    fun getIqomahMinutes(prayerType: PrayerType): Int {
+    override fun getIqomahMinutes(prayerType: PrayerType): Int {
         val config = getConfig()
         return when (prayerType) {
             PrayerType.SUBUH -> config.iqomahSubuh
@@ -749,7 +750,7 @@ class MosqueConfigRepository {
     }
 
     // Announcement methods
-    fun getActiveAnnouncementsFlow(): Flow<List<Announcement>> {
+    override fun getActiveAnnouncementsFlow(): Flow<List<Announcement>> {
         return realm.query<AnnouncementEntity>("isActive == true")
             .asFlow()
             .map { result -> result.list.sortedBy { ann -> ann.position }.map { it.toDomain() } }
@@ -1056,7 +1057,7 @@ class MosqueConfigRepository {
         return realm.query<DashboardBackgroundEntity>().find().sortedBy { it.sortOrder }.map { it.toDomain() }
     }
 
-    fun getDashboardBackgroundsFlow(): Flow<List<DashboardBackground>> {
+    override fun getDashboardBackgroundsFlow(): Flow<List<DashboardBackground>> {
         return realm.query<DashboardBackgroundEntity>().asFlow().map { result -> result.list.sortedBy { s -> s.sortOrder }.map { it.toDomain() } }
     }
 

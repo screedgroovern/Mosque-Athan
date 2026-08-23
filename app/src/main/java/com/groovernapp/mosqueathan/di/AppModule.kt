@@ -1,6 +1,7 @@
 package com.groovernapp.mosqueathan.di
 
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.DisplayDataSource
 import com.groovernapp.mosqueathan.data.RealmKemenagScheduleSource
 import com.groovernapp.mosqueathan.data.media.MediaFileStore
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
@@ -27,14 +28,19 @@ import org.koin.dsl.module
  * global was really for. The difference is that it is now supplied to its consumers
  * rather than fetched by them, so each of them can be constructed with a substitute.
  *
- * There is no `ConfigRepository` interface yet, deliberately: the repository has 70
- * public functions and one implementation, so an interface here would be indirection
- * without a second implementor. It gets extracted in step 7, when the
- * WebSocket-backed remote implementation exists and shows which of those functions
- * can actually be served over a network.
+ * The repository is bound twice: once as itself, for settings and the server, and once
+ * as [DisplayDataSource], the nine read-only members the display screens use. Same
+ * instance either way — `single<DisplayDataSource> { get<MosqueConfigRepository>() }`
+ * resolves the existing singleton rather than building a second Realm.
+ *
+ * There is still no interface covering the other 56 members. That one waits for step 7,
+ * when the WebSocket-backed remote implementation exists and shows which of them can
+ * actually be served over a network — an interface with one implementor would be
+ * indirection without a second point of view.
  */
 val appModule = module {
     single { MosqueConfigRepository() }
+    single<DisplayDataSource> { get<MosqueConfigRepository>() }
     single<KemenagScheduleSource> { RealmKemenagScheduleSource(get()) }
     single { RemoteActionSender(get()) }
     single { MediaFileStore(androidContext()) }

@@ -11,6 +11,8 @@ kotlin {
         commonMain.dependencies {
             // Exposed via the public API of PrayerResult / PrayerType.
             api(libs.kotlinx.datetime)
+            // Exposed via DisplayDataSource, which returns Flow.
+            api(libs.kotlinx.coroutines.core)
         }
     }
 }
