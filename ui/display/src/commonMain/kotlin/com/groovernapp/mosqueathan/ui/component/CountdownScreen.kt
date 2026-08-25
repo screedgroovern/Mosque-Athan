@@ -67,7 +67,10 @@ fun CountdownScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .padding(horizontal = 72.dp, vertical = 40.dp),
+                    .padding(
+                        horizontal = 72.dp * MosqueTheme.displayScale,
+                        vertical = 40.dp * MosqueTheme.displayScale
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -90,7 +93,7 @@ fun CountdownScreen(
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(18.dp * MosqueTheme.displayScale))
 
                     Text(
                         text = prayerName,
@@ -100,7 +103,11 @@ fun CountdownScreen(
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(MosqueTheme.spacing.xxxl))
+                    Spacer(
+                        modifier = Modifier.height(
+                            MosqueTheme.spacing.xxxl * MosqueTheme.displayScale
+                        )
+                    )
 
                     CountdownPanel(value = countdownValue)
                 }
@@ -113,6 +120,16 @@ fun CountdownScreen(
     }
 }
 
+/**
+ * The countdown digits in their bordered panel.
+ *
+ * Every padding here is multiplied by [MosqueTheme.displayScale], and it is not
+ * cosmetic. The enclosing column is `weight(1f)` with `SpaceBetween`, so when the
+ * content is taller than the window the children get compressed — and because this
+ * panel is `clip`ped to its rounded shape, the overflow is *cut off* rather than merely
+ * overlapping. On a phone in landscape that clipped the countdown in half: the one
+ * number the whole screen exists to show.
+ */
 @Composable
 private fun CountdownPanel(value: String) {
     Column(
@@ -124,7 +141,10 @@ private fun CountdownPanel(value: String) {
                 color = MosqueTheme.colors.textDisabled,
                 shape = RoundedCornerShape(MosqueTheme.radius.md)
             )
-            .padding(horizontal = 56.dp, vertical = 28.dp),
+            .padding(
+                horizontal = 56.dp * MosqueTheme.displayScale,
+                vertical = 28.dp * MosqueTheme.displayScale
+            ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
