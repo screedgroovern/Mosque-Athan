@@ -510,6 +510,20 @@ Multiplatform needs a ViewModel factory in common code regardless.
 **Server — Android target only.** Browsers cannot open listening sockets and iOS
 suspends background sockets. Do not attempt to port `SettingsServer`.
 
+**`SettingsServer` keeps `org.json`, deliberately.** It is the one file where removing it
+buys nothing. The reason `org.json` has to go everywhere else is that it is Android-only
+and those files are bound for `commonMain` — but the server is *also* Android-only and
+is never being ported, so converting its 137 reads and 31 builders would be a large,
+risky change to a 1,905-line file in exchange for consistency alone.
+
+There is a further trap if someone tries: `org.json`'s output key order is hash-based
+while `kotlinx.serialization`'s `JsonObject` preserves insertion order, so the
+byte-identical check that made the other conversions safe does not apply here. Any such
+change would need parsed, order-insensitive comparison instead.
+
+It becomes worth doing when `core:protocol` grows typed messages and the server can share
+them with the panel — which is the same work, done once, with a payoff.
+
 **Pattern — unidirectional data flow is the target, not the current state.** The
 display screens (`AppUiState`, `DashboardUiState`) do follow it. Settings does
 not — see *Settings UI* above. If settings is restructured, the display screens
