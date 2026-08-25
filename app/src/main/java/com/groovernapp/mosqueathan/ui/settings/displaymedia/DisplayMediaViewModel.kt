@@ -6,7 +6,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.data.media.MediaFileStore
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
  * writes an announcement or the theme sends its action too.
  */
 class DisplayMediaViewModel(
-    private val repository: MosqueConfigRepository,
+    private val repository: ConfigRepository,
     private val remote: RemoteActionSender,
     private val files: MediaFileStore
 ) : ViewModel() {

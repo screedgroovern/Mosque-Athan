@@ -5,7 +5,7 @@ import kotlinx.serialization.json.put
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
-import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.data.media.MediaFileStore
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import com.groovernapp.mosqueathan.data.remote.pushConfig
@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
  * their own table, and they are files, so they go through [MediaFileStore] first.
  */
 class FridayViewModel(
-    private val repository: MosqueConfigRepository,
+    private val repository: ConfigRepository,
     private val remote: RemoteActionSender,
     private val files: MediaFileStore
 ) : ViewModel() {

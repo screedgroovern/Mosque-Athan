@@ -12,7 +12,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
-import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import com.groovernapp.mosqueathan.data.remote.pushConfig
 import com.groovernapp.mosqueathan.domain.PrayerType
@@ -41,7 +41,7 @@ import java.net.URLEncoder
  * other category. It belongs to exactly one pane.
  */
 class PrayerScheduleViewModel(
-    private val repository: MosqueConfigRepository,
+    private val repository: ConfigRepository,
     private val remote: RemoteActionSender
 ) : ViewModel() {
 

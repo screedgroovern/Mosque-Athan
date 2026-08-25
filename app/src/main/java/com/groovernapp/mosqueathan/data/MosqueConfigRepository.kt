@@ -18,7 +18,7 @@ import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.domain.Announcement
 import com.groovernapp.mosqueathan.domain.ConnectedDevice
 import com.groovernapp.mosqueathan.domain.DashboardBackground
-import com.groovernapp.mosqueathan.domain.DisplayDataSource
+import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.domain.FridayMedia
 import com.groovernapp.mosqueathan.domain.KemenagSchedule
 import com.groovernapp.mosqueathan.domain.Media
@@ -41,7 +41,7 @@ import kotlin.time.Clock
  * nothing touching settings could be constructed in a test without opening a real
  * database — which is why the Kemenag calculation test used to need one.
  */
-class MosqueConfigRepository : DisplayDataSource {
+class MosqueConfigRepository : ConfigRepository {
     private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, FridayMediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class, DashboardBackgroundEntity::class))
         .name("mosque_athan.realm")
         .schemaVersion(18)
@@ -95,7 +95,7 @@ class MosqueConfigRepository : DisplayDataSource {
         return realm.query<MosqueConfigEntity>("id == 'config'").first().find()?.toDomain() ?: MosqueConfig()
     }
 
-    suspend fun updateConfig(config: MosqueConfig) {
+    override suspend fun updateConfig(config: MosqueConfig) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -155,7 +155,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateConfig(
+    override suspend fun updateConfig(
         latitude: Double,
         longitude: Double,
         iqomahSubuh: Int,
@@ -165,23 +165,23 @@ class MosqueConfigRepository : DisplayDataSource {
         iqomahIsya: Int,
         calculationMethodName: String,
         adzanLeadMinutes: Int,
-        offsetImsak: Int = 0,
-        offsetSubuh: Int = 0,
-        offsetSyuruq: Int = 0,
-        offsetDzuhur: Int = 0,
-        offsetAshar: Int = 0,
-        offsetMaghrib: Int = 0,
-        offsetIsya: Int = 0,
-        kemenagCityId: String = "",
-        kemenagCityName: String = "",
-        kemenagDuration: String = "1_MONTH",
-        kemenagTargetDate: String = "",
-        triggerFetch: Boolean = false,
-        adzanFooterText: String? = null,
-        iqomahFooterText: String? = null,
-        dashboardRandomize: Boolean? = null,
-        dashboardTransitionType: String? = null,
-        dashboardTransitionInterval: Int? = null
+        offsetImsak: Int,
+        offsetSubuh: Int,
+        offsetSyuruq: Int,
+        offsetDzuhur: Int,
+        offsetAshar: Int,
+        offsetMaghrib: Int,
+        offsetIsya: Int,
+        kemenagCityId: String,
+        kemenagCityName: String,
+        kemenagDuration: String,
+        kemenagTargetDate: String,
+        triggerFetch: Boolean,
+        adzanFooterText: String?,
+        iqomahFooterText: String?,
+        dashboardRandomize: Boolean?,
+        dashboardTransitionType: String?,
+        dashboardTransitionInterval: Int?
     ) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
@@ -228,7 +228,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    fun triggerKemenagFetchForDuration(cityId: String, duration: String, targetDateStr: String) {
+    override fun triggerKemenagFetchForDuration(cityId: String, duration: String, targetDateStr: String) {
         if (cityId.isEmpty()) return
         val zone = TimeZone.currentSystemDefault()
         val today = Clock.System.now().toLocalDateTime(zone).date
@@ -308,7 +308,7 @@ class MosqueConfigRepository : DisplayDataSource {
             }
         }
     }
-    suspend fun updateCustomBackground(path: String) {
+    override suspend fun updateCustomBackground(path: String) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -317,7 +317,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun resetToDefaults() {
+    override suspend fun resetToDefaults() {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -418,11 +418,11 @@ class MosqueConfigRepository : DisplayDataSource {
             .map { result -> result.list.sortedBy { media -> media.sortOrder }.map { it.toDomain() } }
     }
 
-    fun getMediaList(): List<Media> {
+    override fun getMediaList(): List<Media> {
         return realm.query<MediaEntity>().find().sortedBy { it.sortOrder }.map { it.toDomain() }
     }
 
-    suspend fun addMediaItem(filePath: String, isVideo: Boolean) {
+    override suspend fun addMediaItem(filePath: String, isVideo: Boolean) {
         realm.write {
             val maxOrder = query<MediaEntity>().find().maxOfOrNull { it.sortOrder } ?: -1
             copyToRealm(MediaEntity().apply {
@@ -434,7 +434,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun deleteMediaItem(id: String) {
+    override suspend fun deleteMediaItem(id: String) {
         realm.write {
             val item = query<MediaEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -443,7 +443,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateMediaItemPath(id: String, filePath: String) {
+    override suspend fun updateMediaItemPath(id: String, filePath: String) {
         realm.write {
             val item = query<MediaEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -452,7 +452,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateMediaItemUsed(id: String, isUsed: Boolean) {
+    override suspend fun updateMediaItemUsed(id: String, isUsed: Boolean) {
         realm.write {
             val item = query<MediaEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -461,7 +461,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateMediaListOrder(ids: List<String>) {
+    override suspend fun updateMediaListOrder(ids: List<String>) {
         realm.write {
             ids.forEachIndexed { index, id ->
                 val item = query<MediaEntity>("id == $0", id).first().find()
@@ -478,11 +478,11 @@ class MosqueConfigRepository : DisplayDataSource {
             .map { result -> result.list.sortedBy { media -> media.sortOrder }.map { it.toDomain() } }
     }
 
-    fun getFridayMedia(): List<FridayMedia> {
+    override fun getFridayMedia(): List<FridayMedia> {
         return realm.query<FridayMediaEntity>().find().sortedBy { it.sortOrder }.map { it.toDomain() }
     }
 
-    suspend fun addFridayMedia(filePath: String, isVideo: Boolean) {
+    override suspend fun addFridayMedia(filePath: String, isVideo: Boolean) {
         realm.write {
             val maxOrder = query<FridayMediaEntity>().find().maxOfOrNull { it.sortOrder } ?: -1
             copyToRealm(FridayMediaEntity().apply {
@@ -494,7 +494,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun deleteFridayMedia(id: String) {
+    override suspend fun deleteFridayMedia(id: String) {
         realm.write {
             val item = query<FridayMediaEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -503,7 +503,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateFridayMediaItemPath(id: String, filePath: String) {
+    override suspend fun updateFridayMediaItemPath(id: String, filePath: String) {
         realm.write {
             val item = query<FridayMediaEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -512,7 +512,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateFridayMediaOrder(ids: List<String>) {
+    override suspend fun updateFridayMediaOrder(ids: List<String>) {
         realm.write {
             ids.forEachIndexed { index, id ->
                 val item = query<FridayMediaEntity>("id == $0", id).first().find()
@@ -523,7 +523,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateThemeSettings(transitionType: String, intervalSeconds: Int, videoWaitUntilEnd: Boolean, includeDefaultImage: Boolean) {
+    override suspend fun updateThemeSettings(transitionType: String, intervalSeconds: Int, videoWaitUntilEnd: Boolean, includeDefaultImage: Boolean) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -535,7 +535,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateShowSettingsOnTv(show: Boolean) {
+    override suspend fun updateShowSettingsOnTv(show: Boolean) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -544,7 +544,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateStandbySettings(enabled: Boolean, startTime: String, endTime: String) {
+    override suspend fun updateStandbySettings(enabled: Boolean, startTime: String, endTime: String) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -555,7 +555,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateStandbyEnabled(enabled: Boolean) {
+    override suspend fun updateStandbyEnabled(enabled: Boolean) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -564,7 +564,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateConnectivityMode(mode: String) {
+    override suspend fun updateConnectivityMode(mode: String) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -573,7 +573,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateRemoteTvIp(ip: String) {
+    override suspend fun updateRemoteTvIp(ip: String) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -583,7 +583,7 @@ class MosqueConfigRepository : DisplayDataSource {
     }
 
 
-    fun getSlideshowSchedulesFlow(): Flow<List<SlideshowSchedule>> {
+    override fun getSlideshowSchedulesFlow(): Flow<List<SlideshowSchedule>> {
         return realm.query<SlideshowScheduleEntity>()
             .asFlow()
             .map { result -> result.list.sortedBy { s -> s.startTime }.map { it.toDomain() } }
@@ -593,7 +593,7 @@ class MosqueConfigRepository : DisplayDataSource {
         return realm.query<SlideshowScheduleEntity>().find().sortedBy { it.startTime }.map { it.toDomain() }
     }
 
-    suspend fun addSlideshowSchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String, customId: String = "") {
+    override suspend fun addSlideshowSchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String, customId: String) {
         realm.write {
             copyToRealm(SlideshowScheduleEntity().apply {
                 this.id = if (customId.isNotEmpty()) customId else java.util.UUID.randomUUID().toString()
@@ -611,7 +611,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateSlideshowScheduleTime(id: String, startTime: String, endTime: String) {
+    override suspend fun updateSlideshowScheduleTime(id: String, startTime: String, endTime: String) {
         realm.write {
             val item = query<SlideshowScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -621,7 +621,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateSlideshowScheduleDays(id: String, activeDays: String) {
+    override suspend fun updateSlideshowScheduleDays(id: String, activeDays: String) {
         realm.write {
             val item = query<SlideshowScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -635,7 +635,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateSlideshowScheduleDates(id: String, specificDates: String) {
+    override suspend fun updateSlideshowScheduleDates(id: String, specificDates: String) {
         realm.write {
             val item = query<SlideshowScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -649,7 +649,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun deleteSlideshowSchedule(id: String) {
+    override suspend fun deleteSlideshowSchedule(id: String) {
         realm.write {
             val item = query<SlideshowScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -658,7 +658,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateSlideshowEnabled(enabled: Boolean) {
+    override suspend fun updateSlideshowEnabled(enabled: Boolean) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -667,7 +667,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    fun getStandbySchedulesFlow(): Flow<List<StandbySchedule>> {
+    override fun getStandbySchedulesFlow(): Flow<List<StandbySchedule>> {
         return realm.query<StandbyScheduleEntity>()
             .asFlow()
             .map { result -> result.list.sortedBy { s -> s.startTime }.map { it.toDomain() } }
@@ -677,7 +677,7 @@ class MosqueConfigRepository : DisplayDataSource {
         return realm.query<StandbyScheduleEntity>().find().sortedBy { it.startTime }.map { it.toDomain() }
     }
 
-    suspend fun addStandbySchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String, customId: String = "") {
+    override suspend fun addStandbySchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String, customId: String) {
         realm.write {
             copyToRealm(StandbyScheduleEntity().apply {
                 this.id = if (customId.isNotEmpty()) customId else java.util.UUID.randomUUID().toString()
@@ -695,7 +695,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateStandbyScheduleTime(id: String, startTime: String, endTime: String) {
+    override suspend fun updateStandbyScheduleTime(id: String, startTime: String, endTime: String) {
         realm.write {
             val item = query<StandbyScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -705,7 +705,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateStandbyScheduleDays(id: String, activeDays: String) {
+    override suspend fun updateStandbyScheduleDays(id: String, activeDays: String) {
         realm.write {
             val item = query<StandbyScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -719,7 +719,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateStandbyScheduleDates(id: String, specificDates: String) {
+    override suspend fun updateStandbyScheduleDates(id: String, specificDates: String) {
         realm.write {
             val item = query<StandbyScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -733,7 +733,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun deleteStandbySchedule(id: String) {
+    override suspend fun deleteStandbySchedule(id: String) {
         realm.write {
             val item = query<StandbyScheduleEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -766,7 +766,7 @@ class MosqueConfigRepository : DisplayDataSource {
             .sortedBy { it.position }.map { it.toDomain() }
     }
 
-    suspend fun addAnnouncement(content: String, customId: String = "") {
+    override suspend fun addAnnouncement(content: String, customId: String) {
         realm.write {
             val maxPos = query<AnnouncementEntity>().find().maxOfOrNull { it.position } ?: -1
             copyToRealm(AnnouncementEntity().apply {
@@ -778,7 +778,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateAnnouncement(id: String, content: String, isActive: Boolean) {
+    override suspend fun updateAnnouncement(id: String, content: String, isActive: Boolean) {
         realm.write {
             val announcement = query<AnnouncementEntity>("id == $0", id).first().find()
             if (announcement != null) {
@@ -788,7 +788,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun deleteAnnouncement(id: String) {
+    override suspend fun deleteAnnouncement(id: String) {
         realm.write {
             val announcement = query<AnnouncementEntity>("id == $0", id).first().find()
             if (announcement != null) {
@@ -797,14 +797,14 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun clearAnnouncements() {
+    override suspend fun clearAnnouncements() {
         realm.write {
             val list = query<AnnouncementEntity>().find()
             delete(list)
         }
     }
 
-    suspend fun updateAnnouncementsOrder(ids: List<String>) {
+    override suspend fun updateAnnouncementsOrder(ids: List<String>) {
         realm.write {
             ids.forEachIndexed { index, id ->
                 val announcement = query<AnnouncementEntity>("id == $0", id).first().find()
@@ -816,7 +816,7 @@ class MosqueConfigRepository : DisplayDataSource {
     }
 
     // Device and PIN management
-    fun getConnectedDevicesFlow(): Flow<List<ConnectedDevice>> {
+    override fun getConnectedDevicesFlow(): Flow<List<ConnectedDevice>> {
         return realm.query<ConnectedDeviceEntity>()
             .asFlow()
             .map { result -> result.list.map { it.toDomain() } }
@@ -862,7 +862,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun setDeviceMaster(id: String) {
+    override suspend fun setDeviceMaster(id: String) {
         realm.write {
             val allDevices = query<ConnectedDeviceEntity>().find()
             allDevices.forEach { device ->
@@ -887,7 +887,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updatePinCode(newPin: String, changerDeviceId: String?) {
+    override suspend fun updatePinCode(newPin: String, changerDeviceId: String?) {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
@@ -909,7 +909,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun deleteDevice(id: String) {
+    override suspend fun deleteDevice(id: String) {
         realm.write {
             val device = query<ConnectedDeviceEntity>("deviceId == $0", id).first().find()
             if (device != null) {
@@ -1046,7 +1046,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    fun getKemenagSchedulesFlow(cityId: String): Flow<List<KemenagSchedule>> {
+    override fun getKemenagSchedulesFlow(cityId: String): Flow<List<KemenagSchedule>> {
         val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
         return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString >= $1", cityId, todayStr)
             .asFlow()
@@ -1058,7 +1058,7 @@ class MosqueConfigRepository : DisplayDataSource {
         return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString >= $1", cityId, todayStr).find().sortedBy { it.dateString }.map { it.toDomain() }
     }
 
-    fun getDashboardBackgrounds(): List<DashboardBackground> {
+    override fun getDashboardBackgrounds(): List<DashboardBackground> {
         return realm.query<DashboardBackgroundEntity>().find().sortedBy { it.sortOrder }.map { it.toDomain() }
     }
 
@@ -1066,7 +1066,7 @@ class MosqueConfigRepository : DisplayDataSource {
         return realm.query<DashboardBackgroundEntity>().asFlow().map { result -> result.list.sortedBy { s -> s.sortOrder }.map { it.toDomain() } }
     }
 
-    suspend fun addDashboardBackground(filePath: String, customId: String = "") {
+    override suspend fun addDashboardBackground(filePath: String, customId: String) {
         realm.write {
             val maxOrder = query<DashboardBackgroundEntity>().find().maxOfOrNull { it.sortOrder } ?: -1
             copyToRealm(DashboardBackgroundEntity().apply {
@@ -1078,7 +1078,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun deleteDashboardBackground(id: String) {
+    override suspend fun deleteDashboardBackground(id: String) {
         realm.write {
             val item = query<DashboardBackgroundEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -1096,7 +1096,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateDashboardBackgroundUsed(id: String, isUsed: Boolean) {
+    override suspend fun updateDashboardBackgroundUsed(id: String, isUsed: Boolean) {
         realm.write {
             val item = query<DashboardBackgroundEntity>("id == $0", id).first().find()
             if (item != null) {
@@ -1105,7 +1105,7 @@ class MosqueConfigRepository : DisplayDataSource {
         }
     }
 
-    suspend fun updateDashboardBackgroundOrder(ids: List<String>) {
+    override suspend fun updateDashboardBackgroundOrder(ids: List<String>) {
         realm.write {
             ids.forEachIndexed { index, id ->
                 val item = query<DashboardBackgroundEntity>("id == $0", id).first().find()

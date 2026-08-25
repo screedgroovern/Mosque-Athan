@@ -641,10 +641,22 @@ and `AppViewModel` now take the interface.
 The payoff beyond portability: a display bug can no longer be a stray write, and a
 reader can see that from the type rather than having to check.
 
-**The other 56 members still have no interface.** That one waits for step 7, when the
-WebSocket-backed remote implementation exists and shows which of them can actually be
-served over a network. An interface with one implementor is indirection without a
-second point of view.
+**`ConfigRepository` covers the other 49**, extending `DisplayDataSource` — which also
+states the relationship plainly: a controller does everything a display does, plus writes.
+
+One interface rather than one per settings category, and that was measured rather than
+assumed. The five category ViewModels use 3, 5, 8, 10 and 29 members, but **46 of the 55
+are also used by the web server**, and configuration writes appear in every category. The
+categories partition the *screens*, not the data, so per-category interfaces would mostly
+duplicate one another. `DisplayDataSource` earns its separation because read-only versus
+read-write is a real boundary; category boundaries are not.
+
+`SettingsServer` still takes the concrete class deliberately — it is Android-only and
+never moving, so abstracting it buys nothing.
+
+**What still ties `ui:settings` to `:app`:** `MediaFileStore` (the file-picker seam) and
+`RemoteActionSender`/`pushConfig` (`HttpURLConnection` and `android.os.Build`). Both need
+an interface or an `expect` before the module can move. The repository no longer does.
 
 Koin resolves at runtime, so `AppModuleTest.everyDependencyInTheGraphCanBeResolved`
 is what catches a missing binding — verified by deleting the `DisplayDataSource` line
@@ -732,7 +744,7 @@ shippable throughout.
 | # | Step | Releasable? |
 |---|---|---|
 | ~~1~~ | ~~`build-logic` + `core:model` + `core:prayer`; fix `PrayerCalculator` purity~~ **done** | yes |
-| 2 | Extract `ConfigRepository` interface + Koin; delete `getInstance()` | yes |
+| ~~2~~ | ~~Extract `ConfigRepository` interface + Koin; delete `getInstance()`~~ **done** | yes |
 | 3 | Realm → Room in `data`, shared entity/wire classes, `MosqueSnapshot` (see data-loss warning) | yes |
 | 3a | ~~Split the Realm entities from the domain model~~ **done**, ahead of the rest of step 3 — it touches no schema, so it carries none of step 3's data-loss risk, and both UI modules were blocked on it | yes |
 | 4 | `core:protocol` **started** — action names are shared constants; `org.json` → kotlinx.serialization still to do | yes |

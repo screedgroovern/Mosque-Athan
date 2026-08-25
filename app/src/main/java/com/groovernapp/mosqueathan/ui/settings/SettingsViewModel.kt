@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.domain.Announcement
 import com.groovernapp.mosqueathan.domain.Media
@@ -29,7 +29,7 @@ import kotlinx.coroutines.Job
 import com.groovernapp.mosqueathan.util.ImageUtils
 
 class SettingsViewModel(
-    private val repository: MosqueConfigRepository,
+    private val repository: ConfigRepository,
     private val mediaFileStore: MediaFileStore
 ) : ViewModel() {
 

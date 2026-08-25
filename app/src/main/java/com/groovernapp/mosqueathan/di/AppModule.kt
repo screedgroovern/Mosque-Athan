@@ -1,6 +1,7 @@
 package com.groovernapp.mosqueathan.di
 
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.domain.DisplayDataSource
 import com.groovernapp.mosqueathan.domain.HijriDateSource
 import com.groovernapp.mosqueathan.util.HijriDateFormatter
@@ -32,16 +33,18 @@ import org.koin.dsl.module
  *
  * The repository is bound twice: once as itself, for settings and the server, and once
  * as [DisplayDataSource], the nine read-only members the display screens use. Same
- * instance either way — `single<DisplayDataSource> { get<MosqueConfigRepository>() }`
- * resolves the existing singleton rather than building a second Realm.
+ * instance whichever way it is asked for — each binding resolves the existing singleton
+ * rather than building a second Realm.
  *
- * There is still no interface covering the other 56 members. That one waits for step 7,
- * when the WebSocket-backed remote implementation exists and shows which of them can
- * actually be served over a network — an interface with one implementor would be
- * indirection without a second point of view.
+ * Three bindings for one object, and each names a different amount of authority:
+ * [DisplayDataSource] is the nine read-only members the display screens use,
+ * [ConfigRepository] adds everything the settings UI writes, and the concrete class is
+ * what `SettingsServer` still takes — it is Android-only and never moving, so it has no
+ * reason to be abstracted.
  */
 val appModule = module {
     single { MosqueConfigRepository() }
+    single<ConfigRepository> { get<MosqueConfigRepository>() }
     single<DisplayDataSource> { get<MosqueConfigRepository>() }
     single<HijriDateSource> { HijriDateFormatter }
     single<KemenagScheduleSource> { RealmKemenagScheduleSource(get()) }

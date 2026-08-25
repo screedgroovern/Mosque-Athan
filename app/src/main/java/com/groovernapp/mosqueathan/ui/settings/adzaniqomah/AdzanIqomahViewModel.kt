@@ -5,7 +5,7 @@ import kotlinx.serialization.json.put
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
-import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import com.groovernapp.mosqueathan.data.remote.pushConfig
 import com.groovernapp.mosqueathan.domain.PrayerType
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  * with the caller that already owns that.
  */
 class AdzanIqomahViewModel(
-    private val repository: MosqueConfigRepository,
+    private val repository: ConfigRepository,
     private val remote: RemoteActionSender
 ) : ViewModel() {
 

@@ -2,7 +2,7 @@ package com.groovernapp.mosqueathan.data.remote
 
 import android.os.Build
 import android.util.Log
-import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.ConfigRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -33,7 +33,7 @@ import java.net.URL
  * removes the platform dependency without also rewriting all ~50 payloads at once.
  */
 class RemoteActionSender(
-    private val repository: MosqueConfigRepository,
+    private val repository: ConfigRepository,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 ) {
 

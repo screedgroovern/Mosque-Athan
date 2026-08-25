@@ -4,7 +4,7 @@ import com.groovernapp.mosqueathan.protocol.RemoteActions
 import kotlinx.serialization.json.put
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
  * Moving it needs the Context dependency removed first.
  */
 class RemoteDevicesViewModel(
-    private val repository: MosqueConfigRepository,
+    private val repository: ConfigRepository,
     private val remote: RemoteActionSender
 ) : ViewModel() {
 
