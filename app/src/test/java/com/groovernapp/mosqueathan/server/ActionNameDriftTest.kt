@@ -102,6 +102,27 @@ class ActionNameDriftTest {
         )
     }
 
+    @Test
+    fun theRemoteControllerSendsConstantsOnly() {
+        // The third side of the protocol. A device in REMOTE mode POSTs these to the
+        // display, and two of them named actions the server did not have: the running-text
+        // reorder and — worse — the access PIN. Both failed in silence.
+        val settings = File("src/main/java/com/groovernapp/mosqueathan")
+        val offenders = mutableListOf<String>()
+        settings.walkTopDown().filter { it.extension == "kt" }.forEach { file ->
+            val source = stripComments(file.readText())
+            Regex("""\.send\("([a-z_]+)"""").findAll(source).forEach {
+                offenders += "${file.name}: '${it.groupValues[1]}'"
+            }
+        }
+        assertEquals(
+            "these outgoing actions are spelled by hand; reference RemoteActions so a name " +
+                "the server does not handle cannot compile",
+            emptyList<String>(),
+            offenders
+        )
+    }
+
     /** Removes `//` and block comments so prose about an action name cannot match. */
     private fun stripComments(source: String): String =
         source

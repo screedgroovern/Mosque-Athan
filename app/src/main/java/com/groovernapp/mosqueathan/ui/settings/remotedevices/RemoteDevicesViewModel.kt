@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.ui.settings.remotedevices
 
+import com.groovernapp.mosqueathan.protocol.RemoteActions
+import kotlinx.serialization.json.put
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
@@ -52,7 +54,7 @@ class RemoteDevicesViewModel(
 
             is RemoteDevicesEvent.ShowSettingsOnTvToggled -> {
                 write { repository.updateShowSettingsOnTv(event.show) }
-                remote.send("update_config") { put("showSettingsOnTv", event.show) }
+                remote.send(RemoteActions.UPDATE_CONFIG) { put("showSettingsOnTv", event.show) }
             }
 
             is RemoteDevicesEvent.RemoteTvIpEntered ->
@@ -60,17 +62,19 @@ class RemoteDevicesViewModel(
 
             is RemoteDevicesEvent.PinCodeEntered -> {
                 write { repository.updatePinCode(event.pin, changerDeviceId = null) }
-                remote.send("update_pin") { put("pin", event.pin) }
+                // SET_PIN, not "update_pin": the server has no branch for the latter,
+                // so a controller changing the access PIN silently changed nothing.
+                remote.send(RemoteActions.SET_PIN) { put("pin", event.pin) }
             }
 
             is RemoteDevicesEvent.DeviceMadeMaster -> {
                 write { repository.setDeviceMaster(event.deviceId) }
-                remote.send("set_master") { put("deviceId", event.deviceId) }
+                remote.send(RemoteActions.SET_MASTER) { put("deviceId", event.deviceId) }
             }
 
             is RemoteDevicesEvent.DeviceRemoved -> {
                 write { repository.deleteDevice(event.deviceId) }
-                remote.send("delete_device") { put("deviceId", event.deviceId) }
+                remote.send(RemoteActions.DELETE_DEVICE) { put("deviceId", event.deviceId) }
             }
 
             RemoteDevicesEvent.SyncRequested -> Unit // handled at the call site

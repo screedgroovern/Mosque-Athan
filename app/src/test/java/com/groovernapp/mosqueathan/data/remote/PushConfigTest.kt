@@ -1,7 +1,11 @@
 package com.groovernapp.mosqueathan.data.remote
 
 import com.groovernapp.mosqueathan.domain.MosqueConfig
-import org.json.JSONObject
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -18,7 +22,7 @@ import org.junit.Test
 class PushConfigTest {
 
     private fun payloadFor(config: MosqueConfig) =
-        JSONObject().apply { pushConfig(config) }
+        buildJsonObject { pushConfig(config) }
 
     @Test
     fun theSettingsEveryCategoryEditsAreAllPresent() {
@@ -35,7 +39,7 @@ class PushConfigTest {
             // friday
             "jumatEnabled", "offsetJumat"
         ).forEach {
-            assertTrue("`$it` missing from update_config", payload.has(it))
+            assertTrue("`$it` missing from update_config", payload.containsKey(it))
         }
     }
 
@@ -55,7 +59,7 @@ class PushConfigTest {
             "jumatTransitionType", "jumatSlideIntervalSeconds", "jumatSlideIntervalUnit",
             "jumatVideoWaitUntilEnd"
         ).forEach {
-            assertTrue("`$it` missing from update_config", payload.has(it))
+            assertTrue("`$it` missing from update_config", payload.containsKey(it))
         }
     }
 
@@ -63,29 +67,44 @@ class PushConfigTest {
     fun fridayValuesAreCarriedRatherThanDefaulted() {
         val config = MosqueConfig(jumatEnabled = true, offsetJumat = -4, jumatStandbyOnly = true, murottalStartDelay = 12, jumatSlideIntervalUnit = "MINUTES", selectedGlobalSlideIds = "id-1,id-2")
         val payload = payloadFor(config)
-        assertTrue(payload.getBoolean("jumatEnabled"))
-        assertEquals(-4, payload.getInt("offsetJumat"))
-        assertTrue(payload.getBoolean("jumatStandbyOnly"))
-        assertEquals(12, payload.getInt("murottalStartDelay"))
-        assertEquals("MINUTES", payload.getString("jumatSlideIntervalUnit"))
-        assertEquals("id-1,id-2", payload.getString("selectedGlobalSlideIds"))
+        assertTrue(payload.boolAt("jumatEnabled"))
+        assertEquals(-4, payload.intAt("offsetJumat"))
+        assertTrue(payload.boolAt("jumatStandbyOnly"))
+        assertEquals(12, payload.intAt("murottalStartDelay"))
+        assertEquals("MINUTES", payload.stringAt("jumatSlideIntervalUnit"))
+        assertEquals("id-1,id-2", payload.stringAt("selectedGlobalSlideIds"))
     }
 
     @Test
     fun valuesAreCarriedRatherThanDefaulted() {
         val config = MosqueConfig(latitude = -6.2, iqomahMaghrib = 7, offsetSubuh = -3, calculationMethodName = "KEMENAG", adzanLeadMinutes = 5)
         val payload = payloadFor(config)
-        assertEquals(-6.2, payload.getDouble("latitude"), 0.0)
-        assertEquals(7, payload.getInt("iqomahMaghrib"))
-        assertEquals(-3, payload.getInt("offsetSubuh"))
-        assertEquals("KEMENAG", payload.getString("calculationMethodName"))
-        assertEquals(5, payload.getInt("adzanLeadMinutes"))
+        assertEquals(-6.2, payload.doubleAt("latitude"), 0.0)
+        assertEquals(7, payload.intAt("iqomahMaghrib"))
+        assertEquals(-3, payload.intAt("offsetSubuh"))
+        assertEquals("KEMENAG", payload.stringAt("calculationMethodName"))
+        assertEquals(5, payload.intAt("adzanLeadMinutes"))
     }
 
     @Test
     fun thePayloadIsNotEmpty() {
         // Guards the whole mechanism: an empty pushConfig would make every test
         // above pass vacuously if they only checked for absence.
-        assertTrue(payloadFor(MosqueConfig()).length() > 30)
+        assertTrue(payloadFor(MosqueConfig()).size > 30)
     }
+
+    // Small readers so the assertions above stay as readable as they were with
+    // org.json. kotlinx.serialization exposes values as JsonPrimitive rather than
+    // typed getters.
+    private fun kotlinx.serialization.json.JsonObject.stringAt(key: String) =
+        getValue(key).jsonPrimitive.content
+
+    private fun kotlinx.serialization.json.JsonObject.intAt(key: String) =
+        getValue(key).jsonPrimitive.int
+
+    private fun kotlinx.serialization.json.JsonObject.doubleAt(key: String) =
+        getValue(key).jsonPrimitive.double
+
+    private fun kotlinx.serialization.json.JsonObject.boolAt(key: String) =
+        getValue(key).jsonPrimitive.boolean
 }

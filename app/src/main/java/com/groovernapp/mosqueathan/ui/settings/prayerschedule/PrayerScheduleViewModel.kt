@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.ui.settings.prayerschedule
 
+import com.groovernapp.mosqueathan.protocol.RemoteActions
+import kotlinx.serialization.json.put
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -110,7 +112,7 @@ class PrayerScheduleViewModel(
         viewModelScope.launch {
             val updated = change(repository.getConfig())
             repository.updateConfig(updated)
-            remote.send("update_config") { pushConfig(updated) }
+            remote.send(RemoteActions.UPDATE_CONFIG) { pushConfig(updated) }
         }
     }
 

@@ -7,7 +7,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import org.json.JSONObject
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -23,22 +27,23 @@ import java.net.URL
  * an offset or a PIN stopped reaching the TV. Making it an injectable collaborator
  * is what lets every category keep it.
  *
- * The JSON is assembled by hand here. Step 4 of the KMP migration replaces this
- * with a `kotlinx.serialization` sealed hierarchy shared with the server, which is
- * also what removes `org.json` — an Android-only dependency.
+ * The JSON is assembled by hand, but with kotlinx.serialization rather than
+ * `org.json`, which is Android-only and therefore cannot move to `commonMain`. A
+ * sealed hierarchy of typed actions is the eventual shape; this is the step that
+ * removes the platform dependency without also rewriting all ~50 payloads at once.
  */
 class RemoteActionSender(
     private val repository: MosqueConfigRepository,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 ) {
 
-    fun send(action: String, build: JSONObject.() -> Unit = {}) {
+    fun send(action: String, build: JsonObjectBuilder.() -> Unit = {}) {
         val config = repository.getConfig()
         if (config.connectivityMode != REMOTE_MODE || config.remoteTvIp.isEmpty()) return
 
         val target = config.remoteTvIp
         scope.launch {
-            val payload = JSONObject().apply {
+            val payload = buildJsonObject {
                 put("action", action)
                 put("deviceId", deviceId())
                 build()
@@ -47,7 +52,7 @@ class RemoteActionSender(
         }
     }
 
-    private fun post(host: String, payload: JSONObject) {
+    private fun post(host: String, payload: JsonObject) {
         try {
             val connection = URL("http://$host:$PORT/api/action").openConnection() as HttpURLConnection
             connection.requestMethod = "POST"
@@ -58,7 +63,8 @@ class RemoteActionSender(
             connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
 
             if (connection.responseCode != 200) {
-                Log.e(TAG, "TV rejected ${payload.optString("action")}: ${connection.responseCode}")
+                val name = payload["action"]?.jsonPrimitive?.content
+                Log.e(TAG, "TV rejected $name: ${connection.responseCode}")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Could not reach the TV at $host", e)
@@ -84,7 +90,7 @@ class RemoteActionSender(
  * controller and silently does not on the TV — which is exactly the failure that
  * hand-copying this list into each ViewModel would have produced.
  */
-fun JSONObject.pushConfig(config: com.groovernapp.mosqueathan.domain.MosqueConfig) {
+fun JsonObjectBuilder.pushConfig(config: com.groovernapp.mosqueathan.domain.MosqueConfig) {
     put("latitude", config.latitude)
     put("longitude", config.longitude)
     put("iqomahSubuh", config.iqomahSubuh)

@@ -62,6 +62,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:prayer"))
     implementation(project(":core:protocol"))
+    implementation(libs.kotlinx.serialization.json)
     implementation(project(":ui:design"))
     implementation(project(":ui:display"))
 

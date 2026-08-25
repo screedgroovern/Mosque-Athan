@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.ui.settings.adzaniqomah
 
+import com.groovernapp.mosqueathan.protocol.RemoteActions
+import kotlinx.serialization.json.put
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
@@ -67,7 +69,7 @@ class AdzanIqomahViewModel(
         viewModelScope.launch {
             val updated = change(repository.getConfig())
             repository.updateConfig(updated)
-            remote.send("update_config") { pushConfig(updated) }
+            remote.send(RemoteActions.UPDATE_CONFIG) { pushConfig(updated) }
         }
     }
 }

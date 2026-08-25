@@ -1,5 +1,9 @@
 package com.groovernapp.mosqueathan.ui.settings.displaymedia
 
+import com.groovernapp.mosqueathan.protocol.RemoteActions
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
@@ -11,7 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.json.JSONArray
 
 /**
  * The Display & Media category: slideshow, dashboard backgrounds, running text.
@@ -75,7 +78,7 @@ class DisplayMediaViewModel(
                         event.includeDefaultImage
                     )
                 }
-                remote.send("update_theme") {
+                remote.send(RemoteActions.UPDATE_THEME) {
                     put("transitionType", event.transitionType)
                     put("slideIntervalSeconds", event.intervalSeconds)
                     put("videoWaitUntilEnd", event.videoWaitUntilEnd)
@@ -189,12 +192,12 @@ class DisplayMediaViewModel(
             // --- running text: every one of these also pushes ---
             is DisplayMediaEvent.AnnouncementAdded -> {
                 launch { repository.addAnnouncement(event.content) }
-                remote.send("add_announcement") { put("content", event.content) }
+                remote.send(RemoteActions.ADD_ANNOUNCEMENT) { put("content", event.content) }
             }
 
             is DisplayMediaEvent.AnnouncementEdited -> {
                 launch { repository.updateAnnouncement(event.id, event.content, true) }
-                remote.send("update_announcement") {
+                remote.send(RemoteActions.UPDATE_ANNOUNCEMENT) {
                     put("id", event.id)
                     put("content", event.content)
                     put("isActive", true)
@@ -203,13 +206,16 @@ class DisplayMediaViewModel(
 
             is DisplayMediaEvent.AnnouncementDeleted -> {
                 launch { repository.deleteAnnouncement(event.id) }
-                remote.send("delete_announcement") { put("id", event.id) }
+                remote.send(RemoteActions.DELETE_ANNOUNCEMENT) { put("id", event.id) }
             }
 
             is DisplayMediaEvent.AnnouncementsReordered -> {
                 launch { repository.updateAnnouncementsOrder(event.ids) }
-                remote.send("update_announcements_order") {
-                    put("ids", JSONArray().apply { event.ids.forEach { put(it) } })
+                // REORDER_ANNOUNCEMENTS, not "update_announcements_order": the server
+                // never had a branch for that name, so reordering the running text from
+                // a controller silently did nothing. Payload shape already matched.
+                remote.send(RemoteActions.REORDER_ANNOUNCEMENTS) {
+                    putJsonArray("ids") { event.ids.forEach { add(it) } }
                 }
             }
 
