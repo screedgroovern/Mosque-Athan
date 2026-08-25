@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.server
 
+import com.groovernapp.mosqueathan.protocol.RemoteActions
+
 object WebPageJsOffline {
     fun getJs(): String {
         return """
@@ -182,7 +184,7 @@ object WebPageJsOffline {
             await clearFilesFromDB();
             
             ws.send(JSON.stringify({
-                action: 'register',
+                action: '${RemoteActions.REGISTER}',
                 deviceId: myDeviceId,
                 deviceName: myDeviceName
             }));

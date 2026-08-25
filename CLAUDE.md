@@ -675,6 +675,41 @@ JSON array — history, not design. `joinFooterLines` in `core:model` handles bo
 `ui/component`. Both are used by settings and the server; the dashboard renders its
 slideshow inline. They belong with `ui:settings`.
 
+### Step 4 so far: the action names are shared
+
+`core:protocol` exists and holds `RemoteActions` — the 47 action names of the WebSocket
+protocol as constants. `SettingsServer`'s `when` and the panel's JavaScript both
+reference them, so a name cannot be spelled differently on the two sides.
+
+This was not a tidiness exercise. Each name used to be typed twice, in two languages,
+in two files, with nothing connecting them — and the panel's device-rename button had
+been sending `register_device` while the server only ever handled `register`. The
+message was dropped and the panel showed a success toast. The `when` had no `else`, so
+an unhandled action left no trace; it does now.
+
+Two things make the change safe to trust:
+
+- **The panel the device serves is byte-identical.** Fetched `http://<tv>:8080/` from
+  the Xiaomi before and after; 417,376 bytes both times, `cmp` clean. The constants hold
+  the strings the protocol already used, so an older panel talking to a newer server
+  still works.
+- **`ActionNameDriftTest` fails if either side writes a literal again.** Mutation-tested
+  three ways: a bare `action: '…'` in the JS fails it, a bare `"…" ->` branch fails it,
+  and an action name appearing only in a *comment* does not — comments are stripped
+  before matching, which matters because this test reads source rather than behaviour.
+
+Reading source in a test is unusual; the justification is that the failure being guarded
+against is textual, and there is no runtime moment at which an action nothing handles can
+be observed. That is precisely what made the original bug invisible.
+
+**Four action names are still literals in the JavaScript**, and must stay that way: the
+schedule actions are assembled as `'update_' + type + '_schedule_days'`. They are why a
+name-by-name diff of the two sides shows ten apparent mismatches that are not real.
+
+Still to do in step 4: `org.json` itself. It remains in `SettingsServer`, the remote-sync
+path in `SettingsViewModel`, and `RemoteActionSender`. That is the kotlinx.serialization
+half, and `kotlinx-serialization-json` is already on the classpath via `core:model`.
+
 ### Migration order
 
 Each step is independently reviewable. Steps 1–6 stay Android-only and remain
@@ -686,7 +721,7 @@ shippable throughout.
 | 2 | Extract `ConfigRepository` interface + Koin; delete `getInstance()` | yes |
 | 3 | Realm → Room in `data`, shared entity/wire classes, `MosqueSnapshot` (see data-loss warning) | yes |
 | 3a | ~~Split the Realm entities from the domain model~~ **done**, ahead of the rest of step 3 — it touches no schema, so it carries none of step 3's data-loss risk, and both UI modules were blocked on it | yes |
-| 4 | `core:protocol`; `org.json` → kotlinx.serialization on both sides | yes |
+| 4 | `core:protocol` **started** — action names are shared constants; `org.json` → kotlinx.serialization still to do | yes |
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
 | 6 | `ui:settings` + `ui:display` into `commonMain` | yes |
 | 7 | `webApp` (wasmJs) — runs *alongside* the existing HTML panel | yes |

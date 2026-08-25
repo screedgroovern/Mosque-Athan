@@ -61,6 +61,7 @@ kotlin {
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:prayer"))
+    implementation(project(":core:protocol"))
     implementation(project(":ui:design"))
     implementation(project(":ui:display"))
 

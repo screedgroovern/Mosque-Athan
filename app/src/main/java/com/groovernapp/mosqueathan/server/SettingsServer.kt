@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.server
 
+import com.groovernapp.mosqueathan.protocol.RemoteActions
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
@@ -969,7 +970,7 @@ class SettingsServer(
             val action = json.optString("action").takeIf { it.isNotEmpty() } ?: return
 
             // Authorization check for non-registration/verification actions
-            if (action != "register" && action != "verify_pin" && action != "ping") {
+            if (action !in RemoteActions.UNAUTHENTICATED) {
                 val deviceId = connectionDeviceMap[connection]
                 val config = repository.getConfig()
                 val devices = repository.getConnectedDevices()
@@ -984,12 +985,12 @@ class SettingsServer(
             }
 
             when (action) {
-                "ping" -> {
+                RemoteActions.PING -> {
                     connection.send(JSONObject().apply {
                         put("type", "pong")
                     }.toString())
                 }
-                "update_config" -> {
+                RemoteActions.UPDATE_CONFIG -> {
                     var config = repository.getConfig()
                     val lat = if (json.has("latitude") && !json.isNull("latitude")) json.optDouble("latitude") else config.latitude
                     val lng = if (json.has("longitude") && !json.isNull("longitude")) json.optDouble("longitude") else config.longitude
@@ -1077,34 +1078,34 @@ class SettingsServer(
 
                     repository.updateConfig(config)
                 }
-                "preview_adzan" -> {
+                RemoteActions.PREVIEW_ADZAN -> {
                     withContext(Dispatchers.Main) {
                         (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.previewAdzan()
                     }
                 }
-                "preview_iqomah" -> {
+                RemoteActions.PREVIEW_IQOMAH -> {
                     withContext(Dispatchers.Main) {
                         (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.previewIqomah()
                     }
                 }
-                "preview_slideshow" -> {
+                RemoteActions.PREVIEW_SLIDESHOW -> {
                     withContext(Dispatchers.Main) {
                         (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.previewSlideshow()
                     }
                 }
-                "preview_friday_slideshow" -> {
+                RemoteActions.PREVIEW_FRIDAY_SLIDESHOW -> {
                     withContext(Dispatchers.Main) {
                         (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.previewFridaySlideshow()
                     }
                 }
-                "add_announcement" -> {
+                RemoteActions.ADD_ANNOUNCEMENT -> {
                     val content = json.optString("content").takeIf { it.isNotEmpty() } ?: return
                     val customId = json.optString("id", "")
                     if (content.isNotBlank()) {
                         repository.addAnnouncement(content, customId)
                     }
                 }
-                "search_kemenag_cities" -> {
+                RemoteActions.SEARCH_KEMENAG_CITIES -> {
                     val query = json.optString("query") ?: ""
                     scope.launch(Dispatchers.IO) {
                         try {
@@ -1153,7 +1154,7 @@ class SettingsServer(
                         }
                     }
                 }
-                "save_kemenag_schedules" -> {
+                RemoteActions.SAVE_KEMENAG_SCHEDULES -> {
                     val schedulesArray = json.optJSONArray("schedules")
                     if (schedulesArray != null) {
                         scope.launch(Dispatchers.IO) {
@@ -1189,17 +1190,17 @@ class SettingsServer(
                         }
                     }
                 }
-                "delete_announcement" -> {
+                RemoteActions.DELETE_ANNOUNCEMENT -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     repository.deleteAnnouncement(id)
                 }
-                "update_announcement" -> {
+                RemoteActions.UPDATE_ANNOUNCEMENT -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val content = json.optString("content", "")
                     val isActive = json.optBoolean("isActive", true)
                     repository.updateAnnouncement(id, content, isActive)
                 }
-                "reorder_announcements" -> {
+                RemoteActions.REORDER_ANNOUNCEMENTS -> {
                     val idsJson = json.optJSONArray("ids") ?: return
                     val ids = mutableListOf<String>()
                     for (i in 0 until idsJson.length()) {
@@ -1207,7 +1208,7 @@ class SettingsServer(
                     }
                     repository.updateAnnouncementsOrder(ids)
                 }
-                "update_theme" -> {
+                RemoteActions.UPDATE_THEME -> {
                     val config = repository.getConfig()
                     val transitionType = if (json.has("transitionType") && !json.isNull("transitionType")) json.optString("transitionType") else config.transitionType
                     val slideIntervalSeconds = if (json.has("slideIntervalSeconds") && !json.isNull("slideIntervalSeconds")) json.optInt("slideIntervalSeconds") else config.slideIntervalSeconds
@@ -1215,7 +1216,7 @@ class SettingsServer(
                     val includeDefaultImage = if (json.has("includeDefaultImage") && !json.isNull("includeDefaultImage")) json.optBoolean("includeDefaultImage") else config.includeDefaultImage
                     repository.updateThemeSettings(transitionType, slideIntervalSeconds, videoWaitUntilEnd, includeDefaultImage)
                 }
-                "update_dashboard_settings" -> {
+                RemoteActions.UPDATE_DASHBOARD_SETTINGS -> {
                     val config = repository.getConfig()
                     val randomize = if (json.has("dashboardRandomize") && !json.isNull("dashboardRandomize")) json.optBoolean("dashboardRandomize") else config.dashboardRandomize
                     val transitionType = if (json.has("dashboardTransitionType") && !json.isNull("dashboardTransitionType")) json.optString("dashboardTransitionType") else config.dashboardTransitionType
@@ -1233,11 +1234,11 @@ class SettingsServer(
                     )
                     broadcastState()
                 }
-                "update_show_settings_on_tv" -> {
+                RemoteActions.UPDATE_SHOW_SETTINGS_ON_TV -> {
                     val show = json.optBoolean("show")
                     repository.updateShowSettingsOnTv(show)
                 }
-                "update_standby" -> {
+                RemoteActions.UPDATE_STANDBY -> {
                     val config = repository.getConfig()
                     val enabled = if (json.has("standbyModeEnabled") && !json.isNull("standbyModeEnabled")) json.optBoolean("standbyModeEnabled") else config.standbyModeEnabled
                     val startTime = if (json.has("standbyStartTime") && !json.isNull("standbyStartTime")) json.optString("standbyStartTime") else config.standbyStartTime
@@ -1245,7 +1246,7 @@ class SettingsServer(
                     repository.updateStandbySettings(enabled, startTime, endTime)
                     broadcastState()
                 }
-                "register" -> {
+                RemoteActions.REGISTER -> {
                     val deviceId = json.optString("deviceId").takeIf { it.isNotEmpty() } ?: return
                     val deviceName = json.optString("deviceName").takeIf { it.isNotEmpty() } ?: "Remote Client"
                     connectionDeviceMap[connection] = deviceId
@@ -1268,7 +1269,7 @@ class SettingsServer(
                     }
                     broadcastState()
                 }
-                "verify_pin" -> {
+                RemoteActions.VERIFY_PIN -> {
                     val pin = json.optString("pin") ?: ""
                     val deviceId = connectionDeviceMap[connection].takeIf { !it.isNullOrEmpty() } ?: return
                     val config = repository.getConfig()
@@ -1291,7 +1292,7 @@ class SettingsServer(
                         }.toString())
                     }
                 }
-                "set_pin" -> {
+                RemoteActions.SET_PIN -> {
                     val pin = json.optString("pin") ?: ""
                     val deviceId = connectionDeviceMap[connection].takeIf { !it.isNullOrEmpty() } ?: return
                     val devices = repository.getConnectedDevices()
@@ -1308,7 +1309,7 @@ class SettingsServer(
                         }.toString())
                     }
                 }
-                "set_master" -> {
+                RemoteActions.SET_MASTER -> {
                     val targetId = json.optString("targetId").takeIf { it.isNotEmpty() } ?: return
                     val pin = json.optString("pin") ?: ""
                     val deviceId = connectionDeviceMap[connection].takeIf { !it.isNullOrEmpty() } ?: return
@@ -1339,7 +1340,7 @@ class SettingsServer(
                         }.toString())
                     }
                 }
-                "delete_device" -> {
+                RemoteActions.DELETE_DEVICE -> {
                     val targetId = json.optString("targetId").takeIf { it.isNotEmpty() } ?: return
                     val deviceId = connectionDeviceMap[connection].takeIf { !it.isNullOrEmpty() } ?: return
                     
@@ -1356,7 +1357,7 @@ class SettingsServer(
                         }.toString())
                     }
                 }
-                "upload_background" -> {
+                RemoteActions.UPLOAD_BACKGROUND -> {
                     val filename = json.optString("filename") ?: "custom_background.jpg"
                     val base64Data = json.optString("base64") ?: return
 
@@ -1388,7 +1389,7 @@ class SettingsServer(
                         Log.e(TAG, "Background upload failure", e)
                     }
                 }
-                "clear_background" -> {
+                RemoteActions.CLEAR_BACKGROUND -> {
                     try {
                         val oldPath = repository.getConfig().customBackgroundPath
                         if (oldPath.isNotEmpty()) {
@@ -1399,7 +1400,7 @@ class SettingsServer(
                     repository.updateCustomBackground("")
                     broadcastState()
                 }
-                "upload_media" -> {
+                RemoteActions.UPLOAD_MEDIA -> {
                     val filename = json.optString("filename") ?: "slide_${System.currentTimeMillis()}.jpg"
                     val base64Data = json.optString("base64") ?: return
                     val isVideo = json.optBoolean("isVideo")
@@ -1432,7 +1433,7 @@ class SettingsServer(
                         Log.e(TAG, "Media upload failure", e)
                     }
                 }
-                "update_media_item_path" -> {
+                RemoteActions.UPDATE_MEDIA_ITEM_PATH -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val filename = json.optString("filename") ?: "slide_${System.currentTimeMillis()}.jpg"
                     val base64Data = json.optString("base64") ?: return
@@ -1473,7 +1474,7 @@ class SettingsServer(
                         Log.e(TAG, "Media item path update failure", e)
                     }
                 }
-                "delete_media" -> {
+                RemoteActions.DELETE_MEDIA -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val mediaList = repository.getMediaList()
                     val targetMedia = mediaList.find { it.id == id }
@@ -1488,7 +1489,7 @@ class SettingsServer(
                         broadcastState()
                     }
                 }
-                "upload_friday_media" -> {
+                RemoteActions.UPLOAD_FRIDAY_MEDIA -> {
                     val filename = json.optString("filename") ?: "friday_slide_${System.currentTimeMillis()}.jpg"
                     val base64Data = json.optString("base64") ?: return
                     val isVideo = json.optBoolean("isVideo")
@@ -1520,7 +1521,7 @@ class SettingsServer(
                         Log.e(TAG, "Friday media upload failure", e)
                     }
                 }
-                "update_friday_media_item_path" -> {
+                RemoteActions.UPDATE_FRIDAY_MEDIA_ITEM_PATH -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val filename = json.optString("filename") ?: "friday_slide_${System.currentTimeMillis()}.jpg"
                     val base64Data = json.optString("base64") ?: return
@@ -1561,7 +1562,7 @@ class SettingsServer(
                         Log.e(TAG, "Friday media item path update failure", e)
                     }
                 }
-                "delete_friday_media" -> {
+                RemoteActions.DELETE_FRIDAY_MEDIA -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val fridayMediaList = repository.getFridayMedia()
                     val targetMedia = fridayMediaList.find { it.id == id }
@@ -1576,7 +1577,7 @@ class SettingsServer(
                         broadcastState()
                     }
                 }
-                "reorder_friday_media" -> {
+                RemoteActions.REORDER_FRIDAY_MEDIA -> {
                     val idsArray = json.optJSONArray("ids") ?: return
                     val ids = mutableListOf<String>()
                     for (i in 0 until idsArray.length()) {
@@ -1585,7 +1586,7 @@ class SettingsServer(
                     repository.updateFridayMediaOrder(ids)
                     broadcastState()
                 }
-                "add_slideshow_schedule" -> {
+                RemoteActions.ADD_SLIDESHOW_SCHEDULE -> {
                     val day = json.optString("day", "Monday")
                     val isSpecificDate = json.optBoolean("isSpecificDate", false)
                     val startTime = json.optString("startTime").takeIf { it.isNotEmpty() } ?: return
@@ -1596,38 +1597,38 @@ class SettingsServer(
                         broadcastState()
                     }
                 }
-                "update_slideshow_schedule_time" -> {
+                RemoteActions.UPDATE_SLIDESHOW_SCHEDULE_TIME -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val startTime = json.optString("startTime").takeIf { it.isNotEmpty() } ?: return
                     val endTime = json.optString("endTime").takeIf { it.isNotEmpty() } ?: return
                     repository.updateSlideshowScheduleTime(id, startTime, endTime)
                     broadcastState()
                 }
-                "update_slideshow_schedule_days" -> {
+                RemoteActions.UPDATE_SLIDESHOW_SCHEDULE_DAYS -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val activeDays = json.optString("activeDays", "")
                     repository.updateSlideshowScheduleDays(id, activeDays)
                     broadcastState()
                 }
-                "update_slideshow_schedule_dates" -> {
+                RemoteActions.UPDATE_SLIDESHOW_SCHEDULE_DATES -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val specificDates = json.optString("specificDates", "")
                     repository.updateSlideshowScheduleDates(id, specificDates)
                     broadcastState()
                 }
-                "delete_slideshow_schedule" -> {
+                RemoteActions.DELETE_SLIDESHOW_SCHEDULE -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     if (id.isNotEmpty()) {
                         repository.deleteSlideshowSchedule(id)
                         broadcastState()
                     }
                 }
-                "update_slideshow_enabled" -> {
+                RemoteActions.UPDATE_SLIDESHOW_ENABLED -> {
                     val enabled = json.optBoolean("enabled")
                     repository.updateSlideshowEnabled(enabled)
                     broadcastState()
                 }
-                "add_standby_schedule" -> {
+                RemoteActions.ADD_STANDBY_SCHEDULE -> {
                     val day = json.optString("day", "Monday")
                     val isSpecificDate = json.optBoolean("isSpecificDate", false)
                     val startTime = json.optString("startTime").takeIf { it.isNotEmpty() } ?: return
@@ -1638,33 +1639,33 @@ class SettingsServer(
                         broadcastState()
                     }
                 }
-                "update_standby_schedule_time" -> {
+                RemoteActions.UPDATE_STANDBY_SCHEDULE_TIME -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val startTime = json.optString("startTime").takeIf { it.isNotEmpty() } ?: return
                     val endTime = json.optString("endTime").takeIf { it.isNotEmpty() } ?: return
                     repository.updateStandbyScheduleTime(id, startTime, endTime)
                     broadcastState()
                 }
-                "update_standby_schedule_days" -> {
+                RemoteActions.UPDATE_STANDBY_SCHEDULE_DAYS -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val activeDays = json.optString("activeDays", "")
                     repository.updateStandbyScheduleDays(id, activeDays)
                     broadcastState()
                 }
-                "update_standby_schedule_dates" -> {
+                RemoteActions.UPDATE_STANDBY_SCHEDULE_DATES -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val specificDates = json.optString("specificDates", "")
                     repository.updateStandbyScheduleDates(id, specificDates)
                     broadcastState()
                 }
-                "delete_standby_schedule" -> {
+                RemoteActions.DELETE_STANDBY_SCHEDULE -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     if (id.isNotEmpty()) {
                         repository.deleteStandbySchedule(id)
                         broadcastState()
                     }
                 }
-                "upload_dashboard_background" -> {
+                RemoteActions.UPLOAD_DASHBOARD_BACKGROUND -> {
                     val filename = json.optString("filename") ?: "dashboard_${System.currentTimeMillis()}.jpg"
                     val base64Data = json.optString("base64") ?: return
                     val customId = json.optString("id", "")
@@ -1691,7 +1692,7 @@ class SettingsServer(
                         Log.e(TAG, "Dashboard background upload failure", e)
                     }
                 }
-                "update_dashboard_background_path" -> {
+                RemoteActions.UPDATE_DASHBOARD_BACKGROUND_PATH -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val filename = json.optString("filename") ?: "dashboard_${System.currentTimeMillis()}.jpg"
                     val base64Data = json.optString("base64") ?: return
@@ -1726,7 +1727,7 @@ class SettingsServer(
                         Log.e(TAG, "Dashboard background path update failure", e)
                     }
                 }
-                "delete_dashboard_background" -> {
+                RemoteActions.DELETE_DASHBOARD_BACKGROUND -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val bgList = repository.getDashboardBackgrounds()
                     val targetBg = bgList.find { it.id == id }
@@ -1741,13 +1742,13 @@ class SettingsServer(
                         broadcastState()
                     }
                 }
-                "update_dashboard_background_used" -> {
+                RemoteActions.UPDATE_DASHBOARD_BACKGROUND_USED -> {
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val isUsed = json.optBoolean("isUsed", true)
                     repository.updateDashboardBackgroundUsed(id, isUsed)
                     broadcastState()
                 }
-                "reorder_dashboard_backgrounds" -> {
+                RemoteActions.REORDER_DASHBOARD_BACKGROUNDS -> {
                     val idsJson = json.optJSONArray("ids") ?: return
                     val ids = mutableListOf<String>()
                     for (i in 0 until idsJson.length()) {
@@ -1756,7 +1757,7 @@ class SettingsServer(
                     repository.updateDashboardBackgroundOrder(ids)
                     broadcastState()
                 }
-                "reset" -> {
+                RemoteActions.RESET -> {
                     try {
                         val oldPath = repository.getConfig().customBackgroundPath
                         if (oldPath.isNotEmpty()) {

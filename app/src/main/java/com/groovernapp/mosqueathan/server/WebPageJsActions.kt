@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.server
 
+import com.groovernapp.mosqueathan.protocol.RemoteActions
+
 object WebPageJsActions {
     fun getJs(): String {
         return """
@@ -749,7 +751,7 @@ object WebPageJsActions {
                         const schedules = await fetchKemenagSchedules(kemenagCityId, months);
                         if (schedules && schedules.length > 0) {
                             safeSend({
-                                action: 'save_kemenag_schedules',
+                                action: '${RemoteActions.SAVE_KEMENAG_SCHEDULES}',
                                 schedules: schedules
                             });
                         }
@@ -916,7 +918,7 @@ object WebPageJsActions {
                 const schedules = await fetchKemenagSchedules(kemenagCityId, months);
                 if (schedules && schedules.length > 0) {
                     safeSend({
-                        action: 'save_kemenag_schedules',
+                        action: '${RemoteActions.SAVE_KEMENAG_SCHEDULES}',
                         schedules: schedules
                     });
                 }
@@ -1176,7 +1178,7 @@ object WebPageJsActions {
             if (!content) return;
             
             safeSend({
-                action: 'add_announcement',
+                action: '${RemoteActions.ADD_ANNOUNCEMENT}',
                 content: content
             });
             
@@ -1190,7 +1192,7 @@ object WebPageJsActions {
                 const trimmed = newContent.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
                 if (trimmed) {
                     safeSend({
-                        action: 'update_announcement',
+                        action: '${RemoteActions.UPDATE_ANNOUNCEMENT}',
                         id: id,
                         content: trimmed,
                         isActive: true
@@ -1202,7 +1204,7 @@ object WebPageJsActions {
 
         function deleteAnnouncement(id) {
             safeSend({
-                action: 'delete_announcement',
+                action: '${RemoteActions.DELETE_ANNOUNCEMENT}',
                 id: id
             });
             showToast(translations[currentLang].toast_announcement_deleted);
@@ -1215,7 +1217,7 @@ object WebPageJsActions {
             const ids = items.map(item => item.getAttribute('data-id'));
             
             safeSend({
-                action: 'reorder_announcements',
+                action: '${RemoteActions.REORDER_ANNOUNCEMENTS}',
                 ids: ids
             });
             showToast(translations[currentLang].toast_announcements_reordered);
@@ -1439,21 +1441,21 @@ object WebPageJsActions {
 
         function previewAdzan() {
             safeSend({
-                action: 'preview_adzan'
+                action: '${RemoteActions.PREVIEW_ADZAN}'
             });
             showToast(currentLang === 'id' ? 'Menampilkan preview layar Adzan...' : 'Showing Adzan screen preview...');
         }
 
         function previewIqomah() {
             safeSend({
-                action: 'preview_iqomah'
+                action: '${RemoteActions.PREVIEW_IQOMAH}'
             });
             showToast(currentLang === 'id' ? 'Menampilkan preview layar Iqomah...' : 'Showing Iqomah screen preview...');
         }
 
         function previewSlideshow() {
             safeSend({
-                action: 'preview_slideshow'
+                action: '${RemoteActions.PREVIEW_SLIDESHOW}'
             });
             showToast(currentLang === 'id' ? 'Menampilkan preview Slideshow...' : 'Showing Slideshow preview...');
         }
@@ -1487,7 +1489,7 @@ object WebPageJsActions {
         function toggleShowSettingsOnTv(checked) {
             appConfig.showSettingsOnTv = checked;
             safeSend({
-                action: 'update_show_settings_on_tv',
+                action: '${RemoteActions.UPDATE_SHOW_SETTINGS_ON_TV}',
                 show: checked
             });
             showToast(checked ? translations[currentLang].toast_tv_settings_shown : translations[currentLang].toast_tv_settings_hidden);
@@ -1501,7 +1503,7 @@ object WebPageJsActions {
 
         function sendStandbyUpdate() {
             safeSend({
-                action: 'update_standby',
+                action: '${RemoteActions.UPDATE_STANDBY}',
                 standbyModeEnabled: !!appConfig.standbyModeEnabled
             });
         }
@@ -1569,7 +1571,7 @@ object WebPageJsActions {
 
         function sendThemeUpdate() {
             safeSend({
-                action: 'update_theme',
+                action: '${RemoteActions.UPDATE_THEME}',
                 transitionType: appConfig.transitionType || 'FADE',
                 slideIntervalSeconds: appConfig.slideIntervalSeconds || 10,
                 videoWaitUntilEnd: !!appConfig.videoWaitUntilEnd,
@@ -1652,7 +1654,7 @@ object WebPageJsActions {
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     await safeSend({
-                        action: 'upload_background',
+                        action: '${RemoteActions.UPLOAD_BACKGROUND}',
                         filename: processedFile.name,
                         base64: e.target.result
                     });
@@ -1672,7 +1674,7 @@ object WebPageJsActions {
 
         function clearBackground() {
             safeSend({
-                action: 'clear_background'
+                action: '${RemoteActions.CLEAR_BACKGROUND}'
             });
             showToast(translations[currentLang].toast_bg_cleared);
         }
@@ -1703,7 +1705,7 @@ object WebPageJsActions {
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     await safeSend({
-                        action: 'upload_media',
+                        action: '${RemoteActions.UPLOAD_MEDIA}',
                         filename: processedFile.name,
                         isVideo: isVideo,
                         base64: e.target.result
@@ -1724,7 +1726,7 @@ object WebPageJsActions {
 
         function deleteMedia(id) {
             safeSend({
-                action: 'delete_media',
+                action: '${RemoteActions.DELETE_MEDIA}',
                 id: id
             });
             showToast(translations[currentLang].toast_media_deleted);
@@ -1733,7 +1735,7 @@ object WebPageJsActions {
         function toggleSlideshowEnabled(checked) {
             appConfig.slideshowEnabled = checked;
             safeSend({
-                action: 'update_slideshow_enabled',
+                action: '${RemoteActions.UPDATE_SLIDESHOW_ENABLED}',
                 enabled: checked
             });
             showToast(checked ? (currentLang === 'id' ? 'Mode Slideshow otomatis diaktifkan!' : 'Automatic Slideshow mode enabled!') : (currentLang === 'id' ? 'Mode Slideshow otomatis dinonaktifkan!' : 'Automatic Slideshow mode disabled!'));
@@ -1744,7 +1746,7 @@ object WebPageJsActions {
             const wasEmpty = (!slideshowSchedules || slideshowSchedules.length === 0);
             
             safeSend({
-                action: 'add_slideshow_schedule',
+                action: '${RemoteActions.ADD_SLIDESHOW_SCHEDULE}',
                 id: defaultId,
                 day: 'Monday',
                 isSpecificDate: false,
@@ -1755,7 +1757,7 @@ object WebPageJsActions {
             if (wasEmpty) {
                 appConfig.slideshowEnabled = true;
                 safeSend({
-                    action: 'update_slideshow_enabled',
+                    action: '${RemoteActions.UPDATE_SLIDESHOW_ENABLED}',
                     enabled: true
                 });
             }
@@ -1768,7 +1770,7 @@ object WebPageJsActions {
             const wasEmpty = (list.length === 0);
             
             safeSend({
-                action: 'add_standby_schedule',
+                action: '${RemoteActions.ADD_STANDBY_SCHEDULE}',
                 id: defaultId,
                 day: 'Monday',
                 isSpecificDate: false,
@@ -1796,7 +1798,7 @@ object WebPageJsActions {
                 if (slideshowSchedules.length <= 1) {
                     appConfig.slideshowEnabled = false;
                     safeSend({
-                        action: 'update_slideshow_enabled',
+                        action: '${RemoteActions.UPDATE_SLIDESHOW_ENABLED}',
                         enabled: false
                     });
                 }
@@ -2056,7 +2058,7 @@ object WebPageJsActions {
         function confirmReset() {
             if (confirm(translations[currentLang].confirm_reset)) {
                 safeSend({
-                    action: 'reset'
+                    action: '${RemoteActions.RESET}'
                 });
                 showToast(translations[currentLang].toast_reset_warning, 'warning');
             }
@@ -2064,7 +2066,7 @@ object WebPageJsActions {
 
         function sendUpdate() {
             safeSend({
-                action: 'update_config',
+                action: '${RemoteActions.UPDATE_CONFIG}',
                 latitude: appConfig.latitude,
                 longitude: appConfig.longitude,
                 iqomahSubuh: appConfig.iqomahSubuh,
@@ -2363,7 +2365,7 @@ object WebPageJsActions {
                 }
 
                 safeSend({
-                    action: 'set_master',
+                    action: '${RemoteActions.SET_MASTER}',
                     targetId: targetId,
                     pin: pin
                 });
@@ -2382,7 +2384,7 @@ object WebPageJsActions {
             const confirmMsg = translations[currentLang].confirm_delete_device + " '" + targetName + "'? " + translations[currentLang].confirm_delete_device_desc;
             if (confirm(confirmMsg)) {
                 safeSend({
-                    action: 'delete_device',
+                    action: '${RemoteActions.DELETE_DEVICE}',
                     targetId: targetId
                 });
                 showToast(translations[currentLang].toast_deleting_device);
@@ -2394,7 +2396,7 @@ object WebPageJsActions {
             const pin = input.value.trim();
             
             safeSend({
-                action: 'set_pin',
+                action: '${RemoteActions.SET_PIN}',
                 pin: pin
             });
             showToast(translations[currentLang].toast_saving_pin);
@@ -2407,7 +2409,7 @@ object WebPageJsActions {
             if (!pin) return;
             
             safeSend({
-                action: 'verify_pin',
+                action: '${RemoteActions.VERIFY_PIN}',
                 pin: pin
             });
         }
@@ -2447,7 +2449,7 @@ object WebPageJsActions {
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     await safeSend({
-                        action: 'upload_dashboard_background',
+                        action: '${RemoteActions.UPLOAD_DASHBOARD_BACKGROUND}',
                         filename: processedFile.name,
                         base64: e.target.result
                     });
@@ -2468,7 +2470,7 @@ object WebPageJsActions {
         function deleteDashboardBg(id) {
             if (confirm(currentLang === 'id' ? 'Hapus background dashboard ini?' : 'Delete this dashboard background?')) {
                 safeSend({
-                    action: 'delete_dashboard_background',
+                    action: '${RemoteActions.DELETE_DASHBOARD_BACKGROUND}',
                     id: id
                 });
                 showToast(currentLang === 'id' ? 'Menghapus background...' : 'Deleting background...');
@@ -2477,7 +2479,7 @@ object WebPageJsActions {
 
         function toggleDashboardBgUsed(id, isUsed) {
             safeSend({
-                action: 'update_dashboard_background_used',
+                action: '${RemoteActions.UPDATE_DASHBOARD_BACKGROUND_USED}',
                 id: id,
                 isUsed: isUsed
             });
@@ -2485,7 +2487,7 @@ object WebPageJsActions {
 
         function reorderDashboardBackgrounds(ids) {
             safeSend({
-                action: 'reorder_dashboard_backgrounds',
+                action: '${RemoteActions.REORDER_DASHBOARD_BACKGROUNDS}',
                 ids: ids
             });
         }
@@ -2512,7 +2514,7 @@ object WebPageJsActions {
             }
             
             safeSend({
-                action: 'update_dashboard_settings',
+                action: '${RemoteActions.UPDATE_DASHBOARD_SETTINGS}',
                 dashboardRandomize: randomize,
                 dashboardTransitionType: transitionType,
                 dashboardTransitionInterval: interval
@@ -2622,7 +2624,7 @@ object WebPageJsActions {
             reader.onload = function(e) {
                 const base64 = e.target.result;
                 safeSend({
-                    action: 'update_dashboard_background_path',
+                    action: '${RemoteActions.UPDATE_DASHBOARD_BACKGROUND_PATH}',
                     id: currentItem.id,
                     filename: file.name,
                     base64: base64
@@ -2639,7 +2641,7 @@ object WebPageJsActions {
             if (!currentItem) return;
             if (confirm(currentLang === 'id' ? 'Hapus background ini?' : 'Delete this background?')) {
                 safeSend({
-                    action: 'delete_dashboard_background',
+                    action: '${RemoteActions.DELETE_DASHBOARD_BACKGROUND}',
                     id: currentItem.id
                 });
                 showToast(currentLang === 'id' ? 'Menghapus background...' : 'Deleting background...', 'warning');
@@ -2651,7 +2653,7 @@ object WebPageJsActions {
             const currentItem = bgs[currentDbBgIndex];
             if (!currentItem) return;
             safeSend({
-                action: 'update_dashboard_background_used',
+                action: '${RemoteActions.UPDATE_DASHBOARD_BACKGROUND_USED}',
                 id: currentItem.id,
                 isUsed: checked
             });
@@ -2682,7 +2684,7 @@ object WebPageJsActions {
             reader.onload = function(e) {
                 const base64 = e.target.result;
                 safeSend({
-                    action: 'update_media_item_path',
+                    action: '${RemoteActions.UPDATE_MEDIA_ITEM_PATH}',
                     id: currentItem.id,
                     filename: file.name,
                     base64: base64,
@@ -2700,7 +2702,7 @@ object WebPageJsActions {
             if (!currentItem) return;
             if (confirm(currentLang === 'id' ? 'Hapus slide ini dari rotasi?' : 'Delete this slide from rotation?')) {
                 safeSend({
-                    action: 'delete_media',
+                    action: '${RemoteActions.DELETE_MEDIA}',
                     id: currentItem.id
                 });
                 showToast(currentLang === 'id' ? 'Menghapus media slide...' : 'Deleting slideshow media...', 'warning');
@@ -2719,7 +2721,7 @@ object WebPageJsActions {
                 // success. 'register' re-registers the same deviceId with the new name,
                 // which is exactly a rename.
                 safeSend({
-                    action: 'register',
+                    action: '${RemoteActions.REGISTER}',
                     deviceId: myDeviceId,
                     deviceName: myDeviceName
                 });
@@ -2851,7 +2853,7 @@ object WebPageJsActions {
             
             // Send update
             safeSend({
-                action: 'update_config',
+                action: '${RemoteActions.UPDATE_CONFIG}',
                 selectedGlobalSlideIds: newValue
             });
         }
@@ -2897,7 +2899,7 @@ object WebPageJsActions {
             appConfig.jumatStandbyOnly = checked;
             updateFridayStandbyOnlyState(checked);
             safeSend({
-                action: 'update_config',
+                action: '${RemoteActions.UPDATE_CONFIG}',
                 jumatStandbyOnly: checked
             });
         }
@@ -2911,7 +2913,7 @@ object WebPageJsActions {
             }
             appConfig[key] = checked;
             safeSend({
-                action: 'update_config',
+                action: '${RemoteActions.UPDATE_CONFIG}',
                 [key]: checked
             });
         }
@@ -2919,7 +2921,7 @@ object WebPageJsActions {
         function saveFridayTextSetting(key, value) {
             appConfig[key] = value;
             safeSend({
-                action: 'update_config',
+                action: '${RemoteActions.UPDATE_CONFIG}',
                 [key]: value
             });
         }
@@ -2931,7 +2933,7 @@ object WebPageJsActions {
             const sign = val > 0 ? "+" : "";
             document.getElementById('offsetJumat').innerText = sign + val;
             safeSend({
-                action: 'update_config',
+                action: '${RemoteActions.UPDATE_CONFIG}',
                 offsetJumat: val
             });
         }
@@ -2942,7 +2944,7 @@ object WebPageJsActions {
             appConfig.murottalStartDelay = val;
             document.getElementById('murottalStartDelay').innerText = val;
             safeSend({
-                action: 'update_config',
+                action: '${RemoteActions.UPDATE_CONFIG}',
                 murottalStartDelay: val
             });
         }
@@ -2954,7 +2956,7 @@ object WebPageJsActions {
             appConfig.jumatSlideIntervalSeconds = val;
             document.getElementById('jumatSlideIntervalSeconds').innerText = val;
             safeSend({
-                action: 'update_config',
+                action: '${RemoteActions.UPDATE_CONFIG}',
                 jumatSlideIntervalSeconds: val
             });
         }
@@ -3035,7 +3037,7 @@ object WebPageJsActions {
 
         function previewFridaySlideshow() {
             safeSend({
-                action: 'preview_friday_slideshow'
+                action: '${RemoteActions.PREVIEW_FRIDAY_SLIDESHOW}'
             });
             showToast(currentLang === 'id' ? 'Memulai pratinjau slideshow Jum\'at di TV...' : 'Starting Friday slideshow preview on TV...', 'info');
         }
@@ -3067,7 +3069,7 @@ object WebPageJsActions {
                 if (isOfflineMode) {
                     const localId = currentItem.id;
                     const action = {
-                        action: 'update_friday_media_item_path',
+                        action: '${RemoteActions.UPDATE_FRIDAY_MEDIA_ITEM_PATH}',
                         id: localId,
                         filename: file.name,
                         base64: base64,
@@ -3077,7 +3079,7 @@ object WebPageJsActions {
                     showToast(currentLang === 'id' ? 'Mengubah media slide Jum\'at secara lokal...' : 'Updating Friday slideshow media locally...', 'info');
                 } else {
                     safeSend({
-                        action: 'update_friday_media_item_path',
+                        action: '${RemoteActions.UPDATE_FRIDAY_MEDIA_ITEM_PATH}',
                         id: currentItem.id,
                         filename: file.name,
                         base64: base64,
@@ -3097,14 +3099,14 @@ object WebPageJsActions {
             if (confirm(currentLang === 'id' ? 'Hapus slide Jum\'at ini dari rotasi?' : 'Delete this Friday slide from rotation?')) {
                 if (isOfflineMode) {
                     const action = {
-                        action: 'delete_friday_media',
+                        action: '${RemoteActions.DELETE_FRIDAY_MEDIA}',
                         id: currentItem.id
                     };
                     pushOfflineAction(action);
                     showToast(currentLang === 'id' ? 'Menghapus media slide Jum\'at secara lokal...' : 'Deleting Friday slideshow media locally...', 'warning');
                 } else {
                     safeSend({
-                        action: 'delete_friday_media',
+                        action: '${RemoteActions.DELETE_FRIDAY_MEDIA}',
                         id: currentItem.id
                     });
                     showToast(currentLang === 'id' ? 'Menghapus media slide Jum\'at...' : 'Deleting Friday slideshow media...', 'warning');
@@ -3126,7 +3128,7 @@ object WebPageJsActions {
                     
                     if (isOfflineMode) {
                         const action = {
-                            action: 'upload_friday_media',
+                            action: '${RemoteActions.UPLOAD_FRIDAY_MEDIA}',
                             id: tempId,
                             filename: file.name,
                             base64: base64,
@@ -3136,7 +3138,7 @@ object WebPageJsActions {
                         showToast(currentLang === 'id' ? 'Menambahkan media slide Jum\'at secara lokal...' : 'Adding Friday slideshow media locally...', 'success');
                     } else {
                         safeSend({
-                            action: 'upload_friday_media',
+                            action: '${RemoteActions.UPLOAD_FRIDAY_MEDIA}',
                             filename: file.name,
                             base64: base64,
                             isVideo: isVideo

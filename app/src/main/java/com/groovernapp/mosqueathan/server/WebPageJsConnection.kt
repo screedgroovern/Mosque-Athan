@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.server
 
+import com.groovernapp.mosqueathan.protocol.RemoteActions
+
 object WebPageJsConnection {
     fun getJs(): String {
         return """
@@ -108,7 +110,7 @@ object WebPageJsConnection {
 
                     // Immediately register device
                     ws.send(JSON.stringify({
-                        action: 'register',
+                        action: '${RemoteActions.REGISTER}',
                         deviceId: myDeviceId,
                         deviceName: myDeviceName
                     }));
@@ -118,7 +120,7 @@ object WebPageJsConnection {
                     if (heartbeatInterval) clearInterval(heartbeatInterval);
                     heartbeatInterval = setInterval(() => {
                         if (ws && ws.readyState === WebSocket.OPEN) {
-                            ws.send(JSON.stringify({ action: 'ping' }));
+                            ws.send(JSON.stringify({ action: '${RemoteActions.PING}' }));
                             if (Date.now() - lastPongReceived > 15000) {
                                 console.warn("No heartbeat received for 15 seconds. Reconnecting...");
                                 ws.close();

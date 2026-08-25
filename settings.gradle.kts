@@ -25,5 +25,6 @@ rootProject.name = "MosqueAthan"
 include(":app")
 include(":core:model")
 include(":core:prayer")
+include(":core:protocol")
 include(":ui:design")
 include(":ui:display")
