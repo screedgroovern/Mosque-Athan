@@ -80,6 +80,16 @@ class MediaFileStore(private val context: Context) {
         }
     }
 
+    /**
+     * Removes the custom background, so the display falls back to the bundled default.
+     *
+     * Here rather than in a ViewModel because this class already knows the filename and
+     * the directory; a reset that reached for `context.filesDir` itself would be a
+     * second place that had to agree about both.
+     */
+    fun deleteCustomBackground(): Boolean =
+        delete(File(context.filesDir, CUSTOM_BACKGROUND).absolutePath)
+
     private fun copy(uri: Uri, dirName: String): StoredMedia? {
         return try {
             val isVideo = context.contentResolver.getType(uri)?.startsWith("video") == true

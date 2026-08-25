@@ -1,5 +1,10 @@
 package com.groovernapp.mosqueathan.ui.settings
 
+import com.groovernapp.mosqueathan.data.media.MediaFileStore
+import com.groovernapp.mosqueathan.util.Lang
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
@@ -16,8 +21,22 @@ import kotlinx.coroutines.Job
 import com.groovernapp.mosqueathan.util.ImageUtils
 
 class SettingsViewModel(
-    private val repository: MosqueConfigRepository
+    private val repository: MosqueConfigRepository,
+    private val mediaFileStore: MediaFileStore
 ) : ViewModel() {
+
+    /**
+     * Short messages for the user — sync succeeded, sync failed.
+     *
+     * A flow rather than a `Toast`, because a `Toast` needs a `Context` and that is the
+     * single reason `syncWithTvServer` and `resetToDefaults` used to take one. The
+     * screen decides how to show these; the ViewModel only says what happened.
+     *
+     * `SharedFlow` with no replay: a message is an event, and re-showing "sync failed"
+     * on every recomposition would be worse than dropping it.
+     */
+    private val _messages = MutableSharedFlow<String>()
+    val messages: SharedFlow<String> = _messages.asSharedFlow()
 
 
     private val _configState = MutableStateFlow(MosqueConfig())
@@ -258,14 +277,9 @@ class SettingsViewModel(
         }
     }
 
-    fun resetToDefaults(context: android.content.Context) {
+    fun resetToDefaults() {
         viewModelScope.launch {
-            try {
-                val file = java.io.File(context.filesDir, "custom_background.jpg")
-                if (file.exists()) {
-                    file.delete()
-                }
-            } catch (_: Exception) {}
+            mediaFileStore.deleteCustomBackground()
             repository.resetToDefaults()
         }
     }
@@ -380,7 +394,7 @@ class SettingsViewModel(
         }
     }
 
-    fun syncWithTvServer(context: android.content.Context) {
+    fun syncWithTvServer() {
         val config = _configState.value
         if (config.connectivityMode != "REMOTE" || config.remoteTvIp.isEmpty()) return
         
@@ -446,16 +460,14 @@ class SettingsViewModel(
                             }
                         }
                         
-                        withContext(kotlinx.coroutines.Dispatchers.Main) {
-                            android.widget.Toast.makeText(context, "Sinkronisasi berhasil!", android.widget.Toast.LENGTH_SHORT).show()
-                        }
+                        _messages.emit(Lang.get("Sync complete.", "Sinkronisasi berhasil!"))
                     }
                 }
             } catch (e: Exception) {
                 android.util.Log.e("SettingsViewModel", "Failed to sync with TV", e)
-                withContext(kotlinx.coroutines.Dispatchers.Main) {
-                    android.widget.Toast.makeText(context, "Sinkronisasi gagal: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
-                }
+                _messages.emit(
+                    Lang.get("Sync failed: ${e.message}", "Sinkronisasi gagal: ${e.message}")
+                )
             }
         }
     }

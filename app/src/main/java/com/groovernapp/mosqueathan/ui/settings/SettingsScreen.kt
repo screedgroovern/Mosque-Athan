@@ -104,6 +104,15 @@ fun SettingsScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val isTv = LocalWindowClass.current.isTv
 
+    // The ViewModel reports what happened; showing it is the screen's job, which is what
+    // lets syncWithTvServer stop taking a Context. Toast keeps the existing behaviour —
+    // the sync button is often pressed with no other visible feedback.
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { message ->
+            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Location States
     var latText by remember(config.latitude) { mutableStateOf(config.latitude.toString()) }
     var lngText by remember(config.longitude) { mutableStateOf(config.longitude.toString()) }
@@ -404,7 +413,7 @@ fun SettingsScreen(
                                              // Syncing still needs an Android Context, so it stays here
                                              // rather than moving into the category ViewModel.
                                              if (event is RemoteDevicesEvent.SyncRequested) {
-                                                 viewModel.syncWithTvServer(context)
+                                                 viewModel.syncWithTvServer()
                                              } else {
                                                  remoteDevicesViewModel.onEvent(event)
                                              }
@@ -450,7 +459,7 @@ fun SettingsScreen(
                                          onUpdateStandbyScheduleDates = { schedule, dates ->
                                              viewModel.updateStandbyScheduleDates(schedule.id, dates)
                                          },
-                                         onResetToDefaults = { viewModel.resetToDefaults(context) }
+                                         onResetToDefaults = { viewModel.resetToDefaults() }
                                      )
                                  }
                             }

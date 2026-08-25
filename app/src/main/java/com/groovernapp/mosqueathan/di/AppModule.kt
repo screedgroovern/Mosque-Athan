@@ -52,7 +52,7 @@ val appModule = module {
     viewModel { DashboardViewModel(get(), get(), get()) }
     viewModel { AdzanViewModel(get()) }
     viewModel { IqomahViewModel(get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get()) }
     viewModel { RemoteDevicesViewModel(get(), get()) }
     viewModel { AdzanIqomahViewModel(get(), get()) }
     viewModel { PrayerScheduleViewModel(get(), get()) }
