@@ -1,9 +1,17 @@
 package com.groovernapp.mosqueathan.util
 
 import com.github.msarhan.ummalqura.calendar.UmmalquraCalendar
+import com.groovernapp.mosqueathan.domain.HijriDateSource
 import java.util.Calendar
 
-object HijriDateFormatter {
+/**
+ * The Android implementation of [HijriDateSource], backed by `ummalqura-calendar`.
+ *
+ * Stays in `:app` because that library is JVM-only. Kept as an `object` that also
+ * implements the interface, so the handful of existing direct callers still work while
+ * the display screens receive it through the graph.
+ */
+object HijriDateFormatter : HijriDateSource {
 
     private val hijriMonths = listOf(
         "Muharram",
@@ -20,7 +28,7 @@ object HijriDateFormatter {
         "Dzulhijjah"
     )
 
-    fun today(): String {
+    override fun today(): String {
         val calendar = UmmalquraCalendar()
         val day = calendar.get(Calendar.DAY_OF_MONTH)
         val month = calendar.get(Calendar.MONTH)

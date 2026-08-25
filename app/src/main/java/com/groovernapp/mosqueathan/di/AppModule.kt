@@ -2,6 +2,8 @@ package com.groovernapp.mosqueathan.di
 
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
 import com.groovernapp.mosqueathan.domain.DisplayDataSource
+import com.groovernapp.mosqueathan.domain.HijriDateSource
+import com.groovernapp.mosqueathan.util.HijriDateFormatter
 import com.groovernapp.mosqueathan.data.RealmKemenagScheduleSource
 import com.groovernapp.mosqueathan.data.media.MediaFileStore
 import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
@@ -41,12 +43,13 @@ import org.koin.dsl.module
 val appModule = module {
     single { MosqueConfigRepository() }
     single<DisplayDataSource> { get<MosqueConfigRepository>() }
+    single<HijriDateSource> { HijriDateFormatter }
     single<KemenagScheduleSource> { RealmKemenagScheduleSource(get()) }
     single { RemoteActionSender(get()) }
     single { MediaFileStore(androidContext()) }
 
     viewModel { AppViewModel(get(), get()) }
-    viewModel { DashboardViewModel(get(), get()) }
+    viewModel { DashboardViewModel(get(), get(), get()) }
     viewModel { AdzanViewModel(get()) }
     viewModel { IqomahViewModel(get()) }
     viewModel { SettingsViewModel(get()) }

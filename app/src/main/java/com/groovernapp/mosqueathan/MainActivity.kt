@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.groovernapp.mosqueathan.ui.adzan.AdzanScreen
@@ -29,7 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.res.painterResource
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.display.DisplayBackgrounds
+import com.groovernapp.mosqueathan.ui.display.LocalDisplayBackgrounds
 
 class MainActivity : ComponentActivity() {
 
@@ -70,127 +74,139 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MosqueAthanTheme {
-                val appState by appViewModel.appState.collectAsState()
-                val isStandbyActive by appViewModel.isStandbyActive.collectAsState()
+                // The three built-in backgrounds are Android drawables and stay in :app —
+                // SettingsServer still serves main_bg_default to the web panel as raw
+                // bytes, so it has to remain reachable as a resource. ui:display receives
+                // them as Painters instead of knowing about R.
+                CompositionLocalProvider(
+                    LocalDisplayBackgrounds provides DisplayBackgrounds(
+                        dashboard = painterResource(R.drawable.main_bg_default),
+                        adzan = painterResource(R.drawable.adzan_bg_default),
+                        iqomah = painterResource(R.drawable.iqomah_bg_default)
+                    )
+                ) {
+                    val appState by appViewModel.appState.collectAsState()
+                    val isStandbyActive by appViewModel.isStandbyActive.collectAsState()
 
-                val window = this@MainActivity.window
-                LaunchedEffect(isStandbyActive) {
-                    window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    val params = window.attributes
-                    if (isStandbyActive) {
-                        params.screenBrightness = 0.0f
-                    } else {
-                        params.screenBrightness =
-                            android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                    val window = this@MainActivity.window
+                    LaunchedEffect(isStandbyActive) {
+                        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        val params = window.attributes
+                        if (isStandbyActive) {
+                            params.screenBrightness = 0.0f
+                        } else {
+                            params.screenBrightness =
+                                android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                        }
+                        window.attributes = params
                     }
-                    window.attributes = params
-                }
 
-                LaunchedEffect(appState is AppUiState.Settings) {
-                    if (appState is AppUiState.Settings) {
-                        this@MainActivity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-                    } else {
-                        this@MainActivity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    LaunchedEffect(appState is AppUiState.Settings) {
+                        if (appState is AppUiState.Settings) {
+                            this@MainActivity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        } else {
+                            this@MainActivity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        }
                     }
-                }
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    when (val state = appState) {
-                        is AppUiState.Dashboard -> {
-                            if (state.isPreviewMode) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        when (val state = appState) {
+                            is AppUiState.Dashboard -> {
+                                if (state.isPreviewMode) {
+                                    BackHandler {
+                                        appViewModel.exitPreview()
+                                    }
+                                }
+                                DashboardScreen(
+                                    state = state.state,
+                                    customBackgroundPath = state.customBackgroundPath,
+                                    mediaList = state.mediaList,
+                                    dashboardBackgrounds = state.dashboardBackgrounds,
+                                    transitionType = state.transitionType,
+                                    slideIntervalSeconds = state.slideIntervalSeconds,
+                                    videoWaitUntilEnd = state.videoWaitUntilEnd,
+                                    includeDefaultImage = state.includeDefaultImage,
+                                    dashboardTransitionType = state.dashboardTransitionType,
+                                    dashboardTransitionInterval = state.dashboardTransitionInterval,
+                                    dashboardRandomize = state.dashboardRandomize,
+                                    isFridayStandby = state.isFridayStandby,
+                                    jumatWarningText = state.jumatWarningText,
+                                    isFridayBeforeAdzan = state.isFridayBeforeAdzan,
+                                    isFridayAfterAdzan = state.isFridayAfterAdzan,
+                                    onNavigateToSettings = {
+                                        appViewModel.transitionToSettings()
+                                    },
+                                    onStartAdzanNow = {
+                                        appViewModel.forceStandbyMode()
+                                    },
+                                    onForceFridaySilence = {
+                                        appViewModel.forceFridaySilence()
+                                    }
+                                )
+                            }
+
+                            is AppUiState.Adzan -> {
+                                if (appViewModel.isPreviewMode) {
+                                    BackHandler {
+                                        appViewModel.exitPreview()
+                                    }
+                                }
+                                AdzanScreen(
+                                    state = state.state,
+                                    onDismiss = { appViewModel.transitionToSettings() }
+                                )
+                            }
+
+                            is AppUiState.Iqomah -> {
+                                if (appViewModel.isPreviewMode) {
+                                    BackHandler {
+                                        appViewModel.exitPreview()
+                                    }
+                                }
+                                IqomahScreen(
+                                    state = state.state,
+                                    onDismiss = { appViewModel.transitionToSettings() }
+                                )
+                            }
+
+                            is AppUiState.Settings -> {
                                 BackHandler {
-                                    appViewModel.exitPreview()
-                                }
-                            }
-                            DashboardScreen(
-                                state = state.state,
-                                customBackgroundPath = state.customBackgroundPath,
-                                mediaList = state.mediaList,
-                                dashboardBackgrounds = state.dashboardBackgrounds,
-                                transitionType = state.transitionType,
-                                slideIntervalSeconds = state.slideIntervalSeconds,
-                                videoWaitUntilEnd = state.videoWaitUntilEnd,
-                                includeDefaultImage = state.includeDefaultImage,
-                                dashboardTransitionType = state.dashboardTransitionType,
-                                dashboardTransitionInterval = state.dashboardTransitionInterval,
-                                dashboardRandomize = state.dashboardRandomize,
-                                isFridayStandby = state.isFridayStandby,
-                                jumatWarningText = state.jumatWarningText,
-                                isFridayBeforeAdzan = state.isFridayBeforeAdzan,
-                                isFridayAfterAdzan = state.isFridayAfterAdzan,
-                                onNavigateToSettings = {
-                                    appViewModel.transitionToSettings()
-                                },
-                                onStartAdzanNow = {
-                                    appViewModel.forceStandbyMode()
-                                },
-                                onForceFridaySilence = {
-                                    appViewModel.forceFridaySilence()
-                                }
-                            )
-                        }
-
-                        is AppUiState.Adzan -> {
-                            if (appViewModel.isPreviewMode) {
-                                BackHandler {
-                                    appViewModel.exitPreview()
-                                }
-                            }
-                            AdzanScreen(
-                                state = state.state,
-                                onDismiss = { appViewModel.transitionToSettings() }
-                            )
-                        }
-
-                        is AppUiState.Iqomah -> {
-                            if (appViewModel.isPreviewMode) {
-                                BackHandler {
-                                    appViewModel.exitPreview()
-                                }
-                            }
-                            IqomahScreen(
-                                state = state.state,
-                                onDismiss = { appViewModel.transitionToSettings() }
-                            )
-                        }
-
-                        is AppUiState.Settings -> {
-                            BackHandler {
-                                appViewModel.transitionToDashboard()
-                            }
-                            SettingsScreen(
-                                viewModel = settingsViewModel,
-                                onPreviewAdzan = {
-                                    appViewModel.previewAdzan()
-                                },
-                                onPreviewIqomah = {
-                                    appViewModel.previewIqomah()
-                                },
-                                onPreviewSlideshow = {
-                                    appViewModel.previewSlideshow()
-                                },
-                                onPreviewFridaySlideshow = {
-                                    appViewModel.previewFridaySlideshow()
-                                },
-                                onBack = {
                                     appViewModel.transitionToDashboard()
                                 }
+                                SettingsScreen(
+                                    viewModel = settingsViewModel,
+                                    onPreviewAdzan = {
+                                        appViewModel.previewAdzan()
+                                    },
+                                    onPreviewIqomah = {
+                                        appViewModel.previewIqomah()
+                                    },
+                                    onPreviewSlideshow = {
+                                        appViewModel.previewSlideshow()
+                                    },
+                                    onPreviewFridaySlideshow = {
+                                        appViewModel.previewFridaySlideshow()
+                                    },
+                                    onBack = {
+                                        appViewModel.transitionToDashboard()
+                                    }
+                                )
+                            }
+                        } // End of when
+                    
+                        if (isStandbyActive) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(MosqueTheme.colors.scrim)
+                                    .pointerInput(Unit) {
+                                        detectTapGestures { }
+                                    }
                             )
                         }
-                    } // End of when
-                    
-                    if (isStandbyActive) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(MosqueTheme.colors.scrim)
-                                .pointerInput(Unit) {
-                                    detectTapGestures { }
-                                }
-                        )
-                    }
-                } // End of parent Box
-            }
+                    } // End of parent Box
+                }
+                }
         }
     }
 

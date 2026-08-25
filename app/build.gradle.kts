@@ -62,6 +62,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:prayer"))
     implementation(project(":ui:design"))
+    implementation(project(":ui:display"))
 
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)

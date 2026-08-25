@@ -26,6 +26,7 @@ uiTooling = "1.11.2"
 splashscreen = "1.0.1"
 kotlinxDatetime = "0.7.1"
 kotlinxCoroutines = "1.10.2"
+kotlinxSerialization = "1.9.0"
 koin = "4.1.0"
 composeMultiplatform = "1.9.0"
 json = "20250517"
@@ -54,6 +55,7 @@ androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscree
 # :app:dependencies), so this pins current behaviour rather than changing it.
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 # Compose UI testing. Version tracks the compose-ui artifacts already in use.
 androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "uiTooling" }
 androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "uiTooling" }
