@@ -34,6 +34,41 @@ The web control panel's JS lives inside Kotlin raw strings. The root-level `test
 node test_webpage.js && node --check test_webpage_full.js
 ```
 
+### Checking the layout on a phone
+
+The settings UI is authored for a television and goes wrong on a narrow screen in ways
+a screenshot does not make obvious. Two shipped examples: a heading that rendered as
+`"Dashboard Background ListRandomize"`, and a fourth option clipped to `"INSTAN"`.
+Neither was caught by looking at the screen. Comparing pixel bounds catches them:
+
+```bash
+adb -s <serial> shell uiautomator dump /sdcard/ui.xml
+adb -s <serial> shell cat /sdcard/ui.xml > /tmp/ui.xml
+python3 tools/sweep_layout.py /tmp/ui.xml 1080 "Display & Media"
+```
+
+It reports `CLIPPED` (a node reaching the screen edge) and `COLLIDE` (two nodes on one
+row overlapping). Navigate between dumps yourself; it inspects one screen at a time.
+
+Three things learned driving these devices, each of which cost time:
+
+- **`adb shell input keyevent` does not reach the app.** Injected events carry input
+  source *unknown*, which the D-pad handling ignores. Use `input dpad -d 0 keyevent
+  <code>`. The `-d 0` matters whenever a second display is attached — Android Studio
+  mirroring adds one, and without it key events go to the wrong display and silently do
+  nothing. This is a test-harness quirk, **not** a bug in `SecretSequence`.
+- **The UI is Compose, so assert on the accessibility tree, not screenshots.**
+  `uiautomator dump` gives text and exact bounds; a screenshot cannot be diffed
+  meaningfully against a photo background.
+- **A black screenshot usually means standby, not a crash.** Check the file size: under
+  ~50KB is a blank screen. Confirm with `standbyModeEnabled` from
+  `GET /api/get_config`, and note that `jumatStandbyOnly` suppresses standby on
+  non-Fridays, so the flag being `true` does not mean the screen will dim today.
+
+Known false positive, already filtered: an `OutlinedTextField`'s floating label is a
+separate node whose bounds nest inside the field's, so label and value always look like
+they overlap.
+
 ## Architecture
 
 ### Screen state machine
