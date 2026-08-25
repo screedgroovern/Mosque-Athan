@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -280,6 +281,10 @@ fun DashboardTabContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
+                // weight, so the heading yields space instead of colliding with the
+                // switch. Without it SpaceBetween hands the Text its full intrinsic
+                // width and the two run together as "ListRandomize" on a phone.
+                modifier = Modifier.weight(1f),
                 text = Lang.get("Dashboard Background List", "Daftar Latar Belakang Dashboard"),
                 color = MosqueTheme.colors.textSecondary,
                 fontSize = MosqueTheme.typography.labelSmall,
@@ -667,10 +672,13 @@ fun TransitionAnimationRow(
                 fontSize = MosqueTheme.typography.label,
                 fontWeight = FontWeight.SemiBold
             )
-            Row(
+            // FlowRow, not Row: the four labels do not fit a phone's width and the
+            // last one was clipped to "INSTAN". Wrapping keeps every option readable
+            // at any width, and on a television it still lays out as one line.
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.sm)
             ) {
                 listOf("FADE", "SLIDE", "ZOOM", "INSTANT").forEach { type ->
                     val isSelected = selectedType == type
