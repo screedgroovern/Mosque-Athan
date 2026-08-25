@@ -59,7 +59,7 @@ fun RemoteControlSettingsSegment(
                 qrContent
             }
             onUpdateRemoteTvIp(cleanedIp)
-            Toast.makeText(context, Lang.get("Terhubung ke TV via QR: $cleanedIp", "Terhubung ke TV via QR: $cleanedIp"), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, Lang.get("Connected to the TV via QR: $cleanedIp", "Terhubung ke TV via QR: $cleanedIp"), Toast.LENGTH_SHORT).show()
             onSyncWithTv()
         }
     }
@@ -76,17 +76,14 @@ fun RemoteControlSettingsSegment(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = Lang.get("Sinkronisasi", "Sinkronisasi"),
+                text = Lang.get("Sync", "Sinkronisasi"),
                 color = MosqueTheme.colors.accent,
                 fontSize = MosqueTheme.typography.body,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
-                text = Lang.get(
-                    "Hubungkan ke Android TV untuk sinkronisasi setelan jadwal, adzan, dan tampilan media secara realtime.",
-                    "Hubungkan ke Android TV untuk sinkronisasi setelan jadwal, adzan, dan tampilan media secara realtime."
-                ),
+                text = Lang.get("Connect to the Android TV to sync schedule, adzan and display settings in real time.", "Hubungkan ke Android TV untuk sinkronisasi setelan jadwal, adzan, dan tampilan media secara realtime."),
                 color = MosqueTheme.colors.textSecondary,
                 fontSize = MosqueTheme.typography.labelSmall
             )
@@ -94,7 +91,7 @@ fun RemoteControlSettingsSegment(
             OutlinedTextField(
                 value = ipText,
                 onValueChange = { ipText = it },
-                label = { Text(Lang.get("IP Address TV", "IP Address TV")) },
+                label = { Text(Lang.get("TV IP address", "IP Address TV")) },
                 placeholder = { Text("Contoh: 192.168.1.15") },
                 singleLine = true,
                 colors = mosqueTextFieldColors(),
@@ -110,10 +107,10 @@ fun RemoteControlSettingsSegment(
                     MosquePrimaryButton(
                         onClick = {
                             if (ipText.trim().isEmpty()) {
-                                Toast.makeText(context, Lang.get("IP TV tidak boleh kosong!", "IP TV tidak boleh kosong!"), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, Lang.get("The TV IP address cannot be empty.", "IP TV tidak boleh kosong!"), Toast.LENGTH_SHORT).show()
                             } else {
                                 onUpdateRemoteTvIp(ipText.trim())
-                                Toast.makeText(context, Lang.get("Menghubungkan ke TV ${ipText.trim()}...", "Menghubungkan ke TV ${ipText.trim()}..."), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, Lang.get("Connecting to the TV at ${ipText.trim()}\u2026", "Menghubungkan ke TV ${ipText.trim()}..."), Toast.LENGTH_SHORT).show()
                                 onSyncWithTv()
                             }
                         },
@@ -122,14 +119,14 @@ fun RemoteControlSettingsSegment(
                     ) {
                         Icon(imageVector = Icons.Default.Tv, contentDescription = null)
                         Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
-                        Text(Lang.get("Hubungkan", "Hubungkan"), fontWeight = FontWeight.Bold)
+                        Text(Lang.get("Connect", "Hubungkan"), fontWeight = FontWeight.Bold)
                     }
 
                     MosqueSecondaryButton(
                         onClick = {
                             val options = ScanOptions().apply {
                                 setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                                setPrompt(Lang.get("Arahkan kamera ke QR Code TV", "Arahkan kamera ke QR Code TV"))
+                                setPrompt(Lang.get("Point the camera at the QR code on the TV", "Arahkan kamera ke QR Code TV"))
                                 setCameraId(0)
                                 setBeepEnabled(true)
                                 setBarcodeImageEnabled(true)
@@ -142,7 +139,7 @@ fun RemoteControlSettingsSegment(
                     ) {
                         Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null)
                         Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
-                        Text(Lang.get("Pindai QR", "Pindai QR"), fontWeight = FontWeight.Bold)
+                        Text(Lang.get("Scan QR", "Pindai QR"), fontWeight = FontWeight.Bold)
                     }
                 }
             } else {
@@ -154,10 +151,10 @@ fun RemoteControlSettingsSegment(
                     MosquePrimaryButton(
                         onClick = {
                             if (ipText.trim().isEmpty()) {
-                                Toast.makeText(context, Lang.get("IP TV tidak boleh kosong!", "IP TV tidak boleh kosong!"), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, Lang.get("The TV IP address cannot be empty.", "IP TV tidak boleh kosong!"), Toast.LENGTH_SHORT).show()
                             } else {
                                 onUpdateRemoteTvIp(ipText.trim())
-                                Toast.makeText(context, Lang.get("Menghubungkan ke TV ${ipText.trim()}...", "Menghubungkan ke TV ${ipText.trim()}..."), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, Lang.get("Connecting to the TV at ${ipText.trim()}\u2026", "Menghubungkan ke TV ${ipText.trim()}..."), Toast.LENGTH_SHORT).show()
                                 onSyncWithTv()
                             }
                         },
@@ -166,14 +163,14 @@ fun RemoteControlSettingsSegment(
                     ) {
                         Icon(imageVector = Icons.Default.Tv, contentDescription = null)
                         Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
-                        Text(Lang.get("Hubungkan", "Hubungkan"), fontWeight = FontWeight.Bold)
+                        Text(Lang.get("Connect", "Hubungkan"), fontWeight = FontWeight.Bold)
                     }
 
                     MosqueSecondaryButton(
                         onClick = {
                             val options = ScanOptions().apply {
                                 setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                                setPrompt(Lang.get("Arahkan kamera ke QR Code TV", "Arahkan kamera ke QR Code TV"))
+                                setPrompt(Lang.get("Point the camera at the QR code on the TV", "Arahkan kamera ke QR Code TV"))
                                 setCameraId(0)
                                 setBeepEnabled(true)
                                 setBarcodeImageEnabled(true)
@@ -186,7 +183,7 @@ fun RemoteControlSettingsSegment(
                     ) {
                         Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null)
                         Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
-                        Text(Lang.get("Pindai QR", "Pindai QR"), fontWeight = FontWeight.Bold)
+                        Text(Lang.get("Scan QR", "Pindai QR"), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -194,9 +191,9 @@ fun RemoteControlSettingsSegment(
             MosqueTertiaryButton(
                 onClick = {
                     if (state.remoteTvIp.isEmpty()) {
-                        Toast.makeText(context, Lang.get("Hubungkan ke TV terlebih dahulu!", "Hubungkan ke TV terlebih dahulu!"), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, Lang.get("Connect to the TV first.", "Hubungkan ke TV terlebih dahulu!"), Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(context, Lang.get("Menyinkronkan data dengan TV...", "Menyinkronkan data dengan TV..."), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, Lang.get("Syncing with the TV\u2026", "Menyinkronkan data dengan TV..."), Toast.LENGTH_SHORT).show()
                         onSyncWithTv()
                     }
                 },
@@ -205,7 +202,7 @@ fun RemoteControlSettingsSegment(
             ) {
                 Icon(imageVector = Icons.Default.Sync, contentDescription = null, tint = MosqueTheme.colors.accent)
                 Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
-                Text(Lang.get("Sinkronkan Sekarang", "Sinkronkan Sekarang"), fontWeight = FontWeight.Bold)
+                Text(Lang.get("Sync now", "Sinkronkan Sekarang"), fontWeight = FontWeight.Bold)
             }
         }
 
@@ -217,17 +214,14 @@ fun RemoteControlSettingsSegment(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = Lang.get("PIN Remote Kontrol", "PIN Remote Kontrol"),
+                text = Lang.get("Remote control PIN", "PIN Remote Kontrol"),
                 color = MosqueTheme.colors.accent,
                 fontSize = MosqueTheme.typography.body,
                 fontWeight = FontWeight.Bold
             )
 
             Text(
-                text = Lang.get(
-                    "Gunakan PIN keamanan untuk membatasi perangkat remote control lain agar tidak dapat mengubah setelan sembarangan.",
-                    "Gunakan PIN keamanan untuk membatasi perangkat remote control lain agar tidak dapat mengubah setelan sembarangan."
-                ),
+                text = Lang.get("Require a PIN so other remote controls cannot change settings.", "Gunakan PIN keamanan untuk membatasi perangkat remote control lain agar tidak dapat mengubah setelan sembarangan."),
                 color = MosqueTheme.colors.textSecondary,
                 fontSize = MosqueTheme.typography.labelSmall
             )
@@ -235,11 +229,11 @@ fun RemoteControlSettingsSegment(
             val hasPin = state.pinCode.isNotEmpty()
             val badgeBg = if (hasPin) MosqueTheme.colors.success.copy(alpha = 0.15f) else MosqueTheme.colors.danger.copy(alpha = 0.15f)
             val badgeColor = if (hasPin) MosqueTheme.colors.success else MosqueTheme.colors.danger
-            val badgeText = if (hasPin) Lang.get("AKTIF (MEMAKAI PIN)", "AKTIF (MEMAKAI PIN)") else Lang.get("TIDAK AKTIF", "TIDAK AKTIF")
+            val badgeText = if (hasPin) Lang.get("ON (PIN REQUIRED)", "AKTIF (MEMAKAI PIN)") else Lang.get("OFF", "TIDAK AKTIF")
 
             val statusBadgeContent = @Composable {
                 Text(
-                    text = Lang.get("Status PIN Keamanan:", "Status PIN Keamanan:"),
+                    text = Lang.get("PIN status:", "Status PIN Keamanan:"),
                     color = MosqueTheme.colors.textPrimary,
                     fontSize = MosqueTheme.typography.label
                 )
@@ -289,7 +283,7 @@ fun RemoteControlSettingsSegment(
             OutlinedTextField(
                 value = pinText,
                 onValueChange = { pinText = it },
-                label = { Text(Lang.get("PIN Baru (Hanya Angka/Karakter)", "PIN Baru (Hanya Angka/Karakter)")) },
+                label = { Text(Lang.get("New PIN (letters or digits)", "PIN Baru (Hanya Angka/Karakter)")) },
                 placeholder = { Text("Masukkan PIN baru...") },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
@@ -298,10 +292,7 @@ fun RemoteControlSettingsSegment(
             )
 
             Text(
-                text = Lang.get(
-                    "Kosongkan PIN lalu simpan untuk menghapus pengaman PIN.",
-                    "Kosongkan PIN lalu simpan untuk menghapus pengaman PIN."
-                ),
+                text = Lang.get("Leave the PIN empty and save to remove it.", "Kosongkan PIN lalu simpan untuk menghapus pengaman PIN."),
                 color = MosqueTheme.colors.textMuted,
                 fontSize = MosqueTheme.typography.captionSmall
             )
@@ -309,7 +300,7 @@ fun RemoteControlSettingsSegment(
             MosquePrimaryButton(
                 onClick = {
                     onUpdatePinCode(pinText.trim())
-                    Toast.makeText(context, Lang.get("PIN keamanan berhasil disimpan!", "PIN keamanan berhasil disimpan!"), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, Lang.get("PIN saved.", "PIN keamanan berhasil disimpan!"), Toast.LENGTH_SHORT).show()
                     pinText = ""
                 },
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
@@ -321,7 +312,7 @@ fun RemoteControlSettingsSegment(
             ) {
                 Icon(imageVector = Icons.Default.Lock, contentDescription = null)
                 Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
-                Text(Lang.get("Simpan PIN", "Simpan PIN"), fontWeight = FontWeight.Bold)
+                Text(Lang.get("Save PIN", "Simpan PIN"), fontWeight = FontWeight.Bold)
             }
         }
     }
