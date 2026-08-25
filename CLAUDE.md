@@ -500,12 +500,12 @@ Line references are against `v.1.4.4`; re-check them before acting.
 
 | Blocker | Where | Fix |
 |---|---|---|
-| `sendRemoteAction` builds `org.json.JSONObject` | `ui/settings/SettingsViewModel.kt:449` | kotlinx.serialization |
-| `HijriDateFormatter` uses `UmmalquraCalendar` + `java.util.Calendar` — **deliberately left in `:app`** during step 1 | `util/HijriDateFormatter.kt` | needs the real Umm al-Qura month table; an arithmetic approximation would change displayed dates, so it must be ported exactly |
-| `VideoView` through `AndroidView` | `ui/dashboard/DashboardScreen.kt:293` | `expect`/`actual` player |
-| `LocalConfiguration` / `UiModeManager` size detection | three sites, see *Design system* | `BoxWithConstraints` + `expect`/`actual` `isTv` |
+| `sendRemoteAction` builds `org.json.JSONObject` | `data/remote/RemoteActionSender.kt` | kotlinx.serialization. Note `kotlinx-serialization-json` is already on the classpath via `core:model` (see `joinFooterLines`), so step 4 no longer starts from zero |
+| `HijriDateFormatter` uses `UmmalquraCalendar` + `java.util.Calendar` | `util/HijriDateFormatter.kt` | **unblocked, not solved** — it now implements `HijriDateSource` (`core:model`) and is injected, so the display screens are portable without it. A real iOS/web implementation still needs the Umm al-Qura month table: it is set by decree, not computable, and an approximation would shift the displayed date by a day |
+| ~~`VideoView` through `AndroidView`~~ | ~~`ui/dashboard/DashboardScreen.kt`~~ | **done** — `expect VideoSurface` in `:ui:display` |
+| ~~`LocalConfiguration` / `UiModeManager` size detection~~ | ~~three sites~~ | **done** — `LocalWindowInfo` + `expect rememberIsTv()` |
 | `zxing` is JVM/Android-only | device-pairing QR | per-platform implementation |
-| `BitmapFactory` | `util/ImageUtils.kt` | `expect`/`actual` |
+| `BitmapFactory` | `util/ImageUtils.kt` (settings side only now) | `expect`/`actual`; the display side is done via `expect decodeImageFile` |
 | `BootReceiver`, Manifest, leanback launcher | `app/` | stays Android-only, never shared |
 | ~~`MosqueConfigEntity` is simultaneously the domain model and the Realm entity~~ | ~~`data/MosqueConfigEntity.kt`~~ | **done** — nine plain data classes in `core:model`, mapped in `data/EntityMappers.kt`; the entity dropped 191 → 76 LOC and the hand-written `copy(...)` is gone |
 
@@ -600,6 +600,45 @@ second point of view.
 Koin resolves at runtime, so `AppModuleTest.everyDependencyInTheGraphCanBeResolved`
 is what catches a missing binding — verified by deleting the `DisplayDataSource` line
 and watching it fail.
+
+### `:ui:display` — what the move actually cost
+
+Dashboard, Adzan and Iqomah are in `:ui:display` and compile for `jvm`, which is what
+proves no Android API is left in `commonMain`. Packages were kept identical, so `:app`
+imports did not change.
+
+Two `expect`s, as predicted:
+
+- **`decodeImageFile(path): ImageBitmap?`** — also de-duplicated three dashboard call
+  sites. The `catch (e: Throwable)` inside it is load-bearing and must stay `Throwable`:
+  `OutOfMemoryError` on an oversized image is the likely failure here, and a corrupt
+  file dropped on the TV has to fall back to the default background rather than take the
+  display down.
+- **`VideoSurface(path, loop, onEnded)`** — keeps two behaviours that look incidental
+  and are not: always muted, because the adzan comes from the building's sound system;
+  and `onEnded` fires on *error* as well as completion, because otherwise one unplayable
+  file freezes the display on a black rectangle.
+
+Two things that were **not** `expect`, and should not become one:
+
+- **Hijri dates are an interface** (`HijriDateSource` in `core:model`), because
+  `ummalqura-calendar` is not a platform API — it carries the real Umm al-Qura
+  month-length table. That calendar is set by decree and cannot be computed, so a port
+  means finding the table for each platform, not writing arithmetic. Injecting it made
+  the display screens portable without answering that question.
+- **The three built-in backgrounds arrive as `Painter`s** through
+  `LocalDisplayBackgrounds`, provided by `MainActivity`. `main_bg_default` cannot move:
+  `SettingsServer` serves the same file to the web panel as raw bytes, so it must stay
+  reachable as an Android resource. Compose Multiplatform resources are the eventual
+  home, once the panel no longer needs bytes.
+
+Also removed on the way: `org.json` was hiding in `AdzanViewModel` and
+`IqomahViewModel`, parsing footer text that is stored as *either* a plain string or a
+JSON array — history, not design. `joinFooterLines` in `core:model` handles both.
+
+**`Schedule.kt` and `SlideshowComponent.kt` stayed in `:app`** despite living in
+`ui/component`. Both are used by settings and the server; the dashboard renders its
+slideshow inline. They belong with `ui:settings`.
 
 ### Migration order
 
