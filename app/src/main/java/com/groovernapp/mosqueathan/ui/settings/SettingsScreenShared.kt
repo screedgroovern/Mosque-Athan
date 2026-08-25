@@ -54,30 +54,6 @@ import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
 import com.groovernapp.mosqueathan.ui.design.initialFocus
-
-
-fun parseFooterTexts(raw: String): List<String> {
-    if (raw.trim().startsWith("[")) {
-        try {
-            val arr = org.json.JSONArray(raw)
-            val list = mutableListOf<String>()
-            for (i in 0 until arr.length()) {
-                list.add(arr.getString(i))
-            }
-            return list
-        } catch (e: Exception) {
-            // fallback
-        }
-    }
-    return if (raw.isBlank()) emptyList() else listOf(raw)
-}
-
-fun formatFooterTexts(list: List<String>): String {
-    val arr = org.json.JSONArray()
-    list.forEach { arr.put(it) }
-    return arr.toString()
-}
-
 @Composable
 fun RunningTextListSettingsComponent(
     title: String,

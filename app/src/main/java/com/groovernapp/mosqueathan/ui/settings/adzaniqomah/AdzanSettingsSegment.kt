@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.ui.settings.adzaniqomah
 
+import com.groovernapp.mosqueathan.util.footerLines
+import com.groovernapp.mosqueathan.util.encodeFooterLines
 import com.groovernapp.mosqueathan.ui.settings.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -42,7 +44,7 @@ fun AdzanSettingsSegment(
         { adzan, iqomah -> onEvent(AdzanIqomahEvent.FootersChanged(adzan, iqomah)) }
     val onPreviewAdzan: () -> Unit = { onEvent(AdzanIqomahEvent.PreviewAdzanRequested) }
     val adzanFooters = remember(state.adzanFooterText) {
-        parseFooterTexts(state.adzanFooterText)
+        footerLines(state.adzanFooterText)
     }
 
     Column(
@@ -74,7 +76,7 @@ fun AdzanSettingsSegment(
             subtitle = Lang.get("Adzan Screen Footer (Running Text)", "Footer Layar Adzan (Teks Berjalan)"),
             items = adzanFooters,
             onItemsChange = { updated ->
-                onUpdateFooters(formatFooterTexts(updated), state.iqomahFooterText)
+                onUpdateFooters(encodeFooterLines(updated), state.iqomahFooterText)
             },
             placeholderText = Lang.get("Type adzan footer...", "Ketik footer adzan..."),
             isCompact = isCompact

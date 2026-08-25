@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.ui.settings.adzaniqomah
 
+import com.groovernapp.mosqueathan.util.footerLines
+import com.groovernapp.mosqueathan.util.encodeFooterLines
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -44,8 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
-import com.groovernapp.mosqueathan.ui.settings.formatFooterTexts
-import com.groovernapp.mosqueathan.ui.settings.parseFooterTexts
 import com.groovernapp.mosqueathan.ui.settings.RunningTextListSettingsComponent
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
@@ -63,7 +63,7 @@ fun IqomahSettingsSegment(
         { adzan, iqomah -> onEvent(AdzanIqomahEvent.FootersChanged(adzan, iqomah)) }
     val onPreviewIqomah: () -> Unit = { onEvent(AdzanIqomahEvent.PreviewIqomahRequested) }
     val iqomahFooters = remember(state.iqomahFooterText) {
-        parseFooterTexts(state.iqomahFooterText)
+        footerLines(state.iqomahFooterText)
     }
 
     Column(
@@ -107,7 +107,7 @@ fun IqomahSettingsSegment(
             subtitle = Lang.get("Iqomah Screen Footer (Running Text)", "Footer Layar Iqomah (Teks Berjalan)"),
             items = iqomahFooters,
             onItemsChange = { updated ->
-                onUpdateFooters(state.adzanFooterText, formatFooterTexts(updated))
+                onUpdateFooters(state.adzanFooterText, encodeFooterLines(updated))
             },
             placeholderText = Lang.get("Type iqomah footer...", "Ketik footer iqomah..."),
             isCompact = isCompact
