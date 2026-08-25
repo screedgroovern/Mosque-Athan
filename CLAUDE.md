@@ -693,6 +693,33 @@ more, so both render as they shipped. `DisplayTypeScaleTest` asserts that with
 `assertEquals` on the `TextUnit` rather than a tolerance — "approximately
 unchanged" is not good enough for a display already in a mosque.
 
+**Measured, tablet vs phone (2026-08-26).** Xiaomi 1137×711dp, Realme 800×360dp, both
+on the dashboard, block heights as a percentage of screen height taken from the
+accessibility tree rather than by eye:
+
+| Block | Xiaomi | Realme | Relative excess |
+|---|---|---|---|
+| clock | 31.8% | 33.3% | +5% |
+| prayer-times row | 9.9% | 14.4% | +45% |
+| running-text bar | 5.6% | 6.7% | +20% |
+
+The clock is proportional. The bottom band is not, and **it cannot be made
+proportional** — that is the finding, not a to-do. The phone's effective
+`displayScale` is 0.531 (its *window* is ~319dp, not the screen's 360dp), which puts
+`prayerLabel` at **10.6sp** and `prayerName` at 14.9sp. Making the row proportional
+means shrinking it a further 31%, landing the label at **7.3sp**. So the phone's small
+type has hit a legibility floor while the clock still had headroom, and uniform
+scaling has nothing left to give.
+
+Anything further is a *layout* change rather than a scale change — putting the label
+and time on one line on a short window would roughly halve the row. That is a mockup
+change and needs sign-off; do not do it as part of a scaling pass.
+
+Do not "fix" the remaining gap by steepening `displayScaleFor`. Note also that
+raising `FULL_HEIGHT` above 600dp would scale down **the mosque's television**, whose
+dp height is unmeasured — a 1080p Android TV at density 2.0 reports 540dp, which is
+already below the 600dp knee. Measure the real TV before touching that constant.
+
 Rules for display-screen work:
 
 1. Read sizes from `MosqueTheme.typography`; never hard-code `sp` on these screens.

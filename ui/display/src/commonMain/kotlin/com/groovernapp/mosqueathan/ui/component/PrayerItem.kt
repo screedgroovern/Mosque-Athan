@@ -30,7 +30,14 @@ fun PrayerItem(
             fontWeight = FontWeight.SemiBold
         )
 
-        Spacer(modifier = Modifier.height(if (isSlideshowActive) 5.dp else 6.dp))
+        // Scaled, like every other fixed dimension on a display screen: the two labels
+        // either side of it shrink with the window, so a fixed gap grows in proportion
+        // to them and pushes the row taller exactly where space is scarcest.
+        Spacer(
+            modifier = Modifier.height(
+                (if (isSlideshowActive) 5.dp else 6.dp) * MosqueTheme.displayScale
+            )
+        )
 
         Text(
             text = time,
