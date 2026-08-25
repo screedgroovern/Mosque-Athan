@@ -2714,8 +2714,12 @@ object WebPageJsActions {
                 const trimmed = newName.trim();
                 localStorage.setItem('remote_device_name', trimmed);
                 myDeviceName = trimmed;
+                // 'register', not 'register_device': the server has no branch for the
+                // latter, so renaming silently did nothing while the toast below claimed
+                // success. 'register' re-registers the same deviceId with the new name,
+                // which is exactly a rename.
                 safeSend({
-                    action: 'register_device',
+                    action: 'register',
                     deviceId: myDeviceId,
                     deviceName: myDeviceName
                 });

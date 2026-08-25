@@ -1767,6 +1767,12 @@ class SettingsServer(
                     repository.resetToDefaults()
                     broadcastState()
                 }
+                // Until now an action with no branch here was dropped without a trace,
+                // which is how the panel's rename button came to send 'register_device'
+                // — an action nothing handled — while still showing a success toast. The
+                // panel and this `when` are maintained separately and in two languages,
+                // so the next mismatch is a matter of when, not whether. Make it audible.
+                else -> Log.w(TAG, "Unhandled WebSocket action: '$action'")
             }
         } catch (e: Exception) {
             Log.e(TAG, "WS payload parse exception", e)
