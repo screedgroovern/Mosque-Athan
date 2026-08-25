@@ -790,11 +790,17 @@ change and needs sign-off; do not do it as part of a scaling pass.
 Do not "fix" the remaining gap by steepening `displayScaleFor`, and do not raise
 `FULL_HEIGHT` — see the television note below.
 
-**The television, measured at last (2026-08-26).** An AQUA/Haier Android TV, model
+**A television, measured at last (2026-08-26).** An AQUA/Haier Android TV, model
 `AQUA Android TV DVB`, Android 11: **1920x1080 at density 320, so 960x540dp**. That is
 *below* the 600dp knee, so it had been rendering display type at **0.9** ever since the
-short-window fix landed — the mosque's screen was 10% smaller than designed and nobody
-could see it, because there was nothing to compare against.
+short-window fix landed, and nobody could see it because there was nothing on screen to
+compare against.
+
+This was the developer's own television, **not the mosque's** — that one has still never
+been measured. It does not change the fix, which now holds for any television at any
+height, but it does mean the mosque's screen has not been confirmed either way. 540dp is
+what a 1080p Android TV at density 320 reports and is the common case, so the mosque's
+display was very likely shrunk too; that is an inference, not a measurement.
 
 Measured on the device itself, both ways: with the old behaviour the clock node was
 360px; with `isTv` short-circuiting the scale it is 398px. 360/398 = 0.905, which is the
