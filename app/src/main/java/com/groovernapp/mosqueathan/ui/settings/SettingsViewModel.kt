@@ -153,52 +153,6 @@ class SettingsViewModel(
         }
     }
 
-    fun updateConfig(config: MosqueConfig) {
-        viewModelScope.launch {
-            repository.updateConfig(config)
-        }
-        sendRemoteAction("update_config") {
-            put("latitude", config.latitude)
-            put("longitude", config.longitude)
-            put("iqomahSubuh", config.iqomahSubuh)
-            put("iqomahDzuhur", config.iqomahDzuhur)
-            put("iqomahAshar", config.iqomahAshar)
-            put("iqomahMaghrib", config.iqomahMaghrib)
-            put("iqomahIsya", config.iqomahIsya)
-            put("calculationMethodName", config.calculationMethodName)
-            put("adzanLeadMinutes", config.adzanLeadMinutes)
-            put("offsetImsak", config.offsetImsak)
-            put("offsetSubuh", config.offsetSubuh)
-            put("offsetSyuruq", config.offsetSyuruq)
-            put("offsetDzuhur", config.offsetDzuhur)
-            put("offsetAshar", config.offsetAshar)
-            put("offsetMaghrib", config.offsetMaghrib)
-            put("offsetIsya", config.offsetIsya)
-            put("kemenagCityId", config.kemenagCityId)
-            put("kemenagCityName", config.kemenagCityName)
-            put("kemenagDuration", config.kemenagDuration)
-            put("kemenagTargetDate", config.kemenagTargetDate)
-            put("adzanFooterText", config.adzanFooterText)
-            put("iqomahFooterText", config.iqomahFooterText)
-            put("jumatEnabled", config.jumatEnabled)
-            put("jumatStartTime", config.jumatStartTime)
-            put("jumatEndTime", config.jumatEndTime)
-            put("offsetJumat", config.offsetJumat)
-            put("jumatStandbyOnly", config.jumatStandbyOnly)
-            put("jumatWarningText", config.jumatWarningText)
-            put("murottalEnabled", config.murottalEnabled)
-            put("murottalStartDelay", config.murottalStartDelay)
-            put("murottalAudioPaths", config.murottalAudioPaths)
-            put("jumatSlideshowEnabled", config.jumatSlideshowEnabled)
-            put("includeGlobalSlideshow", config.includeGlobalSlideshow)
-            put("selectedGlobalSlideIds", config.selectedGlobalSlideIds)
-            put("jumatTransitionType", config.jumatTransitionType)
-            put("jumatSlideIntervalSeconds", config.jumatSlideIntervalSeconds)
-            put("jumatSlideIntervalUnit", config.jumatSlideIntervalUnit)
-            put("jumatVideoWaitUntilEnd", config.jumatVideoWaitUntilEnd)
-        }
-    }
-
     fun updateConfig(
         latitude: Double,
         longitude: Double,
@@ -234,46 +188,6 @@ class SettingsViewModel(
                 adzanFooterText = adzanFooterText,
                 iqomahFooterText = iqomahFooterText
             )
-        }
-    }
-
-    fun addAnnouncement(content: String) {
-        viewModelScope.launch {
-            repository.addAnnouncement(content)
-        }
-        sendRemoteAction("add_announcement") {
-            put("content", content)
-        }
-    }
-
-    fun deleteAnnouncement(id: String) {
-        viewModelScope.launch {
-            repository.deleteAnnouncement(id)
-        }
-        sendRemoteAction("delete_announcement") {
-            put("id", id)
-        }
-    }
-
-    fun editAnnouncement(id: String, content: String) {
-        viewModelScope.launch {
-            repository.updateAnnouncement(id, content, true)
-        }
-        sendRemoteAction("update_announcement") {
-            put("id", id)
-            put("content", content)
-            put("isActive", true)
-        }
-    }
-
-    fun reorderAnnouncements(ids: List<String>) {
-        viewModelScope.launch {
-            repository.updateAnnouncementsOrder(ids)
-        }
-        sendRemoteAction("update_announcements_order") {
-            val arr = org.json.JSONArray()
-            ids.forEach { arr.put(it) }
-            put("ids", arr)
         }
     }
 
@@ -344,53 +258,6 @@ class SettingsViewModel(
     fun deleteStandbySchedule(id: String) {
         viewModelScope.launch {
             repository.deleteStandbySchedule(id)
-        }
-    }
-
-    fun updateThemeSettings(transitionType: String, intervalSeconds: Int, videoWaitUntilEnd: Boolean, includeDefaultImage: Boolean) {
-        viewModelScope.launch {
-            repository.updateThemeSettings(transitionType, intervalSeconds, videoWaitUntilEnd, includeDefaultImage)
-        }
-        sendRemoteAction("update_theme") {
-            put("transitionType", transitionType)
-            put("slideIntervalSeconds", intervalSeconds)
-            put("videoWaitUntilEnd", videoWaitUntilEnd)
-            put("includeDefaultImage", includeDefaultImage)
-        }
-    }
-
-    fun sendRemoteAction(action: String, block: org.json.JSONObject.() -> Unit) {
-        val config = _configState.value
-        if (config.connectivityMode != "REMOTE" || config.remoteTvIp.isEmpty()) return
-        
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                val json = org.json.JSONObject().apply {
-                    put("action", action)
-                    put("deviceId", "remote_${android.os.Build.MODEL.replace(" ", "_")}")
-                    block()
-                }
-                val url = java.net.URL("http://${config.remoteTvIp}:8080/api/action")
-                val conn = url.openConnection() as java.net.HttpURLConnection
-                conn.requestMethod = "POST"
-                conn.connectTimeout = 3000
-                conn.readTimeout = 3000
-                conn.doOutput = true
-                conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
-                
-                conn.outputStream.use { os ->
-                    os.write(json.toString().toByteArray(Charsets.UTF_8))
-                }
-                val responseCode = conn.responseCode
-                if (responseCode == 200) {
-                    val resp = conn.inputStream.bufferedReader().use { it.readText() }
-                    android.util.Log.d("RemoteSync", "Action sent successfully: $resp")
-                } else {
-                    android.util.Log.e("RemoteSync", "Failed to send action: $responseCode")
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("RemoteSync", "Error sending action", e)
-            }
         }
     }
 
@@ -481,53 +348,6 @@ class SettingsViewModel(
     fun updateRemoteTvIp(ip: String) {
         viewModelScope.launch {
             repository.updateRemoteTvIp(ip)
-        }
-    }
-
-    fun updateShowSettingsOnTv(show: Boolean) {
-        viewModelScope.launch {
-            repository.updateShowSettingsOnTv(show)
-        }
-        sendRemoteAction("update_config") {
-            put("showSettingsOnTv", show)
-        }
-    }
-
-    fun updateStandbySettings(enabled: Boolean, startTime: String, endTime: String) {
-        viewModelScope.launch {
-            repository.updateStandbySettings(enabled, startTime, endTime)
-        }
-        sendRemoteAction("update_config") {
-            put("standbyModeEnabled", enabled)
-            put("standbyStartTime", startTime)
-            put("standbyEndTime", endTime)
-        }
-    }
-
-    fun setDeviceMaster(deviceId: String) {
-        viewModelScope.launch {
-            repository.setDeviceMaster(deviceId)
-        }
-        sendRemoteAction("set_master") {
-            put("deviceId", deviceId)
-        }
-    }
-
-    fun updatePinCode(newPin: String) {
-        viewModelScope.launch {
-            repository.updatePinCode(newPin, null)
-        }
-        sendRemoteAction("update_pin") {
-            put("pin", newPin)
-        }
-    }
-
-    fun deleteDevice(deviceId: String) {
-        viewModelScope.launch {
-            repository.deleteDevice(deviceId)
-        }
-        sendRemoteAction("delete_device") {
-            put("deviceId", deviceId)
         }
     }
 
