@@ -1,5 +1,13 @@
 package com.groovernapp.mosqueathan.ui.settings
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import com.groovernapp.mosqueathan.util.optionalBoolean
+import com.groovernapp.mosqueathan.util.optionalDouble
+import com.groovernapp.mosqueathan.util.optionalInt
+import com.groovernapp.mosqueathan.util.optionalString
 import com.groovernapp.mosqueathan.data.media.MediaFileStore
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -92,66 +100,8 @@ class SettingsViewModel(
         }
     }
 
-    private val _citySearchResults = MutableStateFlow<List<Pair<String, String>>>(emptyList())
-    val citySearchResults = _citySearchResults.asStateFlow()
 
-    private val _isSearchingCities = MutableStateFlow(false)
-    val isSearchingCities = _isSearchingCities.asStateFlow()
 
-    fun searchKemenagCities(query: String) {
-        if (query.trim().isEmpty()) {
-            _citySearchResults.value = emptyList()
-            return
-        }
-        _isSearchingCities.value = true
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                val urlString = "https://api.myquran.com/v3/sholat/kabkota/cari/${java.net.URLEncoder.encode(query, "UTF-8")}"
-                val url = java.net.URL(urlString)
-                val connection = url.openConnection() as java.net.HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 5000
-                connection.readTimeout = 5000
-                connection.connect()
-
-                if (connection.responseCode == 200) {
-                    val reader = java.io.BufferedReader(java.io.InputStreamReader(connection.inputStream))
-                    val response = java.lang.StringBuilder()
-                    var line: String?
-                    while (reader.readLine().also { line = it } != null) {
-                        response.append(line)
-                    }
-                    reader.close()
-
-                    val json = org.json.JSONObject(response.toString())
-                    if (json.optBoolean("status")) {
-                        val arr = json.optJSONArray("data")
-                        val results = mutableListOf<Pair<String, String>>()
-                        if (arr != null) {
-                            for (i in 0 until arr.length()) {
-                                val item = arr.getJSONObject(i)
-                                val id = item.optString("id")
-                                val lokasi = item.optString("lokasi")
-                                if (id.isNotEmpty() && lokasi.isNotEmpty()) {
-                                    results.add(id to lokasi)
-                                }
-                            }
-                        }
-                        _citySearchResults.value = results
-                    } else {
-                        _citySearchResults.value = emptyList()
-                    }
-                } else {
-                    _citySearchResults.value = emptyList()
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("SettingsViewModel", "Error searching Kemenag cities", e)
-                _citySearchResults.value = emptyList()
-            } finally {
-                _isSearchingCities.value = false
-            }
-        }
-    }
 
     fun updateConfig(
         latitude: Double,
@@ -276,53 +226,52 @@ class SettingsViewModel(
                 
                 if (conn.responseCode == 200) {
                     val response = conn.inputStream.bufferedReader().use { it.readText() }
-                    val json = org.json.JSONObject(response)
-                    val configJson = json.optJSONObject("config")
+                    val json = Json.parseToJsonElement(response).jsonObject
+                    val configJson = json["config"] as? JsonObject
                     
                     if (configJson != null) {
                         repository.updateConfig(
-                            latitude = configJson.optDouble("latitude"),
-                            longitude = configJson.optDouble("longitude"),
-                            iqomahSubuh = configJson.optInt("iqomahSubuh"),
-                            iqomahDzuhur = configJson.optInt("iqomahDzuhur"),
-                            iqomahAshar = configJson.optInt("iqomahAshar"),
-                            iqomahMaghrib = configJson.optInt("iqomahMaghrib"),
-                            iqomahIsya = configJson.optInt("iqomahIsya"),
-                            calculationMethodName = configJson.optString("calculationMethodName"),
-                            adzanLeadMinutes = configJson.optInt("adzanLeadMinutes"),
-                            offsetImsak = configJson.optInt("offsetImsak"),
-                            offsetSubuh = configJson.optInt("offsetSubuh"),
-                            offsetSyuruq = configJson.optInt("offsetSyuruq"),
-                            offsetDzuhur = configJson.optInt("offsetDzuhur"),
-                            offsetAshar = configJson.optInt("offsetAshar"),
-                            offsetMaghrib = configJson.optInt("offsetMaghrib"),
-                            offsetIsya = configJson.optInt("offsetIsya"),
-                            kemenagCityId = configJson.optString("kemenagCityId"),
-                            kemenagCityName = configJson.optString("kemenagCityName"),
-                            kemenagDuration = configJson.optString("kemenagDuration"),
-                            kemenagTargetDate = configJson.optString("kemenagTargetDate"),
+                            latitude = configJson.optionalDouble("latitude"),
+                            longitude = configJson.optionalDouble("longitude"),
+                            iqomahSubuh = configJson.optionalInt("iqomahSubuh"),
+                            iqomahDzuhur = configJson.optionalInt("iqomahDzuhur"),
+                            iqomahAshar = configJson.optionalInt("iqomahAshar"),
+                            iqomahMaghrib = configJson.optionalInt("iqomahMaghrib"),
+                            iqomahIsya = configJson.optionalInt("iqomahIsya"),
+                            calculationMethodName = configJson.optionalString("calculationMethodName"),
+                            adzanLeadMinutes = configJson.optionalInt("adzanLeadMinutes"),
+                            offsetImsak = configJson.optionalInt("offsetImsak"),
+                            offsetSubuh = configJson.optionalInt("offsetSubuh"),
+                            offsetSyuruq = configJson.optionalInt("offsetSyuruq"),
+                            offsetDzuhur = configJson.optionalInt("offsetDzuhur"),
+                            offsetAshar = configJson.optionalInt("offsetAshar"),
+                            offsetMaghrib = configJson.optionalInt("offsetMaghrib"),
+                            offsetIsya = configJson.optionalInt("offsetIsya"),
+                            kemenagCityId = configJson.optionalString("kemenagCityId"),
+                            kemenagCityName = configJson.optionalString("kemenagCityName"),
+                            kemenagDuration = configJson.optionalString("kemenagDuration"),
+                            kemenagTargetDate = configJson.optionalString("kemenagTargetDate"),
                             triggerFetch = true,
-                            adzanFooterText = configJson.optString("adzanFooterText"),
-                            iqomahFooterText = configJson.optString("iqomahFooterText")
+                            adzanFooterText = configJson.optionalString("adzanFooterText"),
+                            iqomahFooterText = configJson.optionalString("iqomahFooterText")
                         )
                         repository.updateStandbySettings(
-                            enabled = configJson.optBoolean("standbyModeEnabled"),
-                            startTime = configJson.optString("standbyStartTime"),
-                            endTime = configJson.optString("standbyEndTime")
+                            enabled = configJson.optionalBoolean("standbyModeEnabled"),
+                            startTime = configJson.optionalString("standbyStartTime"),
+                            endTime = configJson.optionalString("standbyEndTime")
                         )
                         repository.updateSlideshowEnabled(
-                            enabled = configJson.optBoolean("slideshowEnabled")
+                            enabled = configJson.optionalBoolean("slideshowEnabled")
                         )
                         
                         // Sync announcements
-                        val announcementsArray = json.optJSONArray("announcements")
-                        if (announcementsArray != null) {
+                        val announcements = json["announcements"] as? JsonArray
+                        if (announcements != null) {
                             repository.clearAnnouncements()
-                            for (i in 0 until announcementsArray.length()) {
-                                val item = announcementsArray.getJSONObject(i)
+                            announcements.filterIsInstance<JsonObject>().forEach { item ->
                                 repository.addAnnouncement(
-                                    content = item.optString("content"),
-                                    customId = item.optString("id")
+                                    content = item.optionalString("content"),
+                                    customId = item.optionalString("id")
                                 )
                             }
                         }

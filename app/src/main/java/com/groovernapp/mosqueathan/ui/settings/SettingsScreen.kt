@@ -90,8 +90,6 @@ fun SettingsScreen(
     val announcements by viewModel.announcementsState.collectAsState()
     val mediaList by viewModel.mediaListState.collectAsState()
     val devices by viewModel.devicesState.collectAsState()
-    val citySearchResults by viewModel.citySearchResults.collectAsState()
-    val isSearchingCities by viewModel.isSearchingCities.collectAsState()
     val slideshowSchedules by viewModel.slideshowSchedulesState.collectAsState()
     val dashboardBackgrounds by viewModel.dashboardBackgroundsState.collectAsState()
     val standbySchedules by viewModel.standbySchedulesState.collectAsState()
