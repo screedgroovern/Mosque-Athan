@@ -29,13 +29,14 @@ fun MosqueTheme(
     val container = LocalWindowInfo.current.containerSize
     val widthDp = with(density) { container.width.toDp() }
     val heightDp = with(density) { container.height.toDp() }
-    val windowClass = windowClassFor(widthDp, rememberIsTv())
+    val isTv = rememberIsTv()
+    val windowClass = windowClassFor(widthDp, isTv)
 
     CompositionLocalProvider(
         LocalWindowClass provides windowClass,
         LocalWindowMetrics provides WindowMetrics(windowClass, widthDp, heightDp),
-        LocalTypeScale provides displayTypeScaleFor(heightDp),
-        LocalDisplayScale provides displayScaleFor(heightDp)
+        LocalTypeScale provides displayTypeScaleFor(heightDp, isTv),
+        LocalDisplayScale provides displayScaleFor(heightDp, isTv)
     ) {
         MaterialTheme(
             colorScheme = darkColorScheme(),

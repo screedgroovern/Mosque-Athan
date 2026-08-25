@@ -78,4 +78,32 @@ class DisplayTypeScaleTest {
         val tiny = displayTypeScaleFor(80.dp)
         assertTrue(tiny.clockDisplay.value >= MosqueTypography.clockDisplay.value * 0.45f - 0.01f)
     }
+
+    @Test
+    fun aTelevisionIsNeverScaled() {
+        // The mosque's display is an AQUA/Haier Android TV: 1920x1080 at density 320,
+        // so 540dp tall — below the 600dp knee. It had been rendering at 0.9 since the
+        // short-window fix, because the code assumed a television was always taller than
+        // the knee and nobody had measured one.
+        assertEquals(1f, displayScaleFor(540.dp, isTv = true))
+        assertEquals(MosqueTypography.clockDisplay, displayTypeScaleFor(540.dp, isTv = true).clockDisplay)
+    }
+
+    @Test
+    fun aTelevisionIsUnscaledEvenAtAbsurdlyShortHeights() {
+        // A television is read from the back of a room. There is no height at which
+        // shrinking its type is the right answer, so this holds unconditionally rather
+        // than down to some threshold.
+        listOf(540, 480, 360, 200).forEach { h ->
+            assertEquals(1f, displayScaleFor(h.dp, isTv = true), "TV at ${h}dp")
+        }
+    }
+
+    @Test
+    fun aNonTelevisionOfTheSameHeightStillScales() {
+        // Guards the obvious mistake of making the knee unconditional and thereby
+        // undoing the phone fix.
+        assertEquals(540f / 600f, displayScaleFor(540.dp, isTv = false))
+        assertTrue(displayScaleFor(360.dp, isTv = false) < 1f)
+    }
 }

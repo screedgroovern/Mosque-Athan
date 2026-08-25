@@ -145,12 +145,13 @@ private class ScaledTypeScale(private val factor: Float) : TypeScale {
 /**
  * How much to shrink display type for a window this tall.
  *
- * Exactly 1.0 at [FULL_HEIGHT] and above, so the television and the tablet — 711dp
- * and up — render byte-identically to before. Below that it tracks the height, with
- * a floor so the clock never becomes unreadable from across a room.
+ * Unscaled on a television at any height, and on any window [FULL_HEIGHT] or taller.
+ * Below that it tracks the height, with a floor so the clock never becomes unreadable
+ * from across a room.
  */
-fun displayTypeScaleFor(height: Dp): TypeScale =
-    if (height >= FULL_HEIGHT) MosqueTypography else ScaledTypeScale(displayScaleFor(height))
+fun displayTypeScaleFor(height: Dp, isTv: Boolean = false): TypeScale =
+    if (isTv || height >= FULL_HEIGHT) MosqueTypography
+    else ScaledTypeScale(displayScaleFor(height, isTv))
 
 /**
  * How much display-side vertical space to keep at this height.
@@ -159,9 +160,23 @@ fun displayTypeScaleFor(height: Dp): TypeScale =
  * alongside the text or they eat the room the smaller type just freed: at 360dp the
  * dashboard's paddings and the running-text bar came to 136dp of the 360, which is
  * why shrinking the clock alone was not enough.
+ *
+ * **A television is never scaled**, whatever its height reports. This is not a special
+ * case bolted on: shrinking exists so a phone held at arm's length can still show the
+ * prayer times, and a television is the one screen where the opposite is true — it is
+ * read from the back of a room and every dp of type is doing work.
+ *
+ * It is also not hypothetical. The mosque's own display, an AQUA/Haier Android TV, is
+ * 1920x1080 at density 320 — **540dp tall**, below the 600dp knee. Without this it
+ * rendered at 0.9, and had been doing so since the short-window fix landed. The
+ * comment that used to sit here asserted "the television ... 711dp and up", which was
+ * an assumption nobody had measured.
  */
-fun displayScaleFor(height: Dp): Float =
-    if (height >= FULL_HEIGHT) 1f else (height / FULL_HEIGHT).coerceIn(MIN_FACTOR, 1f)
+fun displayScaleFor(height: Dp, isTv: Boolean = false): Float = when {
+    isTv -> 1f
+    height >= FULL_HEIGHT -> 1f
+    else -> (height / FULL_HEIGHT).coerceIn(MIN_FACTOR, 1f)
+}
 
 private val FULL_HEIGHT = 600.dp
 private const val MIN_FACTOR = 0.45f

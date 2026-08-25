@@ -1,5 +1,10 @@
 package com.groovernapp.mosqueathan.data
 
+import com.groovernapp.mosqueathan.util.optionalBoolean
+import com.groovernapp.mosqueathan.util.optionalString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import io.realm.kotlin.ext.query
@@ -948,39 +953,39 @@ class MosqueConfigRepository : DisplayDataSource {
                 }
                 reader.close()
 
-                val json = org.json.JSONObject(response.toString())
-                if (json.optBoolean("status")) {
-                    val dataObj = json.optJSONObject("data")
-                    val jadwalObj = dataObj?.optJSONObject("jadwal")
+                val json = Json.parseToJsonElement(response.toString()).jsonObject
+                if (json.optionalBoolean("status")) {
+                    val dataObj = json["data"] as? JsonObject
+                    val jadwalObj = dataObj?.get("jadwal") as? JsonObject
                     if (jadwalObj != null) {
-                        val keys = jadwalObj.keys()
                         realm.write {
-                            while (keys.hasNext()) {
-                                val dateStr = keys.next()
-                                val dayObj = jadwalObj.optJSONObject(dateStr)
+                            // The keys are dates, so the object is a map rather than a
+                            // record — iterate its entries instead of naming fields.
+                            jadwalObj.forEach { (dateStr, dayElement) ->
+                                val dayObj = dayElement as? JsonObject
                                 if (dayObj != null) {
                                     val existing = query<KemenagScheduleEntity>("dateString == $0 AND cityId == $1", dateStr, cityId).first().find()
                                     if (existing != null) {
-                                        existing.imsak = dayObj.optString("imsak")
-                                        existing.subuh = dayObj.optString("subuh")
-                                        existing.terbit = dayObj.optString("terbit")
-                                        existing.dhuha = dayObj.optString("dhuha")
-                                        existing.dzuhur = dayObj.optString("dzuhur")
-                                        existing.ashar = dayObj.optString("ashar")
-                                        existing.maghrib = dayObj.optString("maghrib")
-                                        existing.isya = dayObj.optString("isya")
+                                        existing.imsak = dayObj.optionalString("imsak")
+                                        existing.subuh = dayObj.optionalString("subuh")
+                                        existing.terbit = dayObj.optionalString("terbit")
+                                        existing.dhuha = dayObj.optionalString("dhuha")
+                                        existing.dzuhur = dayObj.optionalString("dzuhur")
+                                        existing.ashar = dayObj.optionalString("ashar")
+                                        existing.maghrib = dayObj.optionalString("maghrib")
+                                        existing.isya = dayObj.optionalString("isya")
                                     } else {
                                         copyToRealm(KemenagScheduleEntity().apply {
                                             this.dateString = dateStr
                                             this.cityId = cityId
-                                            this.imsak = dayObj.optString("imsak")
-                                            this.subuh = dayObj.optString("subuh")
-                                            this.terbit = dayObj.optString("terbit")
-                                            this.dhuha = dayObj.optString("dhuha")
-                                            this.dzuhur = dayObj.optString("dzuhur")
-                                            this.ashar = dayObj.optString("ashar")
-                                            this.maghrib = dayObj.optString("maghrib")
-                                            this.isya = dayObj.optString("isya")
+                                            this.imsak = dayObj.optionalString("imsak")
+                                            this.subuh = dayObj.optionalString("subuh")
+                                            this.terbit = dayObj.optionalString("terbit")
+                                            this.dhuha = dayObj.optionalString("dhuha")
+                                            this.dzuhur = dayObj.optionalString("dzuhur")
+                                            this.ashar = dayObj.optionalString("ashar")
+                                            this.maghrib = dayObj.optionalString("maghrib")
+                                            this.isya = dayObj.optionalString("isya")
                                         })
                                     }
                                 }

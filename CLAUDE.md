@@ -758,10 +758,12 @@ Two things scale with window height, both provided by `MosqueTheme`:
   on display screens. Scaling type alone was not enough: fixed padding and the
   running-text bar's `height(controlXl)` came to 136dp of the 360.
 
-**Exactly 1.0 at 600dp of height and above.** The tablet is 711dp and a television
-more, so both render as they shipped. `DisplayTypeScaleTest` asserts that with
-`assertEquals` on the `TextUnit` rather than a tolerance — "approximately
-unchanged" is not good enough for a display already in a mosque.
+**A television is never scaled, and otherwise the factor is 1.0 at 600dp and above.**
+The `isTv` half is not a refinement, it is a correction: this file used to claim "the
+tablet is 711dp and a television more", and the mosque's television is **540dp**. See
+below. `DisplayTypeScaleTest` asserts the unscaled sizes with `assertEquals` on the
+`TextUnit` rather than a tolerance — "approximately unchanged" is not good enough for a
+display already in a mosque.
 
 **Measured, tablet vs phone (2026-08-26).** Xiaomi 1137×711dp, Realme 800×360dp, both
 on the dashboard, block heights as a percentage of screen height taken from the
@@ -785,10 +787,28 @@ Anything further is a *layout* change rather than a scale change — putting the
 and time on one line on a short window would roughly halve the row. That is a mockup
 change and needs sign-off; do not do it as part of a scaling pass.
 
-Do not "fix" the remaining gap by steepening `displayScaleFor`. Note also that
-raising `FULL_HEIGHT` above 600dp would scale down **the mosque's television**, whose
-dp height is unmeasured — a 1080p Android TV at density 2.0 reports 540dp, which is
-already below the 600dp knee. Measure the real TV before touching that constant.
+Do not "fix" the remaining gap by steepening `displayScaleFor`, and do not raise
+`FULL_HEIGHT` — see the television note below.
+
+**The television, measured at last (2026-08-26).** An AQUA/Haier Android TV, model
+`AQUA Android TV DVB`, Android 11: **1920x1080 at density 320, so 960x540dp**. That is
+*below* the 600dp knee, so it had been rendering display type at **0.9** ever since the
+short-window fix landed — the mosque's screen was 10% smaller than designed and nobody
+could see it, because there was nothing to compare against.
+
+Measured on the device itself, both ways: with the old behaviour the clock node was
+360px; with `isTv` short-circuiting the scale it is 398px. 360/398 = 0.905, which is the
+0.9 the arithmetic predicted.
+
+`displayScaleFor` now returns 1.0 for a television at any height. That is the right rule
+rather than a patch for one device: shrinking exists so a phone held at arm's length can
+still show the prayer times, and a television is the one screen where the opposite
+holds — it is read from the back of a room.
+
+Reaching the TV at all: **its USB port is host-only**, so a cable will never enumerate it.
+Use `adb connect <ip>:5555`; it advertises itself as `_adb._tcp` and `adb mdns services`
+finds it. The RSA dialog has to be accepted on the TV screen, and while it says
+`unauthorized` every command — including one to wake it — answers `device offline`.
 
 Rules for display-screen work:
 

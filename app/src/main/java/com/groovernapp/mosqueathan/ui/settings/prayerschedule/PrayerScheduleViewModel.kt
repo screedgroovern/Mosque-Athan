@@ -1,5 +1,11 @@
 package com.groovernapp.mosqueathan.ui.settings.prayerschedule
 
+import com.groovernapp.mosqueathan.util.optionalBoolean
+import com.groovernapp.mosqueathan.util.optionalString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import com.groovernapp.mosqueathan.protocol.RemoteActions
 import kotlinx.serialization.json.put
 import android.util.Log
@@ -144,14 +150,13 @@ class PrayerScheduleViewModel(
         if (connection.responseCode != 200) return emptyList()
 
         val body = BufferedReader(InputStreamReader(connection.inputStream)).use { it.readText() }
-        val json = org.json.JSONObject(body)
-        if (!json.optBoolean("status")) return emptyList()
+        val json = Json.parseToJsonElement(body).jsonObject
+        if (!json.optionalBoolean("status")) return emptyList()
 
-        val array = json.optJSONArray("data") ?: return emptyList()
-        return (0 until array.length()).mapNotNull { i ->
-            val item = array.getJSONObject(i)
-            val id = item.optString("id")
-            val name = item.optString("lokasi")
+        val array = json["data"] as? JsonArray ?: return emptyList()
+        return array.filterIsInstance<JsonObject>().mapNotNull { item ->
+            val id = item.optionalString("id")
+            val name = item.optionalString("lokasi")
             if (id.isNotEmpty() && name.isNotEmpty()) KemenagCity(id, name) else null
         }
     }
