@@ -1,4 +1,4 @@
-package com.groovernapp.mosqueathan.ui.display
+package com.groovernapp.mosqueathan.ui.design
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -6,7 +6,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.painter.Painter
 
 /**
- * The three built-in background images, supplied by the platform that owns them.
+ * The built-in background images, supplied by the platform that owns them.
  *
  * These are Android drawables today, and `main_bg_default` cannot simply move here:
  * `SettingsServer` serves the same file as raw bytes over HTTP to the web panel, so it
@@ -27,6 +27,11 @@ class DisplayBackgrounds(
     val adzan: Painter,
     val iqomah: Painter
 )
+
+/*
+ * Lives in `:ui:design` rather than `:ui:display` because the settings screen draws the
+ * dashboard's background behind itself, and settings cannot depend on the display module.
+ */
 
 /**
  * Read it through [displayBackgrounds]. There is no sensible default — a missing

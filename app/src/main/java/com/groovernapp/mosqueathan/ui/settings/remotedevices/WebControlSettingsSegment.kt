@@ -14,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.groovernapp.mosqueathan.protocol.TvPairing
-import com.groovernapp.mosqueathan.server.SettingsServer
+import com.groovernapp.mosqueathan.ui.design.serverAddress
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
@@ -32,7 +32,7 @@ fun WebControlSettingsSegment(
     val showSettingsOnTv = state.showSettingsOnTv
     val onUpdateShowSettingsOnTv: (Boolean) -> Unit =
         { onEvent(RemoteDevicesEvent.ShowSettingsOnTvToggled(it)) }
-    val ipAddress = remember { SettingsServer.getIpAddress() }
+    val ipAddress = serverAddress
     // TvPairing owns the format so that this string and the scanner that reads it back
     // cannot drift apart; the port lived here as a literal before.
     val serverUrl = ipAddress?.let(TvPairing::url)

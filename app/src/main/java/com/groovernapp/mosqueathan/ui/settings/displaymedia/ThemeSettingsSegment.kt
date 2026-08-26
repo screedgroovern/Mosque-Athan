@@ -65,7 +65,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.groovernapp.mosqueathan.R
 import com.groovernapp.mosqueathan.domain.DashboardBackground
 import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.domain.MosqueConfig
@@ -73,7 +72,6 @@ import com.groovernapp.mosqueathan.domain.SlideshowSchedule
 import com.groovernapp.mosqueathan.ui.component.Schedule
 import com.groovernapp.mosqueathan.ui.component.SlideshowComponent
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
-import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
@@ -958,7 +956,7 @@ fun DropdownAdjustmentRow(
 @Preview(showBackground = true, backgroundColor = 0xFF000000, widthDp = 1280, heightDp = 720)
 @Composable
 fun ThemeSettingsSegmentPreview() {
-    MosqueAthanTheme {
+    MosqueTheme {
         ThemeSettingsSegment(
             state = DisplayMediaUiState(
                 slideshow = SlideshowSettings(transitionType = "FADE", intervalSeconds = 8)

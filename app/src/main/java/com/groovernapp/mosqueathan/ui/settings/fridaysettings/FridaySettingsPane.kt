@@ -31,7 +31,6 @@ import com.groovernapp.mosqueathan.ui.design.media.rememberAudioFilePicker
 import com.groovernapp.mosqueathan.ui.design.media.rememberMediaPicker
 import com.groovernapp.mosqueathan.ui.design.media.rememberMultipleMediaPicker
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
-import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 
@@ -643,7 +642,7 @@ private const val MAX_LISTED_AUDIO_PATHS = 5
 fun FridaySettingsPanePreview() {
     // Forty-one arguments became two, so the preview is now readable: it says what
     // it is showing rather than restating the whole signature.
-    MosqueAthanTheme {
+    MosqueTheme {
         FridaySettingsPane(
             state = FridayUiState(
                 enabled = true,

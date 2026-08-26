@@ -9,7 +9,9 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import com.groovernapp.mosqueathan.server.SettingsServer
 import com.groovernapp.mosqueathan.ui.adzan.AdzanScreen
 import com.groovernapp.mosqueathan.ui.adzan.AdzanViewModel
 import com.groovernapp.mosqueathan.ui.dashboard.DashboardScreen
@@ -20,7 +22,6 @@ import com.groovernapp.mosqueathan.ui.navigation.AppUiState
 import com.groovernapp.mosqueathan.ui.navigation.AppViewModel
 import com.groovernapp.mosqueathan.ui.settings.SettingsScreen
 import com.groovernapp.mosqueathan.ui.settings.SettingsViewModel
-import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import android.view.KeyEvent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
@@ -32,9 +33,10 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.res.painterResource
 import com.groovernapp.mosqueathan.ui.design.LocalAppVersion
+import com.groovernapp.mosqueathan.ui.design.LocalServerAddress
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
-import com.groovernapp.mosqueathan.ui.display.DisplayBackgrounds
-import com.groovernapp.mosqueathan.ui.display.LocalDisplayBackgrounds
+import com.groovernapp.mosqueathan.ui.design.DisplayBackgrounds
+import com.groovernapp.mosqueathan.ui.design.LocalDisplayBackgrounds
 
 class MainActivity : ComponentActivity() {
 
@@ -74,7 +76,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MosqueAthanTheme {
+            MosqueTheme {
                 // The three built-in backgrounds are Android drawables and stay in :app —
                 // SettingsServer still serves main_bg_default to the web panel as raw
                 // bytes, so it has to remain reachable as a resource. ui:display receives
@@ -83,6 +85,9 @@ class MainActivity : ComponentActivity() {
                     // Only the platform can answer this, so it is handed in here rather
                     // than read from the screen that shows it.
                     LocalAppVersion provides appVersionName(),
+                    // Enumerating network interfaces is a platform job; the pane that
+                    // shows the pairing QR should not be doing it.
+                    LocalServerAddress provides remember { SettingsServer.getIpAddress() },
                     LocalDisplayBackgrounds provides DisplayBackgrounds(
                         dashboard = painterResource(R.drawable.main_bg_default),
                         adzan = painterResource(R.drawable.adzan_bg_default),

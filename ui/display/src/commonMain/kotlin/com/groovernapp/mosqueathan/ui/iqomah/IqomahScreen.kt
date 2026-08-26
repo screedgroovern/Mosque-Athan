@@ -2,7 +2,7 @@ package com.groovernapp.mosqueathan.ui.iqomah
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.groovernapp.mosqueathan.ui.display.displayBackgrounds
+import com.groovernapp.mosqueathan.ui.design.displayBackgrounds
 import com.groovernapp.mosqueathan.ui.component.CountdownScreen
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 

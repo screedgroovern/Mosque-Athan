@@ -1,5 +1,8 @@
 package com.groovernapp.mosqueathan.ui.settings
 
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.groovernapp.mosqueathan.ui.design.displayBackgrounds
+import com.groovernapp.mosqueathan.ui.design.icon.StarCrescent
 import com.groovernapp.mosqueathan.ui.settings.prayerschedule.*
 import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.*
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.*
@@ -26,10 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.groovernapp.mosqueathan.R
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -153,7 +154,7 @@ fun SettingsScreen(
             )
         } else {
             Image(
-                painter = painterResource(R.drawable.main_bg_default),
+                painter = displayBackgrounds.dashboard,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
@@ -571,21 +572,12 @@ fun SideSheetContent(
                         contentAlignment = Alignment.Center
                     ) {
                         if (isCollapsed) {
-                            if (category.icon is androidx.compose.ui.graphics.vector.ImageVector) {
-                                Icon(
-                                    imageVector = category.icon,
-                                    contentDescription = category.getDisplayName(),
-                                    tint = tintColor,
-                                    modifier = Modifier.size(MosqueTheme.size.iconLg)
-                                )
-                            } else if (category.icon is Int) {
-                                Icon(
-                                    painter = androidx.compose.ui.res.painterResource(id = category.icon),
-                                    contentDescription = category.getDisplayName(),
-                                    tint = tintColor,
-                                    modifier = Modifier.size(MosqueTheme.size.iconLg)
-                                )
-                            }
+                            Icon(
+                                imageVector = category.icon,
+                                contentDescription = category.getDisplayName(),
+                                tint = tintColor,
+                                modifier = Modifier.size(MosqueTheme.size.iconLg)
+                            )
                         } else {
                             Row(
                                 modifier = Modifier
@@ -593,21 +585,12 @@ fun SideSheetContent(
                                     .padding(horizontal = MosqueTheme.spacing.xl),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                if (category.icon is androidx.compose.ui.graphics.vector.ImageVector) {
-                                    Icon(
-                                        imageVector = category.icon,
-                                        contentDescription = null,
-                                        tint = tintColor,
-                                        modifier = Modifier.size(MosqueTheme.size.iconLg)
-                                    )
-                                } else if (category.icon is Int) {
-                                    Icon(
-                                        painter = androidx.compose.ui.res.painterResource(id = category.icon),
-                                        contentDescription = null,
-                                        tint = tintColor,
-                                        modifier = Modifier.size(MosqueTheme.size.iconLg)
-                                    )
-                                }
+                                Icon(
+                                    imageVector = category.icon,
+                                    contentDescription = null,
+                                    tint = tintColor,
+                                    modifier = Modifier.size(MosqueTheme.size.iconLg)
+                                )
                                 Spacer(modifier = Modifier.width(MosqueTheme.spacing.lg))
                                 Text(
                                     text = category.getDisplayName(),
@@ -670,7 +653,7 @@ fun SideSheetContent(
 enum class SettingsCategory(
     val getDisplayName: @Composable () -> String,
     val getDescription: @Composable () -> String,
-    val icon: Any // Accepts ImageVector or Drawable Res ID (Int)
+    val icon: ImageVector
 ) {
     PRAYER_SCHEDULE(
         getDisplayName = { Lang.get("Prayer Schedule", "Jadwal Shalat") },
@@ -695,7 +678,7 @@ enum class SettingsCategory(
     FRIDAY_SETTINGS(
         getDisplayName = { Lang.get("Friday", "Hari Jum'at") },
         getDescription = { Lang.get("Configure Friday specific schedules, standby modes, khutbah warnings, and murottal audio.", "Atur jadwal khusus hari Jumat, standby, murottal sebelum adzan, dan teks pengumuman khutbah.") },
-        icon = com.groovernapp.mosqueathan.R.drawable.ic_star_crescent
+        icon = StarCrescent
     ),
     SYSTEM_MAINTENANCE(
         getDisplayName = { Lang.get("System & Reset", "Sistem & Reset") },

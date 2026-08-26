@@ -18,7 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.groovernapp.mosqueathan.ui.display.displayBackgrounds
+import com.groovernapp.mosqueathan.ui.design.displayBackgrounds
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush

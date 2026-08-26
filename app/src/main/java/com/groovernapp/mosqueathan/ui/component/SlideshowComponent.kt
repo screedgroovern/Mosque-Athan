@@ -34,7 +34,6 @@ import androidx.compose.ui.zIndex
 import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.TransitionAnimationRow
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.DropdownAdjustmentRow
-import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
@@ -395,7 +394,7 @@ fun SlideshowComponentPreview() {
         Media(id = "3", filePath = "path/to/image2.jpg", isVideo = false, isUsed = true)
     )
 
-    MosqueAthanTheme {
+    MosqueTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
             SlideshowComponent(
                 items = mockMediaList,
@@ -420,7 +419,7 @@ fun SlideshowComponentPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 fun SlideshowComponentEmptyPreview() {
-    MosqueAthanTheme {
+    MosqueTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
             SlideshowComponent<Media>(
                 items = emptyList(),
