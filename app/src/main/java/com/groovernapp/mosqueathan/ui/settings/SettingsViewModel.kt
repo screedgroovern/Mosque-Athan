@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.Job
 import com.groovernapp.mosqueathan.util.ImageUtils
 
 class SettingsViewModel(
@@ -59,23 +58,12 @@ class SettingsViewModel(
     private val _mediaListState = MutableStateFlow<List<Media>>(emptyList())
     val mediaListState = _mediaListState.asStateFlow()
 
-    private val _fridayMediaListState = MutableStateFlow<List<FridayMedia>>(emptyList())
-    val fridayMediaListState = _fridayMediaListState.asStateFlow()
 
-    private val _kemenagSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.domain.KemenagSchedule>>(emptyList())
-    val kemenagSchedulesState = _kemenagSchedulesState.asStateFlow()
 
     init {
         viewModelScope.launch {
-            var schedulesJob: Job? = null
             repository.getConfigFlow().collect { config ->
                 _configState.value = config
-                schedulesJob?.cancel()
-                schedulesJob = viewModelScope.launch {
-                    repository.getKemenagSchedulesFlow(config.kemenagCityId).collect { list ->
-                        _kemenagSchedulesState.value = list
-                    }
-                }
             }
         }
         viewModelScope.launch {
@@ -93,70 +81,15 @@ class SettingsViewModel(
                 _mediaListState.value = it
             }
         }
-        viewModelScope.launch {
-            repository.observeFridayMedia().collect {
-                _fridayMediaListState.value = it
-            }
-        }
     }
 
 
 
-
-    fun updateConfig(
-        latitude: Double,
-        longitude: Double,
-        iqomahSubuh: Int,
-        iqomahDzuhur: Int,
-        iqomahAshar: Int,
-        iqomahMaghrib: Int,
-        iqomahIsya: Int,
-        calculationMethodName: String,
-        adzanLeadMinutes: Int,
-        offsetImsak: Int = 0,
-        offsetSubuh: Int = 0,
-        offsetSyuruq: Int = 0,
-        offsetDzuhur: Int = 0,
-        offsetAshar: Int = 0,
-        offsetMaghrib: Int = 0,
-        offsetIsya: Int = 0,
-        kemenagCityId: String = "",
-        kemenagCityName: String = "",
-        kemenagDuration: String = "1_MONTH",
-        kemenagTargetDate: String = "",
-        adzanFooterText: String? = null,
-        iqomahFooterText: String? = null
-    ) {
-        viewModelScope.launch {
-            repository.updateConfig(
-                latitude, longitude,
-                iqomahSubuh, iqomahDzuhur, iqomahAshar, iqomahMaghrib, iqomahIsya,
-                calculationMethodName, adzanLeadMinutes,
-                offsetImsak, offsetSubuh, offsetSyuruq, offsetDzuhur, offsetAshar, offsetMaghrib, offsetIsya,
-                kemenagCityId, kemenagCityName, kemenagDuration, kemenagTargetDate,
-                triggerFetch = true,
-                adzanFooterText = adzanFooterText,
-                iqomahFooterText = iqomahFooterText
-            )
-        }
-    }
 
     fun resetToDefaults() {
         viewModelScope.launch {
             mediaFileStore.deleteCustomBackground()
             repository.resetToDefaults()
-        }
-    }
-
-    fun deleteMediaItem(item: Media) {
-        viewModelScope.launch {
-            try {
-                val file = java.io.File(item.filePath)
-                if (file.exists()) {
-                    file.delete()
-                }
-            } catch (_: Exception) {}
-            repository.deleteMediaItem(item.id)
         }
     }
 
@@ -184,18 +117,6 @@ class SettingsViewModel(
             repository.getStandbySchedulesFlow().collect {
                 _standbySchedulesState.value = it
             }
-        }
-    }
-
-    fun addSlideshowSchedule(day: String, isSpecificDate: Boolean, startTime: String, endTime: String) {
-        viewModelScope.launch {
-            repository.addSlideshowSchedule(day, isSpecificDate, startTime, endTime)
-        }
-    }
-
-    fun deleteSlideshowSchedule(id: String) {
-        viewModelScope.launch {
-            repository.deleteSlideshowSchedule(id)
         }
     }
 
@@ -288,72 +209,6 @@ class SettingsViewModel(
         }
     }
 
-    fun updateConnectivityMode(mode: String) {
-        viewModelScope.launch {
-            repository.updateConnectivityMode(mode)
-        }
-    }
-
-    fun updateRemoteTvIp(ip: String) {
-        viewModelScope.launch {
-            repository.updateRemoteTvIp(ip)
-        }
-    }
-
-    fun updateFooters(adzanFooter: String, iqomahFooter: String) {
-        viewModelScope.launch {
-            val config = repository.getConfig()
-            repository.updateConfig(
-                latitude = config.latitude,
-                longitude = config.longitude,
-                iqomahSubuh = config.iqomahSubuh,
-                iqomahDzuhur = config.iqomahDzuhur,
-                iqomahAshar = config.iqomahAshar,
-                iqomahMaghrib = config.iqomahMaghrib,
-                iqomahIsya = config.iqomahIsya,
-                calculationMethodName = config.calculationMethodName,
-                adzanLeadMinutes = config.adzanLeadMinutes,
-                offsetImsak = config.offsetImsak,
-                offsetSubuh = config.offsetSubuh,
-                offsetSyuruq = config.offsetSyuruq,
-                offsetDzuhur = config.offsetDzuhur,
-                offsetAshar = config.offsetAshar,
-                offsetMaghrib = config.offsetMaghrib,
-                offsetIsya = config.offsetIsya,
-                kemenagCityId = config.kemenagCityId,
-                kemenagCityName = config.kemenagCityName,
-                kemenagDuration = config.kemenagDuration,
-                kemenagTargetDate = config.kemenagTargetDate,
-                adzanFooterText = adzanFooter,
-                iqomahFooterText = iqomahFooter
-            )
-        }
-    }
-
-    fun updateSlideshowScheduleTime(id: String, startTime: String, endTime: String) {
-        viewModelScope.launch {
-            repository.updateSlideshowScheduleTime(id, startTime, endTime)
-        }
-    }
-
-    fun updateSlideshowScheduleDays(id: String, activeDays: String) {
-        viewModelScope.launch {
-            repository.updateSlideshowScheduleDays(id, activeDays)
-        }
-    }
-
-    fun updateSlideshowScheduleDates(id: String, specificDates: String) {
-        viewModelScope.launch {
-            repository.updateSlideshowScheduleDates(id, specificDates)
-        }
-    }
-
-    fun updateSlideshowEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            repository.updateSlideshowEnabled(enabled)
-        }
-    }
-
     fun updateStandbyScheduleTime(id: String, startTime: String, endTime: String) {
         viewModelScope.launch {
             repository.updateStandbyScheduleTime(id, startTime, endTime)
@@ -378,92 +233,4 @@ class SettingsViewModel(
         }
     }
 
-    fun deleteDashboardBackground(id: String) {
-        viewModelScope.launch {
-            try {
-                val item = _dashboardBackgroundsState.value.firstOrNull { it.id == id }
-                if (item != null) {
-                    val file = java.io.File(item.filePath)
-                    if (file.exists()) {
-                        file.delete()
-                    }
-                }
-            } catch (_: Exception) {}
-            repository.deleteDashboardBackground(id)
-        }
-    }
-
-    fun updateDashboardBackgroundUsed(id: String, isUsed: Boolean) {
-        viewModelScope.launch {
-            repository.updateDashboardBackgroundUsed(id, isUsed)
-        }
-    }
-
-    fun updateDashboardBackgroundOrder(ids: List<String>) {
-        viewModelScope.launch {
-            repository.updateDashboardBackgroundOrder(ids)
-        }
-    }
-
-    fun updateDashboardSettings(randomize: Boolean, transitionType: String, intervalSeconds: Int) {
-        viewModelScope.launch {
-            val config = repository.getConfig()
-            repository.updateConfig(
-                latitude = config.latitude,
-                longitude = config.longitude,
-                iqomahSubuh = config.iqomahSubuh,
-                iqomahDzuhur = config.iqomahDzuhur,
-                iqomahAshar = config.iqomahAshar,
-                iqomahMaghrib = config.iqomahMaghrib,
-                iqomahIsya = config.iqomahIsya,
-                calculationMethodName = config.calculationMethodName,
-                adzanLeadMinutes = config.adzanLeadMinutes,
-                offsetImsak = config.offsetImsak,
-                offsetSubuh = config.offsetSubuh,
-                offsetSyuruq = config.offsetSyuruq,
-                offsetDzuhur = config.offsetDzuhur,
-                offsetAshar = config.offsetAshar,
-                offsetMaghrib = config.offsetMaghrib,
-                offsetIsya = config.offsetIsya,
-                kemenagCityId = config.kemenagCityId,
-                kemenagCityName = config.kemenagCityName,
-                kemenagDuration = config.kemenagDuration,
-                kemenagTargetDate = config.kemenagTargetDate,
-                adzanFooterText = config.adzanFooterText,
-                iqomahFooterText = config.iqomahFooterText,
-                dashboardRandomize = randomize,
-                dashboardTransitionType = transitionType,
-                dashboardTransitionInterval = intervalSeconds
-            )
-        }
-    }
-
-    fun updateMediaItemUsed(id: String, isUsed: Boolean) {
-        viewModelScope.launch {
-            repository.updateMediaItemUsed(id, isUsed)
-        }
-    }
-    fun updateMediaListOrder(ids: List<String>) {
-        viewModelScope.launch {
-            repository.updateMediaListOrder(ids)
-        }
-    }
-
-    fun deleteFridayMediaItem(item: FridayMedia) {
-        viewModelScope.launch {
-            try {
-                val file = java.io.File(item.filePath)
-                if (file.exists()) {
-                    file.delete()
-                }
-            } catch (_: Exception) {}
-            repository.deleteFridayMedia(item.id)
-        }
-    }
-
-    fun updateFridayMediaOrder(ids: List<String>) {
-        viewModelScope.launch {
-            repository.updateFridayMediaOrder(ids)
-        }
-    }
 }
