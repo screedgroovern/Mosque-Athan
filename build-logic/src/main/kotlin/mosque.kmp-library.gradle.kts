@@ -6,10 +6,14 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  * Shared configuration for every Kotlin Multiplatform library module.
  *
  * Targets are declared here once so that the module list cannot silently diverge.
- * `iosArm64`/`iosSimulatorArm64`/`wasmJs` are deliberately absent for now — they are
- * added when steps 7 and 9 of the KMP migration need them. The `jvm()` target earns
- * its keep as a guardrail: if Android code leaks into `commonMain`, the JVM
- * compilation fails immediately rather than at the end of the migration.
+ * `iosArm64`/`iosSimulatorArm64` are still absent — they arrive with step 9.
+ *
+ * Two targets exist to be told the truth by, not to ship:
+ *  - `jvm()` catches Android code reaching `commonMain` immediately rather than at the
+ *    end of the migration.
+ *  - `wasmJs()` catches the *JVM* assumptions the jvm target happily allows —
+ *    `java.*`, reflection, `String.format`. It is the stricter of the two guardrails and
+ *    the reason step 7 is buildable at all.
  */
 plugins {
     id("com.android.library")
@@ -25,6 +29,9 @@ extensions.configure<KotlinMultiplatformExtension> {
         }
     }
     jvm()
+    wasmJs {
+        browser()
+    }
 
     compilerOptions {
         freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
