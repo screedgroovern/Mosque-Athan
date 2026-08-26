@@ -14,25 +14,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.groovernapp.mosqueathan.domain.MosqueConfig
-import com.groovernapp.mosqueathan.util.Lang
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
+import com.groovernapp.mosqueathan.protocol.TvPairing
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import com.groovernapp.mosqueathan.ui.design.MessageHost
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
-import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
+import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
+import com.groovernapp.mosqueathan.ui.design.qr.rememberQrScanner
+import com.groovernapp.mosqueathan.util.Lang
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 @Composable
 fun RemoteControlSettingsSegment(
@@ -43,24 +38,56 @@ fun RemoteControlSettingsSegment(
     val onUpdateRemoteTvIp: (String) -> Unit = { onEvent(RemoteDevicesEvent.RemoteTvIpEntered(it)) }
     val onUpdatePinCode: (String) -> Unit = { onEvent(RemoteDevicesEvent.PinCodeEntered(it)) }
     val onSyncWithTv: () -> Unit = { onEvent(RemoteDevicesEvent.SyncRequested) }
-    val context = LocalContext.current
     var ipText by remember(state.remoteTvIp) { mutableStateOf(state.remoteTvIp) }
     var pinText by remember { mutableStateOf("") }
 
-    val barcodeLauncher = rememberLauncherForActivityResult(
-        contract = ScanContract()
-    ) { result ->
-        if (result.contents != null) {
-            val qrContent = result.contents
-            val cleanedIp = try {
-                val uri = android.net.Uri.parse(qrContent)
-                uri.host ?: qrContent
-            } catch (e: Exception) {
-                qrContent
+    // The pane's own transient feedback, through the MessageHost seam rather than a
+    // Toast: a Toast needs a Context, and that Context was the last Android type in this
+    // file. `tryEmit` so a click handler stays a plain lambda; a dropped message when
+    // two arrive in the same frame is the right trade for that.
+    //
+    // Owned here rather than by RemoteDevicesViewModel deliberately. Every message below
+    // answers a press this composable validated itself ("the IP is empty", "connecting
+    // to X"), while the *outcome* of a sync already arrives on
+    // SettingsViewModel.messages. Moving these onto the category ViewModel means moving
+    // the validation with them, and SyncRequested is routed to SettingsViewModel at the
+    // SettingsScreen call site — so the pane would have to raise two events per press
+    // and split one validation across two files.
+    val messages = remember { MutableSharedFlow<String>(extraBufferCapacity = 1) }
+    fun say(message: String) {
+        messages.tryEmit(message)
+    }
+
+    val scanner = rememberQrScanner(
+        prompt = Lang.get(
+            "Point the camera at the QR code on the TV",
+            "Arahkan kamera ke QR Code TV"
+        )
+    )
+    // One scanner for both layouts' buttons, which is what a callback passed at launch
+    // buys: the compact and wide branches below call the same instance.
+    val onScanQr: () -> Unit = {
+        scanner.launch { payload ->
+            val address = TvPairing.addressFrom(payload)
+            if (address == null) {
+                // The payload used to be stored raw when it did not parse, so scanning a
+                // notice board set the TV's address to the notice board's text.
+                say(
+                    Lang.get(
+                        "That QR code does not carry a display address.",
+                        "Kode QR itu tidak memuat alamat layar."
+                    )
+                )
+            } else {
+                onUpdateRemoteTvIp(address)
+                say(
+                    Lang.get(
+                        "Connected to the TV via QR: $address",
+                        "Terhubung ke TV via QR: $address"
+                    )
+                )
+                onSyncWithTv()
             }
-            onUpdateRemoteTvIp(cleanedIp)
-            Toast.makeText(context, Lang.get("Connected to the TV via QR: $cleanedIp", "Terhubung ke TV via QR: $cleanedIp"), Toast.LENGTH_SHORT).show()
-            onSyncWithTv()
         }
     }
 
@@ -107,10 +134,10 @@ fun RemoteControlSettingsSegment(
                     MosquePrimaryButton(
                         onClick = {
                             if (ipText.trim().isEmpty()) {
-                                Toast.makeText(context, Lang.get("The TV IP address cannot be empty.", "IP TV tidak boleh kosong!"), Toast.LENGTH_SHORT).show()
+                                say(Lang.get("The TV IP address cannot be empty.", "IP TV tidak boleh kosong!"))
                             } else {
                                 onUpdateRemoteTvIp(ipText.trim())
-                                Toast.makeText(context, Lang.get("Connecting to the TV at ${ipText.trim()}\u2026", "Menghubungkan ke TV ${ipText.trim()}..."), Toast.LENGTH_SHORT).show()
+                                say(Lang.get("Connecting to the TV at ${ipText.trim()}\u2026", "Menghubungkan ke TV ${ipText.trim()}..."))
                                 onSyncWithTv()
                             }
                         },
@@ -123,17 +150,7 @@ fun RemoteControlSettingsSegment(
                     }
 
                     MosqueSecondaryButton(
-                        onClick = {
-                            val options = ScanOptions().apply {
-                                setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                                setPrompt(Lang.get("Point the camera at the QR code on the TV", "Arahkan kamera ke QR Code TV"))
-                                setCameraId(0)
-                                setBeepEnabled(true)
-                                setBarcodeImageEnabled(true)
-                                setOrientationLocked(false)
-                            }
-                            barcodeLauncher.launch(options)
-                        },
+                        onClick = onScanQr,
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
                     ) {
@@ -151,10 +168,10 @@ fun RemoteControlSettingsSegment(
                     MosquePrimaryButton(
                         onClick = {
                             if (ipText.trim().isEmpty()) {
-                                Toast.makeText(context, Lang.get("The TV IP address cannot be empty.", "IP TV tidak boleh kosong!"), Toast.LENGTH_SHORT).show()
+                                say(Lang.get("The TV IP address cannot be empty.", "IP TV tidak boleh kosong!"))
                             } else {
                                 onUpdateRemoteTvIp(ipText.trim())
-                                Toast.makeText(context, Lang.get("Connecting to the TV at ${ipText.trim()}\u2026", "Menghubungkan ke TV ${ipText.trim()}..."), Toast.LENGTH_SHORT).show()
+                                say(Lang.get("Connecting to the TV at ${ipText.trim()}\u2026", "Menghubungkan ke TV ${ipText.trim()}..."))
                                 onSyncWithTv()
                             }
                         },
@@ -167,17 +184,7 @@ fun RemoteControlSettingsSegment(
                     }
 
                     MosqueSecondaryButton(
-                        onClick = {
-                            val options = ScanOptions().apply {
-                                setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                                setPrompt(Lang.get("Point the camera at the QR code on the TV", "Arahkan kamera ke QR Code TV"))
-                                setCameraId(0)
-                                setBeepEnabled(true)
-                                setBarcodeImageEnabled(true)
-                                setOrientationLocked(false)
-                            }
-                            barcodeLauncher.launch(options)
-                        },
+                        onClick = onScanQr,
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f).height(MosqueTheme.size.controlLg)
                     ) {
@@ -191,9 +198,9 @@ fun RemoteControlSettingsSegment(
             MosqueTertiaryButton(
                 onClick = {
                     if (state.remoteTvIp.isEmpty()) {
-                        Toast.makeText(context, Lang.get("Connect to the TV first.", "Hubungkan ke TV terlebih dahulu!"), Toast.LENGTH_SHORT).show()
+                        say(Lang.get("Connect to the TV first.", "Hubungkan ke TV terlebih dahulu!"))
                     } else {
-                        Toast.makeText(context, Lang.get("Syncing with the TV\u2026", "Menyinkronkan data dengan TV..."), Toast.LENGTH_SHORT).show()
+                        say(Lang.get("Syncing with the TV\u2026", "Menyinkronkan data dengan TV..."))
                         onSyncWithTv()
                     }
                 },
@@ -300,7 +307,7 @@ fun RemoteControlSettingsSegment(
             MosquePrimaryButton(
                 onClick = {
                     onUpdatePinCode(pinText.trim())
-                    Toast.makeText(context, Lang.get("PIN saved.", "PIN keamanan berhasil disimpan!"), Toast.LENGTH_SHORT).show()
+                    say(Lang.get("PIN saved.", "PIN keamanan berhasil disimpan!"))
                     pinText = ""
                 },
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
@@ -315,5 +322,10 @@ fun RemoteControlSettingsSegment(
                 Text(Lang.get("Save PIN", "Simpan PIN"), fontWeight = FontWeight.Bold)
             }
         }
+
+        // Last child of the pane, which is where it belongs on both platforms for
+        // different reasons: on Android a Toast is its own window so this places no node
+        // at all, and the Snackbar the jvm actual would draw wants the bottom edge.
+        MessageHost(messages)
     }
 }

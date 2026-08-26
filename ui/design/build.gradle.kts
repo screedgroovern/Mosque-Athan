@@ -33,12 +33,22 @@ kotlin {
             api(project(":core:model"))
         }
         androidMain.dependencies {
-            // The module's only Android-specific dependency, and two seams need it:
-            // rememberLauncherForActivityResult for the media picker, and
-            // OnBackPressedDispatcher behind SystemBackHandler. androidx.activity owns
-            // both and has no multiplatform artifact, which is precisely why those two
-            // are expect/actual rather than shared code.
+            // Three seams need it: rememberLauncherForActivityResult for the media
+            // picker and the QR scanner, and OnBackPressedDispatcher behind
+            // SystemBackHandler. androidx.activity owns both and has no multiplatform
+            // artifact, which is precisely why those are expect/actual rather than
+            // shared code.
             implementation(libs.androidx.activity.compose)
+
+            // The QR seams. zxing's core is pure Java and encodes, so the jvm target
+            // gets it too; zxing-android-embedded is the scanner *activity* and is
+            // Android-only, which is why scanning has no jvm implementation.
+            implementation(libs.zxing)
+            implementation(libs.zxing.embedded)
+        }
+        jvmMain.dependencies {
+            // Encoding only. See QrScanner.jvm.kt for why reading a code is not here.
+            implementation(libs.zxing)
         }
         commonTest.dependencies {
             // kotlin.test, not JUnit: these assertions now run on the jvm target too,
