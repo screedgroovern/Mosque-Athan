@@ -1,4 +1,4 @@
-package com.groovernapp.mosqueathan.ui.display
+package com.groovernapp.mosqueathan.ui.design
 
 import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.ImageBitmap

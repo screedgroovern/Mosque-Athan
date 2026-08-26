@@ -21,47 +21,33 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.R
-import com.groovernapp.mosqueathan.domain.MosqueConfig
-import com.groovernapp.mosqueathan.domain.Announcement
-import com.groovernapp.mosqueathan.domain.Media
-import com.groovernapp.mosqueathan.domain.ConnectedDevice
-import com.groovernapp.mosqueathan.server.SettingsServer
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Campaign
-import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Devices
-import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Close
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.MessageHost
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import com.groovernapp.mosqueathan.ui.design.SystemBackHandler
+import com.groovernapp.mosqueathan.ui.design.decodeImageFile
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 import org.koin.androidx.compose.koinViewModel
@@ -102,15 +88,6 @@ fun SettingsScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val isTv = LocalWindowClass.current.isTv
 
-    // The ViewModel reports what happened; showing it is the screen's job, which is what
-    // lets syncWithTvServer stop taking a Context. Toast keeps the existing behaviour —
-    // the sync button is often pressed with no other visible feedback.
-    LaunchedEffect(viewModel) {
-        viewModel.messages.collect { message ->
-            android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
-
     // Location States
     var latText by remember(config.latitude) { mutableStateOf(config.latitude.toString()) }
     var lngText by remember(config.longitude) { mutableStateOf(config.longitude.toString()) }
@@ -143,25 +120,16 @@ fun SettingsScreen(
     var standbyModeEnabled by remember(config.standbyModeEnabled) { mutableStateOf(config.standbyModeEnabled) }
 
     val customBgBitmap = remember(config.customBackgroundPath) {
-        if (config.customBackgroundPath.isNotEmpty() && java.io.File(config.customBackgroundPath).exists()) {
-            try {
-                android.graphics.BitmapFactory.decodeFile(config.customBackgroundPath)?.asImageBitmap()
-            } catch (e: Throwable) {
-                null
-            }
-        } else {
-            null
-        }
+        decodeImageFile(config.customBackgroundPath)
     }
 
-    val containerSize = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
     val isCompact = LocalWindowClass.current.isCompact
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
     var isSideSheetExpanded by remember { mutableStateOf(!isCompact) }
 
-    androidx.activity.compose.BackHandler(enabled = isCompact && drawerState.isOpen) {
+    SystemBackHandler(enabled = isCompact && drawerState.isOpen) {
         coroutineScope.launch { drawerState.close() }
     }
 
@@ -469,6 +437,11 @@ fun SettingsScreen(
             }
         }
         }
+
+        // Last child of the root Box so it draws over the panes. The ViewModel reports
+        // what happened — sync succeeded, sync failed — and this decides how the
+        // platform says it; on Android that is still a Toast.
+        MessageHost(viewModel.messages)
     }
 }
 
