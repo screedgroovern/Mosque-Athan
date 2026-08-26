@@ -2,6 +2,7 @@ package com.groovernapp.mosqueathan.data.media
 
 import android.content.Context
 import android.net.Uri
+import com.groovernapp.mosqueathan.domain.AndroidPickedFile
 import com.groovernapp.mosqueathan.domain.MediaStore
 import com.groovernapp.mosqueathan.domain.PickedFile
 import com.groovernapp.mosqueathan.domain.StoredMedia
@@ -11,7 +12,8 @@ import com.groovernapp.mosqueathan.util.ImageUtils
 import java.io.File
 import java.util.UUID
 
-/** A file the app now owns, copied out of whatever the picker handed over. */
+private val PickedFile.uri: Uri
+    get() = (this as AndroidPickedFile).uri
 
 /**
  * Copies picked media into the app's own storage.
@@ -28,17 +30,6 @@ import java.util.UUID
  * Images are downscaled in place after copying; a phone camera photo is several
  * megabytes and would be decoded in full on every slideshow tick otherwise.
  */
-/**
- * The Android [PickedFile]: a content `Uri` from the system picker.
- *
- * A wrapper rather than a typealias so the neutral type can stay a plain interface —
- * see [PickedFile] for why `expect class` cannot work here.
- */
-class AndroidPickedFile(val uri: Uri) : PickedFile
-
-private val PickedFile.uri: Uri
-    get() = (this as AndroidPickedFile).uri
-
 class MediaFileStore(private val context: Context) : MediaStore {
 
     override fun storePresentationMedia(file: PickedFile): StoredMedia? = copy(file.uri, PRESENTATION_DIR)

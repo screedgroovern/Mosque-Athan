@@ -1,6 +1,5 @@
 package com.groovernapp.mosqueathan.ui.settings.fridaysettings
 
-import com.groovernapp.mosqueathan.data.media.AndroidPickedFile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -27,6 +26,10 @@ import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTertiaryButton
 import com.groovernapp.mosqueathan.ui.design.component.mosqueTextFieldColors
 import com.groovernapp.mosqueathan.ui.design.focusHighlight
+import com.groovernapp.mosqueathan.ui.design.media.MediaKind
+import com.groovernapp.mosqueathan.ui.design.media.rememberAudioFilePicker
+import com.groovernapp.mosqueathan.ui.design.media.rememberMediaPicker
+import com.groovernapp.mosqueathan.ui.design.media.rememberMultipleMediaPicker
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
@@ -38,49 +41,25 @@ fun FridaySettingsPane(
     onEvent: (FridayEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val mediaPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
-    ) { uris: List<android.net.Uri> ->
-        if (uris.isNotEmpty()) {
-            onEvent(FridayEvent.MediaAdded(uris.map(::AndroidPickedFile)))
-        }
-    }
-
-    var editingMediaId by remember { mutableStateOf<String?>(null) }
-    val mediaEditLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
-    ) { uri: android.net.Uri? ->
-        val id = editingMediaId
-        if (id != null && uri != null) {
-            onEvent(FridayEvent.MediaFileReplaced(id, AndroidPickedFile(uri)))
-        }
-        editingMediaId = null
-    }
+    val slidePicker = rememberMultipleMediaPicker(MediaKind.ImageAndVideo)
+    val slideReplacePicker = rememberMediaPicker(MediaKind.ImageAndVideo)
 
     /**
      * Opens a picker for the request events and passes everything else on.
      *
-     * The launchers have to live here — `rememberLauncherForActivityResult` is a
-     * composable — so the pane is the only place that can act on a "pick a file"
-     * request. Children stay on `state` + `onEvent` and never see a launcher.
+     * The pickers have to be remembered here — they are composables — so the pane is
+     * the only place that can act on a "pick a file" request. Children stay on
+     * `state` + `onEvent` and never see a picker.
      */
     val handleEvent: (FridayEvent) -> Unit = { event ->
         when (event) {
             FridayEvent.MediaPickRequested ->
-                mediaPickerLauncher.launch(
-                    androidx.activity.result.PickVisualMediaRequest(
-                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                    )
-                )
+                slidePicker.launch { files -> onEvent(FridayEvent.MediaAdded(files)) }
 
-            is FridayEvent.MediaFilePickRequested -> {
-                editingMediaId = event.id
-                mediaEditLauncher.launch(
-                    androidx.activity.result.PickVisualMediaRequest(
-                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                    )
-                )
-            }
+            is FridayEvent.MediaFilePickRequested ->
+                slideReplacePicker.launch { file ->
+                    onEvent(FridayEvent.MediaFileReplaced(event.id, file))
+                }
 
             else -> onEvent(event)
         }
@@ -572,17 +551,10 @@ private fun MurottalAudioPathsManager(
         state.audioPaths.split(",").map { it.trim() }.filter { it.isNotEmpty() }
     }
 
-    // Audio is picked with OpenMultipleDocuments rather than the visual-media
-    // picker, and the chosen URIs are the setting itself, so this launcher stays
-    // local: there is no file to copy and nothing for the ViewModel to resolve.
-    val audioPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments()
-    ) { uris: List<android.net.Uri> ->
-        if (uris.isNotEmpty()) {
-            val newPaths = (paths + uris.map { it.toString() }).distinct()
-            onEvent(FridayEvent.MurottalAudioPathsChanged(newPaths.joinToString(",")))
-        }
-    }
+    // The chosen references are the setting itself — nothing is copied and nothing is
+    // resolved by a ViewModel — so this picker stays local to the manager that owns
+    // the list.
+    val audioPicker = rememberAudioFilePicker()
 
     Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
         Text(
@@ -636,7 +608,12 @@ private fun MurottalAudioPathsManager(
 
         Row(horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
             MosqueSecondaryButton(
-                onClick = { audioPickerLauncher.launch(arrayOf("audio/*")) },
+                onClick = {
+                    audioPicker.launch { picked ->
+                        val newPaths = (paths + picked).distinct()
+                        onEvent(FridayEvent.MurottalAudioPathsChanged(newPaths.joinToString(",")))
+                    }
+                },
                 enabled = enabled
             ) {
                 Text(Lang.get("Add Audio", "Tambah Audio"))

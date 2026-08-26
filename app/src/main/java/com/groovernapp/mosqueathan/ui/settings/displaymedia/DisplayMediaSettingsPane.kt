@@ -1,23 +1,16 @@
 package com.groovernapp.mosqueathan.ui.settings.displaymedia
 
-import com.groovernapp.mosqueathan.data.media.AndroidPickedFile
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.groovernapp.mosqueathan.domain.Media
-import com.groovernapp.mosqueathan.domain.MosqueConfig
-import com.groovernapp.mosqueathan.domain.SlideshowSchedule
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
-import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.media.MediaKind
+import com.groovernapp.mosqueathan.ui.design.media.rememberMediaPicker
+import com.groovernapp.mosqueathan.ui.design.media.rememberMultipleMediaPicker
 
 @Composable
 fun DisplayMediaSettingsPane(
@@ -25,99 +18,45 @@ fun DisplayMediaSettingsPane(
     onEvent: (DisplayMediaEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val mediaPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
-    ) { uris: List<android.net.Uri> ->
-        if (uris.isNotEmpty()) {
-            onEvent(DisplayMediaEvent.MediaAdded(uris.map(::AndroidPickedFile)))
-        }
-    }
+    val slidePicker = rememberMultipleMediaPicker(MediaKind.ImageAndVideo)
+    val slideReplacePicker = rememberMediaPicker(MediaKind.ImageAndVideo)
+    val backgroundPicker = rememberMultipleMediaPicker(MediaKind.ImageOnly)
 
-    val backgroundPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
-    ) { uri: android.net.Uri? ->
-        if (uri != null) {
-            onEvent(DisplayMediaEvent.CustomBackgroundSelected(AndroidPickedFile(uri)))
-        }
-    }
-
-    val dashboardBackgroundAddLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
-    ) { uris: List<android.net.Uri> ->
-        if (uris.isNotEmpty()) {
-            onEvent(DisplayMediaEvent.BackgroundsAdded(uris.map(::AndroidPickedFile)))
-        }
-    }
-
-    var editingBgId by remember { mutableStateOf<String?>(null) }
-    val dashboardBackgroundEditLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
-    ) { uri: android.net.Uri? ->
-        val id = editingBgId
-        if (id != null && uri != null) {
-            onEvent(DisplayMediaEvent.BackgroundFileReplaced(id, AndroidPickedFile(uri)))
-        }
-        editingBgId = null
-    }
-
-    var editingMediaId by remember { mutableStateOf<String?>(null) }
-    val mediaEditLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
-    ) { uri: android.net.Uri? ->
-        val id = editingMediaId
-        if (id != null && uri != null) {
-            onEvent(DisplayMediaEvent.MediaFileReplaced(id, AndroidPickedFile(uri)))
-        }
-        editingMediaId = null
-    }
+    // Serves both single-image actions: with the callback given at launch, the custom
+    // background and a dashboard-background replacement no longer need a picker each.
+    val singleImagePicker = rememberMediaPicker(MediaKind.ImageOnly)
 
     /**
      * Opens a picker for the request events and passes everything else on.
      *
-     * The launchers have to live here — `rememberLauncherForActivityResult` is a
-     * composable — so the pane is the only place that can act on a "pick a file"
-     * request. Children stay on `state` + `onEvent` and never see a launcher.
+     * The pickers have to be remembered here — they are composables — so the pane is
+     * the only place that can act on a "pick a file" request. Children stay on
+     * `state` + `onEvent` and never see a picker.
      */
     val handleEvent: (DisplayMediaEvent) -> Unit = { event ->
         when (event) {
             DisplayMediaEvent.MediaPickRequested ->
-                mediaPickerLauncher.launch(
-                    androidx.activity.result.PickVisualMediaRequest(
-                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                    )
-                )
+                slidePicker.launch { files -> onEvent(DisplayMediaEvent.MediaAdded(files)) }
 
-            is DisplayMediaEvent.MediaFilePickRequested -> {
-                editingMediaId = event.id
-                mediaEditLauncher.launch(
-                    androidx.activity.result.PickVisualMediaRequest(
-                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
-                    )
-                )
-            }
+            is DisplayMediaEvent.MediaFilePickRequested ->
+                slideReplacePicker.launch { file ->
+                    onEvent(DisplayMediaEvent.MediaFileReplaced(event.id, file))
+                }
 
             DisplayMediaEvent.CustomBackgroundPickRequested ->
-                backgroundPickerLauncher.launch(
-                    androidx.activity.result.PickVisualMediaRequest(
-                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
-                    )
-                )
+                singleImagePicker.launch { file ->
+                    onEvent(DisplayMediaEvent.CustomBackgroundSelected(file))
+                }
 
             DisplayMediaEvent.BackgroundPickRequested ->
-                dashboardBackgroundAddLauncher.launch(
-                    androidx.activity.result.PickVisualMediaRequest(
-                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
-                    )
-                )
+                backgroundPicker.launch { files ->
+                    onEvent(DisplayMediaEvent.BackgroundsAdded(files))
+                }
 
-            is DisplayMediaEvent.BackgroundFilePickRequested -> {
-                editingBgId = event.id
-                dashboardBackgroundEditLauncher.launch(
-                    androidx.activity.result.PickVisualMediaRequest(
-                        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
-                    )
-                )
-            }
+            is DisplayMediaEvent.BackgroundFilePickRequested ->
+                singleImagePicker.launch { file ->
+                    onEvent(DisplayMediaEvent.BackgroundFileReplaced(event.id, file))
+                }
 
             else -> onEvent(event)
         }
