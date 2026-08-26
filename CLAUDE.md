@@ -843,6 +843,45 @@ for module boundaries over conventions in one paragraph:
 **`androidx.lifecycle` and `androidx.compose` are both multiplatform**, so no import in the
 32 files changed for either.
 
+### Step 7 groundwork: every shared module compiles for wasmJs
+
+All six — `core:model`, `core:prayer`, `core:protocol`, `ui:design`, `ui:display`,
+`ui:settings`. No `webApp` module yet; this is the part that had to come first, because it
+turns "will the UI port?" from a question into a measurement.
+
+**What wasmJs caught that the jvm guardrail did not.** This is the whole reason it was
+added rather than trusted:
+
+- **`String.format` in six places.** `"%02d:%02d:%02d".format(...)` resolves to
+  `java.lang.String.format`. The jvm target compiles it happily; wasm does not have it.
+  These formatted the *clock on the mosque display*, so `PaddingTest` now pins
+  `Int.pad(2)` against `%02d`'s behaviour — including that a value wider than the pad is
+  printed in full, since a three-digit minute countdown must not lose a digit.
+- **`androidx.lifecycle:lifecycle-viewmodel-compose` has no wasm variant.** The
+  multiplatform artifacts are JetBrains' republish,
+  `org.jetbrains.androidx.lifecycle:*` — the same arrangement as `org.jetbrains.compose`.
+  This file previously said "androidx.lifecycle 2.10 is multiplatform", which was true of
+  the runtime and not of the compose bindings.
+- **Two unused imports** (`asImageBitmap`, `painterResource`) that the Android and jvm
+  builds tolerated.
+
+**What the seams cost:** `:ui:design` failed with exactly nine errors, one per `expect`,
+and nothing else. `:ui:display` needed one more (`VideoSurface`). That is the payoff for
+naming every platform difference — the port is bounded by a list you can read.
+
+**The wasmJs actuals are not all equal, and the KDoc on each says which it is.** Three
+kinds:
+
+| Kind | Which |
+|---|---|
+| Correct as null/no-op | `rememberIsTv` (a browser is never the display), `decodeImageFile` (the paths belong to the *display's* filesystem and no browser can read them), `encodeQrCode` (only the display draws a pairing QR) |
+| Real gap, bounded by a product question | `SystemBackHandler` — the browser has `popstate`, but what a settings drawer should do to page history is a product decision |
+| Real gap, bounded by the canvas | `rememberQrScanner`, `VideoSurface` — Compose for web renders to a canvas, so a camera preview or a `<video>` has to be *composited* with it rather than laid out inside it. One obstacle, two features |
+| Real gap, bounded by upload | the three media pickers — a browser can pick a file; getting it into the *display's* storage means uploading over mosque wifi, and `POST /upload` exists but the progress UX does not |
+
+Do not "finish" these by writing plausible implementations. The pickers and the scanner
+each need a decision first, and the KDoc records which decision.
+
 ### Migration order
 
 Each step is independently reviewable. Steps 1–6 stay Android-only and remain

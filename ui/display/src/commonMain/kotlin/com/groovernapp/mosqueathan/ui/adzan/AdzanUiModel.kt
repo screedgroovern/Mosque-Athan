@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.adzan
 
+import com.groovernapp.mosqueathan.util.pad
 import com.groovernapp.mosqueathan.domain.PrayerType
 
 data class AdzanUiModel(
@@ -14,6 +15,6 @@ data class AdzanUiModel(
             val minutes = remainingSeconds / 60
             val seconds = remainingSeconds % 60
 
-            return "%02d:%02d".format(minutes, seconds)
+            return "${minutes.pad(2)}:${seconds.pad(2)}"
         }
 }

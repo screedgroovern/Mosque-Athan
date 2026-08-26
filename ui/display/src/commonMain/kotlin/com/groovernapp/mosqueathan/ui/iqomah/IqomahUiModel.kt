@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.iqomah
 
+import com.groovernapp.mosqueathan.util.pad
 import com.groovernapp.mosqueathan.domain.PrayerType
 
 data class IqomahUiModel(
@@ -16,16 +17,9 @@ data class IqomahUiModel(
             val seconds = remainingSeconds % 60
 
             return if (hours > 0) {
-                "%02d:%02d:%02d".format(
-                    hours,
-                    minutes,
-                    seconds
-                )
+                "${hours.pad(2)}:${minutes.pad(2)}:${seconds.pad(2)}"
             } else {
-                "%02d:%02d".format(
-                    minutes,
-                    seconds
-                )
+                "${minutes.pad(2)}:${seconds.pad(2)}"
             }
         }
 }

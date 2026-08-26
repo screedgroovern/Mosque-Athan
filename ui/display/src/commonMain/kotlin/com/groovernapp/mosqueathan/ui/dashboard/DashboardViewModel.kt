@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.dashboard
 
+import com.groovernapp.mosqueathan.util.pad
 import com.groovernapp.mosqueathan.domain.DisplayDataSource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -83,11 +84,7 @@ class DashboardViewModel(
 
 
     private fun LocalDateTime.toClockString(): String =
-        "%02d:%02d:%02d".format(
-            hour,
-            minute,
-            second
-        )
+        "${hour.pad(2)}:${minute.pad(2)}:${second.pad(2)}"
 
     private fun startClock() {
         clockJob?.cancel()

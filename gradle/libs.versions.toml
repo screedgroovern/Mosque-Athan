@@ -28,6 +28,9 @@ kotlinxDatetime = "0.7.1"
 kotlinxCoroutines = "1.10.2"
 kotlinxSerialization = "1.9.0"
 koin = "4.1.0"
+# The multiplatform lifecycle artifacts. androidx.lifecycle publishes no wasm variant;
+# JetBrains republishes it for Compose Multiplatform, the same arrangement as compose itself.
+jbLifecycle = "2.9.1"
 composeMultiplatform = "1.9.0"
 json = "20250517"
 
@@ -64,6 +67,8 @@ koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", versi
 koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
 # The multiplatform Koin bindings. koin-androidx-compose is Android-only, so a UI module
 # bound for commonMain needs these instead.
+jb-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jbLifecycle" }
+jb-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "jbLifecycle" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koin" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
 # org.json ships as a throwing stub on the Android unit-test classpath; this is the

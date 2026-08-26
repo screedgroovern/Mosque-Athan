@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.iqomah
 
+import com.groovernapp.mosqueathan.util.pad
 import com.groovernapp.mosqueathan.domain.DisplayDataSource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -55,7 +56,7 @@ class IqomahViewModel(
     }
 
     private fun LocalDateTime.toClockString(): String =
-        "%02d:%02d:%02d".format(hour, minute, second)
+        "${hour.pad(2)}:${minute.pad(2)}:${second.pad(2)}"
 
     override fun onCleared() {
         super.onCleared()

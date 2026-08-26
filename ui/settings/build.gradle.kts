@@ -19,9 +19,9 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.materialIconsExtended)
-            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.jb.lifecycle.viewmodel.compose)
             // collectAsStateWithLifecycle
-            implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.jb.lifecycle.runtime.compose)
             // koinViewModel(). The androidx variant :app uses is Android-only.
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)

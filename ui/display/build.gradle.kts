@@ -22,7 +22,7 @@ kotlin {
             // is the multiplatform annotation, and it is what makes the existing
             // previews survive the move rather than being deleted.
             implementation(compose.components.uiToolingPreview)
-            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.jb.lifecycle.viewmodel.compose)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
