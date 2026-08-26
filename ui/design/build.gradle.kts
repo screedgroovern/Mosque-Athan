@@ -27,6 +27,15 @@ kotlin {
             api(compose.foundation)
             api(compose.material3)
             api(compose.ui)
+
+            // PickedFile appears in the public API of the media picker seam, so it has
+            // to be `api`: a settings pane hands the result straight to an event.
+            api(project(":core:model"))
+        }
+        androidMain.dependencies {
+            // rememberLauncherForActivityResult, for the picker's Android actual. The
+            // only Android-specific dependency this module has.
+            implementation(libs.androidx.activity.compose)
         }
         commonTest.dependencies {
             // kotlin.test, not JUnit: these assertions now run on the jvm target too,
