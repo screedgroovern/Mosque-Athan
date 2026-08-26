@@ -8,6 +8,10 @@ android {
 
 kotlin {
     sourceSets {
+        commonMain.dependencies {
+            api(project(":core:model"))
+            api(libs.kotlinx.serialization.json)
+        }
         commonTest.dependencies {
             implementation(kotlin("test"))
         }

@@ -13,8 +13,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.domain.ConfigRepository
-import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
-import com.groovernapp.mosqueathan.data.remote.pushConfig
+import com.groovernapp.mosqueathan.protocol.RemoteActionSink
+import com.groovernapp.mosqueathan.protocol.pushConfig
 import com.groovernapp.mosqueathan.domain.PrayerType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,7 +42,7 @@ import java.net.URLEncoder
  */
 class PrayerScheduleViewModel(
     private val repository: ConfigRepository,
-    private val remote: RemoteActionSender
+    private val remote: RemoteActionSink
 ) : ViewModel() {
 
     private val searchResults = MutableStateFlow<List<KemenagCity>>(emptyList())

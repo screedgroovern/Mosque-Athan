@@ -8,7 +8,7 @@ import com.groovernapp.mosqueathan.util.optionalBoolean
 import com.groovernapp.mosqueathan.util.optionalDouble
 import com.groovernapp.mosqueathan.util.optionalInt
 import com.groovernapp.mosqueathan.util.optionalString
-import com.groovernapp.mosqueathan.data.media.MediaFileStore
+import com.groovernapp.mosqueathan.domain.MediaStore
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -30,7 +30,7 @@ import com.groovernapp.mosqueathan.util.ImageUtils
 
 class SettingsViewModel(
     private val repository: ConfigRepository,
-    private val mediaFileStore: MediaFileStore
+    private val mediaFileStore: MediaStore
 ) : ViewModel() {
 
     /**

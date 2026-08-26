@@ -1,4 +1,4 @@
-package com.groovernapp.mosqueathan.data.remote
+package com.groovernapp.mosqueathan.protocol
 
 import com.groovernapp.mosqueathan.domain.MosqueConfig
 import kotlinx.serialization.json.boolean
@@ -6,9 +6,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonPrimitive
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 /**
  * The `update_config` payload is what makes a change on a controller device reach
@@ -39,7 +39,7 @@ class PushConfigTest {
             // friday
             "jumatEnabled", "offsetJumat"
         ).forEach {
-            assertTrue("`$it` missing from update_config", payload.containsKey(it))
+            assertTrue(payload.containsKey(it), "`$it` missing from update_config")
         }
     }
 
@@ -59,7 +59,7 @@ class PushConfigTest {
             "jumatTransitionType", "jumatSlideIntervalSeconds", "jumatSlideIntervalUnit",
             "jumatVideoWaitUntilEnd"
         ).forEach {
-            assertTrue("`$it` missing from update_config", payload.containsKey(it))
+            assertTrue(payload.containsKey(it), "`$it` missing from update_config")
         }
     }
 
@@ -79,7 +79,7 @@ class PushConfigTest {
     fun valuesAreCarriedRatherThanDefaulted() {
         val config = MosqueConfig(latitude = -6.2, iqomahMaghrib = 7, offsetSubuh = -3, calculationMethodName = "KEMENAG", adzanLeadMinutes = 5)
         val payload = payloadFor(config)
-        assertEquals(-6.2, payload.doubleAt("latitude"), 0.0)
+        assertEquals(-6.2, payload.doubleAt("latitude"))
         assertEquals(7, payload.intAt("iqomahMaghrib"))
         assertEquals(-3, payload.intAt("offsetSubuh"))
         assertEquals("KEMENAG", payload.stringAt("calculationMethodName"))

@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings.displaymedia
 
+import com.groovernapp.mosqueathan.data.media.AndroidPickedFile
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,7 +29,7 @@ fun DisplayMediaSettingsPane(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris: List<android.net.Uri> ->
         if (uris.isNotEmpty()) {
-            onEvent(DisplayMediaEvent.MediaAdded(uris))
+            onEvent(DisplayMediaEvent.MediaAdded(uris.map(::AndroidPickedFile)))
         }
     }
 
@@ -36,7 +37,7 @@ fun DisplayMediaSettingsPane(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
     ) { uri: android.net.Uri? ->
         if (uri != null) {
-            onEvent(DisplayMediaEvent.CustomBackgroundSelected(uri))
+            onEvent(DisplayMediaEvent.CustomBackgroundSelected(AndroidPickedFile(uri)))
         }
     }
 
@@ -44,7 +45,7 @@ fun DisplayMediaSettingsPane(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris: List<android.net.Uri> ->
         if (uris.isNotEmpty()) {
-            onEvent(DisplayMediaEvent.BackgroundsAdded(uris))
+            onEvent(DisplayMediaEvent.BackgroundsAdded(uris.map(::AndroidPickedFile)))
         }
     }
 
@@ -54,7 +55,7 @@ fun DisplayMediaSettingsPane(
     ) { uri: android.net.Uri? ->
         val id = editingBgId
         if (id != null && uri != null) {
-            onEvent(DisplayMediaEvent.BackgroundFileReplaced(id, uri))
+            onEvent(DisplayMediaEvent.BackgroundFileReplaced(id, AndroidPickedFile(uri)))
         }
         editingBgId = null
     }
@@ -65,7 +66,7 @@ fun DisplayMediaSettingsPane(
     ) { uri: android.net.Uri? ->
         val id = editingMediaId
         if (id != null && uri != null) {
-            onEvent(DisplayMediaEvent.MediaFileReplaced(id, uri))
+            onEvent(DisplayMediaEvent.MediaFileReplaced(id, AndroidPickedFile(uri)))
         }
         editingMediaId = null
     }

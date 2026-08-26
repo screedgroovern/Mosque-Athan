@@ -2,6 +2,9 @@ package com.groovernapp.mosqueathan.data.media
 
 import android.content.Context
 import android.net.Uri
+import com.groovernapp.mosqueathan.domain.MediaStore
+import com.groovernapp.mosqueathan.domain.PickedFile
+import com.groovernapp.mosqueathan.domain.StoredMedia
 import android.provider.OpenableColumns
 import android.util.Log
 import com.groovernapp.mosqueathan.util.ImageUtils
@@ -9,7 +12,6 @@ import java.io.File
 import java.util.UUID
 
 /** A file the app now owns, copied out of whatever the picker handed over. */
-data class StoredMedia(val path: String, val isVideo: Boolean, val wasLarge: Boolean)
 
 /**
  * Copies picked media into the app's own storage.
@@ -26,14 +28,25 @@ data class StoredMedia(val path: String, val isVideo: Boolean, val wasLarge: Boo
  * Images are downscaled in place after copying; a phone camera photo is several
  * megabytes and would be decoded in full on every slideshow tick otherwise.
  */
-class MediaFileStore(private val context: Context) {
+/**
+ * The Android [PickedFile]: a content `Uri` from the system picker.
+ *
+ * A wrapper rather than a typealias so the neutral type can stay a plain interface —
+ * see [PickedFile] for why `expect class` cannot work here.
+ */
+class AndroidPickedFile(val uri: Uri) : PickedFile
 
-    fun storePresentationMedia(uri: Uri): StoredMedia? = copy(uri, PRESENTATION_DIR)
+private val PickedFile.uri: Uri
+    get() = (this as AndroidPickedFile).uri
 
-    fun storeDashboardBackground(uri: Uri): StoredMedia? = copy(uri, DASHBOARD_DIR)
+class MediaFileStore(private val context: Context) : MediaStore {
+
+    override fun storePresentationMedia(file: PickedFile): StoredMedia? = copy(file.uri, PRESENTATION_DIR)
+
+    override fun storeDashboardBackground(file: PickedFile): StoredMedia? = copy(file.uri, DASHBOARD_DIR)
 
     /** Friday slides live in their own directory: they are a separate library, not a subset. */
-    fun storeFridayMedia(uri: Uri): StoredMedia? = copy(uri, FRIDAY_DIR)
+    override fun storeFridayMedia(file: PickedFile): StoredMedia? = copy(file.uri, FRIDAY_DIR)
 
     /**
      * Deletes a file this store owns.
@@ -42,7 +55,7 @@ class MediaFileStore(private val context: Context) {
      * can be videos, so leaving them behind fills a television's internal storage
      * with files no screen will ever show again.
      */
-    fun delete(path: String): Boolean = try {
+    override fun delete(path: String): Boolean = try {
         val file = File(path)
         !file.exists() || file.delete()
     } catch (e: Exception) {
@@ -51,7 +64,8 @@ class MediaFileStore(private val context: Context) {
     }
 
     /** Overwrites an existing entry's file, keeping its path so the database row stands. */
-    fun replaceFile(path: String, uri: Uri): Boolean {
+    override fun replaceFile(path: String, file: PickedFile): Boolean {
+        val uri = file.uri
         val target = File(path)
         return try {
             context.contentResolver.openInputStream(uri)?.use { input ->
@@ -65,7 +79,8 @@ class MediaFileStore(private val context: Context) {
         }
     }
 
-    fun storeCustomBackground(uri: Uri): StoredMedia? {
+    override fun storeCustomBackground(file: PickedFile): StoredMedia? {
+        val uri = file.uri
         val target = File(context.filesDir, CUSTOM_BACKGROUND)
         return try {
             val large = isLarge(uri)
@@ -87,7 +102,7 @@ class MediaFileStore(private val context: Context) {
      * the directory; a reset that reached for `context.filesDir` itself would be a
      * second place that had to agree about both.
      */
-    fun deleteCustomBackground(): Boolean =
+    override fun deleteCustomBackground(): Boolean =
         delete(File(context.filesDir, CUSTOM_BACKGROUND).absolutePath)
 
     private fun copy(uri: Uri, dirName: String): StoredMedia? {

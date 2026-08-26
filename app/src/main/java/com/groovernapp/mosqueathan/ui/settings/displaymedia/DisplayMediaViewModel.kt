@@ -7,8 +7,8 @@ import kotlinx.serialization.json.putJsonArray
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.ConfigRepository
-import com.groovernapp.mosqueathan.data.media.MediaFileStore
-import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
+import com.groovernapp.mosqueathan.domain.MediaStore
+import com.groovernapp.mosqueathan.protocol.RemoteActionSink
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,8 +27,8 @@ import kotlinx.coroutines.launch
  */
 class DisplayMediaViewModel(
     private val repository: ConfigRepository,
-    private val remote: RemoteActionSender,
-    private val files: MediaFileStore
+    private val remote: RemoteActionSink,
+    private val files: MediaStore
 ) : ViewModel() {
 
     private val notice = MutableStateFlow<String?>(null)

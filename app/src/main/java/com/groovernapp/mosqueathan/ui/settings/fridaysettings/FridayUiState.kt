@@ -1,6 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings.fridaysettings
 
-import android.net.Uri
+import com.groovernapp.mosqueathan.domain.PickedFile
 import com.groovernapp.mosqueathan.domain.FridayMedia
 import com.groovernapp.mosqueathan.domain.Media
 
@@ -82,8 +82,8 @@ sealed interface FridayEvent {
     data class VideoWaitUntilEndChanged(val wait: Boolean) : FridayEvent
 
     // Friday media
-    data class MediaAdded(val uris: List<Uri>) : FridayEvent
-    data class MediaFileReplaced(val id: String, val uri: Uri) : FridayEvent
+    data class MediaAdded(val uris: List<PickedFile>) : FridayEvent
+    data class MediaFileReplaced(val id: String, val uri: PickedFile) : FridayEvent
     data class MediaDeleted(val item: FridayMedia) : FridayEvent
     data class MediaReordered(val ids: List<String>) : FridayEvent
 

@@ -1,6 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings.displaymedia
 
-import android.net.Uri
+import com.groovernapp.mosqueathan.domain.PickedFile
 import com.groovernapp.mosqueathan.domain.Announcement
 import com.groovernapp.mosqueathan.domain.DashboardBackground
 import com.groovernapp.mosqueathan.domain.Media
@@ -62,8 +62,8 @@ sealed interface DisplayMediaEvent {
     data object SlideshowPreviewRequested : DisplayMediaEvent
 
     // Slideshow media
-    data class MediaAdded(val uris: List<Uri>) : DisplayMediaEvent
-    data class MediaFileReplaced(val id: String, val uri: Uri) : DisplayMediaEvent
+    data class MediaAdded(val uris: List<PickedFile>) : DisplayMediaEvent
+    data class MediaFileReplaced(val id: String, val uri: PickedFile) : DisplayMediaEvent
     data class MediaUsedToggled(val id: String, val used: Boolean) : DisplayMediaEvent
     data class MediaDeleted(val item: Media) : DisplayMediaEvent
     data class MediaReordered(val ids: List<String>) : DisplayMediaEvent
@@ -88,10 +88,10 @@ sealed interface DisplayMediaEvent {
         val intervalSeconds: Int
     ) : DisplayMediaEvent
 
-    data class CustomBackgroundSelected(val uri: Uri) : DisplayMediaEvent
+    data class CustomBackgroundSelected(val uri: PickedFile) : DisplayMediaEvent
     data object CustomBackgroundCleared : DisplayMediaEvent
-    data class BackgroundsAdded(val uris: List<Uri>) : DisplayMediaEvent
-    data class BackgroundFileReplaced(val id: String, val uri: Uri) : DisplayMediaEvent
+    data class BackgroundsAdded(val uris: List<PickedFile>) : DisplayMediaEvent
+    data class BackgroundFileReplaced(val id: String, val uri: PickedFile) : DisplayMediaEvent
     data class BackgroundDeleted(val id: String) : DisplayMediaEvent
     data class BackgroundUsedToggled(val id: String, val used: Boolean) : DisplayMediaEvent
     data class BackgroundsReordered(val ids: List<String>) : DisplayMediaEvent

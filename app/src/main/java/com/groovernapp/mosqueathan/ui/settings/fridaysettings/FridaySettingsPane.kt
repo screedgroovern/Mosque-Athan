@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings.fridaysettings
 
+import com.groovernapp.mosqueathan.data.media.AndroidPickedFile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -41,7 +42,7 @@ fun FridaySettingsPane(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris: List<android.net.Uri> ->
         if (uris.isNotEmpty()) {
-            onEvent(FridayEvent.MediaAdded(uris))
+            onEvent(FridayEvent.MediaAdded(uris.map(::AndroidPickedFile)))
         }
     }
 
@@ -51,7 +52,7 @@ fun FridaySettingsPane(
     ) { uri: android.net.Uri? ->
         val id = editingMediaId
         if (id != null && uri != null) {
-            onEvent(FridayEvent.MediaFileReplaced(id, uri))
+            onEvent(FridayEvent.MediaFileReplaced(id, AndroidPickedFile(uri)))
         }
         editingMediaId = null
     }

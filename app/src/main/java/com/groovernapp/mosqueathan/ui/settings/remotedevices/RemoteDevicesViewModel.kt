@@ -5,7 +5,7 @@ import kotlinx.serialization.json.put
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.ConfigRepository
-import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
+import com.groovernapp.mosqueathan.protocol.RemoteActionSink
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
  */
 class RemoteDevicesViewModel(
     private val repository: ConfigRepository,
-    private val remote: RemoteActionSender
+    private val remote: RemoteActionSink
 ) : ViewModel() {
 
     val uiState: StateFlow<RemoteDevicesUiState> =

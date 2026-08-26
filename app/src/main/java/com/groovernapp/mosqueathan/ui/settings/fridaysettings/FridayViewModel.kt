@@ -6,9 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.domain.ConfigRepository
-import com.groovernapp.mosqueathan.data.media.MediaFileStore
-import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
-import com.groovernapp.mosqueathan.data.remote.pushConfig
+import com.groovernapp.mosqueathan.domain.MediaStore
+import com.groovernapp.mosqueathan.protocol.RemoteActionSink
+import com.groovernapp.mosqueathan.protocol.pushConfig
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -25,8 +25,8 @@ import kotlinx.coroutines.launch
  */
 class FridayViewModel(
     private val repository: ConfigRepository,
-    private val remote: RemoteActionSender,
-    private val files: MediaFileStore
+    private val remote: RemoteActionSink,
+    private val files: MediaStore
 ) : ViewModel() {
 
     val uiState: StateFlow<FridayUiState> =
