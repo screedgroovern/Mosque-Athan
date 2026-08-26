@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package com.groovernapp.mosqueathan.ui.settings.adzaniqomah
 
 import androidx.compose.foundation.BorderStroke

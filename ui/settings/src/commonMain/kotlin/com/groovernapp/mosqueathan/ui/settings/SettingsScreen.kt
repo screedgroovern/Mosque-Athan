@@ -52,7 +52,7 @@ import com.groovernapp.mosqueathan.ui.design.SystemBackHandler
 import com.groovernapp.mosqueathan.ui.design.decodeImageFile
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesEvent
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel

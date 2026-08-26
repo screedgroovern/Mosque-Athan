@@ -817,6 +817,32 @@ each was a *different* answer to the same question:
   be exactly `0`. Getting that wrong shifts a scheduled date by a day, and on a Friday
   schedule that means the Friday layout appears on Thursday.
 
+### Step 6 is done: what the module boundary cost, and caught
+
+`:ui:settings` exists — 32 files, compiling for the `jvm` guardrail. `:app` is down to 56
+files: the server, the Realm data layer, `MainActivity`, `BootReceiver`, DI, and the
+`when (AppUiState)` state machine in `ui/navigation`.
+
+Four things only surfaced once a real Gradle boundary enforced them, which is the argument
+for module boundaries over conventions in one paragraph:
+
+- **`koin-androidx-compose` is Android-only.** `koinViewModel()` had to become
+  `org.koin.compose.viewmodel.koinViewModel` from `koin-compose-viewmodel`. `:app` still
+  uses the androidx variant for its own call sites.
+- **CMP's material3 marks APIs experimental that Google's 1.4.0 does not.**
+  `SecondaryTabRow`, `DatePicker` and `rememberDatePickerState` needed
+  `@file:OptIn(ExperimentalMaterial3Api::class)` in five files — a real difference between
+  the two artifacts, not a code smell.
+- **`allWarningsAsErrors` is not set on `:app`**, so a deprecated `Divider` had been warning
+  quietly for however long. The module inherits the flag and the warning became a build
+  failure, which is exactly what it is for.
+- **Two unused imports were load-bearing evidence**: `util.ImageUtils` and
+  `com.groovernapp.mosqueathan.R` looked like blockers in the audit and turned out to be
+  imports nothing used. Worth checking usage, not just imports.
+
+**`androidx.lifecycle` and `androidx.compose` are both multiplatform**, so no import in the
+32 files changed for either.
+
 ### Migration order
 
 Each step is independently reviewable. Steps 1–6 stay Android-only and remain
@@ -830,7 +856,7 @@ shippable throughout.
 | 3a | ~~Split the Realm entities from the domain model~~ **done**, ahead of the rest of step 3 — it touches no schema, so it carries none of step 3's data-loss risk, and both UI modules were blocked on it | yes |
 | 4 | `core:protocol` **started** — action names are shared constants; `org.json` → kotlinx.serialization still to do | yes |
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
-| 6 | `ui:settings` + `ui:display` into `commonMain` | yes |
+| ~~6~~ | ~~`ui:settings` + `ui:display` into `commonMain`~~ **done** | yes |
 | 7 | `webApp` (wasmJs) — runs *alongside* the existing HTML panel | yes |
 | 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | only after 7 reaches parity |
 | 9 | `iosApp` — controller + preview | yes |

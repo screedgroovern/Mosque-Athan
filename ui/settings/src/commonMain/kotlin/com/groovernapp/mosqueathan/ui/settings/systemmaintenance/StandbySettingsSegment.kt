@@ -68,7 +68,7 @@ fun StandbySettingsSegment(
             )
         }
 
-        Divider(color = MosqueTheme.colors.fillStrong)
+        HorizontalDivider(color = MosqueTheme.colors.fillStrong)
 
         // Schedule Component for Standby schedules
         Schedule(

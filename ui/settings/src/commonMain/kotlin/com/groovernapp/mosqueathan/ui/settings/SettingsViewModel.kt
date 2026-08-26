@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.groovernapp.mosqueathan.util.ImageUtils
 
 class SettingsViewModel(
     private val repository: ConfigRepository,

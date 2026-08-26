@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(project(":ui:design"))
     implementation(project(":ui:display"))
+    implementation(project(":ui:settings"))
 
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
