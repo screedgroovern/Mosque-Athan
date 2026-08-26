@@ -882,6 +882,43 @@ kinds:
 Do not "finish" these by writing plausible implementations. The pickers and the scanner
 each need a decision first, and the KDoc records which decision.
 
+### `webApp` renders — what it is and is not
+
+`:webApp` builds and serves. It renders the *real* `SettingsScreen` from `:ui:settings`,
+the same code the television runs, which is the entire point of the migration.
+
+Run it with `./gradlew :webApp:wasmJsBrowserDistribution`, then serve
+`webApp/build/dist/wasmJs/productionExecutable`.
+
+**It has no transport yet.** The Koin graph binds `InMemoryConfigRepository` plus three
+do-nothing collaborators, all in `web/WebModule.kt` — one file, so "what the web build
+cannot do yet" is a place you can read rather than a hunt. A toggle stays toggled; nothing
+is sent anywhere. The next step is a `ConfigRepository` backed by the display's own
+`GET /api/get_config` and `POST /api/action`, which already exist and already serve the
+hand-written panel.
+
+**IndexedDB is not needed for that**, and it is worth being precise because it is easy to
+assume otherwise: a *connected* controller is a client. Local storage is only for the
+offline replica (`MosqueSnapshot`) — the takmir who edits at home. That is step 3's
+business, not step 7's.
+
+**The bundle is 14MB** — an 8MB wasm, a 3.3MB wasm, 576KB of JS. Measured, not estimated.
+For a panel served over mosque LAN that is acceptable, which this file already said; the
+number is now real rather than "multi-MB".
+
+Three things the build itself needed, none of them obvious:
+
+- **`repositoriesMode` had to drop from `FAIL_ON_PROJECT_REPOS` to `PREFER_SETTINGS`.** The
+  Kotlin/Wasm browser toolchain adds its own Node and Yarn download repositories from
+  inside the plugin, and the strict mode rejects that outright. The declared repositories
+  are still consulted first; what is given up is the guarantee that nothing else can be
+  added.
+- **Node, Yarn and Binaryen repositories are declared in `settings.gradle.kts`** with
+  content filters, so they are only ever consulted for those three artifacts.
+- **`:webApp` does not use a `mosque.kmp-*` convention plugin.** Those declare an
+  `androidTarget`, and this module has no Android side. It is the one place a hand-written
+  `kotlin { }` block is correct rather than drift waiting to happen.
+
 ### Migration order
 
 Each step is independently reviewable. Steps 1–6 stay Android-only and remain
@@ -896,7 +933,7 @@ shippable throughout.
 | 4 | `core:protocol` **started** — action names are shared constants; `org.json` → kotlinx.serialization still to do | yes |
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
 | ~~6~~ | ~~`ui:settings` + `ui:display` into `commonMain`~~ **done** | yes |
-| 7 | `webApp` (wasmJs) — runs *alongside* the existing HTML panel | yes |
+| 7 | `webApp` (wasmJs) — **renders**; needs a transport before it is useful | yes |
 | 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | only after 7 reaches parity |
 | 9 | `iosApp` — controller + preview | yes |
 

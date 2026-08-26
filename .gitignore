@@ -38,3 +38,5 @@ Thumbs.db
 /.idea/vcs.xml
 /.idea/deploymentTargetSelector.xml
 .claude/
+webApp/build/
+kotlin-js-store/
