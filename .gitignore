@@ -37,3 +37,4 @@ Thumbs.db
 /.idea/planningMode.xml
 /.idea/vcs.xml
 /.idea/deploymentTargetSelector.xml
+.claude/

@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.res.painterResource
+import com.groovernapp.mosqueathan.ui.design.LocalAppVersion
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.display.DisplayBackgrounds
 import com.groovernapp.mosqueathan.ui.display.LocalDisplayBackgrounds
@@ -79,6 +80,9 @@ class MainActivity : ComponentActivity() {
                 // bytes, so it has to remain reachable as a resource. ui:display receives
                 // them as Painters instead of knowing about R.
                 CompositionLocalProvider(
+                    // Only the platform can answer this, so it is handed in here rather
+                    // than read from the screen that shows it.
+                    LocalAppVersion provides appVersionName(),
                     LocalDisplayBackgrounds provides DisplayBackgrounds(
                         dashboard = painterResource(R.drawable.main_bg_default),
                         adzan = painterResource(R.drawable.adzan_bg_default),
@@ -240,5 +244,15 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         settingsServer?.stop()
     }
-}
 
+    /** The build's version name, or a placeholder if the package manager will not say. */
+    private fun appVersionName(): String = try {
+        packageManager.getPackageInfo(packageName, 0).versionName ?: UNKNOWN_VERSION
+    } catch (e: Exception) {
+        UNKNOWN_VERSION
+    }
+
+    private companion object {
+        const val UNKNOWN_VERSION = "unknown"
+    }
+}

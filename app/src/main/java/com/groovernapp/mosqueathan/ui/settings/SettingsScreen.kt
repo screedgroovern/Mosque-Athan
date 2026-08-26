@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Close
 import com.groovernapp.mosqueathan.util.Lang
+import com.groovernapp.mosqueathan.ui.design.appVersion
 import com.groovernapp.mosqueathan.ui.design.MessageHost
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
@@ -85,7 +86,6 @@ fun SettingsScreen(
     var selectedCategory by remember(showAllSettings) {
         mutableStateOf(if (showAllSettings) SettingsCategory.PRAYER_SCHEDULE else SettingsCategory.REMOTE_DEVICES)
     }
-    val context = androidx.compose.ui.platform.LocalContext.current
     val isTv = LocalWindowClass.current.isTv
 
     // Location States
@@ -141,14 +141,7 @@ fun SettingsScreen(
         }
     }
 
-    val versionName = remember(context) {
-        try {
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            packageInfo.versionName ?: "Unknown"
-        } catch (e: Exception) {
-            "Unknown"
-        }
-    }
+    val versionName = appVersion
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (customBgBitmap != null) {
