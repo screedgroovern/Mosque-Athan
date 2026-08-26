@@ -1,8 +1,5 @@
 package com.groovernapp.mosqueathan.ui.settings.remotedevices
 
-import com.groovernapp.mosqueathan.ui.settings.*
-
-import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,21 +10,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.qrcode.QRCodeWriter
+import com.groovernapp.mosqueathan.protocol.TvPairing
 import com.groovernapp.mosqueathan.server.SettingsServer
-import androidx.core.graphics.set
-import androidx.core.graphics.createBitmap
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import com.groovernapp.mosqueathan.ui.design.MosqueRadius
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.focusHighlight
-import com.groovernapp.mosqueathan.ui.design.MosqueRadius
+import com.groovernapp.mosqueathan.ui.design.qr.encodeQrCode
 
 @Composable
 fun WebControlSettingsSegment(
@@ -41,32 +33,19 @@ fun WebControlSettingsSegment(
     val onUpdateShowSettingsOnTv: (Boolean) -> Unit =
         { onEvent(RemoteDevicesEvent.ShowSettingsOnTvToggled(it)) }
     val ipAddress = remember { SettingsServer.getIpAddress() }
-    val serverUrl = if (ipAddress != null) "http://$ipAddress:8080" else null
+    // TvPairing owns the format so that this string and the scanner that reads it back
+    // cannot drift apart; the port lived here as a literal before.
+    val serverUrl = ipAddress?.let(TvPairing::url)
 
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         if (serverUrl != null) {
-            val qrCodeBitmap = remember(serverUrl) {
-                try {
-                    val writer = QRCodeWriter()
-                    val bitMatrix = writer.encode(serverUrl, BarcodeFormat.QR_CODE, 512, 512)
-                    val bitmap = createBitmap(512, 512, Bitmap.Config.RGB_565)
-                    for (x in 0 until 512) {
-                        for (y in 0 until 512) {
-                            bitmap[x, y] = if (bitMatrix.get(
-                                    x,
-                                    y
-                                )
-                            ) android.graphics.Color.BLACK else android.graphics.Color.WHITE
-                        }
-                    }
-                    bitmap.asImageBitmap()
-                } catch (_: Exception) {
-                    null
-                }
-            }
+            // Encoding is not a pane's job, and zxing is not available off the JVM.
+            // remember, not derivedStateOf: the address changes when the network does,
+            // and 512x512 pixels is not work to repeat per recomposition.
+            val qrCodeBitmap = remember(serverUrl) { encodeQrCode(serverUrl, QR_SIZE_PX) }
 
             if (isCompact) {
                 Column(
@@ -300,3 +279,10 @@ fun WebControlSettingsSegment(
         }
     }
 }
+
+/**
+ * Generated at a fixed size rather than the display size: the code is drawn into a 160dp
+ * or 180dp card, and re-encoding per window class would produce a different number of
+ * modules for the same address.
+ */
+private const val QR_SIZE_PX = 512
