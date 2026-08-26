@@ -33,14 +33,11 @@ kotlin {
             api(project(":core:model"))
         }
         androidMain.dependencies {
-            // rememberLauncherForActivityResult, for the picker's Android actual. The
-            // only Android-specific dependency this module has.
-            implementation(libs.androidx.activity.compose)
-        }
-        androidMain.dependencies {
-            // Only for `SystemBackHandler`'s actual. androidx.activity is the owner of
-            // OnBackPressedDispatcher and has no multiplatform artifact, which is the
-            // whole reason that seam is an expect/actual rather than shared code.
+            // The module's only Android-specific dependency, and two seams need it:
+            // rememberLauncherForActivityResult for the media picker, and
+            // OnBackPressedDispatcher behind SystemBackHandler. androidx.activity owns
+            // both and has no multiplatform artifact, which is precisely why those two
+            // are expect/actual rather than shared code.
             implementation(libs.androidx.activity.compose)
         }
         commonTest.dependencies {

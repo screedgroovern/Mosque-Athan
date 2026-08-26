@@ -349,10 +349,11 @@ will be broken.
    implementation.
 3. **No platform types in a ViewModel** — no `Context`, `Uri`, `Bitmap`,
    `JSONObject`, `File`. This is the rule broken accidentally; the `ui:*` module
-   boundary is what catches it.
-4. **`expect`/`actual` only where genuinely unavoidable** — currently video
-   playback, image decoding, file paths, TV detection. Any other use is a design
-   smell.
+   boundary is what catches it. **True across the whole settings and display layer
+   as of 2026-08-26.**
+4. **`expect`/`actual` only where genuinely unavoidable** — currently video playback,
+   image decoding, file picking, transient messages, system back, and TV detection.
+   Any other use is a design smell.
 5. **State is an immutable `data class`**, updated via `copy()`. Never mutate a
    field in place.
 6. Everything under **Conventions** above still applies unchanged.
@@ -592,12 +593,12 @@ the accessors.
 
 | API | Uses | What it needs |
 |---|---|---|
-| `ActivityResultContracts` | 15 | an `expect` file picker |
-| `rememberLauncherForActivityResult` | 14 | same |
-| `android.net.Uri` | 21 | a platform-neutral picked-file handle |
-| `BitmapFactory` / `asImageBitmap` | 11 / 11 | `expect` image decoding |
-| `LocalContext` | 7 | mostly removable; already gone from ViewModels |
-| `PickVisualMediaRequest` | 7 | part of the file picker |
+| ~~`ActivityResultContracts`~~ | ~~15~~ | **done** — `rememberMediaPicker` in `:ui:design` |
+| ~~`rememberLauncherForActivityResult`~~ | ~~14~~ | **done** — same seam |
+| ~~`android.net.Uri`~~ | ~~21~~ | **done** — `PickedFile` in `core:model` |
+| ~~`BitmapFactory` / `asImageBitmap`~~ | ~~11 / 11~~ | **done** for UI — `decodeImageFile` in `:ui:design`; only `util/ImageUtils.kt` still uses it |
+| ~~`LocalContext`~~ | ~~7~~ | **done** in settings — the last one read the version string, now `LocalAppVersion` |
+| ~~`PickVisualMediaRequest`~~ | ~~7~~ | **done** — same seam |
 | `UiModeManager` | 4 | `expect` TV detection — **done**, see below |
 | `AndroidView` | 1 | `expect` video player — the `VideoView` in DashboardScreen |
 
@@ -654,9 +655,11 @@ read-write is a real boundary; category boundaries are not.
 `SettingsServer` still takes the concrete class deliberately — it is Android-only and
 never moving, so abstracting it buys nothing.
 
-**What still ties `ui:settings` to `:app`:** `MediaFileStore` (the file-picker seam) and
-`RemoteActionSender`/`pushConfig` (`HttpURLConnection` and `android.os.Build`). Both need
-an interface or an `expect` before the module can move. The repository no longer does.
+**What still ties `ui:settings` to `:app`** is now small enough to list precisely. The
+repository, the file picker, media storage, HTTP and the app version are all behind
+interfaces or `expect`s. What remains is whatever `SettingsScreenShared.kt` and the
+segment files still reach for — audit before moving the module, since the ViewModels and
+the two big panes are clean.
 
 Koin resolves at runtime, so `AppModuleTest.everyDependencyInTheGraphCanBeResolved`
 is what catches a missing binding — verified by deleting the `DisplayDataSource` line
@@ -735,6 +738,42 @@ name-by-name diff of the two sides shows ten apparent mismatches that are not re
 Still to do in step 4: `org.json` itself. It remains in `SettingsServer`, the remote-sync
 path in `SettingsViewModel`, and `RemoteActionSender`. That is the kotlinx.serialization
 half, and `kotlinx-serialization-json` is already on the classpath via `core:model`.
+
+### The seams `:ui:design` owns
+
+Seven `expect` declarations, and the module gained its first `androidMain` dependency
+(`androidx.activity:activity-compose`) for two of them:
+
+| Seam | Android | jvm |
+|---|---|---|
+| `rememberIsTv()` | `UiModeManager` | `false`, permanently — a desktop build is a controller |
+| `decodeImageFile(path)` | `BitmapFactory` | `ImageIO` |
+| `rememberMediaPicker` / `rememberMultipleMediaPicker` | `PickVisualMedia` | no-op |
+| `rememberAudioFilePicker` | `OpenMultipleDocuments` | no-op |
+| `MessageHost(messages)` | `Toast` | `SnackbarHost` |
+| `SystemBackHandler(enabled, onBack)` | `BackHandler` | no-op — no system back button to intercept |
+
+Two of these are worth understanding rather than just using:
+
+**`MessageHost` is an `expect` rather than a shared `Snackbar`, deliberately.** A
+`Snackbar` participates in focus and traversal, and this screen is driven by a D-pad —
+an element that appears for four seconds and rearranges the focus graph is a navigation
+bug that gets reported as "the remote stopped working". It also pins to the bottom edge
+of a 55" screen, metres from where the user is looking. `Snackbar` is still right *off*
+Android, which is what the jvm actual uses; the seam lets each platform be correct
+instead of averaging them.
+
+**The picker's callback is passed to `launch()`, not to `remember`.** With the callback
+fixed at composition, "replace this one slide" forced each pane to park the row id in its
+own `remember { mutableStateOf<String?>(null) }` and read it back later. Passing it per
+launch lets the call site capture the id in the lambda, which deleted both id holders and
+collapsed five launchers to four.
+
+`PickedFile` is an interface, not an `expect class` — an `expect class` implies a
+no-argument constructor and `android.net.Uri` is abstract, so a typealias can never
+match. `AndroidPickedFile` lives in `core:model`'s `androidMain` because `:ui:design`
+constructs it and `:app`'s `MediaFileStore` unwraps it, and those two must not depend on
+each other.
 
 ### Migration order
 
