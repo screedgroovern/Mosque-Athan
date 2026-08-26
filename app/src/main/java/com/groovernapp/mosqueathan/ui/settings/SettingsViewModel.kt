@@ -9,6 +9,8 @@ import com.groovernapp.mosqueathan.util.optionalDouble
 import com.groovernapp.mosqueathan.util.optionalInt
 import com.groovernapp.mosqueathan.util.optionalString
 import com.groovernapp.mosqueathan.domain.MediaStore
+import com.groovernapp.mosqueathan.protocol.HttpFetcher
+import com.groovernapp.mosqueathan.protocol.HttpResult
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -29,7 +31,8 @@ import com.groovernapp.mosqueathan.util.ImageUtils
 
 class SettingsViewModel(
     private val repository: ConfigRepository,
-    private val mediaFileStore: MediaStore
+    private val mediaFileStore: MediaStore,
+    private val http: HttpFetcher
 ) : ViewModel() {
 
     /**
@@ -136,17 +139,13 @@ class SettingsViewModel(
         val config = _configState.value
         if (config.connectivityMode != "REMOTE" || config.remoteTvIp.isEmpty()) return
         
-        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                val url = java.net.URL("http://${config.remoteTvIp}:8080/api/get_config")
-                val conn = url.openConnection() as java.net.HttpURLConnection
-                conn.requestMethod = "GET"
-                conn.connectTimeout = 5000
-                conn.readTimeout = 5000
-                conn.connect()
-                
-                if (conn.responseCode == 200) {
-                    val response = conn.inputStream.bufferedReader().use { it.readText() }
+        viewModelScope.launch {
+            when (val result = http.getText("http://${config.remoteTvIp}:8080/api/get_config")) {
+                is HttpResult.Failure ->
+                    _messages.emit(Lang.get("Sync failed: ${result.reason}", "Sinkronisasi gagal: ${result.reason}"))
+
+                is HttpResult.Success -> try {
+                    val response = result.body
                     val json = Json.parseToJsonElement(response).jsonObject
                     val configJson = json["config"] as? JsonObject
                     
@@ -199,12 +198,14 @@ class SettingsViewModel(
                         
                         _messages.emit(Lang.get("Sync complete.", "Sinkronisasi berhasil!"))
                     }
+                } catch (e: Exception) {
+                    // The fetch succeeded and the body did not parse: a display running
+                    // different code, or something else answering on that address.
+                    val reason = e.message ?: "unreadable response"
+                    _messages.emit(
+                        Lang.get("Sync failed: $reason", "Sinkronisasi gagal: $reason")
+                    )
                 }
-            } catch (e: Exception) {
-                android.util.Log.e("SettingsViewModel", "Failed to sync with TV", e)
-                _messages.emit(
-                    Lang.get("Sync failed: ${e.message}", "Sinkronisasi gagal: ${e.message}")
-                )
             }
         }
     }

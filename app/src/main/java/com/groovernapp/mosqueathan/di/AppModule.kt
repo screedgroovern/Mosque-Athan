@@ -2,7 +2,9 @@ package com.groovernapp.mosqueathan.di
 
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
 import com.groovernapp.mosqueathan.domain.ConfigRepository
+import com.groovernapp.mosqueathan.data.remote.HttpUrlFetcher
 import com.groovernapp.mosqueathan.domain.MediaStore
+import com.groovernapp.mosqueathan.protocol.HttpFetcher
 import com.groovernapp.mosqueathan.protocol.RemoteActionSink
 import com.groovernapp.mosqueathan.domain.DisplayDataSource
 import com.groovernapp.mosqueathan.domain.HijriDateSource
@@ -53,16 +55,17 @@ val appModule = module {
     single { RemoteActionSender(get()) }
     single<RemoteActionSink> { get<RemoteActionSender>() }
     single { MediaFileStore(androidContext()) }
+    single<HttpFetcher> { HttpUrlFetcher() }
     single<MediaStore> { get<MediaFileStore>() }
 
     viewModel { AppViewModel(get(), get()) }
     viewModel { DashboardViewModel(get(), get(), get()) }
     viewModel { AdzanViewModel(get()) }
     viewModel { IqomahViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
     viewModel { RemoteDevicesViewModel(get(), get()) }
     viewModel { AdzanIqomahViewModel(get(), get()) }
-    viewModel { PrayerScheduleViewModel(get(), get()) }
+    viewModel { PrayerScheduleViewModel(get(), get(), get()) }
     viewModel { DisplayMediaViewModel(get(), get(), get()) }
     viewModel { FridayViewModel(get(), get(), get()) }
 }

@@ -1,14 +1,11 @@
 package com.groovernapp.mosqueathan.ui.settings.prayerschedule
 
-import com.groovernapp.mosqueathan.util.optionalBoolean
-import com.groovernapp.mosqueathan.util.optionalString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
+import com.groovernapp.mosqueathan.domain.parseKemenagCities
+import com.groovernapp.mosqueathan.protocol.HttpFetcher
+import com.groovernapp.mosqueathan.protocol.HttpResult
+import com.groovernapp.mosqueathan.protocol.urlEncodePathSegment
 import com.groovernapp.mosqueathan.protocol.RemoteActions
 import kotlinx.serialization.json.put
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
@@ -16,7 +13,6 @@ import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.protocol.RemoteActionSink
 import com.groovernapp.mosqueathan.protocol.pushConfig
 import com.groovernapp.mosqueathan.domain.PrayerType
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,11 +23,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
-import java.net.URLEncoder
 
 /**
  * The Prayer Schedule category: coordinates, calculation method, per-prayer offsets,
@@ -42,7 +33,8 @@ import java.net.URLEncoder
  */
 class PrayerScheduleViewModel(
     private val repository: ConfigRepository,
-    private val remote: RemoteActionSink
+    private val remote: RemoteActionSink,
+    private val http: HttpFetcher
 ) : ViewModel() {
 
     private val searchResults = MutableStateFlow<List<KemenagCity>>(emptyList())
@@ -128,36 +120,16 @@ class PrayerScheduleViewModel(
             return
         }
         isSearching.value = true
-        viewModelScope.launch(Dispatchers.IO) {
-            searchResults.value = try {
-                fetchCities(query)
-            } catch (e: Exception) {
-                Log.e(TAG, "Kemenag city search failed", e)
-                emptyList()
-            } finally {
-                isSearching.value = false
+        viewModelScope.launch {
+            val url = CITY_SEARCH_URL + urlEncodePathSegment(query)
+            searchResults.value = when (val result = http.getText(url)) {
+                is HttpResult.Success -> parseKemenagCities(result.body).map { (id, name) -> KemenagCity(id, name) }
+                // A failed search shows no results, which is what an empty query shows
+                // too. The takmir can retype; there is nowhere sensible to surface a
+                // network error in a type-ahead field.
+                is HttpResult.Failure -> emptyList()
             }
-        }
-    }
-
-    private fun fetchCities(query: String): List<KemenagCity> {
-        val encoded = URLEncoder.encode(query, "UTF-8")
-        val connection = URL("$CITY_SEARCH_URL$encoded").openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-        connection.connectTimeout = TIMEOUT_MS
-        connection.readTimeout = TIMEOUT_MS
-        connection.connect()
-        if (connection.responseCode != 200) return emptyList()
-
-        val body = BufferedReader(InputStreamReader(connection.inputStream)).use { it.readText() }
-        val json = Json.parseToJsonElement(body).jsonObject
-        if (!json.optionalBoolean("status")) return emptyList()
-
-        val array = json["data"] as? JsonArray ?: return emptyList()
-        return array.filterIsInstance<JsonObject>().mapNotNull { item ->
-            val id = item.optionalString("id")
-            val name = item.optionalString("lokasi")
-            if (id.isNotEmpty() && name.isNotEmpty()) KemenagCity(id, name) else null
+            isSearching.value = false
         }
     }
 
