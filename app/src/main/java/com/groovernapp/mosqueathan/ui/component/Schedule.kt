@@ -22,16 +22,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.groovernapp.mosqueathan.domain.ScheduleItem
+import com.groovernapp.mosqueathan.util.utcMillisToIsoDate
+import kotlin.time.Clock
 import com.groovernapp.mosqueathan.util.Lang
-import java.util.Calendar
-import java.util.TimeZone
+import com.groovernapp.mosqueathan.ui.design.rememberIsTv
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
@@ -56,10 +56,11 @@ fun Schedule(
     addButtonText: String = "Add",
     scheduleListButtonText: String = "Schedules"
 ) {
-    val context = LocalContext.current
-    val isTv = remember(context) {
-        context.packageManager.hasSystemFeature("android.software.leanback")
-    }
+    // rememberIsTv, not a second leanback check. This asked the package manager for the
+    // leanback *feature* while MosqueTheme asks UiModeManager for the current mode type —
+    // two different questions that can disagree, in one app, about whether this is a
+    // television.
+    val isTv = rememberIsTv()
 
     // Sort descending by created timestamp and limit to 5
     val displayedSchedules = remember(schedules) {
@@ -757,20 +758,17 @@ fun MultiDatePickerDialog(
     }
 
     if (showSingleDatePicker) {
-        val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = calendar.timeInMillis)
+        // Today at UTC midnight, which is what the picker's own scale is.
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = Clock.System.now().toEpochMilliseconds()
+        )
 
         DatePickerDialog(
             onDismissRequest = { showSingleDatePicker = false },
             confirmButton = {
                 MosqueTextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-                        cal.timeInMillis = millis
-                        val y = cal.get(Calendar.YEAR)
-                        val m = (cal.get(Calendar.MONTH) + 1).toString().padStart(2, '0')
-                        val d = cal.get(Calendar.DAY_OF_MONTH).toString().padStart(2, '0')
-                        val dateString = "$y-$m-$d"
+                        val dateString = utcMillisToIsoDate(millis)
                         if (!datesList.contains(dateString)) {
                             datesList.add(dateString)
                         }

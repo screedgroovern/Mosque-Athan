@@ -1,6 +1,7 @@
 package com.groovernapp.mosqueathan.ui.component
 
-import android.graphics.BitmapFactory
+import com.groovernapp.mosqueathan.ui.design.decodeImageFile
+import com.groovernapp.mosqueathan.util.swap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -37,7 +37,6 @@ import com.groovernapp.mosqueathan.ui.settings.displaymedia.DropdownAdjustmentRo
 import com.groovernapp.mosqueathan.ui.theme.MosqueAthanTheme
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
-import java.util.Collections
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
@@ -113,11 +112,7 @@ fun <T> SlideshowComponent(
                         val isVideo = isVideoSelector(item)
                         
                         val bitmap = remember(filePath) {
-                            try {
-                                if (!isVideo) {
-                                    BitmapFactory.decodeFile(filePath)?.asImageBitmap()
-                                } else null
-                            } catch (_: Exception) { null }
+                            if (!isVideo) decodeImageFile(filePath) else null
                         }
                         
                         val isCurrentPageDragged = index == draggedItemIndex
@@ -150,14 +145,14 @@ fun <T> SlideshowComponent(
                                                 val threshold = itemCardWidth / 2f
                                                 if (dragItemOffsetX > threshold && draggedIdx < items.size - 1) {
                                                     val newList = items.toMutableList()
-                                                    Collections.swap(newList, draggedIdx, draggedIdx + 1)
+                                                    newList.swap(draggedIdx, draggedIdx + 1)
                                                     onReorderItems(newList.map { keySelector(it) })
                                                     dragItemOffsetX -= itemCardWidth
                                                     draggedItemIndex = draggedIdx + 1
                                                     coroutineScope.launch { pagerState.scrollToPage(draggedIdx + 1) }
                                                 } else if (dragItemOffsetX < -threshold && draggedIdx > 0) {
                                                     val newList = items.toMutableList()
-                                                    Collections.swap(newList, draggedIdx, draggedIdx - 1)
+                                                    newList.swap(draggedIdx, draggedIdx - 1)
                                                     onReorderItems(newList.map { keySelector(it) })
                                                     dragItemOffsetX += itemCardWidth
                                                     draggedItemIndex = draggedIdx - 1

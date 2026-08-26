@@ -1,5 +1,6 @@
 package com.groovernapp.mosqueathan.ui.settings
 
+import com.groovernapp.mosqueathan.util.swap
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -296,7 +297,7 @@ fun RunningTextListSettingsComponent(
                                                                 accumHeight += nextHeight / 2f
                                                                 if (dragOffsetY > accumHeight) {
                                                                     val newList = items.toMutableList()
-                                                                    java.util.Collections.swap(newList, tempIndex, tempIndex + 1)
+                                                                    newList.swap(tempIndex, tempIndex + 1)
                                                                     onItemsChange(newList)
                                                                     dragOffsetY -= nextHeight
                                                                     tempIndex += 1
@@ -313,7 +314,7 @@ fun RunningTextListSettingsComponent(
                                                                 accumHeight -= prevHeight / 2f
                                                                 if (dragOffsetY < accumHeight) {
                                                                     val newList = items.toMutableList()
-                                                                    java.util.Collections.swap(newList, tempIndex, tempIndex - 1)
+                                                                    newList.swap(tempIndex, tempIndex - 1)
                                                                     onItemsChange(newList)
                                                                     dragOffsetY += prevHeight
                                                                     tempIndex -= 1
@@ -440,7 +441,7 @@ fun RunningTextListSettingsComponent(
                                                             accumHeight += nextHeight / 2f
                                                             if (dragOffsetY > accumHeight) {
                                                                 val newList = items.toMutableList()
-                                                                java.util.Collections.swap(newList, tempIndex, tempIndex + 1)
+                                                                newList.swap(tempIndex, tempIndex + 1)
                                                                 onItemsChange(newList)
                                                                 dragOffsetY -= nextHeight
                                                                 tempIndex += 1
@@ -457,7 +458,7 @@ fun RunningTextListSettingsComponent(
                                                             accumHeight -= prevHeight / 2f
                                                             if (dragOffsetY < accumHeight) {
                                                                 val newList = items.toMutableList()
-                                                                java.util.Collections.swap(newList, tempIndex, tempIndex - 1)
+                                                                newList.swap(tempIndex, tempIndex - 1)
                                                                 onItemsChange(newList)
                                                                 dragOffsetY += prevHeight
                                                                 tempIndex -= 1

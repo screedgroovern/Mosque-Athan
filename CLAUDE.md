@@ -775,6 +775,35 @@ match. `AndroidPickedFile` lives in `core:model`'s `androidMain` because `:ui:de
 constructs it and `:app`'s `MediaFileStore` unwraps it, and those two must not depend on
 each other.
 
+### What is left before `ui:settings` can move
+
+Two files, both about QR codes, and both needing a real platform seam rather than a
+rearrangement:
+
+- `RemoteControlSettingsSegment.kt` — QR **scanning**, via `html5-qrcode`'s Android
+  equivalent plus `Toast` and `Uri.parse`.
+- `WebControlSettingsSegment.kt` — QR **generation**, building an `android.graphics.Bitmap`
+  pixel by pixel. The two `android.graphics.Color.BLACK/WHITE` uses here are `Int` colours
+  for that bitmap and are correctly outside the design system.
+
+`zxing` is JVM/Android-only, so both need per-platform implementations. Everything else in
+the settings layer is behind an interface or an `expect`.
+
+Three duplications were removed on the way there, and they are worth knowing about because
+each was a *different* answer to the same question:
+
+- **"Is this a television?"** `Schedule.kt` asked the package manager whether the leanback
+  *feature* is present; `MosqueTheme` asks `UiModeManager` for the current mode *type*.
+  Two definitions in one app that can disagree. Now both use `rememberIsTv()`.
+- **Indonesian month names** existed three times: `DashboardViewModel`, the settings
+  schedule list via `SimpleDateFormat("MMMM yyyy", Locale("id"))`, and again as a literal
+  array in the panel's JavaScript. `Month.toIndonesian()` in `core:model` is now the one
+  copy the Kotlin side uses; the JavaScript array is step 8's problem.
+- **ISO date ↔ picker millis** was written twice with `java.util.Calendar`. Now
+  `isoDateToUtcMillis` / `utcMillisToIsoDate`, tested at the boundary — `1970-01-01` must
+  be exactly `0`. Getting that wrong shifts a scheduled date by a day, and on a Friday
+  schedule that means the Friday layout appears on Thursday.
+
 ### Migration order
 
 Each step is independently reviewable. Steps 1–6 stay Android-only and remain

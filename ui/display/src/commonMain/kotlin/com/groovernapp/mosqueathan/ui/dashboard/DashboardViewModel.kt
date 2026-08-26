@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.domain.HijriDateSource
+import com.groovernapp.mosqueathan.util.toIndonesian
 import com.groovernapp.mosqueathan.util.PrayerCalculator
 import com.groovernapp.mosqueathan.util.PrayerResult
 import com.groovernapp.mosqueathan.util.PrayerUtils
@@ -80,20 +81,6 @@ class DashboardViewModel(
         startClock()
     }
 
-    fun Month.toIndonesian(): String = when (this) {
-        Month.JANUARY -> "Januari"
-        Month.FEBRUARY -> "Februari"
-        Month.MARCH -> "Maret"
-        Month.APRIL -> "April"
-        Month.MAY -> "Mei"
-        Month.JUNE -> "Juni"
-        Month.JULY -> "Juli"
-        Month.AUGUST -> "Agustus"
-        Month.SEPTEMBER -> "September"
-        Month.OCTOBER -> "Oktober"
-        Month.NOVEMBER -> "November"
-        Month.DECEMBER -> "Desember"
-    }
 
     private fun LocalDateTime.toClockString(): String =
         "%02d:%02d:%02d".format(

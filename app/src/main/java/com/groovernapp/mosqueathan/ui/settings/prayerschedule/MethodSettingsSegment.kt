@@ -1,5 +1,9 @@
 package com.groovernapp.mosqueathan.ui.settings.prayerschedule
 
+import com.groovernapp.mosqueathan.util.isoDateToUtcMillis
+import com.groovernapp.mosqueathan.util.monthAndYear
+import com.groovernapp.mosqueathan.util.pad
+import com.groovernapp.mosqueathan.util.utcMillisToIsoDate
 import com.groovernapp.mosqueathan.ui.settings.*
 
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -371,9 +375,7 @@ fun MethodSettingsSegment(
                             item {
                                 val displayMonthYear = try {
                                     val parts = monthYear.split("-")
-                                    val cal = java.util.Calendar.getInstance()
-                                    cal.set(parts[1].toInt(), parts[0].toInt() - 1, 1)
-                                    java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale("id")).format(cal.time)
+                                    monthAndYear(parts[0].toInt(), parts[1].toInt())
                                 } catch (e: Exception) { monthYear }
 
                                 Text(
@@ -480,10 +482,7 @@ fun DatePickerField(
             val month = parts[1].toIntOrNull()
             val day = parts[2].toIntOrNull()
             if (year != null && month != null && day != null) {
-                val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
-                cal.set(year, month - 1, day, 0, 0, 0)
-                cal.set(java.util.Calendar.MILLISECOND, 0)
-                initialMillis = cal.timeInMillis
+                isoDateToUtcMillis("$year-${month.pad(2)}-${day.pad(2)}")?.let { initialMillis = it }
             }
         }
         
@@ -494,12 +493,7 @@ fun DatePickerField(
             confirmButton = {
                 MosqueTextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
-                        cal.timeInMillis = millis
-                        val y = cal.get(java.util.Calendar.YEAR)
-                        val m = (cal.get(java.util.Calendar.MONTH) + 1).toString().padStart(2, '0')
-                        val d = cal.get(java.util.Calendar.DAY_OF_MONTH).toString().padStart(2, '0')
-                        onValueChange("$y-$m-$d")
+                        onValueChange(utcMillisToIsoDate(millis))
                     }
                     showDialog = false
                 }, modifier = Modifier.initialFocus()) {
