@@ -28,6 +28,12 @@ kotlin {
             api(compose.material3)
             api(compose.ui)
         }
+        androidMain.dependencies {
+            // Only for `SystemBackHandler`'s actual. androidx.activity is the owner of
+            // OnBackPressedDispatcher and has no multiplatform artifact, which is the
+            // whole reason that seam is an expect/actual rather than shared code.
+            implementation(libs.androidx.activity.compose)
+        }
         commonTest.dependencies {
             // kotlin.test, not JUnit: these assertions now run on the jvm target too,
             // which is the guardrail that catches Android code reaching commonMain.

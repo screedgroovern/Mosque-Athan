@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.groovernapp.mosqueathan.ui.display.VideoSurface
-import com.groovernapp.mosqueathan.ui.display.decodeImageFile
+import com.groovernapp.mosqueathan.ui.design.decodeImageFile
 import com.groovernapp.mosqueathan.ui.display.displayBackgrounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
