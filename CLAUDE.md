@@ -741,8 +741,9 @@ half, and `kotlinx-serialization-json` is already on the classpath via `core:mod
 
 ### The seams `:ui:design` owns
 
-Seven `expect` declarations, and the module gained its first `androidMain` dependency
-(`androidx.activity:activity-compose`) for two of them:
+Nine `expect` declarations. `androidMain` depends on `androidx.activity:activity-compose`
+(picker, back handling) plus `zxing` and `zxing-android-embedded`; `jvmMain` depends on
+`zxing`:
 
 | Seam | Android | jvm |
 |---|---|---|
@@ -752,6 +753,14 @@ Seven `expect` declarations, and the module gained its first `androidMain` depen
 | `rememberAudioFilePicker` | `OpenMultipleDocuments` | no-op |
 | `MessageHost(messages)` | `Toast` | `SnackbarHost` |
 | `SystemBackHandler(enabled, onBack)` | `BackHandler` | no-op — no system back button to intercept |
+| `encodeQrCode(content, sizePx)` | zxing → `Bitmap` | zxing → `BufferedImage`, a **real** implementation |
+| `rememberQrScanner(prompt)` | `ScanContract` | no-op |
+
+**The QR pair is asymmetric on purpose, and the asymmetry is the lesson.** zxing's core is
+pure Java, so encoding has a genuine jvm implementation; scanning is a camera pipeline, a
+preview surface and a permission prompt, so its jvm actual is a no-op. Encoding is a
+computation any platform can do; scanning is a feature. An `expect` whose only
+implementation is Android would be indistinguishable from leaving the code in `:app`.
 
 Two of these are worth understanding rather than just using:
 
@@ -777,17 +786,21 @@ each other.
 
 ### What is left before `ui:settings` can move
 
-Two files, both about QR codes, and both needing a real platform seam rather than a
-rearrangement:
+**`ui/settings` has no platform imports at all** — no `android.*`, no `androidx.activity`,
+no `java.*`, no `org.json`. What remains are references into `:app` itself:
 
-- `RemoteControlSettingsSegment.kt` — QR **scanning**, via `html5-qrcode`'s Android
-  equivalent plus `Toast` and `Uri.parse`.
-- `WebControlSettingsSegment.kt` — QR **generation**, building an `android.graphics.Bitmap`
-  pixel by pixel. The two `android.graphics.Color.BLACK/WHITE` uses here are `Int` colours
-  for that bitmap and are correctly outside the design system.
+| Reference | What it needs |
+|---|---|
+| `SettingsServer.getIpAddress()` | a "what is my LAN address" seam — the next real one |
+| `com.groovernapp.mosqueathan.R` (2 uses) | a `Painter` passed in, like `LocalDisplayBackgrounds` |
+| `ui.theme.MosqueAthanTheme` (3 uses) | call `MosqueTheme` directly; this alias was always meant to go |
+| `ui.component.Schedule`, `SlideshowComponent` | not blockers — they belong *with* `ui:settings` and move together |
 
-`zxing` is JVM/Android-only, so both need per-platform implementations. Everything else in
-the settings layer is behind an interface or an `expect`.
+Also worth knowing: `:ui:design`'s jvm test classpath cannot construct an `ImageBitmap` —
+Skia's native library is absent, so `BufferedImage.toComposeImageBitmap()` throws
+`ExceptionInInitializerError`. Any seam returning an `ImageBitmap` is therefore only
+*null*-testable on that target, which is why `QrCodeTest` and `ImageDecoding` assert the
+failure contract rather than a successful decode.
 
 Three duplications were removed on the way there, and they are worth knowing about because
 each was a *different* answer to the same question:
