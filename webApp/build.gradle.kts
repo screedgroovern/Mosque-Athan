@@ -44,6 +44,13 @@ kotlin {
                 implementation(libs.koin.compose.viewmodel)
                 implementation(libs.jb.lifecycle.viewmodel.compose)
                 implementation(libs.jb.lifecycle.runtime.compose)
+
+                // kotlinx-datetime delegates to js-joda in the browser, and ships only
+                // the core. TimeZone.currentSystemDefault() needs the timezone database,
+                // which is this separate package — without it, the first call throws, and
+                // PrayerType.displayName makes that call to decide whether today is
+                // Friday. That is why the settings screen would not compose at all.
+                implementation(npm("@js-joda/timezone", "2.18.2"))
             }
         }
     }
