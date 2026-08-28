@@ -1021,6 +1021,38 @@ the Kemenag city search calls `api.myquran.com` from the page, which is cross-or
 if that API sends CORS headers. If it does not, the fix is to route the search through the display,
 which can reach the API unhindered, not to fight CORS from the browser.
 
+### The display serves the panel itself
+
+The wasm bundle used to exist only behind a static file server on a developer's machine, which
+made the browser panel undeliverable: a takmir has nothing to serve it from. The display is the one
+thing on the mosque wifi that can hand it over, so `:app` now carries the bundle in its assets and
+`SettingsServer` serves it at **`/panel/`**.
+
+Verified with the laptop's server switched off: `http://<display>:8080/panel/` renders the settings
+UI and reports `Connected`. `displayHost()` needs no `?tv=` there — the host that served the page
+*is* the display, which is what that fallback was written for.
+
+Details that are load-bearing rather than incidental:
+
+- **`.wasm` must be served as `application/wasm`.** `WebAssembly.instantiateStreaming` refuses any
+  other type outright, and the failure surfaces as a MIME-type error with nothing to do with this
+  app.
+- **The source map is excluded** — 1.7 MB of debug information no takmir opens, and it would
+  otherwise be among the largest things in the APK.
+- **`index.html` is served no-cache while the hashed files are immutable.** The bundle's filenames
+  carry a content hash, so they can be cached hard; `index.html` is what points at whichever hash
+  the installed build shipped, and a stale one names files that no longer exist.
+- **`panelAssetPath` is the only thing between a request and the rest of the APK's assets.**
+  `AssetManager` resolves `..` happily. It decodes before checking, because `%2e%2e%2f` is a
+  traversal that only looks like one afterwards — mutation-tested by removing the decode, which
+  fails the suite. Refused on the device too, not just in tests.
+
+**Cost:** the APK goes from 74 MB to 80 MB — less than the bundle's 15 MB on disk, because the
+assets compress. Every `:app` build now depends on `wasmJsBrowserDistribution`, which is
+up-to-date-checked and so only re-runs when `:webApp` changes.
+
+The old panel still serves at `/`. Step 8 removes it, and this was its missing prerequisite.
+
 ### The link's behaviour, verified on hardware
 
 Reconnection and queueing are the parts most likely to be assumed working, so they were driven

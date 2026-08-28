@@ -641,6 +641,43 @@ class SettingsServer(
                     return
                 }
 
+                if (path == "/panel" || path.startsWith("/panel/")) {
+                    val assetPath = com.groovernapp.mosqueathan.server.panelAssetPath(path)
+                    val bytes = assetPath?.let { readPanelAsset(it) }
+                    if (bytes == null) {
+                        val response = "HTTP/1.1 404 Not Found\r\n" +
+                                "Content-Length: 0\r\n" +
+                                "Connection: close\r\n\r\n"
+                        outputStream.write(response.toByteArray(Charsets.UTF_8))
+                    } else {
+                        val response = "HTTP/1.1 200 OK\r\n" +
+                                "Content-Type: ${panelContentType(assetPath)}\r\n" +
+                                "Content-Length: ${bytes.size}\r\n" +
+                                // The bundle's own filenames carry a content hash, so the two big
+                                // wasm files may be cached hard. index.html must not be: it is what
+                                // points at whichever hash the installed build shipped.
+                                (if (assetPath.endsWith(".html")) {
+                                    "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                                } else {
+                                    "Cache-Control: public, max-age=31536000, immutable\r\n"
+                                }) +
+                                "Connection: close\r\n\r\n"
+                        outputStream.write(response.toByteArray(Charsets.UTF_8))
+                        // Written in chunks rather than one 8 MB call: the socket's buffer is far
+                        // smaller than the file, and a single write of that size is where a slow
+                        // phone on mosque wifi stalls.
+                        var offset = 0
+                        while (offset < bytes.size) {
+                            val length = minOf(PANEL_CHUNK, bytes.size - offset)
+                            outputStream.write(bytes, offset, length)
+                            offset += length
+                        }
+                    }
+                    outputStream.flush()
+                    try { socket.close() } catch (_: Exception) {}
+                    return
+                }
+
                 if (path == "/" || path == "/index.html") {
                     val html = WebPage.getHtml()
                     val htmlBytes = html.toByteArray(Charsets.UTF_8)
@@ -858,6 +895,36 @@ class SettingsServer(
             repository.getConfig().customBackgroundPath.takeIf { it.isNotEmpty() }?.let { add(it) }
         }
     )
+
+    /**
+     * Reads a panel asset whole.
+     *
+     * The largest is about 8 MB, which is a real allocation but a brief one, and it buys an exact
+     * `Content-Length`. The alternative — streaming with a length from `available()` — depends on
+     * behaviour that differs for compressed assets, and a wrong length on a hand-rolled server
+     * produces a truncated wasm file rather than an error.
+     */
+    private fun readPanelAsset(assetPath: String): ByteArray? = try {
+        context.assets.open(assetPath).use { it.readBytes() }
+    } catch (_: Exception) {
+        null
+    }
+
+    /**
+     * The content type for a panel asset.
+     *
+     * `application/wasm` is not cosmetic: `WebAssembly.instantiateStreaming` refuses any other type
+     * outright, and the panel would fail to start with a message about the MIME type rather than
+     * anything to do with the app.
+     */
+    private fun panelContentType(assetPath: String): String = when {
+        assetPath.endsWith(".html") -> "text/html; charset=UTF-8"
+        assetPath.endsWith(".js") -> "application/javascript; charset=UTF-8"
+        assetPath.endsWith(".wasm") -> "application/wasm"
+        assetPath.endsWith(".json") -> "application/json; charset=UTF-8"
+        assetPath.endsWith(".txt") -> "text/plain; charset=UTF-8"
+        else -> "application/octet-stream"
+    }
 
     private fun getCurrentStateJson(): String {
         try {
@@ -2022,3 +2089,6 @@ class SettingsServer(
         }
     }
 }
+
+/** Socket-sized writes for the panel bundle; see the `/panel` route. */
+private const val PANEL_CHUNK = 32 * 1024
