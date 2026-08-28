@@ -1,11 +1,14 @@
 package com.groovernapp.mosqueathan.domain
 
+import kotlinx.serialization.Serializable
+
 /**
  * A paired controller device. Access control stays server-authoritative, so this
  * is the one table a controller never manages.
  *
  * Plain-data counterpart of `data.ConnectedDeviceEntity`.
  */
+@Serializable
 data class ConnectedDevice(
     val deviceId: String = "",
     val deviceName: String = "",

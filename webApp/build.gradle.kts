@@ -11,6 +11,33 @@ plugins {
  * module has no Android side at all. It is the one place a hand-written `kotlin { }` block
  * is right rather than divergence waiting to happen.
  */
+/*
+ * The version string the panel reports, generated from gradle/libs.versions.toml so it cannot
+ * drift from the APK's. Without it LocalAppVersion kept its "unknown" default and the sidebar
+ * read "Versi: vunknown" — visible to anyone who opened the panel.
+ */
+val generatedVersionDir = layout.buildDirectory.dir("generated/version/kotlin")
+
+val generateWebAppVersion by tasks.registering {
+    val versionName = libs.versions.versionName.get()
+    val outputDir = generatedVersionDir
+    inputs.property("versionName", versionName)
+    outputs.dir(outputDir)
+    doLast {
+        val file = outputDir.get()
+            .file("com/groovernapp/mosqueathan/web/WebAppVersion.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+            package com.groovernapp.mosqueathan.web
+
+            /** Generated from gradle/libs.versions.toml. Do not edit. */
+            internal const val WEB_APP_VERSION: String = "$versionName"
+            """.trimIndent() + "\n"
+        )
+    }
+}
+
 kotlin {
     jvmToolchain(21)
 
@@ -30,6 +57,7 @@ kotlin {
 
     sourceSets {
         val wasmJsMain by getting {
+            kotlin.srcDir(generateWebAppVersion)
             dependencies {
                 implementation(project(":core:model"))
                 implementation(project(":core:protocol"))
@@ -45,11 +73,11 @@ kotlin {
                 implementation(libs.jb.lifecycle.viewmodel.compose)
                 implementation(libs.jb.lifecycle.runtime.compose)
 
-                // kotlinx-datetime delegates to js-joda in the browser, and ships only
-                // the core. TimeZone.currentSystemDefault() needs the timezone database,
-                // which is this separate package — without it, the first call throws, and
-                // PrayerType.displayName makes that call to decide whether today is
-                // Friday. That is why the settings screen would not compose at all.
+                // kotlinx-datetime delegates to js-joda in the browser and ships only the core,
+                // so TimeZone.currentSystemDefault() needs this separate timezone database.
+                // Measured, not assumed: with the import removed, that call throws a JS error that
+                // `catch (Throwable)` does not even catch, and main() dies before composition —
+                // see the reference in JsJodaTimeZone.kt, which is what pulls the module in.
                 implementation(npm("@js-joda/timezone", "2.18.2"))
             }
         }

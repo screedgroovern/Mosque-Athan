@@ -1,10 +1,13 @@
 package com.groovernapp.mosqueathan.domain
 
+import kotlinx.serialization.Serializable
+
 /**
  * A window during which the display dims to standby.
  *
  * Plain-data counterpart of `data.StandbyScheduleEntity`.
  */
+@Serializable
 data class StandbySchedule(
     override val id: String = "",
     /** HH:mm */

@@ -1,10 +1,13 @@
 package com.groovernapp.mosqueathan.domain
 
+import kotlinx.serialization.Serializable
+
 /**
  * A window during which the slideshow runs.
  *
  * Plain-data counterpart of `data.SlideshowScheduleEntity`.
  */
+@Serializable
 data class SlideshowSchedule(
     override val id: String = "",
     /** HH:mm */

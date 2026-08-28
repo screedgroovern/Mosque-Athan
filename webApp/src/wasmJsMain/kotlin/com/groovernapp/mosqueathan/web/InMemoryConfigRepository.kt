@@ -8,6 +8,7 @@ import com.groovernapp.mosqueathan.domain.FridayMedia
 import com.groovernapp.mosqueathan.domain.KemenagSchedule
 import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.MosqueSnapshot
 import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.domain.SlideshowSchedule
 import com.groovernapp.mosqueathan.domain.StandbySchedule
@@ -18,19 +19,27 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * A [ConfigRepository] held entirely in memory.
  *
- * This is scaffolding, and saying so is the point: it exists so the settings UI can be
- * *seen* in a browser before any transport is written. Reads come from `MutableStateFlow`s
- * and writes update them, so the screen behaves — a toggle stays toggled — while nothing
- * is persisted or sent anywhere.
+ * It is no longer scaffolding. [DisplayLink] fills it from the snapshots the display pushes, and
+ * the settings ViewModels send every change onward through `RemoteActionSink` — so a write updates
+ * this copy for immediate feedback and the display's echo then overwrites it. The display stays
+ * authoritative; nothing here merges.
  *
- * It is replaced by an implementation backed by the display's own HTTP API
- * (`GET /api/get_config`, `POST /api/action`), which is the actual step 7 work. Only after
- * that does IndexedDB matter, and only for the offline replica: a *connected* controller
- * is a client and needs no local store at all.
+ * Still in memory rather than IndexedDB, which is the right shape for now: a *connected*
+ * controller is a client. Local storage becomes necessary only for the offline replica — the
+ * takmir who edits at home — and that needs the three-snapshot merge model, not just a store.
  */
-class InMemoryConfigRepository : ConfigRepository {
+class InMemoryConfigRepository(
+    /**
+     * The display this browser controls. Seeded into the config because the *role* is a local fact
+     * the display never sends — its snapshot omits `connectivityMode` and `remoteTvIp`, so without
+     * this the panel reads back the default and claims to be a server.
+     */
+    displayAddress: String = ""
+) : ConfigRepository {
 
-    private val config = MutableStateFlow(MosqueConfig())
+    private val config = MutableStateFlow(
+        MosqueConfig(connectivityMode = REMOTE_MODE, remoteTvIp = displayAddress)
+    )
     private val media = MutableStateFlow<List<Media>>(emptyList())
     private val backgrounds = MutableStateFlow<List<DashboardBackground>>(emptyList())
     private val fridayMedia = MutableStateFlow<List<FridayMedia>>(emptyList())
@@ -39,6 +48,31 @@ class InMemoryConfigRepository : ConfigRepository {
     private val slideshowSchedules = MutableStateFlow<List<SlideshowSchedule>>(emptyList())
     private val standbySchedules = MutableStateFlow<List<StandbySchedule>>(emptyList())
     private val kemenagSchedules = MutableStateFlow<List<KemenagSchedule>>(emptyList())
+
+    /**
+     * Replaces everything with a snapshot from the display.
+     *
+     * The device-specific fields are carried over rather than taken from the snapshot: which role
+     * this device plays, which display it talks to, and its PIN are facts about *this* device. The
+     * display does not send them at all, so adopting the decoded defaults would silently flip the
+     * panel into "server" mode on the first snapshot.
+     */
+    fun apply(snapshot: MosqueSnapshot) {
+        val local = config.value
+        config.value = snapshot.config.copy(
+            id = local.id,
+            connectivityMode = local.connectivityMode,
+            remoteTvIp = local.remoteTvIp,
+            pinCode = local.pinCode
+        )
+        media.value = snapshot.mediaList
+        backgrounds.value = snapshot.dashboardBackgrounds
+        fridayMedia.value = snapshot.fridayMediaList
+        announcements.value = snapshot.announcements
+        devices.value = snapshot.devices
+        slideshowSchedules.value = snapshot.slideshowSchedules
+        standbySchedules.value = snapshot.standbySchedules
+    }
 
     override fun getConfigFlow(): Flow<MosqueConfig> = config.asStateFlow()
     override fun getConfig(): MosqueConfig = config.value
@@ -157,3 +191,6 @@ class InMemoryConfigRepository : ConfigRepository {
         )
     }
 }
+
+/** The wire value the display and the Android app both use for a controller. */
+private const val REMOTE_MODE = "REMOTE"

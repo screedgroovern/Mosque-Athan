@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.domain
 
+import kotlinx.serialization.Serializable
+
 /**
  * Every setting, as plain immutable data.
  *
@@ -13,6 +15,7 @@ package com.groovernapp.mosqueathan.domain
  * Field names match the entity exactly, so the mapper is mechanical and a rename here
  * is a compile error there rather than a silent mismatch.
  */
+@Serializable
 data class MosqueConfig(
     val id: String = "config",
     val latitude: Double = MosqueConfigDefaults.DEFAULT_LATITUDE,
