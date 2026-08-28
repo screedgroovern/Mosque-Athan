@@ -17,6 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.domain.ConnectedDevice
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import androidx.compose.runtime.Composable
+import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
@@ -123,7 +126,7 @@ fun DevicesSettingsSegment(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Daftar Perangkat terdaftar / terhubung",
+            text = Lang.get("Registered / connected devices", "Daftar Perangkat terdaftar / terhubung"),
             color = MosqueTheme.colors.accent,
             fontSize = MosqueTheme.typography.bodyCompact,
             fontWeight = FontWeight.Bold,
@@ -141,7 +144,8 @@ fun DevicesSettingsSegment(
                 )
             }
         } else {
-            val sortedDevices = remember(devices) {
+            val isCompact = LocalWindowClass.current.isCompact
+    val sortedDevices = remember(devices) {
                 devices.sortedWith(
                     compareByDescending<ConnectedDevice> { it.isOnline }
                         .thenByDescending { it.lastSeen }
@@ -152,84 +156,157 @@ fun DevicesSettingsSegment(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 sortedDevices.forEach { device ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(MosqueTheme.radius.md))
-                            .background(MosqueTheme.colors.fillSubtle)
-                            .padding(horizontal = MosqueTheme.spacing.xl, vertical = MosqueTheme.spacing.lg),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg),
-                            modifier = Modifier.weight(1f)
+                    // Stacked on a phone, side by side otherwise.
+                    //
+                    // The two action buttons do not shrink, so in one Row they took the width their
+                    // labels needed and left the name column about two characters wide — "MacOS
+                    // Device" rendered as M / ac / O / S / D / ev / ic / e, one fragment per line.
+                    // Only the compact branch is new; a television and a tablet lay out exactly as
+                    // before.
+                    if (isCompact) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(MosqueTheme.radius.md))
+                                .background(MosqueTheme.colors.fillSubtle)
+                                .padding(
+                                    horizontal = MosqueTheme.spacing.lg,
+                                    vertical = MosqueTheme.spacing.lg
+                                ),
+                            verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .clip(RoundedCornerShape(5.dp))
-                                    .background(if (device.isOnline) MosqueTheme.colors.success else MosqueTheme.colors.textMuted)
-                            )
-                            Column {
-                                Text(
-                                    text = device.deviceName,
-                                    color = MosqueTheme.colors.textPrimary,
-                                    fontSize = MosqueTheme.typography.bodyCompact,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = if (device.isOnline) "Terhubung" else "Terputus",
-                                    color = MosqueTheme.colors.textSecondary,
-                                    fontSize = MosqueTheme.typography.caption
+                            DeviceIdentity(device, modifier = Modifier.fillMaxWidth())
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                DeviceActions(
+                                    device = device,
+                                    hasMaster = hasMaster,
+                                    onRequestTransfer = { showTransferMasterDialog = device },
+                                    onSetDeviceMaster = onSetDeviceMaster,
+                                    onDeleteDevice = onDeleteDevice
                                 )
                             }
                         }
-
+                    } else {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(MosqueTheme.radius.md))
+                                .background(MosqueTheme.colors.fillSubtle)
+                                .padding(
+                                    horizontal = MosqueTheme.spacing.xl,
+                                    vertical = MosqueTheme.spacing.lg
+                                ),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (device.isMaster) {
-                                Text(
-                                    text = "Master",
-                                    color = MosqueTheme.colors.accent,
-                                    fontSize = MosqueTheme.typography.label,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = MosqueTheme.spacing.md)
+                            DeviceIdentity(device, modifier = Modifier.weight(1f))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                DeviceActions(
+                                    device = device,
+                                    hasMaster = hasMaster,
+                                    onRequestTransfer = { showTransferMasterDialog = device },
+                                    onSetDeviceMaster = onSetDeviceMaster,
+                                    onDeleteDevice = onDeleteDevice
                                 )
-                            } else {
-                                MosqueSecondaryButton(
-                                    onClick = {
-                                        if (hasMaster) {
-                                            showTransferMasterDialog = device
-                                        } else {
-                                            onSetDeviceMaster(device.deviceId)
-                                        }
-                                    },
-                                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                                    contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
-                                    modifier = Modifier.height(MosqueTheme.size.controlSm)
-                                ) {
-                                    Text("Jadikan Master", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.caption)
-                                }
-                            }
-
-                            if (!device.isMaster) {
-                                MosqueDangerButton(
-                                    onClick = { onDeleteDevice(device.deviceId) },
-                                    shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                                    contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
-                                    modifier = Modifier.height(MosqueTheme.size.controlSm)
-                                ) {
-                                    Text("Hapus", color = MosqueTheme.colors.textPrimary, fontSize = MosqueTheme.typography.caption)
-                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+/** The dot, the name and the connection state — the part that identifies a paired device. */
+@Composable
+private fun DeviceIdentity(device: ConnectedDevice, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(10.dp)
+                .clip(RoundedCornerShape(5.dp))
+                .background(
+                    if (device.isOnline) MosqueTheme.colors.success else MosqueTheme.colors.textMuted
+                )
+        )
+        Column {
+            Text(
+                text = device.deviceName,
+                color = MosqueTheme.colors.textPrimary,
+                fontSize = MosqueTheme.typography.bodyCompact,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = if (device.isOnline) {
+                    Lang.get("Connected", "Terhubung")
+                } else {
+                    Lang.get("Disconnected", "Terputus")
+                },
+                color = MosqueTheme.colors.textSecondary,
+                fontSize = MosqueTheme.typography.caption
+            )
+        }
+    }
+}
+
+/** The master badge, or the two actions available on a device that is not the master. */
+@Composable
+private fun DeviceActions(
+    device: ConnectedDevice,
+    hasMaster: Boolean,
+    onRequestTransfer: () -> Unit,
+    onSetDeviceMaster: (String) -> Unit,
+    onDeleteDevice: (String) -> Unit
+) {
+    if (device.isMaster) {
+        Text(
+            text = Lang.get("Master", "Master"),
+            color = MosqueTheme.colors.accent,
+            fontSize = MosqueTheme.typography.label,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = MosqueTheme.spacing.md)
+        )
+        return
+    }
+
+    MosqueSecondaryButton(
+        onClick = { if (hasMaster) onRequestTransfer() else onSetDeviceMaster(device.deviceId) },
+        shape = RoundedCornerShape(MosqueTheme.radius.sm),
+        contentPadding = PaddingValues(
+            horizontal = MosqueTheme.spacing.lg,
+            vertical = MosqueTheme.spacing.xs
+        ),
+        modifier = Modifier.height(MosqueTheme.size.controlSm)
+    ) {
+        Text(
+            text = Lang.get("Make Master", "Jadikan Master"),
+            color = MosqueTheme.colors.textPrimary,
+            fontSize = MosqueTheme.typography.caption
+        )
+    }
+    MosqueDangerButton(
+        onClick = { onDeleteDevice(device.deviceId) },
+        shape = RoundedCornerShape(MosqueTheme.radius.sm),
+        contentPadding = PaddingValues(
+            horizontal = MosqueTheme.spacing.lg,
+            vertical = MosqueTheme.spacing.xs
+        ),
+        modifier = Modifier.height(MosqueTheme.size.controlSm)
+    ) {
+        Text(
+            text = Lang.get("Delete", "Hapus"),
+            color = MosqueTheme.colors.textPrimary,
+            fontSize = MosqueTheme.typography.caption
+        )
     }
 }

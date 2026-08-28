@@ -29,6 +29,8 @@ import com.groovernapp.mosqueathan.domain.KemenagSchedule
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import com.groovernapp.mosqueathan.domain.calculationMethodLabel
+import com.groovernapp.mosqueathan.domain.calculationMethodOptions
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosquePrimaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueTextButton
@@ -61,10 +63,9 @@ fun MethodSettingsSegment(
         { onEvent(PrayerScheduleEvent.KemenagCitySearched(it)) }
     val onDownloadKemenagSchedules: () -> Unit =
         { onEvent(PrayerScheduleEvent.KemenagDownloadRequested) }
-    val calculationMethods = listOf(
-        "SINGAPORE", "UMM_AL_QURA", "MUSLIM_WORLD_LEAGUE", "EGYPTIAN",
-        "KARACHI", "DUBAI", "KUWAIT", "QATAR", "KEMENAG"
-    )
+    // The ids come from core:model, where they sit next to the name shown for each. They used to
+    // be listed here and rendered raw, which is how MUSLIM_WORLD_LEAGUE ended up on screen.
+    val calculationMethods = calculationMethodOptions.map { it.id }
     val scope = rememberCoroutineScope()
     var showCitySearchDialog by remember { mutableStateOf(false) }
     var showSchedulesDialog by remember { mutableStateOf(false) }
@@ -574,7 +575,7 @@ private fun CalculationMethodItem(
         )
         Spacer(modifier = Modifier.width(spacerWidth))
         Text(
-            text = method,
+            text = calculationMethodLabel(method),
             color = MosqueTheme.colors.textPrimary,
             fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.label,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium

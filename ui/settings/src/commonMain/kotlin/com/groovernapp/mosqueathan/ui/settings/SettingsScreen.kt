@@ -26,6 +26,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Refresh
+import com.groovernapp.mosqueathan.ui.design.LinkStatus
+import com.groovernapp.mosqueathan.ui.design.LocalLinkStatus
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
@@ -71,7 +80,19 @@ fun SettingsScreen(
     onPreviewIqomah: () -> Unit = {},
     onPreviewSlideshow: () -> Unit = {},
     onPreviewFridaySlideshow: () -> Unit = {},
-    onBack: () -> Unit
+    /**
+     * Leaving settings. Null when there is nowhere to go — in the browser the settings UI *is* the
+     * app, where on the television it is a screen you leave to return to the clock. The close and
+     * back controls are then not drawn at all, rather than drawn and doing nothing: both showed a
+     * focus ring on the web build and silently ignored every press.
+     */
+    onBack: (() -> Unit)?,
+    /**
+     * Re-pulls everything from the display. Null where there is nothing to pull — the display
+     * itself, and the Android controller, which posts each action and keeps no connection to
+     * refresh. Null hides the control rather than showing one that does nothing.
+     */
+    onSync: (() -> Unit)? = null
 ) {
 
     val config by viewModel.configState.collectAsState()
@@ -128,7 +149,11 @@ fun SettingsScreen(
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
-    var isSideSheetExpanded by remember { mutableStateOf(!isCompact) }
+    // Keyed on isCompact deliberately. Without the key this is computed once, and on the web the
+    // first composition happens before the canvas reports its size — so the window looks Compact,
+    // the sheet starts collapsed, and it stays a strip of unlabelled icons however wide the window
+    // is. Android never saw this because its first frame already has the real size.
+    var isSideSheetExpanded by remember(isCompact) { mutableStateOf(!isCompact) }
 
     SystemBackHandler(enabled = isCompact && drawerState.isOpen) {
         coroutineScope.launch { drawerState.close() }
@@ -205,10 +230,22 @@ fun SettingsScreen(
                 }
             }
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .safeDrawingPadding()
+            ) {
+            SettingsHeaderBar(
+                isServer = config.connectivityMode != REMOTE_WIRE_VALUE,
+                controllersOnline = devices.count { it.isOnline },
+                status = LocalLinkStatus.current,
+                onSync = onSync,
+                isCompact = isCompact
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
             // 1. Persistent Side Sheet (only for TV / Tablet)
             if (!isCompact) {
@@ -273,7 +310,7 @@ fun SettingsScreen(
                     }
 
                     // Back button on top right of detail area (phone)
-                    if (isCompact) {
+                    if (isCompact && onBack != null) {
                         MosqueIconButton(onClick = onBack) {
                             Icon(
                                 imageVector = Icons.Default.Close,
@@ -430,6 +467,7 @@ fun SettingsScreen(
                 }
             }
         }
+            }
         }
 
         // Last child of the root Box so it draws over the panes. The ViewModel reports
@@ -448,7 +486,8 @@ fun SideSheetContent(
     isSideSheetExpanded: Boolean,
     onToggleExpand: () -> Unit,
     isTv: Boolean,
-    onBack: () -> Unit,
+    /** See the same parameter on [SettingsScreen]: null means the Back button is not drawn. */
+    onBack: (() -> Unit)?,
     versionName: String,
     showAllSettings: Boolean,
     displayedCategories: Array<SettingsCategory>,
@@ -521,11 +560,38 @@ fun SideSheetContent(
                 }
             }
 
-            // Categories items list
+            // Categories items list.
+            //
+            // This list scrolls, and until now nothing said so. With six categories and a short
+            // window the last one — Sistem & Reset — sat below the fold, while the version line and
+            // the Back button underneath stayed pinned in place, which reads as "the list ends
+            // here". The fade is drawn only while there is actually more to reach, so on a window
+            // tall enough for all six nothing about the sidebar changes.
+            //
+            // drawWithContent sits *before* verticalScroll on purpose: that puts it outside the
+            // scrolling node, so it paints in viewport coordinates and stays at the bottom edge
+            // instead of sliding away with the content.
+            val railScroll = rememberScrollState()
+            val railFade = MosqueTheme.colors.scrim
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .verticalScroll(rememberScrollState()),
+                    .drawWithContent {
+                        drawContent()
+                        if (railScroll.canScrollForward) {
+                            val fadeHeight = 28.dp.toPx().coerceAtMost(size.height)
+                            drawRect(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(Color.Transparent, railFade),
+                                    startY = size.height - fadeHeight,
+                                    endY = size.height
+                                ),
+                                topLeft = Offset(0f, size.height - fadeHeight),
+                                size = Size(size.width, fadeHeight)
+                            )
+                        }
+                    }
+                    .verticalScroll(railScroll),
                 verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.lg),
                 horizontalAlignment = if (isCollapsed) Alignment.CenterHorizontally else Alignment.Start
             ) {
@@ -623,7 +689,7 @@ fun SideSheetContent(
                 )
             }
 
-            MosqueSecondaryButton(
+            if (onBack != null) MosqueSecondaryButton(
                 onClick = onBack,
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = Modifier
@@ -685,4 +751,131 @@ enum class SettingsCategory(
         getDescription = { Lang.get("Configure TV standby hours and restore application settings to defaults.", "Atur jadwal layar hitam (standby) otomatis dan kembalikan pengaturan ke setelan pabrik.") },
         icon = Icons.Default.Restore
     )
+}
+
+/** The wire value for a controller, matching the display and the Android app. */
+private const val REMOTE_WIRE_VALUE = "REMOTE"
+
+/**
+ * The bar across the top of settings: what this device *is*, and whether it is reaching the display.
+ *
+ * The role is the part that is always shown, and it is the reason this bar exists rather than a
+ * status chip tucked into the sidebar: one build runs on the mosque's display and on a takmir's
+ * phone, and until now nothing on screen said which. A controller additionally shows whether it is
+ * reaching the display; a display shows how many controllers are attached to it, because a display
+ * is the source of truth and syncs nowhere — "Online" would mean nothing there.
+ *
+ * The status is hidden entirely at [LinkStatus.Unknown]. A host that cannot answer shows nothing
+ * rather than a green light meaning "we did not check" — the Android controller posts each action
+ * and keeps no connection, so it genuinely does not know.
+ */
+@Composable
+private fun SettingsHeaderBar(
+    isServer: Boolean,
+    controllersOnline: Int,
+    status: LinkStatus,
+    onSync: (() -> Unit)?,
+    isCompact: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MosqueTheme.colors.scrim.copy(alpha = 0.6f))
+            .padding(
+                horizontal = if (isCompact) MosqueTheme.spacing.lg else MosqueTheme.spacing.xxl,
+                vertical = MosqueTheme.spacing.md
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Settings,
+            contentDescription = null,
+            tint = MosqueTheme.colors.accent,
+            modifier = Modifier.size(MosqueTheme.size.iconMd)
+        )
+        if (!isCompact) {
+            Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
+            Text(
+                text = "MOSQUE ATHAN",
+                color = MosqueTheme.colors.accent,
+                fontSize = MosqueTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        StatusChip(
+            label = if (isServer) Lang.get("Server", "Server") else Lang.get("Remote", "Remote"),
+            dotColor = MosqueTheme.colors.accent
+        )
+
+        if (isServer) {
+            Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
+            StatusChip(
+                label = if (controllersOnline == 0) {
+                    Lang.get("No controllers", "Tiada pengendali")
+                } else {
+                    Lang.get("$controllersOnline connected", "$controllersOnline terhubung")
+                },
+                dotColor = if (controllersOnline == 0) {
+                    MosqueTheme.colors.textMuted
+                } else {
+                    MosqueTheme.colors.success
+                }
+            )
+        } else if (status != LinkStatus.Unknown) {
+            Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
+            StatusChip(
+                label = when (status) {
+                    LinkStatus.Connected -> Lang.get("Connected", "Terhubung")
+                    LinkStatus.Connecting -> Lang.get("Connecting", "Menghubungkan")
+                    LinkStatus.NeedsApproval -> Lang.get("Needs approval", "Perlu izin")
+                    else -> Lang.get("Disconnected", "Terputus")
+                },
+                dotColor = when (status) {
+                    LinkStatus.Connected -> MosqueTheme.colors.success
+                    LinkStatus.NeedsApproval -> MosqueTheme.colors.accent
+                    else -> MosqueTheme.colors.textMuted
+                }
+            )
+        }
+
+        // Never on a display: it is the source of truth and has nowhere to sync to. The host can
+        // still pass a callback — the web build always does — so the decision belongs here.
+        if (onSync != null && !isServer) {
+            Spacer(modifier = Modifier.width(MosqueTheme.spacing.sm))
+            MosqueIconButton(onClick = onSync) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = Lang.get("Sync", "Sinkron"),
+                    tint = MosqueTheme.colors.textPrimary,
+                    modifier = Modifier.size(MosqueTheme.size.iconMd)
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A dot and a label — the same vocabulary the connected-devices list already uses, deliberately
+ * reused rather than reinvented, so "green dot means reachable" means one thing in this app.
+ */
+@Composable
+private fun StatusChip(label: String, dotColor: androidx.compose.ui.graphics.Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(MosqueTheme.spacing.sm)
+                .clip(CircleShape)
+                .background(dotColor)
+        )
+        Spacer(modifier = Modifier.width(MosqueTheme.spacing.xs))
+        Text(
+            text = label,
+            color = MosqueTheme.colors.textSecondary,
+            fontSize = MosqueTheme.typography.captionSmall,
+            fontWeight = FontWeight.Medium
+        )
+    }
 }
