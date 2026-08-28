@@ -89,6 +89,22 @@ class FridayViewModel(
             is FridayEvent.IntervalUnitChanged -> edit { it.copy(jumatSlideIntervalUnit = event.unit) }
             is FridayEvent.VideoWaitUntilEndChanged -> edit { it.copy(jumatVideoWaitUntilEnd = event.wait) }
 
+            is FridayEvent.MurottalAudioPicked -> launch {
+                // Only the paths the store actually produced are recorded. On a controller it
+                // produces none — it uploads instead, and the display appends the path it chose and
+                // broadcasts, so the list arrives in the next snapshot rather than from here.
+                val stored = event.files.mapNotNull { files.storeMurottalAudio(it)?.path }
+                if (stored.isNotEmpty()) {
+                    edit { config ->
+                        val existing = config.murottalAudioPaths
+                            .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                        config.copy(
+                            murottalAudioPaths = (existing + stored).distinct().joinToString(",")
+                        )
+                    }
+                }
+            }
+
             // --- Friday media ---
             is FridayEvent.MediaAdded -> launch {
                 event.uris.forEach { uri ->
@@ -107,7 +123,10 @@ class FridayViewModel(
             }
 
             is FridayEvent.MediaDeleted -> launch {
-                files.delete(event.item.filePath)
+                // The file goes with the row — the repository does that now, for every caller. This
+                // pane used to delete it here and was the only one that did, so media deleted from
+                // any other pane leaked its file, and from a controller nothing was cleaned up at
+                // all because a controller cannot reach the display's filesystem.
                 repository.deleteFridayMedia(event.item.id)
             }
 

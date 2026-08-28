@@ -17,12 +17,7 @@ import com.groovernapp.mosqueathan.ui.adzan.AdzanViewModel
 import com.groovernapp.mosqueathan.ui.dashboard.DashboardViewModel
 import com.groovernapp.mosqueathan.ui.iqomah.IqomahViewModel
 import com.groovernapp.mosqueathan.ui.navigation.AppViewModel
-import com.groovernapp.mosqueathan.ui.settings.SettingsViewModel
-import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahViewModel
-import com.groovernapp.mosqueathan.ui.settings.displaymedia.DisplayMediaViewModel
-import com.groovernapp.mosqueathan.ui.settings.fridaysettings.FridayViewModel
-import com.groovernapp.mosqueathan.ui.settings.prayerschedule.PrayerScheduleViewModel
-import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel
+import com.groovernapp.mosqueathan.ui.settings.settingsViewModelsModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -55,17 +50,16 @@ val appModule = module {
     single { RemoteActionSender(get()) }
     single<RemoteActionSink> { get<RemoteActionSender>() }
     single { MediaFileStore(androidContext()) }
+    // The only thing in the app that deliberately makes a sound; see MurottalPlayer.
+    single { com.groovernapp.mosqueathan.audio.MurottalPlayer(androidContext()) }
     single<HttpFetcher> { HttpUrlFetcher() }
     single<MediaStore> { get<MediaFileStore>() }
 
-    viewModel { AppViewModel(get(), get()) }
+    viewModel { AppViewModel(get(), get(), get()) }
     viewModel { DashboardViewModel(get(), get(), get()) }
     viewModel { AdzanViewModel(get()) }
     viewModel { IqomahViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get(), get()) }
-    viewModel { RemoteDevicesViewModel(get(), get()) }
-    viewModel { AdzanIqomahViewModel(get(), get()) }
-    viewModel { PrayerScheduleViewModel(get(), get(), get()) }
-    viewModel { DisplayMediaViewModel(get(), get(), get()) }
-    viewModel { FridayViewModel(get(), get(), get()) }
+    // The settings ViewModels live beside the screen that resolves them, so the television and
+    // the browser cannot register different subsets. See settingsViewModelsModule.
+    includes(settingsViewModelsModule)
 }

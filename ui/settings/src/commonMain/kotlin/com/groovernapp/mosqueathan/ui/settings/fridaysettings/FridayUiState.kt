@@ -72,6 +72,16 @@ sealed interface FridayEvent {
     data class MurottalStartDelayChanged(val minutes: Int) : FridayEvent
     data class MurottalAudioPathsChanged(val paths: String) : FridayEvent
 
+    /**
+     * Recitations the user just chose in the platform's audio chooser.
+     *
+     * Files rather than paths: on the display they are copied into its own storage, and from a
+     * controller they are uploaded, because the path in `murottalAudioPaths` has to be one the
+     * *display* can open. Only the ViewModel can tell those two apart, so the pane raises this and
+     * stays out of it.
+     */
+    data class MurottalAudioPicked(val files: List<PickedFile>) : FridayEvent
+
     // Friday slideshow
     data class SlideshowEnabledChanged(val enabled: Boolean) : FridayEvent
     data class IncludeGlobalMediaChanged(val include: Boolean) : FridayEvent

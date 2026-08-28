@@ -17,6 +17,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import com.groovernapp.mosqueathan.ui.component.SlideshowComponent
 import com.groovernapp.mosqueathan.ui.design.MosqueRadius
@@ -557,6 +560,7 @@ private fun MurottalAudioPathsManager(
     // the list.
     val audioPicker = rememberAudioFilePicker()
 
+
     Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
         Text(
             text = Lang.get("Murottal Audio Files", "File Audio Murottal"),
@@ -607,18 +611,55 @@ private fun MurottalAudioPathsManager(
             )
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
-            MosqueSecondaryButton(
-                onClick = {
+        // A field you press, not one you type into.
+        //
+        // The value is never typed: a path has to name a file the *display* can open, and no one
+        // can be expected to know that path. So the field is a target for the platform's own audio
+        // chooser — the file is copied on the display and uploaded from a controller, and the path
+        // comes back from whichever of those happened.
+        //
+        // The inner field is disabled rather than read-only: a read-only field still takes focus and
+        // shows a caret, which invites typing that will never be accepted. Disabled ignores pointer
+        // input entirely, so the press lands on the Box.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(MosqueTheme.radius.md))
+                .focusHighlight(RoundedCornerShape(MosqueTheme.radius.md), scaleUp = false)
+                .clickable(enabled = enabled) {
                     audioPicker.launch { picked ->
-                        val newPaths = (paths + picked).distinct()
-                        onEvent(FridayEvent.MurottalAudioPathsChanged(newPaths.joinToString(",")))
+                        onEvent(FridayEvent.MurottalAudioPicked(picked))
                     }
+                }
+        ) {
+            OutlinedTextField(
+                value = "",
+                onValueChange = {},
+                enabled = false,
+                singleLine = true,
+                placeholder = {
+                    Text(
+                        Lang.get("Choose audio files…", "Pilih file audio…"),
+                        fontSize = MosqueTheme.typography.caption
+                    )
                 },
-                enabled = enabled
-            ) {
-                Text(Lang.get("Add Audio", "Tambah Audio"))
-            }
+                trailingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = if (enabled) {
+                            MosqueTheme.colors.accent
+                        } else {
+                            MosqueTheme.colors.textDisabled
+                        }
+                    )
+                },
+                colors = mosqueTextFieldColors(),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
             if (paths.size > MAX_LISTED_AUDIO_PATHS) {
                 MosqueSecondaryButton(
                     onClick = { /* Open full list dialog or expand */ },

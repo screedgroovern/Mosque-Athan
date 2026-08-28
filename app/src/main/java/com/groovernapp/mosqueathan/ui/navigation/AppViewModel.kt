@@ -34,7 +34,8 @@ import kotlin.time.Duration.Companion.seconds
 
 class AppViewModel(
     private val repository: DisplayDataSource,
-    private val kemenagSource: com.groovernapp.mosqueathan.domain.KemenagScheduleSource
+    private val kemenagSource: com.groovernapp.mosqueathan.domain.KemenagScheduleSource,
+    private val murottal: com.groovernapp.mosqueathan.audio.MurottalPlayer
 ) : ViewModel() {
 
 
@@ -137,6 +138,7 @@ class AppViewModel(
                 refreshPrayerSchedule()
                 checkTransitions()
                 updateStandbyStatus()
+                updateMurottal()
                 delay(1000)
             }
         }
@@ -275,6 +277,10 @@ class AppViewModel(
     }
 
     private fun transitionToAdzan(prayerType: PrayerType, prayerTime: LocalDateTime) {
+        // Immediately, not on the next tick: the recitation must not overlap the call to prayer
+        // even by a second, and the adzan screen appears `adzanLeadMinutes` *before* the time
+        // `shouldPlayMurottal` compares against.
+        murottal.stop()
         lastAdzanBeepedSecond = -1
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Adzan(prayerType, prayerTime)
@@ -591,6 +597,32 @@ class AppViewModel(
         transitionToSettings()
     }
 
+    /**
+     * Starts and stops the pre-adzan recitation.
+     *
+     * Called once a second from the coordinator, and deliberately written as "should it be playing
+     * right now" rather than as two edges. An edge-triggered version has to be right about every
+     * way the window can be entered or left — the date rolling over, the config changing under it,
+     * the app being restarted mid-window by [com.groovernapp.mosqueathan.BootReceiver] — and
+     * getting any of those wrong leaves a television reciting through the sermon.
+     * [MurottalPlayer.start] and [MurottalPlayer.stop] both ignore calls that change nothing.
+     */
+    private fun updateMurottal() {
+        val config = currentConfig
+        val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+        val shouldPlay = com.groovernapp.mosqueathan.audio.shouldPlayMurottal(
+            config = config,
+            now = now,
+            dzuhur = prayerResult?.dzuhur,
+            forcedSilence = forcedFridaySilence
+        )
+        if (shouldPlay) {
+            murottal.start(config.murottalAudioPaths.split(","))
+        } else {
+            murottal.stop()
+        }
+    }
+
     private fun isFridayModeActive(config: MosqueConfig, now: LocalDateTime): Boolean {
         if (!config.jumatEnabled) return false
         if (now.dayOfWeek != kotlinx.datetime.DayOfWeek.FRIDAY) return false
@@ -695,15 +727,12 @@ class AppViewModel(
         _isStandbyActive.value = shouldBeActive
     }
 
-    private fun parseTimeToMinutes(timeStr: String): Int? {
-        val parts = timeStr.trim().split(":")
-        if (parts.size != 2) return null
-        val hour = parts[0].trim().toIntOrNull() ?: return null
-        val minute = parts[1].trim().toIntOrNull() ?: return null
-        return hour * 60 + minute
-    }
+    /** Delegates to the one in `audio`, which the murottal schedule tests cover. */
+    private fun parseTimeToMinutes(timeStr: String): Int? =
+        com.groovernapp.mosqueathan.audio.minutesOfDay(timeStr)
 
     override fun onCleared() {
+        murottal.stop()
         super.onCleared()
         coordinatorJob?.cancel()
         iqomahCollectorJob?.cancel()
