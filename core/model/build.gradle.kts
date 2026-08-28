@@ -1,5 +1,10 @@
 plugins {
     id("mosque.kmp-library")
+    // The domain classes are the wire format: the display serves them as JSON and a
+    // controller decodes them straight back. Only the json *library* was on the classpath
+    // before, which is why joinFooterLines worked without this — @Serializable needs the
+    // compiler plugin to generate the serializers.
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
