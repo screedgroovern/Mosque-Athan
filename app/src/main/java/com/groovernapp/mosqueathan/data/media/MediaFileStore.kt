@@ -40,6 +40,49 @@ class MediaFileStore(private val context: Context) : MediaStore {
     override fun storeFridayMedia(file: PickedFile): StoredMedia? = copy(file.uri, FRIDAY_DIR)
 
     /**
+     * Copies a recitation in, keeping its real extension.
+     *
+     * Not [copy]: that one decides between `.jpg` and `.mp4` and downscales images, both wrong
+     * here. The extension is preserved because a media player picks its decoder from the file, and
+     * a `.mp3` renamed to `.jpg` is a decoder failure waiting for a Friday.
+     *
+     * The file is copied rather than referenced. The picker's content URI used to *be* the setting,
+     * which tied a stored preference to a permission grant — and to the device that granted it.
+     */
+    override fun storeMurottalAudio(file: PickedFile): StoredMedia? {
+        val uri = file.uri
+        return try {
+            val dir = File(context.filesDir, MUROTTAL_DIR).apply { if (!exists()) mkdirs() }
+            val target = File(dir, "${System.currentTimeMillis()}_${audioFileName(uri)}")
+            val copied = context.contentResolver.openInputStream(uri)?.use { input ->
+                target.outputStream().use { input.copyTo(it) }
+                true
+            } ?: false
+            if (copied) StoredMedia(target.absolutePath, isVideo = false, wasLarge = false) else null
+        } catch (e: Exception) {
+            Log.e(TAG, "Could not store murottal audio", e)
+            null
+        }
+    }
+
+    /**
+     * The chosen file's own name, sanitised.
+     *
+     * Falls back to `.mp3` because that is what murottal recordings are in practice, and a name
+     * with no extension at all is worse than a wrong guess: some players refuse it outright.
+     */
+    private fun audioFileName(uri: Uri): String {
+        val display = try {
+            context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { if (it.moveToFirst()) it.getString(0) else null }
+        } catch (_: Exception) {
+            null
+        }
+        val name = (display ?: "murottal.mp3").replace(Regex("[/\\\\]"), "_")
+        return if (name.contains('.')) name else "$name.mp3"
+    }
+
+    /**
      * Deletes a file this store owns.
      *
      * The repository removes the row; nothing else removes the bytes. Friday slides
@@ -139,6 +182,7 @@ class MediaFileStore(private val context: Context) : MediaStore {
         const val PRESENTATION_DIR = "presentation"
         const val DASHBOARD_DIR = "dashboard"
         const val FRIDAY_DIR = "friday_media"
+        const val MUROTTAL_DIR = "murottal"
         const val CUSTOM_BACKGROUND = "custom_background.jpg"
         const val LARGE_BYTES = 2L * 1024 * 1024
     }

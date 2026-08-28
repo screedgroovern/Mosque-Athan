@@ -58,19 +58,19 @@ expect fun rememberMultipleMediaPicker(kind: MediaKind): MultipleMediaPicker
 /**
  * Picks audio files, which are referenced where they lie rather than copied.
  *
- * Separate from [MultipleMediaPicker] because the result is a different kind of thing,
- * not a different kind of file: murottal audio is never handed to a `MediaStore`, so
- * there is no [PickedFile] here. The reference the platform gives back — a content URI
- * on Android — *is* the stored setting, and only the platform's audio player has to
- * understand it.
+ * Separate from [MultipleMediaPicker] only because the chooser has to be filtered to audio —
+ * "images and video" is the wrong filter and, on Android, a different picker entirely.
+ *
+ * This used to hand back the platform's own reference (a content URI) to be stored as the setting
+ * verbatim. It hands back [PickedFile] now because that reference is only openable on the device
+ * that produced it: `murottalAudioPaths` is read by the **display**, so a file picked on a
+ * controller has to reach the display before its path means anything. Handing back a file lets
+ * `MediaStore.storeMurottalAudio` decide — copy it, on the display, or upload it, on a controller.
  */
 @Stable
 fun interface AudioFilePicker {
-    /**
-     * [onPicked] runs only if the user actually chose something, and receives opaque
-     * references to keep, not paths to read.
-     */
-    fun launch(onPicked: (List<String>) -> Unit)
+    /** [onPicked] runs only if the user actually chose something; never with an empty list. */
+    fun launch(onPicked: (List<PickedFile>) -> Unit)
 }
 
 /** A picker for audio files. See [AudioFilePicker] for why it is not a [MediaKind]. */

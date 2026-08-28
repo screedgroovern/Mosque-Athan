@@ -2,53 +2,34 @@ package com.groovernapp.mosqueathan.web
 
 import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.domain.MediaStore
-import com.groovernapp.mosqueathan.domain.PickedFile
-import com.groovernapp.mosqueathan.domain.StoredMedia
 import com.groovernapp.mosqueathan.protocol.HttpFetcher
-import com.groovernapp.mosqueathan.protocol.HttpResult
 import com.groovernapp.mosqueathan.protocol.RemoteActionSink
-import com.groovernapp.mosqueathan.ui.settings.SettingsViewModel
-import kotlinx.serialization.json.JsonObjectBuilder
-import org.koin.core.module.dsl.viewModel
+import com.groovernapp.mosqueathan.ui.settings.settingsViewModelsModule
 import org.koin.dsl.module
 
 /**
  * The browser's object graph.
  *
- * Deliberately the smallest thing that renders: an in-memory repository and three
- * do-nothing collaborators. Each is replaced by a real one in a later step, and each is
- * named here so that "what the web build cannot do yet" is one file rather than a hunt.
+ * The transport is real now: [DisplayLink] holds one WebSocket to the display, fills
+ * [InMemoryConfigRepository] from the snapshots it pushes, and carries every settings change back.
+ * Nothing here is a stub any more. What the browser still cannot do is bounded and documented at
+ * each implementation instead: [WebMediaStore] cannot replace or delete files on the display, and
+ * the audio picker in `:ui:design` has no browser form at all.
  */
 val webModule = module {
-    single<ConfigRepository> { InMemoryConfigRepository() }
-    single<MediaStore> { NoMediaStore }
-    single<HttpFetcher> { NoHttpFetcher }
-    single<RemoteActionSink> { NoRemoteActionSink }
-    viewModel { SettingsViewModel(get(), get(), get()) }
+    // Bound twice on purpose, the same way :app binds its repository: the settings layer wants the
+    // interface, and DisplayLink needs the concrete type to push snapshots into.
+    single { InMemoryConfigRepository(displayHost()) }
+    single<ConfigRepository> { get<InMemoryConfigRepository>() }
+
+    single { DisplayLink(get(), displayHost(), storedDeviceId(), browserDeviceName()) }
+    single<RemoteActionSink> { WebRemoteActionSink(get()) }
+    single<HttpFetcher> { WebHttpFetcher() }
+
+    single<MediaStore> { WebMediaStore(displayHost()) }
+    // Every settings ViewModel, from the one list :app also uses. Registering a subset here is
+    // what made the panel render nothing at all.
+    includes(settingsViewModelsModule)
 }
 
-/**
- * Media management is not available in the browser yet — see the picker seams in
- * `:ui:design`, whose wasm actuals explain why. Returning null is what those seams do on
- * failure, so the UI already handles it.
- */
-private object NoMediaStore : MediaStore {
-    override fun storePresentationMedia(file: PickedFile): StoredMedia? = null
-    override fun storeDashboardBackground(file: PickedFile): StoredMedia? = null
-    override fun storeFridayMedia(file: PickedFile): StoredMedia? = null
-    override fun storeCustomBackground(file: PickedFile): StoredMedia? = null
-    override fun replaceFile(path: String, file: PickedFile): Boolean = false
-    override fun delete(path: String): Boolean = false
-    override fun deleteCustomBackground(): Boolean = false
-}
 
-/** No transport yet, and the failure reason says so rather than pretending to time out. */
-private object NoHttpFetcher : HttpFetcher {
-    override suspend fun getText(url: String): HttpResult =
-        HttpResult.Failure("the browser build has no transport yet")
-}
-
-/** Nowhere to push to until this build can reach a display. */
-private object NoRemoteActionSink : RemoteActionSink {
-    override fun send(action: String, build: JsonObjectBuilder.() -> Unit) = Unit
-}

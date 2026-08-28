@@ -46,6 +46,20 @@ interface MediaStore {
 
     fun storeCustomBackground(file: PickedFile): StoredMedia?
 
+    /**
+     * Stores a murottal recitation and returns where it landed.
+     *
+     * Audio is different from the media above in one way that shapes everything: the *path* is the
+     * setting. `murottalAudioPaths` is read by the display at playback time, so whatever this
+     * returns has to be a path the display can open — which is why a picked file is copied rather
+     * than referenced. A controller cannot produce such a path itself, so its implementation
+     * uploads instead and returns null, leaving the display to record the path it chose.
+     *
+     * [StoredMedia.isVideo] is always false here and [StoredMedia.wasLarge] is meaningless — audio
+     * is never downscaled. Only [StoredMedia.path] matters.
+     */
+    fun storeMurottalAudio(file: PickedFile): StoredMedia?
+
     /** Overwrites the file at [path] with [file], keeping the path the database holds. */
     fun replaceFile(path: String, file: PickedFile): Boolean
 

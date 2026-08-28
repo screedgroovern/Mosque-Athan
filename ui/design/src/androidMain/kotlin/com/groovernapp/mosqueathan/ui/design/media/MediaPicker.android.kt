@@ -45,14 +45,17 @@ actual fun rememberMultipleMediaPicker(kind: MediaKind): MultipleMediaPicker {
 
 @Composable
 actual fun rememberAudioFilePicker(): AudioFilePicker {
-    val pending = remember { PendingCallback<List<String>>() }
+    val pending = remember { PendingCallback<List<PickedFile>>() }
     // OpenMultipleDocuments, not the visual-media picker, because audio is not visual
     // media — and because the URI is kept as the setting rather than copied.
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
         val onPicked = pending.take()
-        if (uris.isNotEmpty()) onPicked?.invoke(uris.map { it.toString() })
+        // Wrapped rather than stringified: the URI is now something to *read from*, so the store
+        // can copy the file into the display's own storage. Keeping the URI as the setting meant
+        // the setting depended on a permission grant that outlives nothing.
+        if (uris.isNotEmpty()) onPicked?.invoke(uris.map { AndroidPickedFile(it) })
     }
     return remember(launcher) {
         AudioFilePicker { onPicked ->

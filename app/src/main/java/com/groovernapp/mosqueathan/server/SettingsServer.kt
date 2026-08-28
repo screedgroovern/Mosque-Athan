@@ -6,6 +6,7 @@ import android.net.Uri
 import android.util.Base64
 import android.util.Log
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.data.isPathOwned
 import com.groovernapp.mosqueathan.domain.KemenagSchedule
 import com.groovernapp.mosqueathan.domain.DashboardBackground
 import kotlinx.coroutines.*
@@ -430,15 +431,60 @@ class SettingsServer(
                     val isBackground = uri.getQueryParameter("isBackground") == "true"
                     val isDashboardBg = uri.getQueryParameter("isDashboardBg") == "true"
                     val isFriday = uri.getQueryParameter("isFriday") == "true"
+                    // Murottal recitation. Unlike the others this one has no database row of its
+                    // own: the *path* is the setting, so the display records it in
+                    // `murottalAudioPaths` and the controller learns it from the next snapshot.
+                    val isAudio = uri.getQueryParameter("isAudio") == "true"
                     val filename = uri.getQueryParameter("filename") ?: "upload_${System.currentTimeMillis()}"
+                    // Replacing the bytes of a file this display already owns, keeping the path the
+                    // database holds. Only a controller needs this: on the display itself the
+                    // settings UI writes the file directly.
+                    val replacePath = uri.getQueryParameter("replacePath")?.takeIf { it.isNotEmpty() }
                     val contentLength = headers["content-length"]?.toLongOrNull() ?: -1L
+
+                    // The path arrives from another device on the wifi, so it is not trusted. It
+                    // must name a file this display already has a row for; anything else is
+                    // refused rather than written. Without this check the parameter would let any
+                    // paired controller overwrite any file this app can write.
+                    if (replacePath != null && !isReplaceableMediaPath(replacePath)) {
+                        logDebug("Refusing replace of unknown path")
+                        val response = "HTTP/1.1 403 Forbidden\r\n" +
+                                "Access-Control-Allow-Origin: *\r\n" +
+                                "Content-Length: 0\r\n" +
+                                "Connection: close\r\n\r\n"
+                        outputStream.write(response.toByteArray(Charsets.UTF_8))
+                        outputStream.flush()
+                        try { socket.close() } catch (_: Exception) {}
+                        return
+                    }
                     logDebug("Starting upload: $filename, size: $contentLength, isVideo: $isVideo, isDashboardBg: $isDashboardBg, isFriday: $isFriday")
 
                     // Set a longer timeout for the upload process
                     try { socket.soTimeout = 60000 } catch (_: Exception) {}
 
+                    val replaceTarget = replacePath?.let { File(it) }
+                    // Hoisted so the catch below can remove a partial file. Cleared once a replace
+                    // has been renamed into place, so a later failure cannot delete the real one.
+                    var partialToCleanUp: File? = null
+
                     try {
-                        val targetFile = if (isBackground) {
+                        val targetFile = if (replaceTarget != null) {
+                            // Written beside the original and renamed over it only after the whole
+                            // body has arrived. Writing straight to the target would mean an
+                            // upload that drops halfway destroys the file it was replacing — and
+                            // over mosque wifi, halfway is a normal outcome.
+                            File(
+                                replaceTarget.parentFile,
+                                ".incoming_${System.currentTimeMillis()}_${replaceTarget.name}"
+                            ).also { partialToCleanUp = it }
+                        } else if (isAudio) {
+                            val dir = File(context.filesDir, "murottal")
+                            if (!dir.exists()) dir.mkdirs()
+                            // The real extension is kept: a media player picks its decoder from the
+                            // file, and a .mp3 saved as .jpg fails on a Friday rather than now.
+                            val safeName = File(filename).name.ifEmpty { "murottal.mp3" }
+                            File(dir, "${System.currentTimeMillis()}_$safeName")
+                        } else if (isBackground) {
                             val oldPath = repository.getConfig().customBackgroundPath
                             if (oldPath.isNotEmpty()) {
                                 try { File(oldPath).delete() } catch (_: Exception) {}
@@ -494,7 +540,38 @@ class SettingsServer(
 
                         if (contentLength == -1L || totalRead == contentLength) {
                             logDebug("Upload complete: ${targetFile.absolutePath} ($totalRead bytes)")
-                            if (isBackground) {
+                            if (replaceTarget != null) {
+                                if (!isVideo) {
+                                    ImageUtils.downscaleImageInPlace(targetFile)
+                                }
+                                // rename first, copy as the fallback: rename is atomic but fails
+                                // across filesystems, and the two media directories are not
+                                // guaranteed to be on the same mount on every device.
+                                val moved = targetFile.renameTo(replaceTarget) || runCatching {
+                                    targetFile.copyTo(replaceTarget, overwrite = true)
+                                    targetFile.delete()
+                                    true
+                                }.getOrDefault(false)
+                                partialToCleanUp = null
+                                if (!moved) {
+                                    targetFile.delete()
+                                    throw java.io.IOException("could not move the replacement into place")
+                                }
+                                logDebug("Replaced ${replaceTarget.name} ($totalRead bytes)")
+                                // The path is unchanged, so no row is written — the broadcast is
+                                // what tells every client to re-read the file.
+                                broadcastState()
+                            } else if (isAudio) {
+                                // Appended rather than replacing: a mosque plays several
+                                // recitations in sequence, and each upload adds one.
+                                val existing = repository.getConfig().murottalAudioPaths
+                                    .split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                                val updated = (existing + targetFile.absolutePath).distinct()
+                                repository.updateConfig(
+                                    repository.getConfig()
+                                        .copy(murottalAudioPaths = updated.joinToString(","))
+                                )
+                            } else if (isBackground) {
                                 ImageUtils.downscaleImageInPlace(targetFile)
                                 repository.updateCustomBackground(targetFile.absolutePath)
                             } else if (isDashboardBg) {
@@ -520,7 +597,10 @@ class SettingsServer(
                             outputStream.write(response.toByteArray(Charsets.UTF_8))
                         } else {
                             logDebug("Upload incomplete: expected $contentLength, got $totalRead. Deleting partial file.")
+                            // For a replace this deletes the temp, never the original — which is
+                            // the whole point of writing beside it.
                             targetFile.delete()
+                            partialToCleanUp = null
                             val response = "HTTP/1.1 400 Bad Request\r\n" +
                                     "Access-Control-Allow-Origin: *\r\n" +
                                     "Content-Length: 0\r\n" +
@@ -531,6 +611,10 @@ class SettingsServer(
                     } catch (e: Exception) {
                         Log.e(TAG, "Upload failed", e)
                         logDebug("Upload error: ${e.message}")
+                        // A dropped connection used to leave the partial file behind with no row
+                        // pointing at it. For a replace that file is invisible (dot-prefixed), so
+                        // it would accumulate unnoticed.
+                        partialToCleanUp?.let { runCatching { it.delete() } }
                         val response = "HTTP/1.1 500 Internal Server Error\r\n" +
                                 "Access-Control-Allow-Origin: *\r\n" +
                                 "Content-Length: 0\r\n" +
@@ -755,6 +839,26 @@ class SettingsServer(
         return Base64.encodeToString(hash, Base64.NO_WRAP)
     }
 
+    /**
+     * Whether [path] names a file this display already holds a database row for.
+     *
+     * The gate on `replacePath`. Comparison is by canonical path on both sides, so `..` segments
+     * and symlinks cannot be used to walk out of the media directories — matching the string as
+     * given would make the check trivial to defeat.
+     *
+     * An unknown path is refused rather than created: replacing a file that does not exist is
+     * always a mistake or an attack, never a legitimate request.
+     */
+    private fun isReplaceableMediaPath(path: String): Boolean = isPathOwned(
+        requested = path,
+        owned = buildList {
+            repository.getMediaList().forEach { add(it.filePath) }
+            repository.getFridayMedia().forEach { add(it.filePath) }
+            repository.getDashboardBackgrounds().forEach { add(it.filePath) }
+            repository.getConfig().customBackgroundPath.takeIf { it.isNotEmpty() }?.let { add(it) }
+        }
+    )
+
     private fun getCurrentStateJson(): String {
         try {
             logDebug("Generating current state JSON...")
@@ -820,6 +924,12 @@ class SettingsServer(
             put("selectedGlobalSlideIds", config.selectedGlobalSlideIds)
             put("jumatSlideIntervalSeconds", config.jumatSlideIntervalSeconds)
             put("jumatSlideIntervalUnit", config.jumatSlideIntervalUnit)
+            // These two were the only config fields the payload never carried, so no controller
+            // could read them and both showed their defaults instead of the display's values. The
+            // write path already existed on both sides — see the update handler below and
+            // PushConfig in core:protocol — so the read side was the whole gap.
+            put("jumatTransitionType", config.jumatTransitionType)
+            put("jumatVideoWaitUntilEnd", config.jumatVideoWaitUntilEnd)
         }
         json.put("config", configJson)
 
@@ -1478,13 +1588,16 @@ class SettingsServer(
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val mediaList = repository.getMediaList()
                     val targetMedia = mediaList.find { it.id == id }
+
                     if (targetMedia != null) {
-                        try {
-                            val file = File(targetMedia.filePath)
-                            if (file.exists()) {
-                                file.delete()
-                            }
-                        } catch (_: Exception) {}
+
+                        // The file goes with the row: MosqueConfigRepository deletes it, and only
+
+                        // if nothing else still points at it. Deleting it here as well was the
+
+                        // second owner of that rule, and the reason the display's own UI could
+
+                        // quietly stop doing it.
                         repository.deleteMediaItem(id)
                         broadcastState()
                     }
@@ -1566,13 +1679,16 @@ class SettingsServer(
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val fridayMediaList = repository.getFridayMedia()
                     val targetMedia = fridayMediaList.find { it.id == id }
+
                     if (targetMedia != null) {
-                        try {
-                            val file = File(targetMedia.filePath)
-                            if (file.exists()) {
-                                file.delete()
-                            }
-                        } catch (_: Exception) {}
+
+                        // The file goes with the row: MosqueConfigRepository deletes it, and only
+
+                        // if nothing else still points at it. Deleting it here as well was the
+
+                        // second owner of that rule, and the reason the display's own UI could
+
+                        // quietly stop doing it.
                         repository.deleteFridayMedia(id)
                         broadcastState()
                     }
@@ -1731,13 +1847,16 @@ class SettingsServer(
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val bgList = repository.getDashboardBackgrounds()
                     val targetBg = bgList.find { it.id == id }
+
                     if (targetBg != null) {
-                        try {
-                            val file = File(targetBg.filePath)
-                            if (file.exists()) {
-                                file.delete()
-                            }
-                        } catch (_: Exception) {}
+
+                        // The file goes with the row: MosqueConfigRepository deletes it, and only
+
+                        // if nothing else still points at it. Deleting it here as well was the
+
+                        // second owner of that rule, and the reason the display's own UI could
+
+                        // quietly stop doing it.
                         repository.deleteDashboardBackground(id)
                         broadcastState()
                     }
