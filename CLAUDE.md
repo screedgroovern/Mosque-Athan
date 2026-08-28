@@ -117,48 +117,35 @@ The panel's HTML/CSS/JS is generated as Kotlin raw strings, split across files p
 
 External CDN assets (Leaflet, flatpickr, html5-qrcode, Google Fonts) are referenced by URL, so parts of the panel degrade without internet; `WebPageJsOffline.kt` handles that path.
 
-### Settings UI — the pattern described here did not exist
+### Settings UI
 
-An earlier revision of this file described one standalone ViewModel per settings
-category, each exposing a single `uiState: StateFlow<XUiState>` and one
-`onEvent(XEvent)`, with composables receiving "exactly `state` + `onEvent`" and
-"never a long parameter list of individual values and callbacks".
+One ViewModel per settings category, each exposing a single `uiState: StateFlow<XUiState>`
+and a single `onEvent(XEvent)`. Composables receive `state` + `onEvent`.
 
-**None of that is in the code.** What is actually there:
+| ViewModel | Lines | Surface |
+|---|---|---|
+| `SettingsViewModel` | 236 | the shared/global settings |
+| `DisplayMediaViewModel` | 243 | `uiState` + `onEvent` |
+| `PrayerScheduleViewModel` | 162 | `uiState` + `onEvent` |
+| `FridayViewModel` | 145 | `uiState` + `onEvent` |
+| `AdzanIqomahViewModel` | 95 | `uiState` + `onEvent` |
+| `RemoteDevicesViewModel` | 87 | `uiState` + `onEvent` |
 
-- **One `SettingsViewModel`**, 1028 lines, 70→48 public functions, exposing **11
-  separate `StateFlow`s** (`configState`, `announcementsState`, `devicesState`,
-  `mediaListState`, …). There are no per-category ViewModels.
-- **No `XUiState` or `XEvent` types for settings at all.** The only sealed
-  interfaces in `ui/` are `AppUiState`, `AppViewModel.ActiveScreen` and
-  `DashboardUiState`.
-- **Long parameter lists everywhere** — exactly the thing the old text forbade.
-  20 composables take 6 or more parameters, 318 in total:
+Two earlier revisions of this file were both wrong about this section, in opposite
+directions — the first described this pattern before it existed, the second denied it after
+the restructure had begun. **Measure before editing it a third time:** count
+`StateFlow` properties in `SettingsViewModel`, and count composables with six or more
+parameters. Today that count is two, `AdjustmentRow` (6) and `DropdownAdjustmentRow` (7),
+both generic row helpers where the parameters are the content.
 
-  | Composable | Parameters |
-  |---|---|
-  | `FridaySettingsPane` | 41 |
-  | `ThemeSettingsSegment` | 35 |
-  | `PrayerScheduleSettingsSegment` | 33 |
-  | `DisplayMediaSettingsPane` | 32 |
-  | `SlideshowTabContent` | 21 |
-  | `AdzanIqomahSettingsPane` | 18 |
+`SettingsScreen` resolves the five per-category ViewModels with `koinViewModel()`. They are
+registered **once**, in `settingsViewModelsModule` in `:ui:settings`, which both
+`:app`'s `AppModule` and `:webApp`'s `webModule` pull in with `includes(...)`. Do not add a
+registration to one platform's module: while the two lists were separate, the browser build
+registered one of the six and the whole panel rendered nothing — see *Debugging wasm* for how
+expensive that was to trace.
 
-- Composables receive `viewModel: SettingsViewModel` directly, or those parameter
-  lists. `SettingsScreen` does not obtain per-category ViewModels via
-  `viewModel()`; there are none to obtain.
-
-**This is not a KMP blocker** — a ViewModel with eleven flows still moves to
-`commonMain`, and a 41-parameter composable compiles there fine. It is
-maintenance debt, and it is the largest remaining piece of it. Anyone who was
-told the state layer is "already the right shape for KMP" was told something this
-file made up.
-
-**Until it is restructured, match the surrounding file.** Do not add a
-half-migrated `XEvent` to one pane; a single pane in a different style is worse
-than a consistent bad style. Restructuring is a decision that has not been taken.
-
-What *is* real and worth keeping:
+What is real and worth keeping:
 
 - Settings auto-save: every change writes to Realm immediately, and
   `getConfigFlow()` fans it back out to all screens and web clients.
@@ -220,11 +207,10 @@ Known gaps:
 
   `mosqueTextFieldColors()` (same package) styles every `OutlinedTextField`.
 
-  Still raw, deliberately: **15 `IconButton`** and **12 `TextButton`**. The
-  `TextButton`s are dialog confirm/dismiss actions, where Material's own is
-  right. The `IconButton`s are the real gap — they have no focus handling, which
-  on a TV means a D-pad user cannot see which icon is selected. That is worth a
-  variant; it has not been written.
+  **No raw `IconButton` or `TextButton` remains.** This file used to record 15 raw
+  `IconButton`s as "the real gap ... it has not been written"; `MosqueIconButton`
+  now exists and all 15 call sites use it, and `MosqueTextButton` likewise. Counted,
+  not assumed — grep before editing this paragraph again.
 
   `SettingsCard` and `AdjustmentRow` are still in
   `ui/settings/SettingsScreenShared.kt` and should move to `:ui:design` too.
@@ -292,13 +278,10 @@ manage.
 This branch has broad licence to restructure, but three things are assets, not
 debt, and must survive unchanged:
 
-- ~~The state pattern.~~ **Retracted.** This claimed the settings layer was
-  already the KMP-idiomatic shape — one ViewModel per category, single `uiState`,
-  single `onEvent`. It is not; see *Settings UI* above. One 1028-line ViewModel
-  with eleven flows, and composables taking up to 41 parameters. It is still not a
-  *blocker* for moving to `commonMain`, so the migration order does not change,
-  but it is real debt and restructuring it is a live option rather than something
-  to protect.
+- **The state pattern.** This entry has been wrong in both directions. It first
+  claimed one-ViewModel-per-category existed before it did; it was then retracted as
+  "1028 lines and eleven flows". The restructure has since landed, so the pattern is
+  real now — see *Settings UI* above for the measured shape. Keep it.
 - **The `when (AppUiState)` screen state machine.** Deliberate, works, portable.
 - **`PrayerCalculator` and its tests.** The logic is correct; only its hidden
   repository dependency needs fixing.
@@ -525,10 +508,10 @@ change would need parsed, order-insensitive comparison instead.
 It becomes worth doing when `core:protocol` grows typed messages and the server can share
 them with the panel — which is the same work, done once, with a payoff.
 
-**Pattern — unidirectional data flow is the target, not the current state.** The
-display screens (`AppUiState`, `DashboardUiState`) do follow it. Settings does
-not — see *Settings UI* above. If settings is restructured, the display screens
-are the model to copy, and formal MVI reducers are still not worth the ceremony.
+**Pattern — unidirectional data flow.** The display screens (`AppUiState`,
+`DashboardUiState`) follow it, and settings now does too: one `uiState` and one `onEvent`
+per category — see *Settings UI* above. Formal MVI reducers are still not worth the
+ceremony.
 
 **Version catalog.** Declare `kotlinx-datetime` and `kotlinx-coroutines`
 explicitly (see the warning under *Build & test* — the current transitive
@@ -588,6 +571,29 @@ The plugin knows its own mapping. This is why `ui/design/build.gradle.kts` re-ap
 `id("org.jetbrains.compose")` in its own `plugins` block even though the convention
 plugin already applied it — the redundant application is what makes Gradle generate
 the accessors.
+
+**One exception, in the root `build.gradle.kts`: material3 is pinned to 1.9.0.** The
+accessor's 1.8.2 was compiled against kotlinx-datetime **0.6.0**; we resolve 0.7.1, where
+`Clock` and `Instant` have moved to `kotlin.time` and the old classes are gone. Gradle sees
+no conflict and the build succeeds — then wasm throws at first use:
+
+```
+IrLinkageError: Can not get instance of singleton 'System':
+    No class found for symbol 'kotlinx.datetime.Clock.System'
+```
+
+Any `DatePicker` or `TimePicker` therefore killed the composition, which is what made the
+browser panel render a blank canvas. **Android was never affected**: its material3 variant
+uses the AndroidX calendar model and does not touch kotlinx-datetime, so this is invisible
+until something renders on wasm. material3 1.9.0 declares kotlinx-datetime 0.7.1 and asks
+for foundation/runtime/ui 1.9.1 — exactly what the plugin already resolves — so the pin
+aligns the graph rather than forcing a mismatch. It is applied per-dependency rather than
+with `force()` because each KMP target is its own module (`material3-android`,
+`material3-wasm-js`). Remove it when the plugin's own mapping catches up.
+
+This is the concrete instance of the warning under *Build & test*: a kotlinx-datetime bump
+breaks things broadly. Worth knowing that it can break at **runtime linkage** and not at
+compile time, so a green build proves nothing here.
 
 ### What is actually Android-only
 
@@ -919,6 +925,349 @@ Three things the build itself needed, none of them obvious:
   `androidTarget`, and this module has no Android side. It is the one place a hand-written
   `kotlin { }` block is correct rather than drift waiting to happen.
 
+### Step 7 is done: the browser controls the display
+
+`:webApp` is a working controller, verified end to end on hardware: a phone's browser changed
+`adzanLeadMinutes` on the television, 3 → 4 → 5 → 3, over the mosque LAN.
+
+**One WebSocket carries everything, and that is the whole transport.** On connect `DisplayLink`
+sends `register`; the display answers with a `registration_result` and then the full state, and
+re-sends the full state to every client on any change. So the same socket is the first read, the
+live-update channel, and the write path. `POST /api/action` exists and works, but it builds a
+throwaway connection and re-authenticates per request — the socket is already registered.
+
+**`MosqueSnapshot` was not a new format.** `getCurrentStateJson()` already served exactly this
+shape, and its keys were already the domain classes' property names. Measured against a live
+device before writing any parser: all seven lists decoded with **no unmatched key**, and of the
+config's fields only `hasPin` had no counterpart. So the domain classes became `@Serializable` and
+decode straight off the wire — which is the "one set of classes, annotated twice" arrangement step 3
+wants, arrived at early and for free.
+
+What that check also found, and is worth knowing:
+
+- **`jumatTransitionType` and `jumatVideoWaitUntilEnd` were never in the payload** — config fields
+  the display did not serve, so every controller, this one *and* the hand-written panel, showed
+  their defaults while the display held something else. Now served. The write path had existed on
+  both sides all along, which is what made it invisible: the field could be *changed* from a
+  controller and never *read* back.
+
+  `ConfigPayloadCoverageTest` guards the class of bug rather than these two fields: it enumerates
+  `MosqueConfig`'s properties reflectively and fails on any that the server neither serves nor
+  withholds for a stated reason (`id`, `pinCode`, `connectivityMode`, `remoteTvIp`). It reads
+  source, like `ActionNameDriftTest`, because a missing key is indistinguishable at runtime from a
+  key whose value happens to equal the default — there is no moment where the absence shows.
+- **`pinCode` never crosses the wire**; the display sends `hasPin`. `MosqueSnapshotTest` asserts the
+  consequence rather than trusting the habit.
+- **`connectivityMode` and `remoteTvIp` are not sent either**, and must not be adopted from a
+  snapshot: they describe *this* device. `InMemoryConfigRepository.apply` carries the local values
+  over, because without that the panel flips to "server" on the first snapshot it receives.
+
+**The panel never gets a secure context, so secure-context-only APIs are unavailable.** It is served
+over plain `http` on a LAN, so `window.isSecureContext` is false. `crypto.randomUUID()` is therefore
+*undefined*, and calling it threw a TypeError before Koin finished building the graph — blanking the
+whole page for the second time in this migration. Measured on the device: `getRandomValues` is
+available in an insecure context and `randomUUID` is not. The same rule retires the clipboard and
+`crypto.subtle`; check `isSecureContext` before reaching for anything in that family.
+
+**Media upload works from the browser**, and was verified end to end on hardware: a file chosen in
+the phone's own chooser arrived on the display as a new dashboard background. The wasm pickers are a
+real `<input type="file">` now rather than a no-op, and `WebMediaStore` posts the raw file to
+`POST /upload` — raw body, not multipart, because the server reads `Content-Length` bytes straight
+into a file; FormData would write the MIME boundary into the image. Every `store*` returns null on
+purpose: the upload endpoint adds the database row itself, so there is nothing local to add.
+
+**Replacing a media file works too**, through a `replacePath` parameter added to `/upload`. Three
+things about it are load-bearing rather than incidental:
+
+- **The path is validated against the database, not trusted.** It arrives from another device on the
+  mosque wifi, so `isReplaceableMediaPath` requires it to match a row the display already holds —
+  media, Friday media, dashboard background, or the custom background — comparing *canonical* paths
+  on both sides so `..` segments and symlinks cannot walk out of the media directories. Verified by
+  attack, not by reading: an unknown path and a traversal built from a real media path both return
+  403 and create nothing.
+- **The upload is written beside the original and renamed over it only once the whole body has
+  arrived.** Writing straight to the target would mean an upload that drops halfway destroys the
+  file it was replacing, and over mosque wifi halfway is a normal outcome. Verified by sending a
+  declared `Content-Length` far larger than the body and cutting the socket: the original was still
+  intact, byte for byte, and no temp file was left behind.
+- **No row is written.** The path does not change, so the broadcast after the rename is the whole
+  notification — which is why `WebMediaStore.replaceFile` returns false. As with the `store*`
+  methods returning null, false here means "dispatched, nothing local to do", and that overloading
+  is the cost of a synchronous interface over an asynchronous upload.
+
+Verified end to end through the panel's own edit control on hardware: a 297,806-byte background
+became the 21,747-byte file chosen in the phone's chooser, same path, same row count, then was
+restored byte for byte.
+
+**Deleting media: the leak was on the display, not the controllers.** An earlier revision of this
+file said the opposite, and it was wrong — worth recording, because the wrong version would have
+sent someone to fix the wrong side. `SettingsServer`'s delete actions had always removed the file,
+so deleting from the web panel or an Android controller cleaned up correctly. The display's *own*
+settings UI did not: `DisplayMediaViewModel` deleted the row and left the file, and of the four
+places a row can be removed only Friday media also deleted its file. Media deleted by someone
+standing at the television accumulated in private storage; the same action from a phone did not.
+
+The file now follows the row inside `MosqueConfigRepository`, so every caller gets it — the display's
+UI, the panel, the Android controller, the server's handlers. The duplicate deletes in those handlers
+were removed at the same time: two owners of one rule is how the display's side came to be missing.
+
+`isPathOwned` guards the delete as well as the replace — the same question from opposite sides, "does
+any row still name this file". Sharing it means the delete inherits the canonical-path comparison, so
+two spellings of one file cannot pass as unreferenced. It lives in `data`, not `server`, because media
+paths belong to the data layer.
+
+Also unresolved:
+the Kemenag city search calls `api.myquran.com` from the page, which is cross-origin — it works only
+if that API sends CORS headers. If it does not, the fix is to route the search through the display,
+which can reach the API unhindered, not to fight CORS from the browser.
+
+### The link's behaviour, verified on hardware
+
+Reconnection and queueing are the parts most likely to be assumed working, so they were driven
+directly rather than reasoned about. Realme as the controller, Xiaomi as the display, production
+bundle:
+
+| Tested | Result |
+|---|---|
+| Write round trip | `adzanLeadMinutes` 3 → 4 → 5 → 3 from the browser |
+| Display stopped | header switches to `Disconnected` within ~10s |
+| Display restarted | reconnects **on its own**, no user action, back to `Connected` |
+| **Edits made while the display was down** | both arrived after reconnection: 3 → 5 |
+
+That last row is the takmir's real case — a brief wifi drop mid-edit — and it works because
+`DisplayLink` holds unsent actions and flushes them once a snapshot proves the display accepted the
+device again. Note the ordering it depends on: the display answers `register` with its *current*
+state, so the queued action is applied after that snapshot lands, not before, or the display's older
+value would win.
+
+**Testing gotcha that costs time:** the display app is killed when it loses the foreground on a
+phone or tablet, so `GET /api/get_config` starts answering "connection refused" mid-session and it
+looks like a network fault. It is not — check `pidof com.groovernapp.mosqueathan` first. On the
+mosque's television this does not arise, since the app is the launcher. It also means the controller
+and the display must be *different* devices when testing: opening the panel in a browser on the
+display itself backgrounds the very server the panel is trying to reach.
+
+### Murottal audio: now actually plays
+
+**Until this change the feature had no playback at all.** `murottalEnabled`, `murottalStartDelay`
+and `murottalAudioPaths` were stored, synced and editable from every panel, and nothing read them —
+both panels let a takmir configure a feature that did not exist. The only `MediaPlayer` in the
+codebase was inside `VideoSurface`, deliberately muted because the adzan comes from the building's
+sound system.
+
+`MurottalPlayer` (`app/audio/`) is now that missing half, and it is **the one sound this app
+deliberately makes.** Notes on its shape, because each was a decision:
+
+- **Driven by `AppViewModel`'s coordinator, not its own timer.** There is already a clock ticking
+  once a second that knows the date, the prayer times and the Friday window. A second timer would
+  be a second opinion about when Friday starts.
+- **Written as "should it be sounding right now", not as start/stop edges.** An edge-triggered
+  version has to be right about every way the window is entered or left — date rollover, the config
+  changing underneath, `BootReceiver` restarting the app mid-window — and being wrong about any of
+  them leaves a television reciting through the khutbah. Verified: killing and restarting the app
+  mid-window resumed playback on its own.
+- **The adzan is the cutoff, read from the calculated schedule** — not `jumatEndTime`, which is when
+  the Friday *layout* stops, over an hour later. `transitionToAdzan` also stops it directly rather
+  than waiting for the next tick, because the adzan screen appears `adzanLeadMinutes` *before* the
+  time the comparison uses.
+- **A missing or unplayable file is skipped, not fatal**, and a whole pass that plays nothing stops
+  the player rather than retrying once a second all morning. A mosque with five recitations should
+  not fall silent because one was deleted.
+- **The list loops.** The window is defined by the clock, not by the audio.
+- **Losing audio focus stops it** rather than ducking: if something else on the display should be
+  heard, the recitation should not be playing under it.
+
+`shouldPlayMurottal` is a pure function in its own file with ten tests, and the adzan cutoff is
+mutation-tested — swapping it for `jumatEndTime` fails the suite. That separation exists because the
+failure being guarded against is public and expensive, and it is invisible to any test that cannot
+call the decision directly.
+
+Verified on hardware, in `dumpsys audio`: focus granted to `MurottalPlayer`, an
+`android.media.MediaPlayer` in `state:started` with `USAGE_MEDIA`/`CONTENT_TYPE_MUSIC` at 44.1 kHz;
+turning murottal off released the player and abandoned focus; moving the Friday adzan into the past
+stopped it, which is the cutoff proven in the real app rather than only in a unit test.
+
+A controller can also add a recitation now, which it could not before.
+
+- **`AudioFilePicker` hands back `PickedFile`, not paths.** It used to return the platform's own
+  reference — a content URI — to be stored as the setting verbatim. That reference is only openable
+  on the device that produced it, so a file picked on a *controller* named a file on the wrong
+  machine. The display reads `murottalAudioPaths`, so the file has to get there first.
+- **`MediaStore.storeMurottalAudio` decides how.** On the display it copies into private storage and
+  returns the path; on a controller it uploads to `/upload?isAudio=true` and returns null, and the
+  display appends the path it chose and broadcasts. Same shape as the media uploads.
+- The display's own behaviour changed too — from URI-as-setting to a copied file. That is an
+  improvement (a URI grant can be revoked; a copy cannot) and it broke nothing, because nothing
+  reads the setting yet. It will not be so free later.
+
+Verified with a 49 MB recitation: uploaded in ~10s over the LAN, byte-for-byte identical on the
+display, extension and the spaces in its name intact, and the path recorded by the display rather
+than the client.
+
+**Two platform traps found doing it, both worth knowing:**
+
+- **A wildcard audio `accept` makes Chrome on Android open the microphone.** The input was treated as
+  a media-capture request: it went straight to a recording-permission prompt instead of a file
+  chooser. Naming the formats explicitly — extensions *and* MIME types — routes to the document
+  picker, where the music library is one of the sources offered. Measured on the device, twice,
+  because the first retest was served a cached bundle and looked like the fix had failed.
+- **Kotlin nests block comments, so a slash-star sequence inside a KDoc opens a comment that never
+  closes.** Writing the wildcard filter's literal value in a doc comment made every declaration after
+  it vanish; the compiler reported unresolved references at the *top* of the file and
+  `Unclosed comment` at EOF. If a file suddenly cannot see its own private functions, look for that.
+
+Also: **byte-searching a Kotlin/Wasm bundle for a string does not work.** Not one known UI string
+appears as plain bytes. Checking whether a build contains a change has to be done by running it.
+
+### A backgrounded page has a dead socket that still reads OPEN
+
+Found by testing the file picker, and it invalidated a green light: uploading a background from the
+browser put the file on the display and left the panel's own list unchanged, under a status chip
+reading `Connected`. Pressing Sinkron did nothing. A page reload showed the new item immediately.
+
+The cause is that choosing a file puts the browser's picker in front, and while the page is hidden
+the socket stops delivering — but `WebSocket.readyState` still reports `OPEN`, so nothing in
+`DisplayLink` noticed. `resync()` was re-sending `register` into it, which "succeeded" silently.
+
+Two changes, and the first is the general rule:
+
+- **`resync()` replaces the socket instead of reusing it.** Closing and reconnecting is one round
+  trip on a LAN — `register` comes back with a full snapshot — and unlike a re-register it cannot
+  appear to work against a dead connection. `closingDeliberately` keeps that close from also
+  scheduling the backoff reconnect.
+- **Returning to the foreground triggers a resync**, via `visibilitychange`. `focus` is not the
+  event: on Android the picker and the app switcher hide the page without a focus change the page
+  can rely on, and `pageshow` only fires for navigations.
+
+Verified the way the bug was found: with the panel backgrounded, a background was deleted on the
+display through the API; bringing the panel forward showed four items where it had shown five, with
+no reload. Any tab switch or screen lock takes the same path.
+
+### The header bar: role first, connection second
+
+Settings now opens with a bar naming what this device *is* — `Server` or `Remote` — because one
+build runs on the mosque's display and on a takmir's phone and nothing on screen said which. A
+controller adds whether it is reaching the display; a display instead shows how many controllers
+are attached, since a display is the source of truth and syncs nowhere.
+
+Two things this deliberately does not do:
+
+- **No permanent "Sinkron" button on a display.** There is nothing to sync to. The control is
+  hidden rather than disabled.
+- **No green light that means "we did not check".** `LinkStatus` is provided by the host through
+  `LocalLinkStatus` (`:ui:design`), the same arrangement as `LocalAppVersion`, and defaults to
+  `Unknown` — which renders *nothing*. The browser holds a socket and knows; the Android controller
+  posts each action and forgets, so it has nothing to report and shows no status chip at all.
+
+`LinkStatus` already carries `NeedsApproval` separately from `Offline`, because reconnecting cannot
+fix the first — a person has to approve the device. When the offline replica lands, "pending
+changes" and "conflict" join it there; that is why the UI enum is separate from
+`DisplayLink.Status`, which only ever describes a socket.
+
+### What the browser exposed that Android never did
+
+`:webApp` renders the same `SettingsScreen` the television runs, which is the point of the
+migration — and the first real use of it on three engines turned up five defects. Verified on
+Chrome/Android 16 (tablet, 1280x800dp), Chrome/Android 11 (phone, portrait) and Safari 26.5 on
+macOS; all three render, so WebKit is not a special case.
+
+**Two of these were only visible in a browser, and one was never web-specific at all:**
+
+- **A `remember` with no key captured the wrong window class.**
+  `var isSideSheetExpanded by remember { mutableStateOf(!isCompact) }` runs once, and in a browser
+  the first composition happens *before* the canvas reports its size — so the window looks
+  `Compact`, the settings sidebar starts collapsed, and it stays a strip of unlabelled icons on a
+  3420px display. Android's first frame already has the real size, which is why this survived.
+  **Any `remember` seeded from `LocalWindowClass` needs that value as its key.**
+- **Controls wired to a no-op looked alive.** The browser has nowhere to go back to, so `onBack`
+  was `{}` — and both the compact top bar's close icon and the sidebar's Back button rendered, took
+  focus, showed a focus ring, and did nothing. `onBack` is now `(() -> Unit)?` and those two
+  controls are not drawn when it is null. Prefer that over an empty lambda: a control that cannot
+  act should not exist.
+- **`calculationMethodOptions` in `core:model`** replaced a hard-coded
+  `listOf("SINGAPORE", "UMM_AL_QURA", ...)` that was rendered *as the label*. The hand-written panel
+  had always shown "Muslim World League (MWL)"; the Compose UI showed the identifier — **on the
+  television too**, so this was never a web bug, it just took a phone-width row filled by
+  `MUSLIM_WORLD_LEAGUE` to notice. `CalculationMethodOptionsTest` pins each id against
+  `CalculationMethod.entries`, because `PrayerCalculator` silently falls back to SINGAPORE for a
+  name adhan2 rejects — a typo there would shift a mosque's prayer times with nothing reporting it.
+- **`LocalAppVersion` had no provider on web**, so the sidebar read "Versi: vunknown". `:webApp`
+  now generates `WEB_APP_VERSION` from `gradle/libs.versions.toml` at build time, so it cannot
+  drift from the APK's.
+- **A scrolling list with a pinned block under it reads as finished.** Six categories overflowed
+  the sidebar's scroll area while the version line and Back button stayed pinned below, so
+  "Sistem & Reset" appeared not to exist. The rail now fades at its bottom edge, but **only while
+  `canScrollForward`** — where all six fit, nothing about the sidebar changes, so the mockup is
+  untouched wherever it was already right.
+
+### iOS: the panel already works, without an iosApp
+
+Verified on a physical **iPhone 17 Pro** (iOS Safari, via iPhone Mirroring): the shared Compose
+settings UI renders, registers with the display over the WebSocket, and reports `Terhubung` —
+Indonesian, because it follows the device locale. So a takmir with an iPhone has a working
+controller **today**, with no iOS target, no Xcode, and no signing.
+
+That reorders step 9. A native `iosApp` is no longer what unblocks iPhone users; it is a
+nicer-feeling shell around a UI they can already reach. Worth knowing before spending the ~8½
+minute cold iOS compile on it.
+
+WebKit is now proven twice — Safari on macOS and Safari on iOS — so the four engines that matter
+(Chromium/Android, Chromium/desktop, WebKit/macOS, WebKit/iOS) all render this UI.
+
+### Driving the panel from a script: what works where
+
+The Compose canvas takes **real** input events only, and that cuts differently on each platform.
+Learned the hard way, twice:
+
+| Harness | Canvas taps | Keyboard |
+|---|---|---|
+| `adb shell input tap` (Android) | **works** — a real event at the driver level | works |
+| macOS `System Events click at` | **does not work** — it presses an *accessibility element*, and a canvas has none. It drives the old DOM panel fine, which is what makes the failure confusing | n/a |
+| macOS `System Events keystroke` | n/a | **works** — `Cmd+L` focused Safari's address bar, including through iPhone Mirroring |
+| iPhone Mirroring | **does not work** — the mirroring stream forwards keyboard but not synthetic mouse | **works** |
+
+Two consequences worth planning around:
+
+- **Android is the only platform where a script can drive this UI end to end.** Verify behaviour
+  there; use the browser and the iPhone for rendering, layout and connection state.
+- **Tab traversal cannot be tested this way either.** The canvas needs a real click before it holds
+  keyboard focus, so `Tab` goes nowhere from a cold load — a focus ring failing to appear under a
+  script is not evidence that focus traversal is broken.
+
+### Debugging wasm — which instruments actually work
+
+Finding why the browser panel rendered nothing took far longer than the fix, entirely
+because of bad instruments. What was learned, so it is not re-learned:
+
+**A Kotlin exception on wasm arrives in JS as `Uncaught (in promise) #<Exception>` with no
+message and no stack.** That single opaque line is all the console gives you.
+
+| Instrument | Verdict |
+|---|---|
+| Headless Chrome console via `--enable-logging=stderr` | **Unreliable.** Drops lines silently — one run captured 2 of 8 `println`s, another captured none at all. It produced two false conclusions before being distrusted. |
+| `--dump-dom` | Produced no output at all, on the app and on a trivial static page. |
+| `--screenshot` | Cannot decide rendering. A plain `Text("hello")` is equally blank headlessly. Only file **size** is a usable signal — ~2–4 KB blank versus ~61 KB rendered. |
+| `-Xwasm-attach-js-exception` | Surfaced nothing; `e.reason.message` stayed undefined. The stdlib throw path is precompiled, so the flag does not reach it. Removed again. |
+| **`fetch("/R/<marker>")` to the dev server** | **Reliable.** The server logs every path it serves, so no marker is ever lost. This is the instrument to reach for. |
+| A `nodejs()` target for plain `println` | Works and gives real stdout, but the run task then fails fetching the browser-shaped wasm. Add it temporarily if needed; do not leave it in the build. |
+| Calling the **non-composable** factory | The one way to get a real message. `try`/`catch` around a composable is a compile error, but `DatePickerState(locale)` does what `rememberDatePickerState()` does and is catchable — which is how `IrLinkageError` finally became visible. |
+
+Two traps specific to composition:
+
+- `try`/`catch` cannot wrap a composable call ("Try catch is not supported around composable
+  function invocations"), so bisect with markers between calls instead.
+- Some failures are JS-side throws that **`catch (Throwable)` does not catch at all** —
+  removing the `@js-joda/timezone` import makes `TimeZone.currentSystemDefault()` fail this
+  way, killing `main()` before the first statement after it. A silent probe is not a passing
+  probe; always emit a marker *before* the call as well as after.
+
+**Measured, not assumed:** the `@js-joda/timezone` import in `JsJodaTimeZone.kt` is required —
+without it `TimeZone.currentSystemDefault()` throws in the browser (it works in Node, which is
+why a Node-only check is not sufficient evidence). An `Intl.Locale.prototype.weekInfo` polyfill
+was written when Chrome 151's removal of that property looked like the cause; it is **not**
+needed with material3 1.9.0, and was removed rather than kept as a patch for an API nothing
+asks for.
+
 ### Migration order
 
 Each step is independently reviewable. Steps 1–6 stay Android-only and remain
@@ -933,7 +1282,7 @@ shippable throughout.
 | 4 | `core:protocol` **started** — action names are shared constants; `org.json` → kotlinx.serialization still to do | yes |
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
 | ~~6~~ | ~~`ui:settings` + `ui:display` into `commonMain`~~ **done** | yes |
-| 7 | `webApp` (wasmJs) — **renders**; needs a transport before it is useful | yes |
+| ~~7~~ | ~~`webApp` (wasmJs)~~ **done** — the shared Compose settings UI renders in a browser and controls the display over one WebSocket. Media file handling is the remaining stub. | yes |
 | 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | only after 7 reaches parity |
 | 9 | `iosApp` — controller + preview | yes |
 
