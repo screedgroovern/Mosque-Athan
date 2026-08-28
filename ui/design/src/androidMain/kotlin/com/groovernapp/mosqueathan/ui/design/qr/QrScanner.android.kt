@@ -8,7 +8,7 @@ import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 
 @Composable
-actual fun rememberQrScanner(prompt: String): QrScanner {
+actual fun rememberQrScanner(prompt: String): QrScanner? {
     val pending = remember { PendingCallback<String>() }
     val launcher = rememberLauncherForActivityResult(contract = ScanContract()) { result ->
         val onScanned = pending.take()

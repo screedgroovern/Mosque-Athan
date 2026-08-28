@@ -15,6 +15,4 @@ import androidx.compose.runtime.remember
  * Wire a webcam scanner here when a desktop controller actually ships.
  */
 @Composable
-actual fun rememberQrScanner(prompt: String): QrScanner = remember(prompt) {
-    QrScanner { _ -> }
-}
+actual fun rememberQrScanner(prompt: String): QrScanner? = null

@@ -1021,6 +1021,43 @@ the Kemenag city search calls `api.myquran.com` from the page, which is cross-or
 if that API sends CORS headers. If it does not, the fix is to route the search through the display,
 which can reach the API unhindered, not to fight CORS from the browser.
 
+### The QR scanner is not a parity gap — no browser can have one
+
+Looked at as the last thing standing between the panel and step 8, and it turned out not to be
+standing at all.
+
+**The camera is unreachable from the panel, permanently.** `getUserMedia` requires a secure context;
+the panel is served over plain `http` on a mosque LAN, so `window.isSecureContext` is false —
+measured on the device. The hand-written panel *does* carry `html5-qrcode`, and it also carries a
+guard that refuses to start for exactly this reason, so its scanner has never worked either. Nothing
+is being given up.
+
+**It would buy nothing anyway.** The scanner's whole job is `onUpdateRemoteTvIp` — telling a
+controller which display to talk to. A panel served *by* the display already knows: `displayHost()`
+reads the host that served the page. The Android controller is the one that genuinely needs it,
+because it is installed rather than served, and it keeps a working scanner.
+
+So `rememberQrScanner` returns `QrScanner?`, null where no camera can be reached, and
+`RemoteControlSettingsSegment` does not draw the control when it is null. Before this the web panel
+showed a "Pindai QR" button that silently did nothing — the same defect as the Back button that went
+nowhere, and found the same way: by pressing it.
+
+Verified on the Xiaomi: the sync section now offers only Hubungkan and Sinkronkan Sekarang.
+
+**Step 8 has no known blocker left.** Media upload, replace and delete all work from the browser,
+the display serves the panel itself, the Kemenag search is allowed cross-origin
+(`access-control-allow-origin: *`, checked against the live API), and murottal audio is configurable
+and now actually plays. What remains before deleting `WebPage*.kt` is a deliberate side-by-side
+comparison of the two panels, pane by pane, rather than another missing capability.
+
+Two smaller things noticed on the way, neither fixed:
+
+- `SettingsScreen` has `val showAllSettings = true` hardcoded, which makes the `REMOTE_DEVICES`
+  starting category and the single-category sidebar unreachable. Dead branches, and the reason the
+  Connectivity pane cannot be deep-linked to.
+- The display cannot serve its own panel to its own browser: opening Chrome backgrounds the server,
+  and the page then dies mid-load. Testing the panel needs a second device, always.
+
 ### The display serves the panel itself
 
 The wasm bundle used to exist only behind a static file server on a developer's machine, which

@@ -40,4 +40,17 @@ fun interface QrScanner {
  * design-system default could only say "scan a code".
  */
 @Composable
-expect fun rememberQrScanner(prompt: String): QrScanner
+expect fun rememberQrScanner(prompt: String): QrScanner?
+
+/*
+ * Null where a camera cannot be reached, so a caller can leave the control undrawn rather than draw
+ * one that does nothing.
+ *
+ * That is the browser's situation permanently, not temporarily: `getUserMedia` requires a secure
+ * context, and this panel is served over plain http on a mosque LAN, so `window.isSecureContext` is
+ * false — measured on the device. The hand-written panel carries a scanner and a guard that refuses
+ * for exactly this reason, so it has never worked there either; there is no capability being lost.
+ *
+ * It costs nothing on the web anyway. The scanner's whole job is to tell a controller which display
+ * to talk to, and a panel served *by* the display already knows.
+ */

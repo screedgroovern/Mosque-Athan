@@ -66,27 +66,33 @@ fun RemoteControlSettingsSegment(
     )
     // One scanner for both layouts' buttons, which is what a callback passed at launch
     // buys: the compact and wide branches below call the same instance.
-    val onScanQr: () -> Unit = {
-        scanner.launch { payload ->
-            val address = TvPairing.addressFrom(payload)
-            if (address == null) {
-                // The payload used to be stored raw when it did not parse, so scanning a
-                // notice board set the TV's address to the notice board's text.
-                say(
-                    Lang.get(
-                        "That QR code does not carry a display address.",
-                        "Kode QR itu tidak memuat alamat layar."
+    // Null where no camera can be reached — the browser, permanently, because getUserMedia needs a
+    // secure context and this panel is served over plain http on a LAN. The control is then not
+    // drawn: a "Scan QR" button that cannot open a camera is the same defect as a Back button that
+    // goes nowhere.
+    val onScanQr: (() -> Unit)? = scanner?.let { ready ->
+        {
+            ready.launch { payload ->
+                val address = TvPairing.addressFrom(payload)
+                if (address == null) {
+                    // The payload used to be stored raw when it did not parse, so scanning a
+                    // notice board set the TV's address to the notice board's text.
+                    say(
+                        Lang.get(
+                            "That QR code does not carry a display address.",
+                            "Kode QR itu tidak memuat alamat layar."
+                        )
                     )
-                )
-            } else {
-                onUpdateRemoteTvIp(address)
-                say(
-                    Lang.get(
-                        "Connected to the TV via QR: $address",
-                        "Terhubung ke TV via QR: $address"
+                } else {
+                    onUpdateRemoteTvIp(address)
+                    say(
+                        Lang.get(
+                            "Connected to the TV via QR: $address",
+                            "Terhubung ke TV via QR: $address"
+                        )
                     )
-                )
-                onSyncWithTv()
+                    onSyncWithTv()
+                }
             }
         }
     }
@@ -149,7 +155,7 @@ fun RemoteControlSettingsSegment(
                         Text(Lang.get("Connect", "Hubungkan"), fontWeight = FontWeight.Bold)
                     }
 
-                    MosqueSecondaryButton(
+                    if (onScanQr != null) MosqueSecondaryButton(
                         onClick = onScanQr,
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
@@ -183,7 +189,7 @@ fun RemoteControlSettingsSegment(
                         Text(Lang.get("Connect", "Hubungkan"), fontWeight = FontWeight.Bold)
                     }
 
-                    MosqueSecondaryButton(
+                    if (onScanQr != null) MosqueSecondaryButton(
                         onClick = onScanQr,
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
                         modifier = Modifier.weight(1f).height(MosqueTheme.size.controlLg)

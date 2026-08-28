@@ -15,4 +15,4 @@ import androidx.compose.runtime.Composable
  * button on every platform.
  */
 @Composable
-actual fun rememberQrScanner(prompt: String): QrScanner = QrScanner { }
+actual fun rememberQrScanner(prompt: String): QrScanner? = null
