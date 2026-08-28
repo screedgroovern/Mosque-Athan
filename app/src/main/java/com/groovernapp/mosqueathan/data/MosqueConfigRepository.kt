@@ -310,12 +310,16 @@ class MosqueConfigRepository : ConfigRepository {
         }
     }
     override suspend fun updateCustomBackground(path: String) {
+        var previousPath: String? = null
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
             if (entity != null) {
+                if (entity.customBackgroundPath != path) previousPath = entity.customBackgroundPath
                 entity.customBackgroundPath = path
             }
         }
+        // Covers both clearing the background and replacing it with another file.
+        previousPath?.let { deleteFileIfNoLongerReferenced(it) }
     }
 
     override suspend fun resetToDefaults() {
@@ -435,13 +439,62 @@ class MosqueConfigRepository : ConfigRepository {
         }
     }
 
+    /**
+     * Deletes the file behind a media row that has just been removed.
+     *
+     * **The leak was on the display itself, not on the controllers.** `SettingsServer`'s delete
+     * actions always removed the file, so deleting media from the web panel or an Android
+     * controller cleaned up correctly. The display's own settings UI did not: `DisplayMediaViewModel`
+     * deleted the row and left the file, and of the four places a row can be removed only Friday
+     * media also deleted its file. So media deleted by someone standing in front of the television
+     * accumulated in private storage, invisibly, while the same action from a phone did not.
+     *
+     * Doing it here is what makes that impossible to get wrong again: the display's settings UI, the
+     * web panel, the Android controller and the server's action handlers all funnel through these
+     * methods, so the file follows the row for all of them, once. The duplicate deletes in the
+     * server's handlers were removed in the same change — two owners of one rule is how it drifted
+     * in the first place.
+     *
+     * The reference check is not paranoia about a case that cannot happen — it is what makes this
+     * safe to call from the [updateCustomBackground] path, where the same file can legitimately be
+     * pointed at from more than one place while a change is half-applied.
+     *
+     * Failure is silent by design: the row is already gone, the user's intent is satisfied, and a
+     * leftover file is a storage cost rather than a broken state. Throwing here would turn a
+     * successful delete into a visible error.
+     */
+    private fun deleteFileIfNoLongerReferenced(path: String) {
+        if (path.isEmpty()) return
+        // The same check the server runs before overwriting a file, asked from the other side: if
+        // any row still names this file, the bytes are still in use. Reusing it also brings the
+        // canonical-path comparison, so two spellings of one file cannot slip past as "unreferenced".
+        val stillReferenced = isPathOwned(
+            requested = path,
+            owned = buildList {
+                getMediaList().forEach { add(it.filePath) }
+                getFridayMedia().forEach { add(it.filePath) }
+                getDashboardBackgrounds().forEach { add(it.filePath) }
+                getConfig().customBackgroundPath.takeIf { it.isNotEmpty() }?.let { add(it) }
+            }
+        )
+        if (stillReferenced) return
+        try {
+            java.io.File(path).delete()
+        } catch (_: Exception) {
+            // see above: a file left behind is not worth failing the delete over
+        }
+    }
+
     override suspend fun deleteMediaItem(id: String) {
+        var removedPath: String? = null
         realm.write {
             val item = query<MediaEntity>("id == $0", id).first().find()
             if (item != null) {
+                removedPath = item.filePath
                 delete(item)
             }
         }
+        removedPath?.let { deleteFileIfNoLongerReferenced(it) }
     }
 
     override suspend fun updateMediaItemPath(id: String, filePath: String) {
@@ -496,12 +549,15 @@ class MosqueConfigRepository : ConfigRepository {
     }
 
     override suspend fun deleteFridayMedia(id: String) {
+        var removedPath: String? = null
         realm.write {
             val item = query<FridayMediaEntity>("id == $0", id).first().find()
             if (item != null) {
+                removedPath = item.filePath
                 delete(item)
             }
         }
+        removedPath?.let { deleteFileIfNoLongerReferenced(it) }
     }
 
     override suspend fun updateFridayMediaItemPath(id: String, filePath: String) {
@@ -1067,12 +1123,15 @@ class MosqueConfigRepository : ConfigRepository {
     }
 
     override suspend fun deleteDashboardBackground(id: String) {
+        var removedPath: String? = null
         realm.write {
             val item = query<DashboardBackgroundEntity>("id == $0", id).first().find()
             if (item != null) {
+                removedPath = item.filePath
                 delete(item)
             }
         }
+        removedPath?.let { deleteFileIfNoLongerReferenced(it) }
     }
 
     suspend fun updateDashboardBackgroundPath(id: String, filePath: String) {
