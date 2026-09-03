@@ -19,11 +19,15 @@ import kotlinx.coroutines.launch
 /**
  * The Display & Media category: slideshow, dashboard backgrounds, running text.
  *
- * Five of these actions must reach the display as well as the database —
- * `update_theme` and the four announcement actions. That is not incidental: a
- * controller device that saves an announcement locally and never pushes it shows
- * the takmir a saved announcement the mosque never sees. Every branch below that
- * writes an announcement or the theme sends its action too.
+ * **Every branch that changes shared state pushes it to the display too.** A controller writes
+ * to its own database, which on the web is not even a database — so a branch that only writes
+ * shows the takmir a change the mosque never sees. This used to be true of the theme and the four
+ * announcement actions alone, and the twelve media, schedule and background branches below were
+ * silently local: deleting a slide from a phone did nothing at all, without an error.
+ *
+ * The exceptions are the ones where the *display* does the writing: adding or replacing a file
+ * goes through `MediaStore`, which uploads, and the upload endpoint adds the row itself. Those
+ * branches send nothing because the file transfer already carried the change.
  */
 class DisplayMediaViewModel(
     private val repository: ConfigRepository,
@@ -86,8 +90,10 @@ class DisplayMediaViewModel(
                 }
             }
 
-            is DisplayMediaEvent.SlideshowEnabledChanged ->
+            is DisplayMediaEvent.SlideshowEnabledChanged -> {
                 launch { repository.updateSlideshowEnabled(event.enabled) }
+                remote.send(RemoteActions.UPDATE_SLIDESHOW_ENABLED) { put("enabled", event.enabled) }
+            }
 
             DisplayMediaEvent.SlideshowPreviewRequested -> Unit // handled at the call site
 
@@ -114,43 +120,80 @@ class DisplayMediaViewModel(
             is DisplayMediaEvent.MediaUsedToggled ->
                 launch { repository.updateMediaItemUsed(event.id, event.used) }
 
-            is DisplayMediaEvent.MediaDeleted ->
+            is DisplayMediaEvent.MediaDeleted -> {
                 launch { repository.deleteMediaItem(event.item.id) }
+                remote.send(RemoteActions.DELETE_MEDIA) { put("id", event.item.id) }
+            }
 
             is DisplayMediaEvent.MediaReordered ->
                 launch { repository.updateMediaListOrder(event.ids) }
 
             // --- schedules ---
-            is DisplayMediaEvent.ScheduleAdded -> launch {
-                repository.addSlideshowSchedule(
-                    event.day, event.isSpecificDate, event.startTime, event.endTime
-                )
+            is DisplayMediaEvent.ScheduleAdded -> {
+                launch {
+                    repository.addSlideshowSchedule(
+                        event.day, event.isSpecificDate, event.startTime, event.endTime
+                    )
+                }
+                // No id: the display mints one, as the repository does locally. A controller's
+                // own row is never created (its writes are no-ops), so there is no id to agree on
+                // -- the broadcast that follows carries the display's.
+                remote.send(RemoteActions.ADD_SLIDESHOW_SCHEDULE) {
+                    put("day", event.day)
+                    put("isSpecificDate", event.isSpecificDate)
+                    put("startTime", event.startTime)
+                    put("endTime", event.endTime)
+                }
             }
 
-            is DisplayMediaEvent.ScheduleTimeChanged -> launch {
-                repository.updateSlideshowScheduleTime(event.schedule.id, event.startTime, event.endTime)
+            is DisplayMediaEvent.ScheduleTimeChanged -> {
+                launch {
+                    repository.updateSlideshowScheduleTime(event.schedule.id, event.startTime, event.endTime)
+                }
+                remote.send(RemoteActions.UPDATE_SLIDESHOW_SCHEDULE_TIME) {
+                    put("id", event.schedule.id)
+                    put("startTime", event.startTime)
+                    put("endTime", event.endTime)
+                }
             }
 
-            is DisplayMediaEvent.ScheduleDaysChanged -> launch {
-                repository.updateSlideshowScheduleDays(event.schedule.id, event.activeDays)
+            is DisplayMediaEvent.ScheduleDaysChanged -> {
+                launch { repository.updateSlideshowScheduleDays(event.schedule.id, event.activeDays) }
+                remote.send(RemoteActions.UPDATE_SLIDESHOW_SCHEDULE_DAYS) {
+                    put("id", event.schedule.id)
+                    put("activeDays", event.activeDays)
+                }
             }
 
-            is DisplayMediaEvent.ScheduleDatesChanged -> launch {
-                repository.updateSlideshowScheduleDates(event.schedule.id, event.specificDates)
+            is DisplayMediaEvent.ScheduleDatesChanged -> {
+                launch { repository.updateSlideshowScheduleDates(event.schedule.id, event.specificDates) }
+                remote.send(RemoteActions.UPDATE_SLIDESHOW_SCHEDULE_DATES) {
+                    put("id", event.schedule.id)
+                    put("specificDates", event.specificDates)
+                }
             }
 
-            is DisplayMediaEvent.ScheduleDeleted ->
+            is DisplayMediaEvent.ScheduleDeleted -> {
                 launch { repository.deleteSlideshowSchedule(event.id) }
+                remote.send(RemoteActions.DELETE_SLIDESHOW_SCHEDULE) { put("id", event.id) }
+            }
 
             // --- dashboard background ---
-            is DisplayMediaEvent.DashboardSettingsChanged -> launch {
-                repository.updateConfig(
-                    repository.getConfig().copy(
-                        dashboardRandomize = event.randomize,
-                        dashboardTransitionType = event.transitionType,
-                        dashboardTransitionInterval = event.intervalSeconds
+            is DisplayMediaEvent.DashboardSettingsChanged -> {
+                launch {
+                    repository.updateConfig(
+                        repository.getConfig().copy(
+                            dashboardRandomize = event.randomize,
+                            dashboardTransitionType = event.transitionType,
+                            dashboardTransitionInterval = event.intervalSeconds
+                        )
                     )
-                )
+                }
+                remote.send(RemoteActions.UPDATE_DASHBOARD_SETTINGS) {
+                    put("dashboardRandomize", event.randomize)
+                    put("dashboardTransitionType", event.transitionType)
+                    put("dashboardTransitionInterval", event.intervalSeconds)
+                }
             }
 
             is DisplayMediaEvent.CustomBackgroundSelected -> launch {
@@ -160,8 +203,12 @@ class DisplayMediaViewModel(
                 }
             }
 
-            DisplayMediaEvent.CustomBackgroundCleared ->
+            DisplayMediaEvent.CustomBackgroundCleared -> {
                 launch { repository.updateCustomBackground("") }
+                // The display deletes the file as well as clearing the path; a controller cannot
+                // reach that file, which is exactly why this has to be the display's job.
+                remote.send(RemoteActions.CLEAR_BACKGROUND) {}
+            }
 
             is DisplayMediaEvent.BackgroundsAdded -> launch {
                 var sawLarge = false
@@ -180,14 +227,25 @@ class DisplayMediaViewModel(
                 }
             }
 
-            is DisplayMediaEvent.BackgroundDeleted ->
+            is DisplayMediaEvent.BackgroundDeleted -> {
                 launch { repository.deleteDashboardBackground(event.id) }
+                remote.send(RemoteActions.DELETE_DASHBOARD_BACKGROUND) { put("id", event.id) }
+            }
 
-            is DisplayMediaEvent.BackgroundUsedToggled ->
+            is DisplayMediaEvent.BackgroundUsedToggled -> {
                 launch { repository.updateDashboardBackgroundUsed(event.id, event.used) }
+                remote.send(RemoteActions.UPDATE_DASHBOARD_BACKGROUND_USED) {
+                    put("id", event.id)
+                    put("isUsed", event.used)
+                }
+            }
 
-            is DisplayMediaEvent.BackgroundsReordered ->
+            is DisplayMediaEvent.BackgroundsReordered -> {
                 launch { repository.updateDashboardBackgroundOrder(event.ids) }
+                remote.send(RemoteActions.REORDER_DASHBOARD_BACKGROUNDS) {
+                    putJsonArray("ids") { event.ids.forEach { add(it) } }
+                }
+            }
 
             // --- running text: every one of these also pushes ---
             is DisplayMediaEvent.AnnouncementAdded -> {

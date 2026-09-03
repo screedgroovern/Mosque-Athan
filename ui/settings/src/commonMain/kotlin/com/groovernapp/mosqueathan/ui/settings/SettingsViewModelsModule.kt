@@ -24,7 +24,7 @@ import org.koin.dsl.module
  * list serve the television and the browser.
  */
 val settingsViewModelsModule: Module = module {
-    viewModel { SettingsViewModel(get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get()) }
     viewModel { RemoteDevicesViewModel(get(), get()) }
     viewModel { AdzanIqomahViewModel(get(), get()) }
     viewModel { PrayerScheduleViewModel(get(), get(), get()) }

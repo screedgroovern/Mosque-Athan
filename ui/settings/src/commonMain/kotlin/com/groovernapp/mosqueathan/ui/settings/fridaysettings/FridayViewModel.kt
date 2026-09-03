@@ -1,7 +1,9 @@
 package com.groovernapp.mosqueathan.ui.settings.fridaysettings
 
 import com.groovernapp.mosqueathan.protocol.RemoteActions
+import kotlinx.serialization.json.add
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
@@ -122,15 +124,23 @@ class FridayViewModel(
                 }
             }
 
-            is FridayEvent.MediaDeleted -> launch {
-                // The file goes with the row — the repository does that now, for every caller. This
-                // pane used to delete it here and was the only one that did, so media deleted from
-                // any other pane leaked its file, and from a controller nothing was cleaned up at
-                // all because a controller cannot reach the display's filesystem.
-                repository.deleteFridayMedia(event.item.id)
+            is FridayEvent.MediaDeleted -> {
+                launch {
+                    // The file goes with the row — the repository does that now, for every caller. This
+                    // pane used to delete it here and was the only one that did, so media deleted from
+                    // any other pane leaked its file, and from a controller nothing was cleaned up at
+                    // all because a controller cannot reach the display's filesystem.
+                    repository.deleteFridayMedia(event.item.id)
+                }
+                remote.send(RemoteActions.DELETE_FRIDAY_MEDIA) { put("id", event.item.id) }
             }
 
-            is FridayEvent.MediaReordered -> launch { repository.updateFridayMediaOrder(event.ids) }
+            is FridayEvent.MediaReordered -> {
+                launch { repository.updateFridayMediaOrder(event.ids) }
+                remote.send(RemoteActions.REORDER_FRIDAY_MEDIA) {
+                    putJsonArray("ids") { event.ids.forEach { add(it) } }
+                }
+            }
 
             // Handled elsewhere: the picker launchers live in the pane, because
             // `rememberLauncherForActivityResult` is a composable, and preview swaps

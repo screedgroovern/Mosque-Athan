@@ -1,6 +1,7 @@
 package com.groovernapp.mosqueathan.ui.settings
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -10,6 +11,8 @@ import com.groovernapp.mosqueathan.util.optionalInt
 import com.groovernapp.mosqueathan.util.optionalString
 import com.groovernapp.mosqueathan.domain.MediaStore
 import com.groovernapp.mosqueathan.protocol.HttpFetcher
+import com.groovernapp.mosqueathan.protocol.RemoteActionSink
+import com.groovernapp.mosqueathan.protocol.RemoteActions
 import com.groovernapp.mosqueathan.protocol.HttpResult
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -30,6 +33,7 @@ import kotlinx.coroutines.withContext
 
 class SettingsViewModel(
     private val repository: ConfigRepository,
+    private val remote: RemoteActionSink,
     private val mediaFileStore: MediaStore,
     private val http: HttpFetcher
 ) : ViewModel() {
@@ -93,6 +97,8 @@ class SettingsViewModel(
             mediaFileStore.deleteCustomBackground()
             repository.resetToDefaults()
         }
+        // The display also deletes its custom background file, which no controller can reach.
+        remote.send(RemoteActions.RESET) {}
     }
 
     private val _slideshowSchedulesState = MutableStateFlow<List<com.groovernapp.mosqueathan.domain.SlideshowSchedule>>(emptyList())
@@ -126,12 +132,20 @@ class SettingsViewModel(
         viewModelScope.launch {
             repository.addStandbySchedule(day, isSpecificDate, startTime, endTime)
         }
+        // No id, as with the slideshow schedules: the display mints it and broadcasts the row.
+        remote.send(RemoteActions.ADD_STANDBY_SCHEDULE) {
+            put("day", day)
+            put("isSpecificDate", isSpecificDate)
+            put("startTime", startTime)
+            put("endTime", endTime)
+        }
     }
 
     fun deleteStandbySchedule(id: String) {
         viewModelScope.launch {
             repository.deleteStandbySchedule(id)
         }
+        remote.send(RemoteActions.DELETE_STANDBY_SCHEDULE) { put("id", id) }
     }
 
     fun syncWithTvServer() {
@@ -213,11 +227,20 @@ class SettingsViewModel(
         viewModelScope.launch {
             repository.updateStandbyScheduleTime(id, startTime, endTime)
         }
+        remote.send(RemoteActions.UPDATE_STANDBY_SCHEDULE_TIME) {
+            put("id", id)
+            put("startTime", startTime)
+            put("endTime", endTime)
+        }
     }
 
     fun updateStandbyScheduleDays(id: String, activeDays: String) {
         viewModelScope.launch {
             repository.updateStandbyScheduleDays(id, activeDays)
+        }
+        remote.send(RemoteActions.UPDATE_STANDBY_SCHEDULE_DAYS) {
+            put("id", id)
+            put("activeDays", activeDays)
         }
     }
 
@@ -225,12 +248,19 @@ class SettingsViewModel(
         viewModelScope.launch {
             repository.updateStandbyScheduleDates(id, specificDates)
         }
+        remote.send(RemoteActions.UPDATE_STANDBY_SCHEDULE_DATES) {
+            put("id", id)
+            put("specificDates", specificDates)
+        }
     }
 
     fun updateStandbyEnabled(enabled: Boolean) {
         viewModelScope.launch {
             repository.updateStandbyEnabled(enabled)
         }
+        // update_standby is partial on the display: a key left out keeps the value it already
+        // holds, so sending only the flag cannot blank the window times.
+        remote.send(RemoteActions.UPDATE_STANDBY) { put("standbyModeEnabled", enabled) }
     }
 
 }
