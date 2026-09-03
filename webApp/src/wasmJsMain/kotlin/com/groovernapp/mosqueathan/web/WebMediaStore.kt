@@ -102,7 +102,7 @@ class WebMediaStore(private val host: String) : MediaStore {
  * documented as a *path* encoder, and a space in a query value is a different rule. Filenames from
  * a camera roll routinely contain spaces and brackets.
  */
-private fun encodeQueryValue(value: String): String = encodeUriComponent(value)
+internal fun encodeQueryValue(value: String): String = encodeUriComponent(value)
 
 @Suppress("UNUSED_PARAMETER")
 private fun encodeUriComponent(value: String): String = js("encodeURIComponent(value)")

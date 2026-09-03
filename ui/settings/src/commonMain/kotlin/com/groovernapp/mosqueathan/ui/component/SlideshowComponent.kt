@@ -1,6 +1,7 @@
 package com.groovernapp.mosqueathan.ui.component
 
-import com.groovernapp.mosqueathan.ui.design.decodeImageFile
+import com.groovernapp.mosqueathan.ui.design.MediaImageState
+import com.groovernapp.mosqueathan.ui.design.rememberMediaImage
 import com.groovernapp.mosqueathan.util.swap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -111,9 +112,7 @@ fun <T> SlideshowComponent(
                         val filePath = filePathSelector(item)
                         val isVideo = isVideoSelector(item)
                         
-                        val bitmap = remember(filePath) {
-                            if (!isVideo) decodeImageFile(filePath) else null
-                        }
+                        val image = rememberMediaImage(filePath, load = !isVideo)
                         
                         val isCurrentPageDragged = index == draggedItemIndex
 
@@ -192,14 +191,17 @@ fun <T> SlideshowComponent(
                                             .padding(bottom = MosqueTheme.spacing.lg)
                                     )
                                 }
-                            } else if (bitmap != null) {
+                            } else if (image is MediaImageState.Loaded) {
                                 Image(
-                                    bitmap = bitmap,
+                                    bitmap = image.image,
                                     contentDescription = null,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
-                            } else {
+                            } else if (image is MediaImageState.Unavailable) {
+                                // Only once it has actually failed. While it is still loading the
+                                // empty frame stands on its own -- a controller fetches this over
+                                // the network, and announcing failure first would be a lie.
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center

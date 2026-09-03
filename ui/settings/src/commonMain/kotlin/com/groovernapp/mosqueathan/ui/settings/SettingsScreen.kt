@@ -58,7 +58,8 @@ import com.groovernapp.mosqueathan.ui.design.MessageHost
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.SystemBackHandler
-import com.groovernapp.mosqueathan.ui.design.decodeImageFile
+import com.groovernapp.mosqueathan.ui.design.MediaImageState
+import com.groovernapp.mosqueathan.ui.design.rememberMediaImage
 import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 import org.koin.compose.viewmodel.koinViewModel
@@ -141,9 +142,9 @@ fun SettingsScreen(
     // Standby States
     var standbyModeEnabled by remember(config.standbyModeEnabled) { mutableStateOf(config.standbyModeEnabled) }
 
-    val customBgBitmap = remember(config.customBackgroundPath) {
-        decodeImageFile(config.customBackgroundPath)
-    }
+    // Null while it is still resolving, so the default backdrop shows rather than nothing. On a
+    // controller this is a fetch from the display, not a file read.
+    val customBgBitmap = (rememberMediaImage(config.customBackgroundPath) as? MediaImageState.Loaded)?.image
 
     val isCompact = LocalWindowClass.current.isCompact
 

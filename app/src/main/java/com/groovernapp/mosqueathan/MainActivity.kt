@@ -32,11 +32,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.res.painterResource
+import com.groovernapp.mosqueathan.data.remote.AndroidMediaImageLoader
 import com.groovernapp.mosqueathan.ui.design.LocalAppVersion
 import com.groovernapp.mosqueathan.ui.design.LocalServerAddress
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.DisplayBackgrounds
 import com.groovernapp.mosqueathan.ui.design.LocalDisplayBackgrounds
+import com.groovernapp.mosqueathan.ui.design.LocalMediaImageLoader
 
 class MainActivity : ComponentActivity() {
 
@@ -92,7 +94,12 @@ class MainActivity : ComponentActivity() {
                         dashboard = painterResource(R.drawable.main_bg_default),
                         adzan = painterResource(R.drawable.adzan_bg_default),
                         iqomah = painterResource(R.drawable.iqomah_bg_default)
-                    )
+                    ),
+                    // Media paths name files on whichever device is the display. This build is
+                    // both roles, so the loader decides per call rather than assuming local.
+                    LocalMediaImageLoader provides remember {
+                        AndroidMediaImageLoader(configRepository)
+                    }
                 ) {
                     val appState by appViewModel.appState.collectAsState()
                     val isStandbyActive by appViewModel.isStandbyActive.collectAsState()

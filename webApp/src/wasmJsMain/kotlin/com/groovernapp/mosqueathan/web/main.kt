@@ -4,7 +4,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.groovernapp.mosqueathan.ui.design.LinkStatus
 import com.groovernapp.mosqueathan.ui.design.LocalLinkStatus
+import com.groovernapp.mosqueathan.ui.design.LocalMediaImageLoader
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
@@ -39,10 +41,14 @@ fun main() {
             LaunchedEffect(Unit) { link.connect() }
             val linkStatus by link.status.collectAsState()
 
+            // One loader for the life of the page: the host cannot change without a reload.
+            val mediaImages = remember { WebMediaImageLoader(displayHost()) }
+
             CompositionLocalProvider(
                 LocalDisplayBackgrounds provides webBackgrounds,
                 LocalAppVersion provides WEB_APP_VERSION,
-                LocalLinkStatus provides linkStatus.toUiStatus()
+                LocalLinkStatus provides linkStatus.toUiStatus(),
+                LocalMediaImageLoader provides mediaImages
             ) {
                 MosqueTheme {
                     SettingsScreen(
