@@ -706,9 +706,11 @@ Also removed on the way: `org.json` was hiding in `AdzanViewModel` and
 `IqomahViewModel`, parsing footer text that is stored as *either* a plain string or a
 JSON array — history, not design. `joinFooterLines` in `core:model` handles both.
 
-**`Schedule.kt` and `SlideshowComponent.kt` stayed in `:app`** despite living in
-`ui/component`. Both are used by settings and the server; the dashboard renders its
-slideshow inline. They belong with `ui:settings`.
+**`Schedule.kt` and `SlideshowComponent.kt` stayed in `:app`** at the time of the `:ui:display`
+move, despite living in `ui/component`, because settings and the server both used them while the
+dashboard renders its slideshow inline. They have since moved *with* `ui:settings`, which is where
+that paragraph said they belonged — so look for them in
+`ui/settings/src/commonMain/.../ui/component/`, not in `:app`.
 
 ### Step 4 so far: the action names are shared
 
@@ -1154,9 +1156,12 @@ the browser exposed earlier, and the same two shapes:
   cannot tell which image is which, so media management is unusable in the browser even once the
   writes land. The endpoint already exists; what is missing is a URL-based image loader, since
   `decodeImageFile` is path-based and synchronous.
-- **Two buttons clip their labels** — "Add Image / Video to Slideshow" and "Slide show Schedules"
-  both lose their second line at phone width.
-- **An unlabelled `- 1 + days` stepper** sits at the top of the Dashboard tab with no heading.
+- **Two buttons clipped their labels** — "Add Image / Video to Slideshow" and "Slide show
+  Schedules" each lost their second line at phone width. **Fixed**, see below.
+- ~~An unlabelled `- 1 + days` stepper at the top of the Dashboard tab~~ — **not a defect.** The
+  tab row is pinned while the content under it scrolls, so the screenshot that showed this was
+  already scrolled and the stepper's "Transition interval" heading was above the viewport. Worth
+  recording because the wrong version of this line would send someone to fix nothing.
 - **"Preview Slideshow" is drawn but sends nothing**, along with the other three previews — the same
   defect as the QR button and the Back button that went nowhere, and found the same way, by pressing
   it.
@@ -1164,6 +1169,31 @@ the browser exposed earlier, and the same two shapes:
 A full visual pass over the remaining panes is worth doing, but *after* the write path is fixed:
 that work changes these panes, and comparing them twice is the waste this method was chosen to
 avoid.
+
+#### A pinned button height is a clipped label waiting to happen
+
+The two clipped buttons had one cause, and it was general rather than local: `.height(controlLg)`
+on a button whose label wraps. The label's second line is simply cut off, and the button also ends
+up a different height from the one beside it, which is what makes the row look wrong before you
+notice the missing words. Twenty-six controls across nine files were pinned that way.
+
+The fix is `heightIn(min = …)` instead of `height(…)` — everywhere, mechanically. It preserves the
+mockup exactly where a label already fits, because the minimum wins whenever the content is
+shorter; it only has any effect at the widths where the old code was clipping. That is what makes
+it safe to apply to all twenty-six rather than to the two that were caught by eye, and applying it
+to all twenty-six is the point: the other twenty-four are the same bug at a width nobody has
+opened yet. Long labels already sitting in pinned buttons include "Reset all Settings to default",
+"Remote control PIN", "Until Specific Date" and every sidebar category name.
+
+Two of the sites are a `Box` rather than a button — the sidebar category item and the Kemenag
+duration dropdown's anchor. Both hold text that can wrap, so both grow now too.
+
+Labels that genuinely wrap also got `textAlign = TextAlign.Center`, so two lines read as intended
+rather than as an accident. And "Slide show Schedules" became "Slideshow Schedules" — that spelling
+appeared nowhere else in the app.
+
+Verified on the Realme against the display: both buttons render their full label, centred, and the
+two in a row are now the same height.
 
 **One thing the comparison cleared rather than flagged.** `standbyStartTime` and `standbyEndTime`
 are the only two `MosqueConfig` fields the old panel edits and the new one does not, and

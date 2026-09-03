@@ -184,7 +184,7 @@ fun RunningTextListSettingsComponent(
                             MosqueSecondaryButton(
                                 onClick = { isReorderMode = !isReorderMode },
                                 shape = RoundedCornerShape(MosqueTheme.radius.sm),
-                                modifier = Modifier.height(MosqueTheme.size.controlMd),
+                                modifier = Modifier.heightIn(min = MosqueTheme.size.controlMd),
                                 contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg)
                             ) {
                                 Text(
@@ -202,7 +202,7 @@ fun RunningTextListSettingsComponent(
                             isAddingNew = true
                             addTextValue = ""
                         },
-                        modifier = Modifier.height(MosqueTheme.size.controlMd),
+                        modifier = Modifier.heightIn(min = MosqueTheme.size.controlMd),
                         shape = RoundedCornerShape(MosqueTheme.radius.sm)
                     ) {
                         Text(
@@ -234,7 +234,7 @@ fun RunningTextListSettingsComponent(
                                 newText = ""
                             }
                         },
-                        modifier = Modifier.height(MosqueTheme.size.controlXl)
+                        modifier = Modifier.heightIn(min = MosqueTheme.size.controlXl)
                     ) {
                         Text(com.groovernapp.mosqueathan.util.Lang.get("Add", "Tambah"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
                     }
@@ -366,7 +366,7 @@ fun RunningTextListSettingsComponent(
                                             editingIndex = index
                                         },
                                         contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
-                                        modifier = Modifier.height(MosqueTheme.size.controlSm)
+                                        modifier = Modifier.heightIn(min = MosqueTheme.size.controlSm)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.Edit,
@@ -389,7 +389,7 @@ fun RunningTextListSettingsComponent(
                                             onItemsChange(updated)
                                         },
                                         contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.xs),
-                                        modifier = Modifier.height(MosqueTheme.size.controlSm)
+                                        modifier = Modifier.heightIn(min = MosqueTheme.size.controlSm)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.Delete,

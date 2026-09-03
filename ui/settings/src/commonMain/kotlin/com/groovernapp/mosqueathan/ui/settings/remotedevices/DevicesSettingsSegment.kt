@@ -286,7 +286,7 @@ private fun DeviceActions(
             horizontal = MosqueTheme.spacing.lg,
             vertical = MosqueTheme.spacing.xs
         ),
-        modifier = Modifier.height(MosqueTheme.size.controlSm)
+        modifier = Modifier.heightIn(min = MosqueTheme.size.controlSm)
     ) {
         Text(
             text = Lang.get("Make Master", "Jadikan Master"),
@@ -301,7 +301,7 @@ private fun DeviceActions(
             horizontal = MosqueTheme.spacing.lg,
             vertical = MosqueTheme.spacing.xs
         ),
-        modifier = Modifier.height(MosqueTheme.size.controlSm)
+        modifier = Modifier.heightIn(min = MosqueTheme.size.controlSm)
     ) {
         Text(
             text = Lang.get("Delete", "Hapus"),

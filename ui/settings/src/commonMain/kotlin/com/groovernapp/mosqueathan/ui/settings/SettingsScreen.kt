@@ -619,7 +619,7 @@ fun SideSheetContent(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(MosqueTheme.size.controlXl)
+                            .heightIn(min = MosqueTheme.size.controlXl)
                             .border(
                                 width = borderWidth,
                                 color = borderColor,
@@ -694,7 +694,7 @@ fun SideSheetContent(
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(MosqueTheme.size.controlLg)
+                    .heightIn(min = MosqueTheme.size.controlLg)
             ) {
                 if (isCollapsed) {
                     Icon(

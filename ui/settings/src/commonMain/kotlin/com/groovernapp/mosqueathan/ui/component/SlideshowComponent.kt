@@ -31,6 +31,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.text.style.TextAlign
 import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.TransitionAnimationRow
 import com.groovernapp.mosqueathan.ui.settings.displaymedia.DropdownAdjustmentRow
@@ -327,7 +328,7 @@ fun <T> SlideshowComponent(
                 onClick = onAddClicked,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(MosqueTheme.size.controlLg)
+                    .heightIn(min = MosqueTheme.size.controlLg)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -339,7 +340,8 @@ fun <T> SlideshowComponent(
                         text = addText,
                         color = MosqueTheme.colors.onAccent,
                         fontWeight = FontWeight.Bold,
-                        fontSize = MosqueTheme.typography.bodyCompact
+                        fontSize = MosqueTheme.typography.bodyCompact,
+                        textAlign = TextAlign.Center
                     )
                 }
             }

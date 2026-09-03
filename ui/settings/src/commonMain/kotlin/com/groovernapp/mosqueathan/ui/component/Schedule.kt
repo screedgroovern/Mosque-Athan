@@ -150,7 +150,8 @@ fun Schedule(
                     Text(
                         text = addButtonText,
                         fontWeight = FontWeight.Bold,
-                        fontSize = MosqueTheme.typography.bodyCompact
+                        fontSize = MosqueTheme.typography.bodyCompact,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
@@ -160,13 +161,14 @@ fun Schedule(
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = Modifier
                     .weight(1f)
-                    .height(MosqueTheme.size.controlLg)
+                    .heightIn(min = MosqueTheme.size.controlLg)
             ) {
                 Text(
                     text = scheduleListButtonText,
                     color = MosqueTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = MosqueTheme.typography.bodyCompact
+                    fontSize = MosqueTheme.typography.bodyCompact,
+                    textAlign = TextAlign.Center
                 )
             }
         }

@@ -145,7 +145,7 @@ fun MethodSettingsSegment(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(MosqueTheme.size.controlXl)
+                        .heightIn(min = MosqueTheme.size.controlXl)
                         .clip(RoundedCornerShape(MosqueTheme.radius.md))
                         .background(MosqueTheme.colors.fillSubtle)
                         .focusHighlight(shape = RoundedCornerShape(MosqueRadius.md), scaleUp = false)

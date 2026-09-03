@@ -148,7 +148,7 @@ fun RemoteControlSettingsSegment(
                             }
                         },
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
-                        modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
+                        modifier = Modifier.fillMaxWidth().heightIn(min = MosqueTheme.size.controlLg)
                     ) {
                         Icon(imageVector = Icons.Default.Tv, contentDescription = null)
                         Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
@@ -158,7 +158,7 @@ fun RemoteControlSettingsSegment(
                     if (onScanQr != null) MosqueSecondaryButton(
                         onClick = onScanQr,
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
-                        modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
+                        modifier = Modifier.fillMaxWidth().heightIn(min = MosqueTheme.size.controlLg)
                     ) {
                         Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null)
                         Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
@@ -182,7 +182,7 @@ fun RemoteControlSettingsSegment(
                             }
                         },
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
-                        modifier = Modifier.weight(1f).height(MosqueTheme.size.controlLg)
+                        modifier = Modifier.weight(1f).heightIn(min = MosqueTheme.size.controlLg)
                     ) {
                         Icon(imageVector = Icons.Default.Tv, contentDescription = null)
                         Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
@@ -192,7 +192,7 @@ fun RemoteControlSettingsSegment(
                     if (onScanQr != null) MosqueSecondaryButton(
                         onClick = onScanQr,
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
-                        modifier = Modifier.weight(1f).height(MosqueTheme.size.controlLg)
+                        modifier = Modifier.weight(1f).heightIn(min = MosqueTheme.size.controlLg)
                     ) {
                         Icon(imageVector = Icons.Default.CameraAlt, contentDescription = null)
                         Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
@@ -211,7 +211,7 @@ fun RemoteControlSettingsSegment(
                     }
                 },
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
-                modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
+                modifier = Modifier.fillMaxWidth().heightIn(min = MosqueTheme.size.controlLg)
             ) {
                 Icon(imageVector = Icons.Default.Sync, contentDescription = null, tint = MosqueTheme.colors.accent)
                 Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
@@ -318,9 +318,9 @@ fun RemoteControlSettingsSegment(
                 },
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
                 modifier = if (isCompact) {
-                    Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
+                    Modifier.fillMaxWidth().heightIn(min = MosqueTheme.size.controlLg)
                 } else {
-                    Modifier.align(Alignment.Start).height(MosqueTheme.size.controlLg)
+                    Modifier.align(Alignment.Start).heightIn(min = MosqueTheme.size.controlLg)
                 }
             ) {
                 Icon(imageVector = Icons.Default.Lock, contentDescription = null)

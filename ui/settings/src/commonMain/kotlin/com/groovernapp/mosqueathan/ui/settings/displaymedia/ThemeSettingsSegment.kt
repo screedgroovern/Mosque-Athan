@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -554,7 +555,7 @@ fun SlideshowTabContent(
             title = "",
             schedules = slideshowSchedules,
             addButtonText = Lang.get("Add Schedule", "Tambah Jadwal"),
-            scheduleListButtonText = Lang.get("Slide show Schedules", "Jadwal Slide Show"),
+            scheduleListButtonText = Lang.get("Slideshow Schedules", "Jadwal Slideshow"),
             onAddSchedule = {
                 val wasEmpty = slideshowSchedules.isEmpty()
                 onAddSlideshowSchedule("Monday", false, "08:00", "17:00")
@@ -586,7 +587,7 @@ fun SlideshowTabContent(
         MosqueSecondaryButton(
             onClick = onPreviewSlideshow,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
-            modifier = Modifier.fillMaxWidth().height(MosqueTheme.size.controlLg)
+            modifier = Modifier.fillMaxWidth().heightIn(min = MosqueTheme.size.controlLg)
         ) {
             Text(
                 text = Lang.get("Preview Slideshow", "Preview Slideshow"),
@@ -685,7 +686,7 @@ fun TransitionAnimationRow(
                         selected = isSelected,
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
-                        modifier = Modifier.height(MosqueTheme.size.controlSm)
+                        modifier = Modifier.heightIn(min = MosqueTheme.size.controlSm)
                     ) {
                         Text(
                             type,
@@ -721,7 +722,7 @@ fun TransitionAnimationRow(
                         selected = isSelected,
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
-                        modifier = Modifier.height(MosqueTheme.size.controlSm)
+                        modifier = Modifier.heightIn(min = MosqueTheme.size.controlSm)
                     ) {
                         Text(
                             type,
@@ -803,7 +804,7 @@ fun DropdownAdjustmentRow(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = MosqueTheme.spacing.sm),
-                        modifier = Modifier.height(MosqueTheme.size.controlSm)
+                        modifier = Modifier.heightIn(min = MosqueTheme.size.controlSm)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -902,7 +903,7 @@ fun DropdownAdjustmentRow(
                         onClick = { expanded = true },
                         shape = RoundedCornerShape(MosqueTheme.radius.sm),
                         contentPadding = PaddingValues(horizontal = MosqueTheme.spacing.lg, vertical = MosqueTheme.spacing.sm),
-                        modifier = Modifier.height(MosqueTheme.size.controlMd)
+                        modifier = Modifier.heightIn(min = MosqueTheme.size.controlMd)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -1026,7 +1027,7 @@ fun RunningTextSettingsCard(
                         newText = ""
                     }
                 },
-                modifier = Modifier.height(MosqueTheme.size.controlXl),
+                modifier = Modifier.heightIn(min = MosqueTheme.size.controlXl),
                 shape = RoundedCornerShape(MosqueTheme.radius.md)
             ) {
                 Text(Lang.get("Add", "Tambah"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
