@@ -1170,6 +1170,86 @@ A full visual pass over the remaining panes is worth doing, but *after* the writ
 that work changes these panes, and comparing them twice is the waste this method was chosen to
 avoid.
 
+#### The two gaps the comparison found are fixed; three remain
+
+**Thumbnails: a controller asks the display.** `decodeImageFile`'s wasm KDoc had already
+written this down — "media previews in the browser have to come over HTTP from the display,
+which already serves them at `/media`. That is a change to the *caller*." It was also broken on
+Android and had never been noticed: a controller's own `filesDir` has the same shape as the
+display's, so `File(path)` is simply absent there too.
+
+`MediaImageLoader` (`:ui:design`) is the seam, and it is an interface the host provides rather
+than an `expect`. Nothing about resolving a path is platform-specific; what differs is *which
+device holds the file*, and only the host knows whether it is the display or a controller. One
+Android build is both roles, so `AndroidMediaImageLoader` decides per call from
+`connectivityMode` — the same rule `RemoteActionSender` uses for writes. The default reads the
+file directly, so the display and its tests need no provider at all.
+
+`rememberMediaImage` returns `Loading | Loaded | Unavailable` rather than a nullable, because
+over a network that distinction is the difference between a blank frame and a lie: the previous
+code would have shown "Failed to load image" during every fetch.
+
+The bytes reach wasm as base64 because a `ByteArray` cannot cross the Kotlin/Wasm JS boundary
+and strings can. `FileReader.readAsDataURL` is the browser's own encoder, so nothing is paid for
+the conversion, and `org.jetbrains.skia.Image.makeFromEncoded` decodes it — skiko is already in
+the bundle.
+
+**Writes: twenty-one branches now push.** Fixed the way announcements already worked — each
+branch sends its action beside the repository write — rather than by making the web repository
+send, which is smaller and fixes only the browser. `SettingsViewModel` gained the
+`RemoteActionSink` it never had, and `AppModuleTest` is what proves the graph still resolves.
+
+Two categories deliberately send nothing, and both are worth knowing before someone "completes"
+them:
+
+- **Adding or replacing a file.** Those go through `MediaStore`, which uploads, and `/upload`
+  writes the row itself. The transfer already carried the change.
+- **`connectivityMode`, `remoteTvIp`, and `SettingsViewModel`'s sync handler.** The first two
+  describe *this* device; the third applies what the display just sent and must not echo it back.
+
+Schedule adds send no `id`: the display mints one, and a controller's own row is never created,
+so there is nothing to agree on — the broadcast carries the display's. `update_standby` is
+partial on the display, so sending only the flag cannot blank the window times.
+
+**Three payload gaps, and why the existing guard could not see them.** `Media.isUsed`,
+`Announcement.position` and `ConnectedDevice.authenticatedAt` were stored and never sent.
+`ConfigPayloadCoverageTest` scans the whole file for `put("name")`, which suits one flat config
+object and is useless across seven tables — `isUsed` is served for dashboard backgrounds, so
+`Media.isUsed` *looked* served while `mediaArray` never carried it.
+
+`SideTablePayloadCoverageTest` reads each array's own `apply { }` block, brace-counted rather
+than matched with a lazy regex that would stop at the first inner brace. Mutation-tested both
+ways: dropping a `put` fails it, and renaming a builder variable fails it too rather than passing
+vacuously — which is the failure a source-reading test is most likely to have. `authenticatedAt`
+is withheld with a reason (it is what expires a paired device, and no controller reads it), and a
+stale withheld entry now fails too, since it would excuse a real gap.
+
+**`reorder_media` and `update_media_item_used` did not exist.** Not missing from the panel — from
+the *protocol*. The display stored a slide order and a per-slide "Use" flag that no message could
+change, so both looked editable everywhere and were display-only. They are the only two actions
+the hand-written panel never had.
+
+**Verified on hardware** by `curl` against the display rather than by driving a screen: both keys
+appear in the payload (announcement positions read 0–5, not all zero), `update_media_item_used`
+flipped a slide's flag, `reorder_media` reversed and restored the order.
+
+**Still not done, and each needs a decision rather than typing:**
+
+- **The four previews** (`preview_adzan`, `preview_iqomah`, `preview_slideshow`,
+  `preview_friday_slideshow`). The panes handle preview "at the call site" because it swaps which
+  screen `AppViewModel` drives — that is navigation on the display, and on a controller it has to
+  become a message instead. Two different meanings behind one button.
+- **The Kemenag fetch.** `triggerKemenagFetchForDuration` does the fetching *and* the storing
+  inside the repository, so on a controller it is a no-op. The browser may call the API directly
+  (CORS is open), but the result then has to be written to the display; the better shape is a new
+  action asking the display to fetch, since it has both the API access and the storage.
+- **`verify_pin`.** The gate a controller passes to reach settings. The Compose panel has no PIN
+  entry flow at all yet.
+- **Panel-driven verification of the thumbnails and the twenty-one sends.** The transport half is
+  proven (the display serves 79 KB of real JPEG at `/media?path=`, and every action round-trips
+  over `curl`), but nobody has yet watched a thumbnail appear or pressed Add Schedule in the new
+  panel and seen the row arrive.
+
 #### A pinned button height is a clipped label waiting to happen
 
 The two clipped buttons had one cause, and it was general rather than local: `.height(controlLg)`
@@ -1464,7 +1544,7 @@ shippable throughout.
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
 | ~~6~~ | ~~`ui:settings` + `ui:display` into `commonMain`~~ **done** | yes |
 | ~~7~~ | ~~`webApp` (wasmJs)~~ **done** — the shared Compose settings UI renders in a browser and controls the display over one WebSocket. Media file handling is the remaining stub. | yes |
-| 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | **blocked** — the new panel cannot write a side table; see the comparison above |
+| 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | **still blocked**, but narrowly: side-table writes, thumbnails and the two missing actions are fixed; the four previews, the Kemenag fetch and `verify_pin` are not |
 | 9 | `iosApp` — controller + preview | yes |
 
 **Step 3 wipes device data.** `RealmConfiguration` already uses
