@@ -1044,11 +1044,11 @@ nowhere, and found the same way: by pressing it.
 
 Verified on the Xiaomi: the sync section now offers only Hubungkan and Sinkronkan Sekarang.
 
-**Step 8 has no known blocker left.** Media upload, replace and delete all work from the browser,
-the display serves the panel itself, the Kemenag search is allowed cross-origin
-(`access-control-allow-origin: *`, checked against the live API), and murottal audio is configurable
-and now actually plays. What remains before deleting `WebPage*.kt` is a deliberate side-by-side
-comparison of the two panels, pane by pane, rather than another missing capability.
+**Step 8 had no *known* blocker left**, and then the pane-by-pane comparison found one. Media
+upload, replace and delete all work from the browser, the display serves the panel itself, the
+Kemenag search is allowed cross-origin (`access-control-allow-origin: *`, checked against the live
+API), and murottal audio is configurable and now actually plays. What the comparison turned up is
+below — and it is large enough that **step 8 must not proceed yet.**
 
 Two smaller things noticed on the way, neither fixed:
 
@@ -1089,6 +1089,88 @@ assets compress. Every `:app` build now depends on `wasmJsBrowserDistribution`, 
 up-to-date-checked and so only re-runs when `:webApp` changes.
 
 The old panel still serves at `/`. Step 8 removes it, and this was its missing prerequisite.
+
+### Step 8's pane-by-pane comparison: the new panel cannot write a side table
+
+The comparison was done textually first — enumerate what each panel touches, diff it, then
+photograph only where the diff points — which found in minutes what twelve panes of screenshots
+would have found slowly. Three separate classes of finding came out of it, and the first one blocks
+step 8 outright.
+
+**1. Every side-table write from the new panel is silently discarded.** Two code facts with no third
+path between them: `InMemoryConfigRepository`'s writes are all `= Unit`, and the settings ViewModels
+call `remote.send(...)` for only *some* operations. So a change reaches the display when — and only
+when — a ViewModel sends it explicitly. That covers config fields (via `update_config`), the theme,
+announcements, the PIN and devices, plus file uploads, which the `/upload` endpoint completes
+server-side. Everything else is inert on both sides at once: the panel does not even update its own
+copy.
+
+Proven on hardware rather than inferred: pressing **Add Schedule** in the Slideshow pane left the
+display's `slideshowSchedules` at 1, before, immediately after, and ten seconds later. The button
+gives no error.
+
+What is affected — the whole list, derived from the two facts above:
+
+| Pane | Inert |
+|---|---|
+| Slideshow media | delete, reorder, path update, "Use" toggle |
+| Dashboard backgrounds | delete, reorder, "Use" toggle, clear custom |
+| Friday media | delete, reorder, path update |
+| Slideshow schedules | add, delete, time, days, dates, enable |
+| Standby schedules | add, delete, time, days, dates, enable |
+| Prayer schedule | the Kemenag fetch |
+| System & Reset | reset to defaults |
+| Connectivity | `verify_pin` |
+| Several | all four previews (adzan, iqomah, slideshow, Friday slideshow) |
+
+**This is not a web-only bug.** `ui:settings` is shared, so an Android device in `REMOTE` mode has
+exactly the same hole — it writes to its own Realm and never tells the display. The old HTML panel
+is currently the *only* controller that can manage media or schedules at all, which is precisely why
+deleting it now would remove capability rather than duplicate it.
+
+The fix that addresses both controllers is to add the missing `remote.send(...)` calls beside the
+repository calls, matching what announcements already do — roughly thirty call sites across four
+ViewModels. The tempting alternative, making the web's repository send instead, is smaller but fixes
+only the browser and leaves the Android controller broken, so it is the wrong trade.
+
+**2. Two side-table fields are never served**, the same class of bug as `jumatTransitionType` and
+invisible for the same reason — a missing key is indistinguishable from a key whose value happens to
+equal the default:
+
+- **`Media.isUsed`** — so every controller shows the default, not the display's value. This is why
+  toggling "Use" could not even be *observed* over the wire, let alone verified.
+- **`Announcement.position`** — so a controller reorders announcements using positions that all read
+  0.
+
+`ConfigPayloadCoverageTest` did not catch these because it enumerates `MosqueConfig` only. It should
+be extended over the side tables, which is the same reflective check applied to seven more classes.
+
+**3. Layout and dead-control defects, found by looking at three panes.** Consistent with the five
+the browser exposed earlier, and the same two shapes:
+
+- **No media thumbnail renders** — every item reads "Failed to load image". Correct per
+  `decodeImageFile`'s wasm contract (the paths belong to the display's filesystem), but the *panel*
+  is not: the old one fetched `/media?path=` over HTTP from the display. Without thumbnails a takmir
+  cannot tell which image is which, so media management is unusable in the browser even once the
+  writes land. The endpoint already exists; what is missing is a URL-based image loader, since
+  `decodeImageFile` is path-based and synchronous.
+- **Two buttons clip their labels** — "Add Image / Video to Slideshow" and "Slide show Schedules"
+  both lose their second line at phone width.
+- **An unlabelled `- 1 + days` stepper** sits at the top of the Dashboard tab with no heading.
+- **"Preview Slideshow" is drawn but sends nothing**, along with the other three previews — the same
+  defect as the QR button and the Back button that went nowhere, and found the same way, by pressing
+  it.
+
+A full visual pass over the remaining panes is worth doing, but *after* the write path is fixed:
+that work changes these panes, and comparing them twice is the waste this method was chosen to
+avoid.
+
+**One thing the comparison cleared rather than flagged.** `standbyStartTime` and `standbyEndTime`
+are the only two `MosqueConfig` fields the old panel edits and the new one does not, and
+`updateStandbyStatus` reads **neither** — it iterates `standbySchedules` alone. They are stored,
+served, and editable from the old panel while driving nothing. So the new panel is right to omit
+them, and the old panel has been offering a control that does nothing; that is an argument *for*
+step 8, once the rest is fixed.
 
 ### The link's behaviour, verified on hardware
 
@@ -1352,7 +1434,7 @@ shippable throughout.
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
 | ~~6~~ | ~~`ui:settings` + `ui:display` into `commonMain`~~ **done** | yes |
 | ~~7~~ | ~~`webApp` (wasmJs)~~ **done** — the shared Compose settings UI renders in a browser and controls the display over one WebSocket. Media file handling is the remaining stub. | yes |
-| 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | only after 7 reaches parity |
+| 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | **blocked** — the new panel cannot write a side table; see the comparison above |
 | 9 | `iosApp` — controller + preview | yes |
 
 **Step 3 wipes device data.** `RealmConfiguration` already uses
