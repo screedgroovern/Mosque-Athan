@@ -117,16 +117,25 @@ class DisplayMediaViewModel(
                 }
             }
 
-            is DisplayMediaEvent.MediaUsedToggled ->
+            is DisplayMediaEvent.MediaUsedToggled -> {
                 launch { repository.updateMediaItemUsed(event.id, event.used) }
+                remote.send(RemoteActions.UPDATE_MEDIA_ITEM_USED) {
+                    put("id", event.id)
+                    put("isUsed", event.used)
+                }
+            }
 
             is DisplayMediaEvent.MediaDeleted -> {
                 launch { repository.deleteMediaItem(event.item.id) }
                 remote.send(RemoteActions.DELETE_MEDIA) { put("id", event.item.id) }
             }
 
-            is DisplayMediaEvent.MediaReordered ->
+            is DisplayMediaEvent.MediaReordered -> {
                 launch { repository.updateMediaListOrder(event.ids) }
+                remote.send(RemoteActions.REORDER_MEDIA) {
+                    putJsonArray("ids") { event.ids.forEach { add(it) } }
+                }
+            }
 
             // --- schedules ---
             is DisplayMediaEvent.ScheduleAdded -> {

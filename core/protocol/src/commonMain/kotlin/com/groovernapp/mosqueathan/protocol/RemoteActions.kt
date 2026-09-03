@@ -52,11 +52,15 @@ object RemoteActions {
     const val PREVIEW_FRIDAY_SLIDESHOW = "preview_friday_slideshow"
     const val PREVIEW_SLIDESHOW = "preview_slideshow"
     const val REORDER_DASHBOARD_BACKGROUNDS = "reorder_dashboard_backgrounds"
+    // Newer than the rest, and the only two the hand-written panel never had: the display
+    // stored Media.isUsed and a slide order that no controller could change.
+    const val REORDER_MEDIA = "reorder_media"
     const val REORDER_FRIDAY_MEDIA = "reorder_friday_media"
     const val UPDATE_DASHBOARD_BACKGROUND_PATH = "update_dashboard_background_path"
     const val UPDATE_DASHBOARD_BACKGROUND_USED = "update_dashboard_background_used"
     const val UPDATE_FRIDAY_MEDIA_ITEM_PATH = "update_friday_media_item_path"
     const val UPDATE_MEDIA_ITEM_PATH = "update_media_item_path"
+    const val UPDATE_MEDIA_ITEM_USED = "update_media_item_used"
     const val UPDATE_SLIDESHOW_ENABLED = "update_slideshow_enabled"
     const val UPLOAD_BACKGROUND = "upload_background"
     const val UPLOAD_DASHBOARD_BACKGROUND = "upload_dashboard_background"

@@ -1006,6 +1006,9 @@ class SettingsServer(
                 put("id", ann.id)
                 put("content", ann.content)
                 put("isActive", ann.isActive)
+                // Withheld until now, so a controller reordered the running text using
+                // positions that all read 0.
+                put("position", ann.position)
             })
         }
         json.put("announcements", announcementsArray)
@@ -1016,6 +1019,7 @@ class SettingsServer(
                 put("id", med.id)
                 put("filePath", med.filePath)
                 put("isVideo", med.isVideo)
+                put("isUsed", med.isUsed)
                 put("sortOrder", med.sortOrder)
             })
         }
@@ -1932,6 +1936,21 @@ class SettingsServer(
                     val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
                     val isUsed = json.optBoolean("isUsed", true)
                     repository.updateDashboardBackgroundUsed(id, isUsed)
+                    broadcastState()
+                }
+                RemoteActions.UPDATE_MEDIA_ITEM_USED -> {
+                    val id = json.optString("id").takeIf { it.isNotEmpty() } ?: return
+                    val isUsed = json.optBoolean("isUsed", true)
+                    repository.updateMediaItemUsed(id, isUsed)
+                    broadcastState()
+                }
+                RemoteActions.REORDER_MEDIA -> {
+                    val idsJson = json.optJSONArray("ids") ?: return
+                    val ids = mutableListOf<String>()
+                    for (i in 0 until idsJson.length()) {
+                        ids.add(idsJson.getString(i))
+                    }
+                    repository.updateMediaListOrder(ids)
                     broadcastState()
                 }
                 RemoteActions.REORDER_DASHBOARD_BACKGROUNDS -> {
