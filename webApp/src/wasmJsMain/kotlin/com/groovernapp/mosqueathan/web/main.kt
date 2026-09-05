@@ -10,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
+import com.groovernapp.mosqueathan.protocol.RemoteActionSink
+import com.groovernapp.mosqueathan.protocol.RemoteActions
 import com.groovernapp.mosqueathan.ui.design.LocalAppVersion
 import com.groovernapp.mosqueathan.ui.design.LocalDisplayBackgrounds
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
@@ -44,6 +46,10 @@ fun main() {
             // One loader for the life of the page: the host cannot change without a reload.
             val mediaImages = remember { WebMediaImageLoader(displayHost()) }
 
+            // Preview is the one thing this screen sends without going through a ViewModel: there
+            // is no state to write, only a screen for the display to show.
+            val remote = koinInject<RemoteActionSink>()
+
             CompositionLocalProvider(
                 LocalDisplayBackgrounds provides webBackgrounds,
                 LocalAppVersion provides WEB_APP_VERSION,
@@ -53,6 +59,19 @@ fun main() {
                 MosqueTheme {
                     SettingsScreen(
                         viewModel = koinViewModel(),
+                        // Preview means "show it on the television", which is the only thing it can
+                        // mean from here — the takmir is holding the controller precisely to see
+                        // the result on the big screen. On the display these same parameters swap
+                        // which screen AppViewModel drives; here they are messages. Until now the
+                        // browser left all four at their `{}` default, so the buttons drew, took
+                        // focus, and did nothing — the same defect as the Back button that went
+                        // nowhere, and the server side had been waiting all along.
+                        onPreviewAdzan = { remote.send(RemoteActions.PREVIEW_ADZAN) {} },
+                        onPreviewIqomah = { remote.send(RemoteActions.PREVIEW_IQOMAH) {} },
+                        onPreviewSlideshow = { remote.send(RemoteActions.PREVIEW_SLIDESHOW) {} },
+                        onPreviewFridaySlideshow = {
+                            remote.send(RemoteActions.PREVIEW_FRIDAY_SLIDESHOW) {}
+                        },
                         // Nothing to go back to: in the browser the settings UI *is* the app, where
                         // on the television it is a screen you leave to return to the clock. Null
                         // rather than an empty lambda, so the close and back controls are not drawn
