@@ -1261,10 +1261,34 @@ returned it; one `fetch_kemenag_schedules` produced 25 schedule rows within four
   `ui:settings` contains no PIN entry anywhere. So on any display with a PIN set, the new panel
   connects, says it needs approval, and offers the takmir no way forward except walking to the
   television or using the old HTML panel. Step 8 cannot remove the old panel until this exists.
-- **Panel-driven verification of the thumbnails and the twenty-one sends.** The transport half is
-  proven (the display serves 79 KB of real JPEG at `/media?path=`, and every action round-trips
-  over `curl`), but nobody has yet watched a thumbnail appear or pressed Add Schedule in the new
-  panel and seen the row arrive.
+~~Panel-driven verification of the thumbnails and the twenty-one sends.~~ **Done**, on the Realme
+against the Xiaomi, with the panel served by the display itself:
+
+- **Thumbnails render.** The slideshow pane shows the actual photographs where every tile used to
+  read "Failed to load image".
+- **Add Schedule works through the panel's own button**, which is the exact press that proved the
+  bug: `slideshowSchedules` went 1 → 2 within three seconds, where before the fix it stayed at 1
+  indefinitely. The new row then appeared *in the panel* — panel → display → broadcast → panel, the
+  whole round trip.
+- **Preview Slideshow reaches the display**, which went from the full dashboard node tree to the
+  single slideshow node, and back on the display's own Back press.
+
+Everything was restored afterwards: one slideshow schedule, four media, two standby schedules.
+
+#### Two ways a device check lied, in one session
+
+Both were caught, and both would have been reported as bugs by a slightly less suspicious run.
+
+**A layout shift invalidates every coordinate below it.** This file already said to screenshot
+before each tap; that is not sufficient. Adding a schedule row pushed everything under it down, and
+the Preview tap — aimed with coordinates measured *before* the row existed — landed on empty space.
+The button appeared not to work. **Re-measure after any action that can add or remove a row**, not
+merely once per pane.
+
+**A before/after diff that includes a clock always says "changed".** The first Preview check
+compared the display's node text and reported success; the only difference was the ticking time,
+and the structure was identical — the display had not moved at all. Filter time-valued nodes out
+before comparing, or compare the set of *labels* rather than the whole tree.
 
 #### `screencap` on the Xiaomi shows content the app is not drawing
 
