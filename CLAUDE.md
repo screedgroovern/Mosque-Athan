@@ -1233,22 +1233,55 @@ the hand-written panel never had.
 appear in the payload (announcement positions read 0–5, not all zero), `update_media_item_used`
 flipped a slide's flag, `reorder_media` reversed and restored the order.
 
-**Still not done, and each needs a decision rather than typing:**
+**Previews and the Kemenag fetch are done too.** Both were written up here as needing a decision;
+on inspection neither did, and that over-caution is worth recording because it nearly cost a day.
 
-- **The four previews** (`preview_adzan`, `preview_iqomah`, `preview_slideshow`,
-  `preview_friday_slideshow`). The panes handle preview "at the call site" because it swaps which
-  screen `AppViewModel` drives — that is navigation on the display, and on a controller it has to
-  become a message instead. Two different meanings behind one button.
-- **The Kemenag fetch.** `triggerKemenagFetchForDuration` does the fetching *and* the storing
-  inside the repository, so on a controller it is a no-op. The browser may call the API directly
-  (CORS is open), but the result then has to be written to the display; the better shape is a new
-  action asking the display to fetch, since it has both the API access and the storage.
-- **`verify_pin`.** The gate a controller passes to reach settings. The Compose panel has no PIN
-  entry flow at all yet.
+- **The four previews were an empty-lambda bug, not a design question.** `SettingsScreen` takes
+  them as four parameters defaulting to `{}`. `MainActivity` fills them; `main.kt` filled none, so
+  in the browser all four drew, took focus, and did nothing — the same defect as the Back button
+  and the QR button. The display side was never missing: `preview_adzan` has always called the same
+  `previewAdzan()` the display's own settings screen calls, and the old panel has always sent it.
+  And the meaning is not ambiguous from a controller — preview means *the television* changes,
+  which is the whole reason the takmir is holding the phone. Same parameter, navigation on one host
+  and a message on the other, exactly like `MediaImageLoader`.
+- **`fetch_kemenag_schedules` asks the display to do the whole job.** The alternative — the browser
+  fetches (CORS does allow it) and posts the result back — is up to 180 `save_kemenag_schedules`
+  messages for one button press, with the browser doing work the display can do. The display has
+  both the API access and the storage.
+
+Verified on hardware: `preview_adzan` switched the display to MENJELANG ADZAN / SUBUH and back
+returned it; one `fetch_kemenag_schedules` produced 25 schedule rows within four seconds.
+
+**Still open:**
+
+- **`verify_pin` — deferred by decision, not finished.** The user's call on 2026-09-06: the mosque
+  does not use the PIN yet, so this is not urgent. It is still a real hole and must not be read as
+  done. `DisplayLink` already *detects* it — a `registration_result` with `isAllowed=false` becomes
+  `Status.NeedsApproval`, and it deliberately stops the reconnect churn in that state — but
+  `ui:settings` contains no PIN entry anywhere. So on any display with a PIN set, the new panel
+  connects, says it needs approval, and offers the takmir no way forward except walking to the
+  television or using the old HTML panel. Step 8 cannot remove the old panel until this exists.
 - **Panel-driven verification of the thumbnails and the twenty-one sends.** The transport half is
   proven (the display serves 79 KB of real JPEG at `/media?path=`, and every action round-trips
   over `curl`), but nobody has yet watched a thumbnail appear or pressed Add Schedule in the new
   panel and seen the row arrive.
+
+#### `screencap` on the Xiaomi shows content the app is not drawing
+
+Exiting a preview left the adzan screen's text — "MENJELANG ADZAN", "SUBUH", a frozen `00:18` —
+painted under a live, ticking dashboard. It looked exactly like a stuck composition, and it is not.
+
+Three instruments disagreed with the screenshot and agree with each other: `uiautomator dump`
+lists only dashboard nodes, `dumpsys window` shows one window with one surface, and
+`dumpsys SurfaceFlinger --list` shows one layer for the activity. Twenty-five seconds apart the
+live values ticked while the ghost stayed frozen at the same numbers — a composition would have
+kept updating or appeared in the tree.
+
+So the stale pixels are in MIUI's capture path, not in the app. This sharpens the rule already in
+*Checking the layout on a phone*: on this device a screenshot can show text that **exists
+nowhere in the app**, indefinitely. Confirm anything surprising against the accessibility tree
+before believing it, and before reporting it as a bug.
+
 
 #### A pinned button height is a clipped label waiting to happen
 
@@ -1544,7 +1577,7 @@ shippable throughout.
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
 | ~~6~~ | ~~`ui:settings` + `ui:display` into `commonMain`~~ **done** | yes |
 | ~~7~~ | ~~`webApp` (wasmJs)~~ **done** — the shared Compose settings UI renders in a browser and controls the display over one WebSocket. Media file handling is the remaining stub. | yes |
-| 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | **still blocked**, but narrowly: side-table writes, thumbnails and the two missing actions are fixed; the four previews, the Kemenag fetch and `verify_pin` are not |
+| 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | **blocked on `verify_pin` alone** — deferred by decision, not done. Side-table writes, thumbnails, the two missing actions, the four previews and the Kemenag fetch have all landed |
 | 9 | `iosApp` — controller + preview | yes |
 
 **Step 3 wipes device data.** `RealmConfiguration` already uses
