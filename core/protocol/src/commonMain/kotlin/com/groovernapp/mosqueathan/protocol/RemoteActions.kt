@@ -34,6 +34,10 @@ object RemoteActions {
     const val DELETE_SLIDESHOW_SCHEDULE = "delete_slideshow_schedule"
     const val DELETE_STANDBY_SCHEDULE = "delete_standby_schedule"
     const val SAVE_KEMENAG_SCHEDULES = "save_kemenag_schedules"
+    // The display fetches, because it has both the API access and the storage. The old
+    // panel fetched in the browser and posted the result back one day at a time, which is
+    // up to 180 messages for one button press.
+    const val FETCH_KEMENAG_SCHEDULES = "fetch_kemenag_schedules"
     const val UPDATE_SLIDESHOW_SCHEDULE_DATES = "update_slideshow_schedule_dates"
     const val UPDATE_SLIDESHOW_SCHEDULE_DAYS = "update_slideshow_schedule_days"
     const val UPDATE_SLIDESHOW_SCHEDULE_TIME = "update_slideshow_schedule_time"

@@ -91,11 +91,18 @@ class PrayerScheduleViewModel(
 
             PrayerScheduleEvent.KemenagDownloadRequested -> {
                 val state = uiState.value.kemenag
+                // A no-op on a controller, where there is no schedule table to fill, so the
+                // display is asked to do the whole thing rather than being sent the result.
                 repository.triggerKemenagFetchForDuration(
                     cityId = state.cityId,
                     duration = state.duration,
                     targetDateStr = state.targetDate
                 )
+                remote.send(RemoteActions.FETCH_KEMENAG_SCHEDULES) {
+                    put("cityId", state.cityId)
+                    put("duration", state.duration)
+                    put("targetDate", state.targetDate)
+                }
             }
         }
     }

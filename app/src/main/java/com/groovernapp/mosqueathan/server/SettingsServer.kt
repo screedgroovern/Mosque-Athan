@@ -1335,6 +1335,16 @@ class SettingsServer(
                         }
                     }
                 }
+                RemoteActions.FETCH_KEMENAG_SCHEDULES -> {
+                    val cityId = json.optString("cityId").takeIf { it.isNotEmpty() } ?: return
+                    val duration = json.optString("duration").takeIf { it.isNotEmpty() } ?: return
+                    val targetDate = json.optString("targetDate")
+                    // The same call the display's own settings screen makes. It reaches
+                    // api.myquran.com and writes the schedule rows itself, so nothing comes back
+                    // over this connection except the broadcast.
+                    repository.triggerKemenagFetchForDuration(cityId, duration, targetDate)
+                    broadcastState()
+                }
                 RemoteActions.SAVE_KEMENAG_SCHEDULES -> {
                     val schedulesArray = json.optJSONArray("schedules")
                     if (schedulesArray != null) {
