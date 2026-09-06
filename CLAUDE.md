@@ -1473,6 +1473,37 @@ Verified the way the bug was found: with the panel backgrounded, a background wa
 display through the API; bringing the panel forward showed four items where it had shown five, with
 no reload. Any tab switch or screen lock takes the same path.
 
+### The offline queue is safe for a value and dangerous for a row
+
+`DisplayLink` holds unsent actions while the display is unreachable and flushes them once a
+snapshot proves the display accepted the device again. That is recorded above as the takmir's real
+case, verified on hardware — and the verification used `adzanLeadMinutes` 3 → 5, which is why the
+other half went unseen for so long.
+
+**Setting a value is idempotent; appending a row is not.** Delivering "set adzanLeadMinutes to 5"
+twice leaves 5. Delivering "add a standby schedule" eight times leaves eight schedules.
+
+That is not hypothetical. During a pane sweep the display lost the foreground to another app and
+its server stopped answering, so the panel showed defaults and **every button became silently
+inert**: the web repository writes nothing locally, so a press produces no row, no error and no
+movement. The natural response is to press again. Eight presses later the link recovered, the queue
+flushed, and the display gained eight identical `22:00–04:00 Monday` rows — `createdAt` values
+250 ms apart, which is what identified the cause. They were deleted; the count is back to two.
+
+Two things follow, and neither is fixed:
+
+- **A control that cannot act right now should say so.** The status chip reads `Connecting` at the
+  top of the screen, far from the button being pressed, and nothing else changes. `MessageHost`
+  exists for exactly this: "will be sent when reconnected" is honest, keeps offline editing, and
+  stops the blind repetition that creates the duplicates.
+- **The real answer is step 3.** An offline replica writes the row locally, shows it immediately,
+  and reconciles later — at which point the press is visibly *not* a no-op and there is nothing to
+  repeat. Until then the queue is delivering appends that the user could not see they had made.
+
+Worth knowing when reading the hardware table above: "edits made while the display was down both
+arrived after reconnection" is true, and it is a description of the same mechanism that produced
+this.
+
 ### The header bar: role first, connection second
 
 Settings now opens with a bar naming what this device *is* — `Server` or `Remote` — because one
