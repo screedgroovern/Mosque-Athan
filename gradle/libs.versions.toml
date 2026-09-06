@@ -17,6 +17,8 @@ navigation = "2.9.8"
 material3 = "1.4.0"
 materialIcons = "1.7.8"
 realm = "3.2.9"
+room = "2.8.1"
+ksp = "2.2.10-2.0.2"
 adhan = "0.0.6"
 ummalqura = "2.0.2"
 zxing = "3.5.3"
@@ -43,6 +45,8 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 androidx-material-icons = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIcons" }
 realm-base = { module = "com.infomaniak.realm.kotlin:library-base", version.ref = "realm" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 adhan = { module = "com.batoulapps.adhan:adhan2", version.ref = "adhan" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -81,6 +85,8 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 realm = { id = "com.infomaniak.realm.kotlin", version.ref = "realm" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+room = { id = "androidx.room", version.ref = "room" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }

@@ -1,0 +1,800 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "320fe7f838183f7085d990279b549c51",
+    "entities": [
+      {
+        "tableName": "mosque_config",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `iqomahSubuh` INTEGER NOT NULL, `iqomahDzuhur` INTEGER NOT NULL, `iqomahAshar` INTEGER NOT NULL, `iqomahMaghrib` INTEGER NOT NULL, `iqomahIsya` INTEGER NOT NULL, `calculationMethodName` TEXT NOT NULL, `adzanLeadMinutes` INTEGER NOT NULL, `customBackgroundPath` TEXT NOT NULL, `transitionType` TEXT NOT NULL, `slideIntervalSeconds` INTEGER NOT NULL, `videoWaitUntilEnd` INTEGER NOT NULL, `showSettingsOnTv` INTEGER NOT NULL, `pinCode` TEXT NOT NULL, `offsetImsak` INTEGER NOT NULL, `offsetSubuh` INTEGER NOT NULL, `offsetSyuruq` INTEGER NOT NULL, `offsetDzuhur` INTEGER NOT NULL, `offsetAshar` INTEGER NOT NULL, `offsetMaghrib` INTEGER NOT NULL, `offsetIsya` INTEGER NOT NULL, `includeDefaultImage` INTEGER NOT NULL, `kemenagCityId` TEXT NOT NULL, `kemenagCityName` TEXT NOT NULL, `kemenagDuration` TEXT NOT NULL, `kemenagTargetDate` TEXT NOT NULL, `adzanFooterText` TEXT NOT NULL, `iqomahFooterText` TEXT NOT NULL, `standbyModeEnabled` INTEGER NOT NULL, `standbyStartTime` TEXT NOT NULL, `standbyEndTime` TEXT NOT NULL, `connectivityMode` TEXT NOT NULL, `remoteTvIp` TEXT NOT NULL, `dashboardRandomize` INTEGER NOT NULL, `dashboardTransitionType` TEXT NOT NULL, `dashboardTransitionInterval` INTEGER NOT NULL, `slideshowEnabled` INTEGER NOT NULL, `jumatEnabled` INTEGER NOT NULL, `jumatStartTime` TEXT NOT NULL, `jumatEndTime` TEXT NOT NULL, `offsetJumat` INTEGER NOT NULL, `jumatStandbyOnly` INTEGER NOT NULL, `jumatWarningText` TEXT NOT NULL, `murottalEnabled` INTEGER NOT NULL, `murottalStartDelay` INTEGER NOT NULL, `murottalAudioPaths` TEXT NOT NULL, `jumatSlideshowEnabled` INTEGER NOT NULL, `includeGlobalSlideshow` INTEGER NOT NULL, `selectedGlobalSlideIds` TEXT NOT NULL, `jumatTransitionType` TEXT NOT NULL, `jumatSlideIntervalSeconds` INTEGER NOT NULL, `jumatSlideIntervalUnit` TEXT NOT NULL, `jumatVideoWaitUntilEnd` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iqomahSubuh",
+            "columnName": "iqomahSubuh",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iqomahDzuhur",
+            "columnName": "iqomahDzuhur",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iqomahAshar",
+            "columnName": "iqomahAshar",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iqomahMaghrib",
+            "columnName": "iqomahMaghrib",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iqomahIsya",
+            "columnName": "iqomahIsya",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "calculationMethodName",
+            "columnName": "calculationMethodName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adzanLeadMinutes",
+            "columnName": "adzanLeadMinutes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "customBackgroundPath",
+            "columnName": "customBackgroundPath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transitionType",
+            "columnName": "transitionType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "slideIntervalSeconds",
+            "columnName": "slideIntervalSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "videoWaitUntilEnd",
+            "columnName": "videoWaitUntilEnd",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "showSettingsOnTv",
+            "columnName": "showSettingsOnTv",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "pinCode",
+            "columnName": "pinCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetImsak",
+            "columnName": "offsetImsak",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetSubuh",
+            "columnName": "offsetSubuh",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetSyuruq",
+            "columnName": "offsetSyuruq",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetDzuhur",
+            "columnName": "offsetDzuhur",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetAshar",
+            "columnName": "offsetAshar",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetMaghrib",
+            "columnName": "offsetMaghrib",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetIsya",
+            "columnName": "offsetIsya",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "includeDefaultImage",
+            "columnName": "includeDefaultImage",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kemenagCityId",
+            "columnName": "kemenagCityId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kemenagCityName",
+            "columnName": "kemenagCityName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kemenagDuration",
+            "columnName": "kemenagDuration",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kemenagTargetDate",
+            "columnName": "kemenagTargetDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "adzanFooterText",
+            "columnName": "adzanFooterText",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iqomahFooterText",
+            "columnName": "iqomahFooterText",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "standbyModeEnabled",
+            "columnName": "standbyModeEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "standbyStartTime",
+            "columnName": "standbyStartTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "standbyEndTime",
+            "columnName": "standbyEndTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectivityMode",
+            "columnName": "connectivityMode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "remoteTvIp",
+            "columnName": "remoteTvIp",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dashboardRandomize",
+            "columnName": "dashboardRandomize",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dashboardTransitionType",
+            "columnName": "dashboardTransitionType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dashboardTransitionInterval",
+            "columnName": "dashboardTransitionInterval",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "slideshowEnabled",
+            "columnName": "slideshowEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatEnabled",
+            "columnName": "jumatEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatStartTime",
+            "columnName": "jumatStartTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatEndTime",
+            "columnName": "jumatEndTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "offsetJumat",
+            "columnName": "offsetJumat",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatStandbyOnly",
+            "columnName": "jumatStandbyOnly",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatWarningText",
+            "columnName": "jumatWarningText",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "murottalEnabled",
+            "columnName": "murottalEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "murottalStartDelay",
+            "columnName": "murottalStartDelay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "murottalAudioPaths",
+            "columnName": "murottalAudioPaths",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatSlideshowEnabled",
+            "columnName": "jumatSlideshowEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "includeGlobalSlideshow",
+            "columnName": "includeGlobalSlideshow",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "selectedGlobalSlideIds",
+            "columnName": "selectedGlobalSlideIds",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatTransitionType",
+            "columnName": "jumatTransitionType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatSlideIntervalSeconds",
+            "columnName": "jumatSlideIntervalSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatSlideIntervalUnit",
+            "columnName": "jumatSlideIntervalUnit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "jumatVideoWaitUntilEnd",
+            "columnName": "jumatVideoWaitUntilEnd",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "announcements",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `content` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `position` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "content",
+            "columnName": "content",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "media",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `filePath` TEXT NOT NULL, `isVideo` INTEGER NOT NULL, `isUsed` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isVideo",
+            "columnName": "isVideo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isUsed",
+            "columnName": "isUsed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sortOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "friday_media",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `filePath` TEXT NOT NULL, `isVideo` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isVideo",
+            "columnName": "isVideo",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sortOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "dashboard_backgrounds",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `filePath` TEXT NOT NULL, `isUsed` INTEGER NOT NULL, `sortOrder` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "filePath",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isUsed",
+            "columnName": "isUsed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sortOrder",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "slideshow_schedules",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `activeDays` TEXT NOT NULL, `specificDates` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `day` TEXT NOT NULL, `isSpecificDate` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startTime",
+            "columnName": "startTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endTime",
+            "columnName": "endTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeDays",
+            "columnName": "activeDays",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "specificDates",
+            "columnName": "specificDates",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSpecificDate",
+            "columnName": "isSpecificDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "standby_schedules",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `startTime` TEXT NOT NULL, `endTime` TEXT NOT NULL, `activeDays` TEXT NOT NULL, `specificDates` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `day` TEXT NOT NULL, `isSpecificDate` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startTime",
+            "columnName": "startTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endTime",
+            "columnName": "endTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "activeDays",
+            "columnName": "activeDays",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "specificDates",
+            "columnName": "specificDates",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "day",
+            "columnName": "day",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isSpecificDate",
+            "columnName": "isSpecificDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "connected_devices",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`deviceId` TEXT NOT NULL, `deviceName` TEXT NOT NULL, `isMaster` INTEGER NOT NULL, `isAllowed` INTEGER NOT NULL, `authenticatedAt` INTEGER NOT NULL, `lastSeen` INTEGER NOT NULL, `isOnline` INTEGER NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`deviceId`))",
+        "fields": [
+          {
+            "fieldPath": "deviceId",
+            "columnName": "deviceId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deviceName",
+            "columnName": "deviceName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isMaster",
+            "columnName": "isMaster",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isAllowed",
+            "columnName": "isAllowed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "authenticatedAt",
+            "columnName": "authenticatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastSeen",
+            "columnName": "lastSeen",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isOnline",
+            "columnName": "isOnline",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "deviceId"
+          ]
+        }
+      },
+      {
+        "tableName": "kemenag_schedules",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`dateString` TEXT NOT NULL, `cityId` TEXT NOT NULL, `imsak` TEXT NOT NULL, `subuh` TEXT NOT NULL, `terbit` TEXT NOT NULL, `dhuha` TEXT NOT NULL, `dzuhur` TEXT NOT NULL, `ashar` TEXT NOT NULL, `maghrib` TEXT NOT NULL, `isya` TEXT NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`dateString`, `cityId`))",
+        "fields": [
+          {
+            "fieldPath": "dateString",
+            "columnName": "dateString",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cityId",
+            "columnName": "cityId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imsak",
+            "columnName": "imsak",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "subuh",
+            "columnName": "subuh",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "terbit",
+            "columnName": "terbit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dhuha",
+            "columnName": "dhuha",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dzuhur",
+            "columnName": "dzuhur",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ashar",
+            "columnName": "ashar",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "maghrib",
+            "columnName": "maghrib",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isya",
+            "columnName": "isya",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "dateString",
+            "cityId"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '320fe7f838183f7085d990279b549c51')"
+    ]
+  }
+}

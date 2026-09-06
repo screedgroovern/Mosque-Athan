@@ -2,7 +2,22 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    // Realm stays for one release: 2.0 reads the old database once and writes it into Room.
     alias(libs.plugins.realm)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+}
+
+/**
+ * Room writes a JSON snapshot of the schema here on every build, and they are committed.
+ *
+ * That is what makes a migration testable: a test can open version N, apply the migration, and
+ * assert the result matches version N+1 — against the schema as it actually shipped rather than as
+ * someone remembers it. Realm had none of this, which is why `deleteRealmIfMigrationNeeded()` was
+ * the only answer available and eighteen schema versions each wiped the device.
+ */
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 android {
@@ -98,6 +113,8 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.room.runtime)
+    ksp(libs.room.compiler)
     implementation(project(":core:model"))
     implementation(project(":core:prayer"))
     implementation(project(":core:protocol"))

@@ -1,6 +1,7 @@
 package com.groovernapp.mosqueathan.di
 
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.data.room.MosqueDatabase
 import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.data.remote.HttpUrlFetcher
 import com.groovernapp.mosqueathan.domain.MediaStore
@@ -42,6 +43,8 @@ import org.koin.dsl.module
  * reason to be abstracted.
  */
 val appModule = module {
+    single { MosqueDatabase.open(androidContext()) }
+    single { get<MosqueDatabase>().dao() }
     single { MosqueConfigRepository() }
     single<ConfigRepository> { get<MosqueConfigRepository>() }
     single<DisplayDataSource> { get<MosqueConfigRepository>() }
