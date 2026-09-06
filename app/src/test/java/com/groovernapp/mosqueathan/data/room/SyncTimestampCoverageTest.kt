@@ -1,111 +1,90 @@
 package com.groovernapp.mosqueathan.data.room
 
+import com.groovernapp.mosqueathan.protocol.SyncConflict
 import java.io.File
-import kotlin.reflect.KClass
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * `tableTimestamps()` is what a sync compares, and it names its tables in a hand-written SQL string.
+ * Every table a sync compares must actually be stamped when it changes.
  *
- * Room's compiler checks that each name is a table that exists. Nothing checks the other direction:
- * a table added later and not added to the UNION is simply never asked when it last changed, so a
- * controller and the display agree they are in sync while one of them holds newer rows. There is no
- * error, no empty result, and nothing on screen — the query returns seven perfectly good rows, as
- * it did before.
+ * This class used to parse the `UNION ALL` that `tableTimestamps()` was built from, because the
+ * newest write per table was computed as `MAX(lastModified)` over the rows. That query is gone: a
+ * maximum cannot see a deletion — remove the newest running text and the maximum falls back to the
+ * row beneath it, so two devices comparing notes conclude nothing happened and the deleted row
+ * comes back from the other side. There is a `table_stamps` table now, written by the repository.
  *
- * So this is the same shape as
- * [com.groovernapp.mosqueathan.server.ConfigPayloadCoverageTest]: every table is either compared or
- * deliberately left out for a stated reason, and the withheld list is checked for staleness so a
- * renamed table cannot inherit an excuse written for something else.
+ * So the invariant moved with it. It is no longer "is this table in the query" but "does anything
+ * ever stamp this table", and the failure it guards is the same either way: a section of settings
+ * that silently never participates in a sync. Nothing throws, the dialog simply never mentions it,
+ * and whichever side loses that section loses it every time.
  */
 class SyncTimestampCoverageTest {
 
-    private val roomDir = File("src/main/java/com/groovernapp/mosqueathan/data/room")
-    private val daoSource = File(roomDir, "MosqueDao.kt")
+    private val repositorySource =
+        File("src/main/java/com/groovernapp/mosqueathan/data/room/RoomConfigRepository.kt")
 
-    private val entities: List<KClass<*>> = listOf(
-        MosqueConfigEntity::class,
-        AnnouncementEntity::class,
-        MediaEntity::class,
-        FridayMediaEntity::class,
-        DashboardBackgroundEntity::class,
-        SlideshowScheduleEntity::class,
-        StandbyScheduleEntity::class,
-        ConnectedDeviceEntity::class,
-        KemenagScheduleEntity::class
-    )
+    private val daoSource =
+        File("src/main/java/com/groovernapp/mosqueathan/data/room/MosqueDao.kt")
 
-    /**
-     * Tables two devices do not need to agree about. Both reasons are stated on the DAO itself;
-     * they are repeated here because leaving a table out of the comparison has to be a decision.
-     */
-    private val withheld = mapOf(
-        "connected_devices" to "access control is server-authoritative and never syncs",
-        "kemenag_schedules" to "a cache the display re-fetches, not state a controller edits"
-    )
-
-    private fun declaredTableName(type: KClass<*>): String? =
-        Regex("""tableName\s*=\s*"(\w+)"""")
-            .find(File(roomDir, "${type.simpleName}.kt").readText())
-            ?.groupValues?.get(1)
-
-    /** The tables named in the `tableTimestamps()` query, taken from its own body. */
-    private fun comparedTables(): Set<String> {
-        val source = daoSource.readText()
-        val marker = source.indexOf("fun tableTimestamps()")
-        if (marker < 0) return emptySet()
-        val query = source.lastIndexOf("\"\"\"", marker).let { close ->
-            val open = source.lastIndexOf("\"\"\"", close - 1)
-            if (open < 0 || close < 0) return emptySet()
-            source.substring(open, close)
-        }
-        return Regex("""FROM\s+(\w+)""").findAll(query).map { it.groupValues[1] }.toSet()
+    @Test
+    fun theTestCanSeeTheSourcesItReads() {
+        // Without this the whole class passes the moment a file is renamed.
+        assertTrue("cannot read ${repositorySource.absolutePath}", repositorySource.isFile)
+        assertTrue("cannot read ${daoSource.absolutePath}", daoSource.isFile)
+        assertTrue("SyncConflict compares nothing", SyncConflict.COMPARED_TABLES.isNotEmpty())
     }
 
     @Test
-    fun theTestCanSeeTheDaoAndItsQuery() {
-        // Both halves, because a readable file whose query no longer parses would pass every
-        // comparison below by comparing against nothing.
-        assertTrue("cannot read ${daoSource.absolutePath}", daoSource.isFile)
+    fun theStampsTableIsWhatIsRead() {
+        // The point of the change: if this ever goes back to a maximum over the rows, deletions
+        // stop being visible to a sync and no other test would notice.
+        val dao = daoSource.readText()
         assertTrue(
-            "no tables parsed out of tableTimestamps() — the query or its name has moved",
-            comparedTables().isNotEmpty()
+            "tableTimestamps() no longer reads table_stamps; a MAX() over rows cannot see a deletion",
+            Regex("""FROM\s+table_stamps""").containsMatchIn(dao)
+        )
+        assertTrue(
+            "nothing writes a table stamp",
+            dao.contains("suspend fun stampTable(")
         )
     }
 
     @Test
-    fun everyTableIsEitherComparedOrDeliberatelyWithheld() {
-        val compared = comparedTables()
-        val missing = entities
-            .mapNotNull { declaredTableName(it) }
-            .filter { it !in compared && it !in withheld }
+    fun everyComparedTableIsStampedSomewhere() {
+        val source = repositorySource.readText()
+        // The repository names tables through constants, so resolve each to the literal it holds
+        // rather than searching for the table name directly — otherwise a renamed constant would
+        // read as a missing stamp and a renamed *table* would read as fine.
+        val constants = Regex("""const val (TABLE_\w+) = "(\w+)"""")
+            .findAll(source)
+            .associate { it.groupValues[2] to it.groupValues[1] }
+
+        val stamped = Regex("""touch\((TABLE_\w+)\)""").findAll(source).map { it.groupValues[1] }.toSet() +
+            // resetToDefaults stamps the whole compared set in one loop
+            if (Regex("""COMPARED_TABLES\.forEach\s*\{\s*touch\(""").containsMatchIn(source)) {
+                constants.values.toSet()
+            } else {
+                emptySet()
+            }
+
+        val missing = SyncConflict.COMPARED_TABLES.filter { table ->
+            val constant = constants[table]
+            constant == null || constant !in stamped
+        }
         assertTrue(
             "tables no sync will ever notice a change in: $missing\n" +
-                "Add them to tableTimestamps(), or withhold them with a reason.",
+                "Each needs a touch(TABLE_…) on every path that writes or deletes one of its rows.",
             missing.isEmpty()
         )
     }
 
     @Test
-    fun theQueryDoesNotNameATableThatNoLongerExists() {
-        val known = entities.mapNotNull { declaredTableName(it) }.toSet()
-        val unknown = comparedTables() - known
-        assertTrue("tableTimestamps() reads tables that are not entities: $unknown", unknown.isEmpty())
-    }
-
-    @Test
-    fun theWithheldListDoesNotNameATableThatNoLongerExists() {
-        val known = entities.mapNotNull { declaredTableName(it) }.toSet()
-        val stale = withheld.keys - known
-        assertTrue("`withheld` names tables that no longer exist: $stale", stale.isEmpty())
-    }
-
-    @Test
-    fun noWithheldTableIsAlsoCompared() {
-        // Contradiction rather than a gap, and it would leave the withheld reason describing
-        // behaviour the query does not have.
-        val both = withheld.keys.intersect(comparedTables())
-        assertTrue("these are withheld and compared at the same time: $both", both.isEmpty())
+    fun theRepositoryTakesItsTableListFromSyncConflict() {
+        // Two lists that must agree is how a table quietly stops being part of a sync.
+        assertTrue(
+            "RoomConfigRepository declares its own compared-table list instead of using SyncConflict's",
+            repositorySource.readText().contains("SyncConflict.COMPARED_TABLES")
+        )
     }
 }

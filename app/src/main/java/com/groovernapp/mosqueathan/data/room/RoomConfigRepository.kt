@@ -12,6 +12,7 @@ import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.domain.SlideshowSchedule
 import com.groovernapp.mosqueathan.domain.StandbySchedule
+import com.groovernapp.mosqueathan.protocol.SyncConflict
 import kotlin.time.Clock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -72,7 +73,7 @@ class RoomConfigRepository(
         // prayer times from defaults and briefly show the wrong ones.
         runBlocking {
             dao.getConfig()?.let { configState.value = it.toDomain() }
-            announcementsState.value = dao.getAnnouncements().map { it.toDomain() }
+            announcementsState.value = dao.getAnnouncements().filter { it.isActive }.map { it.toDomain() }
             mediaState.value = dao.getMedia().map { it.toDomain() }
             fridayMediaState.value = dao.getFridayMedia().map { it.toDomain() }
             backgroundsState.value = dao.getDashboardBackgrounds().map { it.toDomain() }
@@ -81,7 +82,9 @@ class RoomConfigRepository(
             devicesState.value = dao.getDevices().map { it.toDomain() }
         }
         scope.launch { dao.observeConfig().collect { e -> e?.let { configState.value = it.toDomain() } } }
-        scope.launch { dao.observeAnnouncements().collect { r -> announcementsState.value = r.map { it.toDomain() } } }
+        // Active only: this feeds the running text. The unfiltered query exists for the settings
+        // pane and the web payload, which need the switched-off ones to show their own switch.
+        scope.launch { dao.observeActiveAnnouncements().collect { r -> announcementsState.value = r.map { it.toDomain() } } }
         scope.launch { dao.observeMedia().collect { r -> mediaState.value = r.map { it.toDomain() } } }
         scope.launch { dao.observeFridayMedia().collect { r -> fridayMediaState.value = r.map { it.toDomain() } } }
         scope.launch { dao.observeDashboardBackgrounds().collect { r -> backgroundsState.value = r.map { it.toDomain() } } }
@@ -133,11 +136,73 @@ class RoomConfigRepository(
     private suspend fun editConfig(change: (MosqueConfigEntity) -> MosqueConfigEntity) {
         val current = dao.getConfig() ?: MosqueConfigEntity()
         dao.upsertConfig(change(current).copy(lastModified = now()))
+        touch(TABLE_CONFIG)
     }
 
     private fun <T> stamped(items: List<T>, stamp: (T, Long) -> T): List<T> {
         val at = now()
         return items.map { stamp(it, at) }
+    }
+
+    /**
+     * Records that [table] changed, which a deletion cannot say any other way.
+     *
+     * Row stamps alone cannot express a removal: delete the newest announcement and the maximum
+     * falls back to the row beneath it, so a sync comparing both sides sees no change and restores
+     * what was deleted. Every mutation below calls this, deletes included.
+     */
+    private suspend fun touch(table: String) {
+        dao.stampTable(TableStampEntity(tableName = table, lastModified = now()))
+    }
+
+
+    // Every side-table write goes through one of these, so each DAO call appears exactly once and
+    // the table stamp cannot be forgotten at a call site. The same reason config writes funnel
+    // through editConfig.
+
+    private suspend fun writeAnnouncements(items: List<AnnouncementEntity>) {
+        dao.upsertAnnouncements(items)
+        touch(TABLE_ANNOUNCEMENTS)
+    }
+
+    private suspend fun writeMedia(items: List<MediaEntity>) {
+        dao.upsertMedia(items)
+        touch(TABLE_MEDIA)
+    }
+
+    private suspend fun writeFridayMedia(items: List<FridayMediaEntity>) {
+        dao.upsertFridayMedia(items)
+        touch(TABLE_FRIDAY_MEDIA)
+    }
+
+    private suspend fun writeBackgrounds(items: List<DashboardBackgroundEntity>) {
+        dao.upsertDashboardBackgrounds(items)
+        touch(TABLE_BACKGROUNDS)
+    }
+
+    private suspend fun writeSlideshow(items: List<SlideshowScheduleEntity>) {
+        dao.upsertSlideshowSchedules(items)
+        touch(TABLE_SLIDESHOW)
+    }
+
+    private suspend fun writeStandby(items: List<StandbyScheduleEntity>) {
+        dao.upsertStandbySchedules(items)
+        touch(TABLE_STANDBY)
+    }
+
+    private suspend fun removeMedia(id: String) {
+        dao.deleteMedia(id)
+        touch(TABLE_MEDIA)
+    }
+
+    private suspend fun removeFridayMedia(id: String) {
+        dao.deleteFridayMedia(id)
+        touch(TABLE_FRIDAY_MEDIA)
+    }
+
+    private suspend fun removeBackground(id: String) {
+        dao.deleteDashboardBackground(id)
+        touch(TABLE_BACKGROUNDS)
     }
 
     // --- config writes -----------------------------------------------------------------------
@@ -150,9 +215,26 @@ class RoomConfigRepository(
         dao.getSlideshowSchedules().forEach { dao.deleteSlideshowSchedule(it.id) }
         dao.getStandbySchedules().forEach { dao.deleteStandbySchedule(it.id) }
         dao.clearAllKemenagSchedules()
+        // Paired devices go too. A reset clears the PIN, and leaving every previously approved
+        // phone approved against a now-blank PIN is the opposite of what a reset is for.
+        dao.getDevices().forEach { dao.deleteDevice(it.deviceId) }
         // A fresh row rather than a field-by-field reset, so a config field added later cannot be
         // left behind holding an old value.
         dao.upsertConfig(MosqueConfigEntity(lastModified = now()))
+        // The same default the Realm reset seeded. A television with an empty running-text bar
+        // looks broken rather than reset.
+        writeAnnouncements(
+            listOf(
+                AnnouncementEntity(
+                    id = "default_1",
+                    content = "Mari rapatkan shaf dan mohon handphone di-silent.",
+                    isActive = true,
+                    position = 0,
+                    lastModified = now()
+                )
+            )
+        )
+        COMPARED_TABLES.forEach { touch(it) }
     }
 
     override suspend fun updateConfig(config: MosqueConfig) = editConfig { current ->
@@ -193,6 +275,12 @@ class RoomConfigRepository(
             jumatSlideIntervalUnit = config.jumatSlideIntervalUnit,
             jumatVideoWaitUntilEnd = config.jumatVideoWaitUntilEnd
         )
+    }.also {
+        if (config.calculationMethodName == KEMENAG_METHOD && config.kemenagCityId.isNotEmpty()) {
+            triggerKemenagFetchForDuration(
+                config.kemenagCityId, config.kemenagDuration, config.kemenagTargetDate
+            )
+        }
     }
 
     @Suppress("LongParameterList")
@@ -247,7 +335,11 @@ class RoomConfigRepository(
                     ?: current.dashboardTransitionInterval
             )
         }
-        if (triggerFetch) triggerKemenagFetchForDuration(kemenagCityId, kemenagDuration, kemenagTargetDate)
+        // The same gate Realm used: asking the API for a schedule nobody reads is pointless when
+        // the method is not KEMENAG.
+        if (triggerFetch && calculationMethodName == KEMENAG_METHOD && kemenagCityId.isNotEmpty()) {
+            triggerKemenagFetchForDuration(kemenagCityId, kemenagDuration, kemenagTargetDate)
+        }
     }
 
     override suspend fun updateConnectivityMode(mode: String) =
@@ -291,12 +383,19 @@ class RoomConfigRepository(
 
     override suspend fun updatePinCode(newPin: String, changerDeviceId: String?) {
         editConfig { it.copy(pinCode = newPin) }
-        // Setting a PIN makes every other device unapproved; the one that set it stays in.
+        val at = now()
         val devices = dao.getDevices().map { device ->
-            device.copy(
-                isAllowed = newPin.isEmpty() || device.deviceId == changerDeviceId,
-                lastModified = now()
-            )
+            if (newPin.isEmpty()) {
+                // Clearing the PIN re-approves everything, and refreshes the clock it was approved
+                // at: SettingsServer expires a session older than an hour, so a device re-allowed
+                // with a stale authenticatedAt is expired again the moment a PIN comes back.
+                device.copy(isAllowed = true, authenticatedAt = at, lastModified = at)
+            } else {
+                // The master is spared along with whoever set the PIN. Without that, setting a PIN
+                // from a phone locks out the mosque's own paired tablet.
+                val keep = device.deviceId == changerDeviceId || device.isMaster
+                device.copy(isAllowed = keep, lastModified = at)
+            }
         }
         dao.upsertDevices(devices)
     }
@@ -305,7 +404,7 @@ class RoomConfigRepository(
 
     override suspend fun addAnnouncement(content: String, customId: String) {
         val position = (dao.getAnnouncements().maxOfOrNull { it.position } ?: -1) + 1
-        dao.upsertAnnouncements(
+        writeAnnouncements(
             listOf(
                 AnnouncementEntity(
                     id = customId.ifEmpty { UUID.randomUUID().toString() },
@@ -318,20 +417,26 @@ class RoomConfigRepository(
         )
     }
 
-    override suspend fun clearAnnouncements() = dao.clearAnnouncements()
+    override suspend fun clearAnnouncements() {
+        dao.clearAnnouncements()
+        touch(TABLE_ANNOUNCEMENTS)
+    }
 
-    override suspend fun deleteAnnouncement(id: String) = dao.deleteAnnouncement(id)
+    override suspend fun deleteAnnouncement(id: String) {
+        dao.deleteAnnouncement(id)
+        touch(TABLE_ANNOUNCEMENTS)
+    }
 
     override suspend fun updateAnnouncement(id: String, content: String, isActive: Boolean) {
         val existing = dao.getAnnouncements().firstOrNull { it.id == id } ?: return
-        dao.upsertAnnouncements(
+        writeAnnouncements(
             listOf(existing.copy(content = content, isActive = isActive, lastModified = now()))
         )
     }
 
     override suspend fun updateAnnouncementsOrder(ids: List<String>) {
         val byId = dao.getAnnouncements().associateBy { it.id }
-        dao.upsertAnnouncements(
+        writeAnnouncements(
             stamped(ids.mapIndexedNotNull { index, id -> byId[id]?.copy(position = index) }) { a, at ->
                 a.copy(lastModified = at)
             }
@@ -342,7 +447,7 @@ class RoomConfigRepository(
 
     override suspend fun addMediaItem(filePath: String, isVideo: Boolean) {
         val sortOrder = (dao.getMedia().maxOfOrNull { it.sortOrder } ?: -1) + 1
-        dao.upsertMedia(
+        writeMedia(
             listOf(
                 MediaEntity(
                     id = UUID.randomUUID().toString(), filePath = filePath, isVideo = isVideo,
@@ -354,23 +459,23 @@ class RoomConfigRepository(
 
     override suspend fun deleteMediaItem(id: String) {
         val path = dao.getMedia().firstOrNull { it.id == id }?.filePath
-        dao.deleteMedia(id)
+        removeMedia(id)
         path?.let { deleteFileIfNoLongerReferenced(it) }
     }
 
     override suspend fun updateMediaItemPath(id: String, filePath: String) {
         val existing = dao.getMedia().firstOrNull { it.id == id } ?: return
-        dao.upsertMedia(listOf(existing.copy(filePath = filePath, lastModified = now())))
+        writeMedia(listOf(existing.copy(filePath = filePath, lastModified = now())))
     }
 
     override suspend fun updateMediaItemUsed(id: String, isUsed: Boolean) {
         val existing = dao.getMedia().firstOrNull { it.id == id } ?: return
-        dao.upsertMedia(listOf(existing.copy(isUsed = isUsed, lastModified = now())))
+        writeMedia(listOf(existing.copy(isUsed = isUsed, lastModified = now())))
     }
 
     override suspend fun updateMediaListOrder(ids: List<String>) {
         val byId = dao.getMedia().associateBy { it.id }
-        dao.upsertMedia(
+        writeMedia(
             stamped(ids.mapIndexedNotNull { index, id -> byId[id]?.copy(sortOrder = index) }) { m, at ->
                 m.copy(lastModified = at)
             }
@@ -381,7 +486,7 @@ class RoomConfigRepository(
 
     override suspend fun addFridayMedia(filePath: String, isVideo: Boolean) {
         val sortOrder = (dao.getFridayMedia().maxOfOrNull { it.sortOrder } ?: -1) + 1
-        dao.upsertFridayMedia(
+        writeFridayMedia(
             listOf(
                 FridayMediaEntity(
                     id = UUID.randomUUID().toString(), filePath = filePath,
@@ -393,18 +498,18 @@ class RoomConfigRepository(
 
     override suspend fun deleteFridayMedia(id: String) {
         val path = dao.getFridayMedia().firstOrNull { it.id == id }?.filePath
-        dao.deleteFridayMedia(id)
+        removeFridayMedia(id)
         path?.let { deleteFileIfNoLongerReferenced(it) }
     }
 
     override suspend fun updateFridayMediaItemPath(id: String, filePath: String) {
         val existing = dao.getFridayMedia().firstOrNull { it.id == id } ?: return
-        dao.upsertFridayMedia(listOf(existing.copy(filePath = filePath, lastModified = now())))
+        writeFridayMedia(listOf(existing.copy(filePath = filePath, lastModified = now())))
     }
 
     override suspend fun updateFridayMediaOrder(ids: List<String>) {
         val byId = dao.getFridayMedia().associateBy { it.id }
-        dao.upsertFridayMedia(
+        writeFridayMedia(
             stamped(ids.mapIndexedNotNull { index, id -> byId[id]?.copy(sortOrder = index) }) { m, at ->
                 m.copy(lastModified = at)
             }
@@ -415,7 +520,7 @@ class RoomConfigRepository(
 
     override suspend fun addDashboardBackground(filePath: String, customId: String) {
         val sortOrder = (dao.getDashboardBackgrounds().maxOfOrNull { it.sortOrder } ?: -1) + 1
-        dao.upsertDashboardBackgrounds(
+        writeBackgrounds(
             listOf(
                 DashboardBackgroundEntity(
                     id = customId.ifEmpty { UUID.randomUUID().toString() },
@@ -427,18 +532,18 @@ class RoomConfigRepository(
 
     override suspend fun deleteDashboardBackground(id: String) {
         val path = dao.getDashboardBackgrounds().firstOrNull { it.id == id }?.filePath
-        dao.deleteDashboardBackground(id)
+        removeBackground(id)
         path?.let { deleteFileIfNoLongerReferenced(it) }
     }
 
     override suspend fun updateDashboardBackgroundUsed(id: String, isUsed: Boolean) {
         val existing = dao.getDashboardBackgrounds().firstOrNull { it.id == id } ?: return
-        dao.upsertDashboardBackgrounds(listOf(existing.copy(isUsed = isUsed, lastModified = now())))
+        writeBackgrounds(listOf(existing.copy(isUsed = isUsed, lastModified = now())))
     }
 
     override suspend fun updateDashboardBackgroundOrder(ids: List<String>) {
         val byId = dao.getDashboardBackgrounds().associateBy { it.id }
-        dao.upsertDashboardBackgrounds(
+        writeBackgrounds(
             stamped(ids.mapIndexedNotNull { index, id -> byId[id]?.copy(sortOrder = index) }) { b, at ->
                 b.copy(lastModified = at)
             }
@@ -455,7 +560,7 @@ class RoomConfigRepository(
         customId: String
     ) {
         val at = now()
-        dao.upsertSlideshowSchedules(
+        writeSlideshow(
             listOf(
                 SlideshowScheduleEntity(
                     id = customId.ifEmpty { UUID.randomUUID().toString() },
@@ -468,7 +573,10 @@ class RoomConfigRepository(
         )
     }
 
-    override suspend fun deleteSlideshowSchedule(id: String) = dao.deleteSlideshowSchedule(id)
+    override suspend fun deleteSlideshowSchedule(id: String) {
+        dao.deleteSlideshowSchedule(id)
+        touch(TABLE_SLIDESHOW)
+    }
 
     override suspend fun updateSlideshowScheduleTime(id: String, startTime: String, endTime: String) =
         editSlideshow(id) { it.copy(startTime = startTime, endTime = endTime) }
@@ -487,7 +595,7 @@ class RoomConfigRepository(
         customId: String
     ) {
         val at = now()
-        dao.upsertStandbySchedules(
+        writeStandby(
             listOf(
                 StandbyScheduleEntity(
                     id = customId.ifEmpty { UUID.randomUUID().toString() },
@@ -500,7 +608,10 @@ class RoomConfigRepository(
         )
     }
 
-    override suspend fun deleteStandbySchedule(id: String) = dao.deleteStandbySchedule(id)
+    override suspend fun deleteStandbySchedule(id: String) {
+        dao.deleteStandbySchedule(id)
+        touch(TABLE_STANDBY)
+    }
 
     override suspend fun updateStandbyScheduleTime(id: String, startTime: String, endTime: String) =
         editStandby(id) { it.copy(startTime = startTime, endTime = endTime) }
@@ -513,12 +624,12 @@ class RoomConfigRepository(
 
     private suspend fun editSlideshow(id: String, change: (SlideshowScheduleEntity) -> SlideshowScheduleEntity) {
         val existing = dao.getSlideshowSchedules().firstOrNull { it.id == id } ?: return
-        dao.upsertSlideshowSchedules(listOf(change(existing).copy(lastModified = now())))
+        writeSlideshow(listOf(change(existing).copy(lastModified = now())))
     }
 
     private suspend fun editStandby(id: String, change: (StandbyScheduleEntity) -> StandbyScheduleEntity) {
         val existing = dao.getStandbySchedules().firstOrNull { it.id == id } ?: return
-        dao.upsertStandbySchedules(listOf(change(existing).copy(lastModified = now())))
+        writeStandby(listOf(change(existing).copy(lastModified = now())))
     }
 
     // --- devices -----------------------------------------------------------------------------
@@ -575,5 +686,20 @@ class RoomConfigRepository(
         if (!stillReferenced) {
             runCatching { java.io.File(path).takeIf { it.exists() }?.delete() }
         }
+    }
+
+    private companion object {
+        const val KEMENAG_METHOD = "KEMENAG"
+
+        // The names SyncConflict compares, taken from it rather than repeated. Two lists that must
+        // agree is how a table quietly stops being part of a sync.
+        val COMPARED_TABLES = SyncConflict.COMPARED_TABLES
+        const val TABLE_CONFIG = "mosque_config"
+        const val TABLE_ANNOUNCEMENTS = "announcements"
+        const val TABLE_MEDIA = "media"
+        const val TABLE_FRIDAY_MEDIA = "friday_media"
+        const val TABLE_BACKGROUNDS = "dashboard_backgrounds"
+        const val TABLE_SLIDESHOW = "slideshow_schedules"
+        const val TABLE_STANDBY = "standby_schedules"
     }
 }

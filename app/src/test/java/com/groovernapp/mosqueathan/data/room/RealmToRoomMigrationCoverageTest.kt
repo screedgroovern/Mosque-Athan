@@ -45,7 +45,10 @@ class RealmToRoomMigrationCoverageTest {
     private val notMigrated = mapOf(
         ConnectedDeviceEntity::class to
             "access-control bookkeeping the display rebuilds as devices register; the live display " +
-            "holds eighteen rows, most for browsers closed months ago"
+            "holds eighteen rows, most for browsers closed months ago",
+        TableStampEntity::class to
+            "Room-only, and nothing to carry: the migration stamps every table with its own clock " +
+            "anyway, so there is no earlier value that could be more truthful"
     )
 
     private val source: String by lazy { migrationSource.readText() }

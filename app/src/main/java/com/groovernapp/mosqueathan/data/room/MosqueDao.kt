@@ -37,6 +37,17 @@ interface MosqueDao {
     @Query("SELECT * FROM announcements ORDER BY position ASC")
     fun observeAnnouncements(): Flow<List<AnnouncementEntity>>
 
+    /**
+     * Only the ones switched on, which is what the running text renders.
+     *
+     * Separate from [observeAnnouncements] because the settings pane and the web payload need the
+     * switched-off ones too — they are what the toggle toggles. Serving the unfiltered list to the
+     * display would put every disabled announcement back on the television with its own switch
+     * still reading off.
+     */
+    @Query("SELECT * FROM announcements WHERE isActive = 1 ORDER BY position ASC")
+    fun observeActiveAnnouncements(): Flow<List<AnnouncementEntity>>
+
     @Query("SELECT * FROM announcements ORDER BY position ASC")
     suspend fun getAnnouncements(): List<AnnouncementEntity>
 
@@ -193,31 +204,16 @@ interface MosqueDao {
     }
 
     /**
-     * The newest write in each table, which is what a sync compares.
+     * The newest change in each table, which is what a sync compares.
      *
-     * One query rather than nine round trips, and it returns a row per table so a caller can see
-     * *which* table moved rather than only that something did — the difference between "the display
-     * and this phone disagree" and "you changed the Friday schedule; the display changed the
-     * running text".
+     * Read from `table_stamps` rather than computed as `MAX(lastModified)` over the rows, because
+     * a maximum cannot see a deletion: remove the newest running text and the maximum falls back to
+     * the row beneath it, so two devices comparing notes conclude nothing happened and the deleted
+     * row comes back from the other side.
      */
-    @Query(
-        """
-        SELECT 'mosque_config' AS tableName, COALESCE(MAX(lastModified), 0) AS lastModified FROM mosque_config
-        UNION ALL SELECT 'announcements', COALESCE(MAX(lastModified), 0) FROM announcements
-        UNION ALL SELECT 'media', COALESCE(MAX(lastModified), 0) FROM media
-        UNION ALL SELECT 'friday_media', COALESCE(MAX(lastModified), 0) FROM friday_media
-        UNION ALL SELECT 'dashboard_backgrounds', COALESCE(MAX(lastModified), 0) FROM dashboard_backgrounds
-        UNION ALL SELECT 'slideshow_schedules', COALESCE(MAX(lastModified), 0) FROM slideshow_schedules
-        UNION ALL SELECT 'standby_schedules', COALESCE(MAX(lastModified), 0) FROM standby_schedules
-        """
-    )
-    suspend fun tableTimestamps(): List<TableTimestamp>
-}
+    @Query("SELECT * FROM table_stamps")
+    suspend fun tableTimestamps(): List<TableStampEntity>
 
-/** One table's newest write. `connected_devices` and `kemenag_schedules` are excluded: access
- *  control is server-authoritative and Kemenag rows are a cache that is re-fetched, so neither is
- *  something two devices need to agree about. */
-data class TableTimestamp(
-    val tableName: String,
-    val lastModified: Long
-)
+    @Upsert
+    suspend fun stampTable(stamp: TableStampEntity)
+}

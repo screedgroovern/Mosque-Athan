@@ -41,7 +41,8 @@ class RoomSchemaTest {
         SlideshowScheduleEntity::class,
         StandbyScheduleEntity::class,
         ConnectedDeviceEntity::class,
-        KemenagScheduleEntity::class
+        KemenagScheduleEntity::class,
+        TableStampEntity::class
     )
 
     /** The one entity whose key is deliberately composite; see `KemenagScheduleEntity`'s KDoc. */

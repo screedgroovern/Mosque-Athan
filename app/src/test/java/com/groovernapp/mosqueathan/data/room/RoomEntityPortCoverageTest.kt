@@ -47,6 +47,20 @@ class RoomEntityPortCoverageTest {
      * Each Room entity, paired with its Realm counterpart by simple name, plus any primary-key
      * change and the reason for it. A key that changes without a reason here is the bug.
      */
+    /**
+     * Tables Room introduces that Realm never had.
+     *
+     * Named rather than merely absent from [ported], because "not ported" and "forgotten" look
+     * identical to a coverage check otherwise — and forgetting an entity is exactly what this
+     * class exists to catch.
+     */
+    private val newInRoom = mapOf(
+        TableStampEntity::class to
+            "records when each table last changed, deletions included, which MAX(lastModified) " +
+            "over the rows cannot express: delete the newest row and the maximum falls back to " +
+            "the one beneath it, so a sync sees no change and restores what was deleted"
+    )
+
     private val ported = listOf(
         Ported(MosqueConfigEntity::class),
         Ported(AnnouncementEntity::class),
@@ -120,7 +134,7 @@ class RoomEntityPortCoverageTest {
             .map { it.groupValues[1] }
             .toSet()
         assertTrue("MosqueDatabase declares no entities — the parser missed them", declared.isNotEmpty())
-        val untested = declared - ported.map { it.name }.toSet()
+        val untested = declared - ported.map { it.name }.toSet() - newInRoom.keys.mapNotNull { it.simpleName }.toSet()
         assertTrue("entities in MosqueDatabase that this test never checks: $untested", untested.isEmpty())
     }
 

@@ -28,7 +28,8 @@ import androidx.room.RoomDatabase
         SlideshowScheduleEntity::class,
         StandbyScheduleEntity::class,
         ConnectedDeviceEntity::class,
-        KemenagScheduleEntity::class
+        KemenagScheduleEntity::class,
+        TableStampEntity::class
     ],
     version = 1,
     exportSchema = true

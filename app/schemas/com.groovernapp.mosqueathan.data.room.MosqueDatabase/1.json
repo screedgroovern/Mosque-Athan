@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "109b62ea24e857b06b25de27e664b074",
+    "identityHash": "a8595df2106d7074128baae523765cf6",
     "entities": [
       {
         "tableName": "mosque_config",
@@ -807,11 +807,35 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_kemenag_schedules_cityId` ON `${TABLE_NAME}` (`cityId`)"
           }
         ]
+      },
+      {
+        "tableName": "table_stamps",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tableName` TEXT NOT NULL, `lastModified` INTEGER NOT NULL, PRIMARY KEY(`tableName`))",
+        "fields": [
+          {
+            "fieldPath": "tableName",
+            "columnName": "tableName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastModified",
+            "columnName": "lastModified",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "tableName"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '109b62ea24e857b06b25de27e664b074')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a8595df2106d7074128baae523765cf6')"
     ]
   }
 }
