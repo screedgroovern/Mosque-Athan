@@ -10,6 +10,7 @@ import com.groovernapp.mosqueathan.domain.KemenagSchedule
 import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.domain.PrayerType
+import com.groovernapp.mosqueathan.domain.ServerDataSource
 import com.groovernapp.mosqueathan.domain.SlideshowSchedule
 import com.groovernapp.mosqueathan.domain.StandbySchedule
 import com.groovernapp.mosqueathan.protocol.SyncConflict
@@ -20,6 +21,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -57,7 +60,7 @@ class RoomConfigRepository(
     private val kemenag: KemenagFetcher = KemenagFetcher(),
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
     private val now: () -> Long = { Clock.System.now().toEpochMilliseconds() }
-) : ConfigRepository {
+) : ServerDataSource {
 
     private val configState = MutableStateFlow(MosqueConfig())
     private val announcementsState = MutableStateFlow<List<Announcement>>(emptyList())
@@ -67,6 +70,15 @@ class RoomConfigRepository(
     private val slideshowState = MutableStateFlow<List<SlideshowSchedule>>(emptyList())
     private val standbyState = MutableStateFlow<List<StandbySchedule>>(emptyList())
     private val devicesState = MutableStateFlow<List<ConnectedDevice>>(emptyList())
+
+    /**
+     * The configured city's Kemenag days, keyed `cityId|date`.
+     *
+     * Cached for the same reason the rest is: `KemenagScheduleSource.scheduleFor` is not `suspend`
+     * because `PrayerCalculator` is not, and the display asks it for today's row while computing a
+     * schedule. Only the configured city is held — the others are stale rows nobody reads.
+     */
+    private val kemenagState = MutableStateFlow<Map<String, KemenagSchedule>>(emptyMap())
 
     init {
         // One blocking read, once. Without it the display's first coordinator tick would compute
@@ -80,6 +92,9 @@ class RoomConfigRepository(
             slideshowState.value = dao.getSlideshowSchedules().map { it.toDomain() }
             standbyState.value = dao.getStandbySchedules().map { it.toDomain() }
             devicesState.value = dao.getDevices().map { it.toDomain() }
+            configState.value.kemenagCityId.takeIf { it.isNotEmpty() }?.let { city ->
+                kemenagState.value = dao.getKemenagSchedules(city).associate { it.key() to it.toDomain() }
+            }
         }
         scope.launch { dao.observeConfig().collect { e -> e?.let { configState.value = it.toDomain() } } }
         // Active only: this feeds the running text. The unfiltered query exists for the settings
@@ -91,7 +106,22 @@ class RoomConfigRepository(
         scope.launch { dao.observeSlideshowSchedules().collect { r -> slideshowState.value = r.map { it.toDomain() } } }
         scope.launch { dao.observeStandbySchedules().collect { r -> standbyState.value = r.map { it.toDomain() } } }
         scope.launch { dao.observeDevices().collect { r -> devicesState.value = r.map { it.toDomain() } } }
+        // Follows the configured city: collectLatest cancels the previous city's collection, so
+        // changing city cannot leave two flows writing the same cache.
+        scope.launch {
+            configState.map { it.kemenagCityId }.distinctUntilChanged().collectLatest { city ->
+                if (city.isEmpty()) {
+                    kemenagState.value = emptyMap()
+                } else {
+                    dao.observeKemenagSchedules(city).collect { rows ->
+                        kemenagState.value = rows.associate { it.key() to it.toDomain() }
+                    }
+                }
+            }
+        }
     }
+
+    private fun KemenagScheduleEntity.key(): String = "$cityId|$dateString"
 
     // --- reads -------------------------------------------------------------------------------
 
@@ -641,6 +671,94 @@ class RoomConfigRepository(
         dao.upsertDevices(
             dao.getDevices().map { it.copy(isMaster = it.deviceId == id, lastModified = at) }
         )
+    }
+
+    // --- what only the server needs ----------------------------------------------------------
+
+    override fun getActiveAnnouncements(): List<Announcement> = announcementsState.value
+
+    override fun getConnectedDevices(): List<ConnectedDevice> = devicesState.value
+
+    override fun getKemenagSchedules(cityId: String): List<KemenagSchedule> =
+        kemenagState.value.values.filter { it.cityId == cityId }.sortedBy { it.dateString }
+
+    /**
+     * Today's row for the calculator, read from the cache rather than the database.
+     *
+     * Not on any interface, exactly as on the Realm class: `RoomKemenagScheduleSource` adapts it to
+     * the `KemenagScheduleSource` seam that `PrayerCalculator` consumes, and nothing else should
+     * reach for it.
+     */
+    fun getKemenagSchedule(cityId: String, dateString: String): KemenagSchedule? =
+        kemenagState.value["$cityId|$dateString"]
+
+    /**
+     * The first device ever seen becomes master, and a device is allowed when it is that first one
+     * or when no master exists yet — which is how a mosque with no PIN stays usable without anyone
+     * approving anything. Carried over from the Realm implementation unchanged.
+     */
+    override suspend fun registerDevice(id: String, name: String): ConnectedDevice {
+        val at = now()
+        val existing = dao.getDevice(id)
+        val row = if (existing != null) {
+            existing.copy(deviceName = name, lastSeen = at, isOnline = true, lastModified = at)
+        } else {
+            val all = dao.getDevices()
+            val isFirst = all.isEmpty()
+            ConnectedDeviceEntity(
+                deviceId = id,
+                deviceName = name,
+                isMaster = isFirst,
+                isAllowed = isFirst || all.none { it.isMaster },
+                authenticatedAt = at,
+                lastSeen = at,
+                isOnline = true,
+                lastModified = at
+            )
+        }
+        dao.upsertDevices(listOf(row))
+        return row.toDomain()
+    }
+
+    override suspend fun updateDeviceAllowed(id: String, allowed: Boolean) {
+        val existing = dao.getDevice(id) ?: return
+        val at = now()
+        dao.upsertDevices(
+            listOf(
+                existing.copy(
+                    isAllowed = allowed,
+                    // Approving restarts the session clock; SettingsServer expires anything older
+                    // than an hour, so approving without this expires immediately.
+                    authenticatedAt = if (allowed) at else existing.authenticatedAt,
+                    lastModified = at
+                )
+            )
+        )
+    }
+
+    override suspend fun updateDeviceOnlineStatus(id: String, online: Boolean) {
+        val existing = dao.getDevice(id) ?: return
+        val at = now()
+        dao.upsertDevices(
+            listOf(
+                existing.copy(
+                    isOnline = online,
+                    lastSeen = if (online) at else existing.lastSeen,
+                    lastModified = at
+                )
+            )
+        )
+    }
+
+    override suspend fun saveKemenagSchedules(schedules: List<KemenagSchedule>) {
+        if (schedules.isEmpty()) return
+        val at = now()
+        dao.upsertKemenagSchedules(schedules.map { it.toEntity(at) })
+    }
+
+    override suspend fun updateDashboardBackgroundPath(id: String, filePath: String) {
+        val existing = dao.getDashboardBackgrounds().firstOrNull { it.id == id } ?: return
+        writeBackgrounds(listOf(existing.copy(filePath = filePath, lastModified = now())))
     }
 
     // --- Kemenag -----------------------------------------------------------------------------

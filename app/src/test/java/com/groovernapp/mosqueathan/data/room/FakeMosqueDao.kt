@@ -299,6 +299,11 @@ class FakeMosqueDao(private val observable: Boolean = true) : MosqueDao {
         return kemenag.value.firstOrNull { it.cityId == cityId && it.dateString == date }
     }
 
+    override suspend fun getKemenagSchedules(cityId: String): List<KemenagScheduleEntity> {
+        suspendReads++
+        return kemenag.value.filter { it.cityId == cityId }.sortedBy { it.dateString }
+    }
+
     override suspend fun upsertKemenagSchedules(items: List<KemenagScheduleEntity>) {
         // The composite key is the pair, which is the change this schema made; keying the fake on
         // dateString alone would reproduce the bug it was corrected for.

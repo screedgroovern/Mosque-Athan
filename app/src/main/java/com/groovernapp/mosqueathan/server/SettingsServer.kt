@@ -5,7 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Base64
 import android.util.Log
-import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.domain.ServerDataSource
 import com.groovernapp.mosqueathan.data.isPathOwned
 import com.groovernapp.mosqueathan.domain.KemenagSchedule
 import com.groovernapp.mosqueathan.domain.DashboardBackground
@@ -22,7 +22,16 @@ import com.groovernapp.mosqueathan.util.ImageUtils
 
 class SettingsServer(
     private val context: Context,
-    private val repository: MosqueConfigRepository
+    /**
+     * Deliberately the interface now, where this used to take the concrete Realm class.
+     *
+     * That was a stated decision — the server is Android-only and never being ported, so
+     * abstracting it bought nothing. It stopped being true the moment there were two stores: the
+     * concrete type was the last thing pinning the app to Realm, because a Room repository could
+     * satisfy every settings member and still be unusable here. [ServerDataSource] is what the
+     * server actually needs, and either store can supply it.
+     */
+    private val repository: ServerDataSource
 ) {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())

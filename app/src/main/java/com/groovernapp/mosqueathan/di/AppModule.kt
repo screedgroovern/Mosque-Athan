@@ -1,6 +1,9 @@
 package com.groovernapp.mosqueathan.di
 
 import com.groovernapp.mosqueathan.data.MosqueConfigRepository
+import com.groovernapp.mosqueathan.data.room.RoomConfigRepository
+import com.groovernapp.mosqueathan.data.room.RoomKemenagScheduleSource
+import com.groovernapp.mosqueathan.domain.ServerDataSource
 import com.groovernapp.mosqueathan.data.room.MosqueDatabase
 import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.data.remote.HttpUrlFetcher
@@ -46,10 +49,30 @@ val appModule = module {
     single { MosqueDatabase.open(androidContext()) }
     single { get<MosqueDatabase>().dao() }
     single { MosqueConfigRepository() }
-    single<ConfigRepository> { get<MosqueConfigRepository>() }
-    single<DisplayDataSource> { get<MosqueConfigRepository>() }
-    single<HijriDateSource> { HijriDateFormatter }
+    single { RoomConfigRepository(get()) }
+
+    // ---------------------------------------------------------------------------------------
+    // Which store the app runs on, decided here and nowhere else.
+    //
+    // Both repositories satisfy ServerDataSource, so switching is these two lines and reverting
+    // is the same two — which is the only responsible way to move the storage under a display
+    // running in a mosque. Koin builds a single lazily, so whichever is not chosen is never
+    // constructed and its database is never opened.
+    //
+    // Still Realm. Room has the schema, a tested data migration, a full ConfigRepository and the
+    // eight server members, but the switch itself has not been driven on hardware yet, and the
+    // display's prayer times read through KemenagScheduleSource — the one binding whose being
+    // wrong would be wrong on a television at adzan.
+    single<ServerDataSource> { get<MosqueConfigRepository>() }
     single<KemenagScheduleSource> { RealmKemenagScheduleSource(get()) }
+    // single<ServerDataSource> { get<RoomConfigRepository>() }
+    // single<KemenagScheduleSource> { RoomKemenagScheduleSource(get()) }
+    // ---------------------------------------------------------------------------------------
+
+    // Everything else resolves from whichever was chosen above, so no consumer names a store.
+    single<ConfigRepository> { get<ServerDataSource>() }
+    single<DisplayDataSource> { get<ServerDataSource>() }
+    single<HijriDateSource> { HijriDateFormatter }
     single { RemoteActionSender(get()) }
     single<RemoteActionSink> { get<RemoteActionSender>() }
     single { MediaFileStore(androidContext()) }

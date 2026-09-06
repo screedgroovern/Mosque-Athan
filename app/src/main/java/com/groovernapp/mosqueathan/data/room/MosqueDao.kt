@@ -155,6 +155,9 @@ interface MosqueDao {
     @Query("SELECT * FROM kemenag_schedules WHERE cityId = :cityId AND dateString = :date LIMIT 1")
     suspend fun getKemenagSchedule(cityId: String, date: String): KemenagScheduleEntity?
 
+    @Query("SELECT * FROM kemenag_schedules WHERE cityId = :cityId ORDER BY dateString ASC")
+    suspend fun getKemenagSchedules(cityId: String): List<KemenagScheduleEntity>
+
     @Upsert
     suspend fun upsertKemenagSchedules(items: List<KemenagScheduleEntity>)
 

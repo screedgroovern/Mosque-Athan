@@ -19,6 +19,7 @@ import com.groovernapp.mosqueathan.domain.Announcement
 import com.groovernapp.mosqueathan.domain.ConnectedDevice
 import com.groovernapp.mosqueathan.domain.DashboardBackground
 import com.groovernapp.mosqueathan.domain.ConfigRepository
+import com.groovernapp.mosqueathan.domain.ServerDataSource
 import com.groovernapp.mosqueathan.domain.FridayMedia
 import com.groovernapp.mosqueathan.domain.KemenagSchedule
 import com.groovernapp.mosqueathan.domain.parseKemenagMonth
@@ -42,7 +43,7 @@ import kotlin.time.Clock
  * nothing touching settings could be constructed in a test without opening a real
  * database — which is why the Kemenag calculation test used to need one.
  */
-class MosqueConfigRepository : ConfigRepository {
+class MosqueConfigRepository : ServerDataSource {
     private val config = RealmConfiguration.Builder(schema = setOf(MosqueConfigEntity::class, AnnouncementEntity::class, MediaEntity::class, FridayMediaEntity::class, ConnectedDeviceEntity::class, KemenagScheduleEntity::class, SlideshowScheduleEntity::class, StandbyScheduleEntity::class, DashboardBackgroundEntity::class))
         .name("mosque_athan.realm")
         .schemaVersion(18)
@@ -818,7 +819,7 @@ class MosqueConfigRepository : ConfigRepository {
             .map { result -> result.list.sortedBy { ann -> ann.position }.map { it.toDomain() } }
     }
 
-    fun getActiveAnnouncements(): List<Announcement> {
+    override fun getActiveAnnouncements(): List<Announcement> {
         return realm.query<AnnouncementEntity>("isActive == true").find()
             .sortedBy { it.position }.map { it.toDomain() }
     }
@@ -879,11 +880,11 @@ class MosqueConfigRepository : ConfigRepository {
             .map { result -> result.list.map { it.toDomain() } }
     }
 
-    fun getConnectedDevices(): List<ConnectedDevice> {
+    override fun getConnectedDevices(): List<ConnectedDevice> {
         return realm.query<ConnectedDeviceEntity>().find().map { it.toDomain() }
     }
 
-    suspend fun registerDevice(id: String, name: String): ConnectedDevice {
+    override suspend fun registerDevice(id: String, name: String): ConnectedDevice {
         return realm.write {
             val existing = query<ConnectedDeviceEntity>("deviceId == $0", id).first().find()
             if (existing != null) {
@@ -907,7 +908,7 @@ class MosqueConfigRepository : ConfigRepository {
         }
     }
 
-    suspend fun updateDeviceOnlineStatus(id: String, online: Boolean) {
+    override suspend fun updateDeviceOnlineStatus(id: String, online: Boolean) {
         realm.write {
             val device = query<ConnectedDeviceEntity>("deviceId == $0", id).first().find()
             if (device != null) {
@@ -932,7 +933,7 @@ class MosqueConfigRepository : ConfigRepository {
         }
     }
 
-    suspend fun updateDeviceAllowed(id: String, allowed: Boolean) {
+    override suspend fun updateDeviceAllowed(id: String, allowed: Boolean) {
         realm.write {
             val device = query<ConnectedDeviceEntity>("deviceId == $0", id).first().find()
             if (device != null) {
@@ -1070,7 +1071,7 @@ class MosqueConfigRepository : ConfigRepository {
         }
     }
 
-    suspend fun saveKemenagSchedules(schedules: List<KemenagSchedule>) {
+    override suspend fun saveKemenagSchedules(schedules: List<KemenagSchedule>) {
         realm.write {
             for (schedule in schedules) {
                 val existing = query<KemenagScheduleEntity>("dateString == $0 AND cityId == $1", schedule.dateString, schedule.cityId).first().find()
@@ -1097,7 +1098,7 @@ class MosqueConfigRepository : ConfigRepository {
             .map { result -> result.list.sortedBy { s -> s.dateString }.map { it.toDomain() } }
     }
 
-    fun getKemenagSchedules(cityId: String): List<KemenagSchedule> {
+    override fun getKemenagSchedules(cityId: String): List<KemenagSchedule> {
         val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
         return realm.query<KemenagScheduleEntity>("cityId == $0 AND dateString >= $1", cityId, todayStr).find().sortedBy { it.dateString }.map { it.toDomain() }
     }
@@ -1134,7 +1135,7 @@ class MosqueConfigRepository : ConfigRepository {
         removedPath?.let { deleteFileIfNoLongerReferenced(it) }
     }
 
-    suspend fun updateDashboardBackgroundPath(id: String, filePath: String) {
+    override suspend fun updateDashboardBackgroundPath(id: String, filePath: String) {
         realm.write {
             val item = query<DashboardBackgroundEntity>("id == $0", id).first().find()
             if (item != null) {

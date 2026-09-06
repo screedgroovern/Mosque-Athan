@@ -36,21 +36,20 @@ class RoomSwitchReadinessTest {
     )
 
     /**
-     * Members those consumers call that `RoomConfigRepository` does not have, with what each is
-     * for. Nine, and none of them is hard — they are simply not written yet.
+     * Members those consumers call that `RoomConfigRepository` does not have.
+     *
+     * **Empty, and that is the assertion.** It held nine entries — device registration, presence,
+     * the raw Kemenag rows and the panel's announcement list — which were the whole reason the
+     * store could not be swapped: `SettingsServer` and `RealmKemenagScheduleSource` asked for the
+     * concrete Realm class, so a Room repository could satisfy every settings member and still be
+     * unusable. `ServerDataSource` and `RoomKemenagScheduleSource` closed it.
+     *
+     * Leaving the map here rather than deleting the test is the point: a new call on a concrete
+     * repository type reopens the gap silently, and the next person to try switching would find
+     * out by the display failing rather than by a test. An entry added here needs a reason beside
+     * it, exactly as the nine did.
      */
-    private val stillMissing = mapOf(
-        "getActiveAnnouncements" to "the panel's announcement list, read once rather than observed",
-        "getConnectedDevices" to "the session-expiry sweep, every 30 seconds",
-        "getKemenagSchedule" to "what PrayerCalculator reads through KemenagScheduleSource — so a " +
-            "Room-backed source has to exist before the display can switch",
-        "getKemenagSchedules" to "the panel's schedule table",
-        "registerDevice" to "pairing, on the WebSocket's register action",
-        "saveKemenagSchedules" to "storing a fetch the server performed itself",
-        "updateDashboardBackgroundPath" to "the /upload replace path",
-        "updateDeviceAllowed" to "verify_pin, and the session-expiry sweep",
-        "updateDeviceOnlineStatus" to "a controller connecting and disconnecting"
-    )
+    private val stillMissing = emptyMap<String, String>()
 
     private val roomMembers: Set<String> by lazy {
         RoomConfigRepository::class.memberFunctions.map { it.name }.toSet()
@@ -78,10 +77,10 @@ class RoomSwitchReadinessTest {
     @Test
     fun theGapIsExactlyWhatIsDocumented() {
         assertEquals(
-            "The gap between RoomConfigRepository and the concrete-typed consumers has changed.\n" +
-                "If a member was implemented, remove it from `stillMissing`. If a new call " +
-                "appeared, either implement it or document it here — a switch cannot be justified " +
-                "against a list nobody updated.",
+            "A consumer calls something RoomConfigRepository does not have, so the store can no " +
+                "longer be switched. Either implement it, or reach for it through an interface " +
+                "both stores satisfy — and if it genuinely has to stay concrete, add it to " +
+                "`stillMissing` with a reason.",
             stillMissing.keys.sorted(),
             (concreteCalls() - roomMembers).sorted()
         )
