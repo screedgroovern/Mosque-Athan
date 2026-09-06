@@ -1490,15 +1490,22 @@ movement. The natural response is to press again. Eight presses later the link r
 flushed, and the display gained eight identical `22:00–04:00 Monday` rows — `createdAt` values
 250 ms apart, which is what identified the cause. They were deleted; the count is back to two.
 
-Two things follow, and neither is fixed:
+**The first half is fixed.** `DisplayLink` now emits a notice when it holds an action, and a
+second when the link returns saying how many it sent. The second half of that matters as much as
+the first: it is the moment a takmir who pressed a silent button repeatedly finds out how many
+times it counted. It reaches the screen through a second `MessageHost` in `main.kt` — shared code
+cannot see `DisplayLink` without `ui:settings` learning about the transport, so each layer keeps
+the host for what it has to say.
 
-- **A control that cannot act right now should say so.** The status chip reads `Connecting` at the
-  top of the screen, far from the button being pressed, and nothing else changes. `MessageHost`
-  exists for exactly this: "will be sent when reconnected" is honest, keeps offline editing, and
-  stops the blind repetition that creates the duplicates.
-- **The real answer is step 3.** An offline replica writes the row locally, shows it immediately,
-  and reconciles later — at which point the press is visibly *not* a no-op and there is nothing to
-  repeat. Until then the queue is delivering appends that the user could not see they had made.
+**The real answer is still step 3.** An offline replica writes the row locally, shows it
+immediately, and reconciles later — at which point the press is visibly *not* a no-op and there is
+nothing to repeat. The notice is honesty in the meantime, not a substitute.
+
+**The Android controller fails the opposite way, and neither failure is visible.**
+`RemoteActionSender.post` catches, logs, and returns: no queue, no retry, nothing on screen. So on
+a phone in `REMOTE` mode with the display unreachable an edit is *lost entirely*, where the browser
+at least holds it. Web over-delivers, Android under-delivers, and a takmir sees the same thing in
+both cases — nothing. Not fixed; recorded because the two halves want one answer rather than two.
 
 Worth knowing when reading the hardware table above: "edits made while the display was down both
 arrived after reconnection" is true, and it is a description of the same mechanism that produced
