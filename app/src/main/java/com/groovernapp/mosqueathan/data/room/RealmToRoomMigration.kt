@@ -135,8 +135,17 @@ object RealmToRoomMigration {
         val now = System.currentTimeMillis()
         val counts = mutableMapOf<String, Int>()
 
+        var config: MosqueConfigEntity? = null
+        var announcements = emptyList<AnnouncementEntity>()
+        var media = emptyList<MediaEntity>()
+        var fridayMedia = emptyList<FridayMediaEntity>()
+        var backgrounds = emptyList<DashboardBackgroundEntity>()
+        var slideshow = emptyList<SlideshowScheduleEntity>()
+        var standby = emptyList<StandbyScheduleEntity>()
+        var kemenag = emptyList<KemenagScheduleEntity>()
+
         realm.query<RealmConfig>().first().find()?.let { c ->
-            dao.upsertConfig(
+            config = (
                 MosqueConfigEntity(
                     id = c.id,
                     latitude = c.latitude, longitude = c.longitude,
@@ -187,46 +196,77 @@ object RealmToRoomMigration {
         }
 
         realm.query<RealmAnnouncement>().find().map {
-            AnnouncementEntity(it.id, it.content, it.isActive, it.position, now)
-        }.also { dao.upsertAnnouncements(it); counts["announcements"] = it.size }
+            AnnouncementEntity(
+                id = it.id, content = it.content, isActive = it.isActive,
+                position = it.position, lastModified = now
+            )
+        }.let { announcements = it; counts["announcements"] = it.size }
 
         realm.query<RealmMedia>().find().map {
-            MediaEntity(it.id, it.filePath, it.isVideo, it.isUsed, it.sortOrder, now)
-        }.also { dao.upsertMedia(it); counts["media"] = it.size }
+            MediaEntity(
+                id = it.id, filePath = it.filePath, isVideo = it.isVideo,
+                isUsed = it.isUsed, sortOrder = it.sortOrder, lastModified = now
+            )
+        }.let { media = it; counts["media"] = it.size }
 
         realm.query<RealmFridayMedia>().find().map {
-            FridayMediaEntity(it.id, it.filePath, it.isVideo, it.sortOrder, now)
-        }.also { dao.upsertFridayMedia(it); counts["friday_media"] = it.size }
+            FridayMediaEntity(
+                id = it.id, filePath = it.filePath, isVideo = it.isVideo,
+                sortOrder = it.sortOrder, lastModified = now
+            )
+        }.let { fridayMedia = it; counts["friday_media"] = it.size }
 
         realm.query<RealmBackground>().find().map {
-            DashboardBackgroundEntity(it.id, it.filePath, it.isUsed, it.sortOrder, now)
-        }.also { dao.upsertDashboardBackgrounds(it); counts["dashboard_backgrounds"] = it.size }
+            DashboardBackgroundEntity(
+                id = it.id, filePath = it.filePath, isUsed = it.isUsed,
+                sortOrder = it.sortOrder, lastModified = now
+            )
+        }.let { backgrounds = it; counts["dashboard_backgrounds"] = it.size }
 
         realm.query<RealmSlideshow>().find().map {
             SlideshowScheduleEntity(
-                it.id, it.startTime, it.endTime, it.activeDays, it.specificDates,
-                it.createdAt, it.day, it.isSpecificDate, now
+                id = it.id, startTime = it.startTime, endTime = it.endTime,
+                activeDays = it.activeDays, specificDates = it.specificDates,
+                createdAt = it.createdAt, day = it.day, isSpecificDate = it.isSpecificDate,
+                lastModified = now
             )
-        }.also { dao.upsertSlideshowSchedules(it); counts["slideshow_schedules"] = it.size }
+        }.let { slideshow = it; counts["slideshow_schedules"] = it.size }
 
         realm.query<RealmStandby>().find().map {
             StandbyScheduleEntity(
-                it.id, it.startTime, it.endTime, it.activeDays, it.specificDates,
-                it.createdAt, it.day, it.isSpecificDate, now
+                id = it.id, startTime = it.startTime, endTime = it.endTime,
+                activeDays = it.activeDays, specificDates = it.specificDates,
+                createdAt = it.createdAt, day = it.day, isSpecificDate = it.isSpecificDate,
+                lastModified = now
             )
-        }.also { dao.upsertStandbySchedules(it); counts["standby_schedules"] = it.size }
+        }.let { standby = it; counts["standby_schedules"] = it.size }
 
         realm.query<RealmKemenag>().find().map {
             KemenagScheduleEntity(
-                it.dateString, it.cityId, it.imsak, it.subuh, it.terbit, it.dhuha,
-                it.dzuhur, it.ashar, it.maghrib, it.isya, now
+                dateString = it.dateString, cityId = it.cityId, imsak = it.imsak,
+                subuh = it.subuh, terbit = it.terbit, dhuha = it.dhuha, dzuhur = it.dzuhur,
+                ashar = it.ashar, maghrib = it.maghrib, isya = it.isya, lastModified = now
             )
-        }.also { dao.upsertKemenagSchedules(it); counts["kemenag_schedules"] = it.size }
+        }.let { kemenag = it; counts["kemenag_schedules"] = it.size }
 
         // ConnectedDeviceEntity is deliberately not carried over. Those rows are access-control
         // bookkeeping the display rebuilds as devices register — the live display is holding
         // eighteen of them, most for browsers that were closed months ago. Migrating them would
         // move a pile of stale entries into a fresh schema for no gain.
+
+        // One transaction, so a failure part-way leaves Room exactly as it was. This used to write
+        // as it read, and because the config row doubles as the "already migrated" marker, a throw
+        // between it and the side tables lost them permanently.
+        dao.migrateAll(
+            config = config,
+            announcements = announcements,
+            media = media,
+            fridayMedia = fridayMedia,
+            backgrounds = backgrounds,
+            slideshow = slideshow,
+            standby = standby,
+            kemenag = kemenag
+        )
 
         Log.i(TAG, "migrated $counts")
         return Result.Migrated(counts)

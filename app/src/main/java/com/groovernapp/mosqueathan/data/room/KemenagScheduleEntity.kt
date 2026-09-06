@@ -1,6 +1,7 @@
 package com.groovernapp.mosqueathan.data.room
 
 import androidx.room.Entity
+import androidx.room.Index
 
 /**
  * Keyed by date *and* city, which Realm's version was not.
@@ -11,7 +12,13 @@ import androidx.room.Entity
  * ever be to correct, and the migration loses nothing: every row on disk today belongs to whichever
  * city was last fetched.
  */
-@Entity(tableName = "kemenag_schedules", primaryKeys = ["dateString", "cityId"])
+// Indexed on cityId as well: the composite key starts with dateString, so the common query —
+// every date for one city — has no usable leftmost prefix and would scan the table.
+@Entity(
+    tableName = "kemenag_schedules",
+    primaryKeys = ["dateString", "cityId"],
+    indices = [Index("cityId")]
+)
 data class KemenagScheduleEntity(
     val dateString: String = "",
     val cityId: String = "",

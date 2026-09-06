@@ -2,6 +2,7 @@ package com.groovernapp.mosqueathan.data.room
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
@@ -146,8 +147,50 @@ interface MosqueDao {
     @Upsert
     suspend fun upsertKemenagSchedules(items: List<KemenagScheduleEntity>)
 
+    /**
+     * One city's cached schedule.
+     *
+     * Scoped, because the key became composite so that two cities *can* coexist. Under Realm's
+     * single-column key "clear the schedules" and "clear this city's schedules" were the same
+     * statement; here they are not, and the caller almost always means the narrower one.
+     */
+    @Query("DELETE FROM kemenag_schedules WHERE cityId = :cityId")
+    suspend fun clearKemenagSchedules(cityId: String)
+
+    /** Every city. Only for a reset. */
     @Query("DELETE FROM kemenag_schedules")
-    suspend fun clearKemenagSchedules()
+    suspend fun clearAllKemenagSchedules()
+
+    /**
+     * The whole migration, as one transaction.
+     *
+     * Ordering used to matter here and that was a data-loss bug: the config row was written first
+     * and is also what marks the migration as done, so a failure part-way left the marker set and
+     * the seven side tables never arrived — permanently, because the next launch saw the marker and
+     * skipped. All or nothing removes the question rather than answering it.
+     */
+    @Transaction
+    suspend fun migrateAll(
+        config: MosqueConfigEntity?,
+        announcements: List<AnnouncementEntity>,
+        media: List<MediaEntity>,
+        fridayMedia: List<FridayMediaEntity>,
+        backgrounds: List<DashboardBackgroundEntity>,
+        slideshow: List<SlideshowScheduleEntity>,
+        standby: List<StandbyScheduleEntity>,
+        kemenag: List<KemenagScheduleEntity>
+    ) {
+        upsertAnnouncements(announcements)
+        upsertMedia(media)
+        upsertFridayMedia(fridayMedia)
+        upsertDashboardBackgrounds(backgrounds)
+        upsertSlideshowSchedules(slideshow)
+        upsertStandbySchedules(standby)
+        upsertKemenagSchedules(kemenag)
+        // Last, deliberately: it is the marker, so even if the transaction guarantee were ever lost
+        // the failure mode becomes "migrate again" rather than "never migrate the rest".
+        if (config != null) upsertConfig(config)
+    }
 
     /**
      * The newest write in each table, which is what a sync compares.
