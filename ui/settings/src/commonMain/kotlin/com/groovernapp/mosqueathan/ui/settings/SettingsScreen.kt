@@ -522,6 +522,16 @@ fun SideSheetContent(
                     )
                 }
             } else {
+                // The title is drawn only where the bar above does not carry one.
+                //
+                // On a wide screen that bar reads "MOSQUE ATHAN SETTINGS", so a second gear and a
+                // second title stacked directly under it are two headers for one screen. On a
+                // phone the bar hides its text to make room for the status chips, so the drawer is
+                // the only place the screen names itself and the title stays.
+                //
+                // What must survive either way is the *control*: this row is how the rail is
+                // collapsed, and the collapsed state's gear is the only way to expand it again.
+                val titleInDrawer = LocalWindowClass.current.isCompact
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -529,23 +539,28 @@ fun SideSheetContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = if (!isTv) Modifier.clickable { onToggleExpand() } else Modifier
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = null,
-                            tint = MosqueTheme.colors.accent,
-                            modifier = Modifier.size(MosqueTheme.size.iconLg)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = Lang.get("Settings", "Pengaturan"),
-                            color = MosqueTheme.colors.accent,
-                            fontSize = MosqueTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                    if (titleInDrawer) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = if (!isTv) Modifier.clickable { onToggleExpand() } else Modifier
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = null,
+                                tint = MosqueTheme.colors.accent,
+                                modifier = Modifier.size(MosqueTheme.size.iconLg)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = Lang.get("Settings", "Pengaturan"),
+                                color = MosqueTheme.colors.accent,
+                                fontSize = MosqueTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        // Keeps the collapse control on the right where it has always been.
+                        Spacer(modifier = Modifier.weight(1f))
                     }
 
                     if (!isTv) {
@@ -797,7 +812,7 @@ private fun SettingsHeaderBar(
         if (!isCompact) {
             Spacer(modifier = Modifier.width(MosqueTheme.spacing.md))
             Text(
-                text = "MOSQUE ATHAN",
+                text = "MOSQUE ATHAN SETTINGS",
                 color = MosqueTheme.colors.accent,
                 fontSize = MosqueTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
