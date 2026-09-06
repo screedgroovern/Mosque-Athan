@@ -1023,6 +1023,39 @@ the Kemenag city search calls `api.myquran.com` from the page, which is cross-or
 if that API sends CORS headers. If it does not, the fix is to route the search through the display,
 which can reach the API unhindered, not to fight CORS from the browser.
 
+### Pairing by QR, driven end to end with a real camera
+
+A takmir's actual first move — point a phone at the display — verified rather than reasoned about.
+Realme camera on the Xiaomi's screen, the display in Server mode showing its pairing QR.
+
+**The QR reads correctly off a screen at normal distance.** A plain barcode scanner decoded
+`http://192.168.1.3:8080`, exactly what `TvPairing.url` produces, and the app's own scanner then
+turned it into the setting: the TV IP field went from a stale `192.168.1.8` to `192.168.1.3`
+without a keystroke. `TvPairing.addressFrom` doing the parsing is what makes that a host and not a
+URL.
+
+Then the controller half: Adzan preparation `+` on the Realme moved the display's
+`adzanLeadMinutes` from 3 to 4 within three seconds, and back. So `REMOTE` mode works end to end on
+hardware, which had never been shown in one sitting.
+
+Two things fell out of it that were not the point.
+
+**The pairing QR lands on the *old* panel, and step 8 deletes it.** It encodes the bare origin, so a
+scan opens `/` — whose title is still `MOSQUE ATHAN - Web Control Panel`, the hand-written page.
+The new panel is at `/panel/`. **Before `WebPage*.kt` can be removed, `/` has to serve the new
+panel or redirect to it**, or the first thing a takmir does after the upgrade is scan a code that
+leads nowhere. This is a step 8 prerequisite and nothing else records it.
+
+**An Android controller never registers.** The display's device list holds eight `web-*` and ten
+`dev_*` ids and no `remote_*`: `RemoteActionSender` only POSTs actions, and "Connect" calls the
+sync GET, so nothing ever sends `register`. Harmless while no PIN is set — and squarely in the way
+of `verify_pin`, since a device the display has never seen cannot be the device it approves. Worth
+knowing before that work starts.
+
+**Testing note:** the settings entry sequence must arrive back to back. `input dpad -d 0 keyevent`
+is necessary but not sufficient — four presses one second apart never opened settings, and the same
+four in a single `adb shell "…; …; …; …"` opened it every time.
+
 ### The QR scanner is not a parity gap — no browser can have one
 
 Looked at as the last thing standing between the panel and step 8, and it turned out not to be
