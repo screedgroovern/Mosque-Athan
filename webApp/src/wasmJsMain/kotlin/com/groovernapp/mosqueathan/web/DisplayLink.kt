@@ -7,11 +7,15 @@ import kotlinx.browser.window
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.w3c.dom.WebSocket
+import com.groovernapp.mosqueathan.util.Lang
 
 /**
  * The browser's link to the display.
@@ -66,6 +70,21 @@ class DisplayLink(
      * nowhere else.
      */
     private val pending = mutableListOf<String>()
+
+    /**
+     * Told to the user, because a queued action is otherwise indistinguishable from a dead button.
+     *
+     * The web repository writes nothing locally, so while the display is unreachable a press
+     * produces no row, no error and no movement — and the natural response is to press again. That
+     * is not hypothetical: eight presses on a silent "Add Standby" became eight identical schedules
+     * the moment the link recovered, because queuing is idempotent for "set this value" and is not
+     * for "add a row".
+     *
+     * `extraBufferCapacity` rather than a replay: these are momentary, and a message about a press
+     * made minutes ago is noise.
+     */
+    private val _notices = MutableSharedFlow<String>(extraBufferCapacity = 16)
+    val notices: SharedFlow<String> = _notices.asSharedFlow()
 
     fun connect() {
         if (!watchingForeground) {
@@ -162,12 +181,29 @@ class DisplayLink(
     private fun queue(payload: String) {
         if (pending.size >= MAX_PENDING) pending.removeAt(0)
         pending.add(payload)
+        _notices.tryEmit(
+            Lang.get(
+                "Not connected. This will be sent when the display is back.",
+                "Belum tersambung. Ini akan dikirim saat display kembali."
+            )
+        )
     }
 
     private fun flushPending() {
         val open = socket?.takeIf { it.readyState == WebSocket.OPEN } ?: return
+        val count = pending.size
         pending.forEach(open::send)
         pending.clear()
+        // Saying how many closes the loop the queue opened. It is also the moment a takmir who
+        // pressed a silent button repeatedly finds out how many times it counted.
+        if (count > 0) {
+            _notices.tryEmit(
+                Lang.get(
+                    "Sent $count pending change${if (count == 1) "" else "s"}.",
+                    "$count perubahan tertunda telah dikirim."
+                )
+            )
+        }
     }
 
     private fun handleMessage(text: String) {

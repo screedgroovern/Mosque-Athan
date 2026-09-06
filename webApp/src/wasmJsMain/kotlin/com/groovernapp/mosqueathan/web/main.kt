@@ -9,17 +9,21 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ComposeViewport
 import com.groovernapp.mosqueathan.protocol.RemoteActionSink
 import com.groovernapp.mosqueathan.protocol.RemoteActions
 import com.groovernapp.mosqueathan.ui.design.LocalAppVersion
 import com.groovernapp.mosqueathan.ui.design.LocalDisplayBackgrounds
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
+import com.groovernapp.mosqueathan.ui.design.MessageHost
 import com.groovernapp.mosqueathan.ui.settings.SettingsScreen
 import kotlinx.browser.document
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 
 /**
  * The browser controller's entry point.
@@ -57,6 +61,11 @@ fun main() {
                 LocalMediaImageLoader provides mediaImages
             ) {
                 MosqueTheme {
+                    // A second MessageHost, deliberately. SettingsScreen already renders one for
+                    // the ViewModel's own messages, and these come from the transport instead —
+                    // which shared code cannot reach without teaching ui:settings about
+                    // DisplayLink. Two hosts, each owned by the layer that has something to say.
+                    Box(Modifier.fillMaxSize()) {
                     SettingsScreen(
                         viewModel = koinViewModel(),
                         // Preview means "show it on the television", which is the only thing it can
@@ -81,6 +90,8 @@ fun main() {
                         // the display send a fresh snapshot.
                         onSync = link::resync
                     )
+                        MessageHost(link.notices)
+                    }
                 }
             }
         }
