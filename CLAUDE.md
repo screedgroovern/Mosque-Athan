@@ -1678,7 +1678,7 @@ shippable throughout.
 |---|---|---|
 | ~~1~~ | ~~`build-logic` + `core:model` + `core:prayer`; fix `PrayerCalculator` purity~~ **done** | yes |
 | ~~2~~ | ~~Extract `ConfigRepository` interface + Koin; delete `getInstance()`~~ **done** | yes |
-| 3 | Realm → Room in `data`, shared entity/wire classes, `MosqueSnapshot` (see data-loss warning) | yes |
+| 3 | Realm → Room in `data`, shared entity/wire classes, `MosqueSnapshot` | **mostly done** — Room, the DAO, a tested data migration and a Room `ConfigRepository` have landed; Koin still binds Realm until the nine server-only members exist on both. **No longer a data-loss step; see below.** |
 | 3a | ~~Split the Realm entities from the domain model~~ **done**, ahead of the rest of step 3 — it touches no schema, so it carries none of step 3's data-loss risk, and both UI modules were blocked on it | yes |
 | 4 | `core:protocol` **started** — action names are shared constants; `org.json` → kotlinx.serialization still to do | yes |
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
@@ -1687,12 +1687,21 @@ shippable throughout.
 | 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | **blocked on `verify_pin` alone** — deferred by decision, not done. Side-table writes, thumbnails, the two missing actions, the four previews and the Kemenag fetch have all landed |
 | 9 | `iosApp` — controller + preview | yes |
 
-**Step 3 wipes device data.** `RealmConfiguration` already uses
-`deleteRealmIfMigrationNeeded()` and there are no migrations, but this app runs
-in production in a real mosque — the live install's prayer offsets, media,
-announcements and schedules would be lost. Export the config through the
-existing web panel before upgrading that device, or write a one-off export step.
-Do not discover this on the mosque's TV.
+~~**Step 3 wipes device data.**~~ **It does not, and this warning was wrong in the dangerous
+direction — it said data would be lost when a migration now carries it across.** An agent asked to
+install a build on the mosque-adjacent television read this section and correctly refused, which is
+how it was caught.
+
+`deleteRealmIfMigrationNeeded()` is about Realm's *own* schema versions and has nothing to do with
+moving to Room. `RealmToRoomMigration` reads the old database once on the first launch after the
+upgrade and writes it into Room — verified on the Xiaomi against its real data, every row count
+matching what the display's API reports, with the Realm file untouched and a `.pre-room-backup`
+copy written beside it. There is no bridge release and no export step: 2.0 carries Realm on the
+classpath for exactly this, and drops it in 2.1.
+
+What still deserves care is the *reverse* direction. A device that has run 2.0 and then goes back
+to a 1.x build sees only the Realm file as it was at the upgrade, so anything changed since is not
+there. Downgrading is the lossy move now, not upgrading.
 
 **Step 3 can be deferred until after step 7.** Room is not a prerequisite for
 the web panel — the panel is a client and needs no database. Running
