@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -46,6 +48,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.LocalWindowMetrics
 import com.groovernapp.mosqueathan.ui.design.isShort
@@ -198,9 +201,12 @@ private fun ModeSelector(
             ModeCard(ConnectivityMode.Remote, state, onEvent, Modifier.fillMaxWidth())
         }
     } else {
-        Row(modifier = modifier, horizontalArrangement = gap) {
-            ModeCard(ConnectivityMode.Server, state, onEvent, Modifier.weight(1f))
-            ModeCard(ConnectivityMode.Remote, state, onEvent, Modifier.weight(1f))
+        // IntrinsicSize.Min + fillMaxHeight is what makes both cards as tall as the taller one.
+        // Without it "Remote Control Mode" wraps to two lines, grows, and sits beside a shorter
+        // "Server Mode" -- two boxes of different height for two choices of equal standing.
+        Row(modifier = modifier.height(IntrinsicSize.Min), horizontalArrangement = gap) {
+            ModeCard(ConnectivityMode.Server, state, onEvent, Modifier.weight(1f).fillMaxHeight())
+            ModeCard(ConnectivityMode.Remote, state, onEvent, Modifier.weight(1f).fillMaxHeight())
         }
     }
 }
@@ -229,7 +235,9 @@ private fun ModeCard(
             )
             .focusHighlight(shape = RoundedCornerShape(MosqueRadius.md), scaleUp = false)
             .clickable { onEvent(RemoteDevicesEvent.ModeSelected(mode)) }
-            .padding(vertical = MosqueTheme.spacing.xl),
+            // Horizontal padding as well: a label that wraps was reaching the border on both
+            // sides, which read as an overflow rather than a two-line label.
+            .padding(horizontal = MosqueTheme.spacing.md, vertical = MosqueTheme.spacing.xl),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -252,7 +260,10 @@ private fun ModeCard(
                 },
                 color = tint,
                 fontSize = MosqueTheme.typography.label,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                // The Column centres the text *block*; without this each wrapped line is still
+                // left-aligned inside it, so "Mode" sat under the "R" of "Remote".
+                textAlign = TextAlign.Center
             )
         }
     }

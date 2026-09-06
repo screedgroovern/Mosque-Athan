@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package com.groovernapp.mosqueathan.ui.component
 
 import androidx.compose.foundation.background
@@ -402,10 +404,25 @@ fun ScheduleListItem(
                     }
                 }
             } else {
-                // Mobile layout: Day Toggle buttons
-                Row(
+                // Mobile layout: Day Toggle buttons.
+                //
+                // FlowRow, so the seventh chip drops to a second line instead of off the edge. In
+                // the standby list this card nests one level deeper than in the slideshow list,
+                // which was enough to push Sunday past the right edge with no way to reach it — a
+                // takmir could not put a standby schedule on a Sunday at all.
+                //
+                // Wrapping rather than horizontal scrolling, deliberately. This is not a list to
+                // browse: the seven days are one setting, and the reason to look at it is to see
+                // *which* are on. A scrolled row hides exactly that — "Mon Tue Wed Thu Fri Sat"
+                // says nothing about Sunday until you drag it. There are seven items forever, so
+                // the overflow is one chip rather than a list, and a horizontally scrolling row is
+                // hostile to a D-pad, which is why the isTv branch above avoids one.
+                //
+                // SpaceBetween is kept, so wherever all seven already fit, nothing moves.
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.sm)
                 ) {
                     localizedDays.forEach { (englishName, localizedName) ->
                         val isActive = activeDaysList.contains(englishName)
