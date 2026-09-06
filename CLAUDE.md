@@ -98,7 +98,7 @@ Per-prayer minute offsets are applied on top of whichever source wins. Imsak def
 Realm, accessed only through the singleton `data.MosqueConfigRepository.getInstance()`. All settings live in one row of `MosqueConfigEntity` (`id == "config"`), plus side tables for announcements, media, Friday media, connected devices, Kemenag schedules, slideshow/standby schedules, and dashboard backgrounds.
 
 Two things to know before touching the schema:
-- Settings exist twice on purpose: `MosqueConfigEntity` (a Realm object, in `:app`) and `domain.MosqueConfig` (a `data class` in `core:model`). The repository maps between them at its own boundary, in `data/EntityMappers.kt`, so nothing above the repository sees Realm. **Adding a config field means editing the entity, the domain class, and the mapper** — and `MosqueConfigRepository.updateConfig` too if the field should be part of a whole-config write. The mapper is the one the compiler will not catch on its own, because every domain field has a default: a field left out of `toDomain()` still compiles and then reads back as its default no matter what is on disk. `EntityMappersTest` fails on exactly that, so add the field and run `./gradlew :app:test`.
+- Settings exist twice on purpose: `MosqueConfigEntity` (a Realm object, in `:app`) and `domain.MosqueConfig` (a `data class` in `core:model`). The repository maps between them at its own boundary, in `data/EntityMappers.kt`, so nothing above the repository sees Realm. **Adding a config field means editing the entity, the domain class, and the mapper** — and since Room landed beside Realm, *both* entities and *both* mappers until Realm leaves in 2.1 — and `MosqueConfigRepository.updateConfig` too if the field should be part of a whole-config write. The mapper is the one the compiler will not catch on its own, because every domain field has a default: a field left out of `toDomain()` still compiles and then reads back as its default no matter what is on disk. `EntityMappersTest` fails on exactly that, so add the field and run `./gradlew :app:test`.
 - `updateConfig` deliberately copies **47 of the 55** config fields. The other eight belong to dedicated setters (`updateThemeSettings`, `updateCustomBackground`, `updateShowSettingsOnTv`, the PIN), so a whole-object write would clobber a theme the caller never touched. Do not "fix" it by generating a total write.
 - `RealmConfiguration` uses `deleteRealmIfMigrationNeeded()` with an explicit `schemaVersion`. Bump the version when the schema changes and expect existing device data to be wiped; there are no migrations.
 
@@ -437,11 +437,18 @@ model stored locally — not a handful of preferences.
 
 The decision:
 
-- **One set of classes, annotated twice.** A Room `@Entity` and the wire model
-  are the *same* `@Serializable data class`. No mappers, and adding a config
-  field touches one class rather than three. This works here because every
-  existing entity is flat — only `String`/`Boolean`/`Int`, no nesting — so Room
-  needs no `TypeConverter`.
+- ~~**One set of classes, annotated twice.**~~ **This does not compile, and the reason is the wasm
+  target.** The plan was for a Room `@Entity` and the wire model to be the same `@Serializable`
+  data class in `core:model`. But `core:model` targets `wasmJs` — that is the guardrail that
+  catches JVM assumptions — and Room has no wasm target, so the annotations are simply not there
+  to apply. The plan predates the target.
+
+  What shipped instead: Room entities live in `:app`, replacing the Realm ones one for one, and
+  `RoomMappers.kt` maps them to the domain classes exactly as `EntityMappers.kt` does for Realm.
+  That is the "edit two places" arrangement the original plan wanted to avoid, and it is the price
+  of `core:model` staying free of Android. The mappers were generated from the Realm ones rather
+  than retyped, since the field names are identical, and a coverage test fails if a column is
+  dropped in either direction.
 - **Android / iOS / Windows:** Room (`androidx.room` KMP) over those entities.
   SQLite provides durability, so no hand-rolled atomic-write code.
 - **Web:** Room has no wasm target, so the browser stores the same
@@ -621,7 +628,18 @@ because whether a focus ring draws depends on modifier order at runtime.
 **Practical cost to plan around:** the iOS target takes about 8½ minutes to compile
 from cold. Expect a much slower edit-build loop than the Android-only work so far.
 
-### Step 2: the repository does not want one interface
+### Step 2: the repository does not want one interface — it wanted three
+
+**Written as two, and a third arrived when the store was replaced.** `ServerDataSource` extends
+`ConfigRepository` with the eight members only `SettingsServer` uses — device registration,
+presence, the raw Kemenag rows and the panel's announcement list. It exists because the server took
+the *concrete* Realm class, and that type was the last thing pinning the app to Realm: a Room
+repository could satisfy every settings member and still be unusable.
+
+This file used to state the opposite as a decision — the server is Android-only and never being
+ported, so abstracting it bought nothing. That was right until there were two stores. The interface
+is not for portability; it is what lets the store be replaced at all.
+
 
 Counting the call sites changed what step 2 should build. The repository has **70
 public members**. Of those:
@@ -1668,6 +1686,59 @@ why a Node-only check is not sufficient evidence). An `Intl.Locale.prototype.wee
 was written when Chrome 151's removal of that property looked like the cause; it is **not**
 needed with material3 1.9.0, and was removed rather than kept as a patch for an API nothing
 asks for.
+
+### Step 3, most of the way: Room beside Realm, and what the port cost
+
+Room, a DAO, a database at version 1 with its schema exported, a data migration, a full
+`ConfigRepository` over Room and the eight server-only members. **The Koin binding still chooses
+Realm** — one block in `AppModule` picks the store and everything else resolves from it, so
+switching is two lines and reverting is the same two. What is missing is not code; it is having
+driven the switch on hardware, and `KemenagScheduleSource` is the binding whose being wrong would
+be wrong on a television at adzan.
+
+**There is no bridge release and none is needed.** A version that wrote to both stores, or exported
+to a file, would only prepare data 2.0 can read directly. `RealmToRoomMigration` opens the old
+database on first launch, copies it, and Realm leaves the classpath in 2.1. Three properties, in
+the order they matter:
+
+- It opens Realm **without `deleteRealmIfMigrationNeeded`**. That flag is on the live 1.x config and
+  is the most dangerous thing that could have been copied into the migration: it deletes the
+  database when the schema does not match, which is precisely the case a rescue has to survive.
+- It copies the `.realm` file aside first and never deletes it.
+- One `@Transaction`. It used to write as it read, and because the config row doubles as the
+  "already migrated" marker, a throw between it and the side tables lost them **permanently** — the
+  next launch saw the marker and skipped. Found by the tests written against it, not by reading.
+
+Verified on the Xiaomi against its real database: every row count matching what the display's API
+reports, Realm untouched, backup written beside it.
+
+**`lastModified` is on every table, and cannot be forgotten.** Config writes funnel through
+`editConfig` and side-table writes through nine private helpers, each applying the stamp to the
+*result* of the caller's change. No path can supply its own value or omit one, because the coming
+conflict dialog is only as honest as this column and "remember to set it" is not a design.
+
+**Deletions needed their own table.** `MAX(lastModified)` over the rows cannot see a removal:
+delete the newest running text and the maximum falls back to the row beneath it, so two devices
+comparing notes conclude nothing happened and the deleted row comes back from the other side.
+`table_stamps` holds one row per table, written on every mutation including deletes.
+
+**Two corrections made because a new schema is the cheapest moment for them.**
+`kemenag_schedules` is keyed on `(dateString, cityId)` where Realm keyed on the date alone, so two
+cities could never hold a schedule for the same day and changing city overwrote the previous one
+row at a time. And `ConnectedDeviceEntity` is not migrated at all — eighteen rows of access-control
+bookkeeping the display rebuilds as devices register.
+
+**Five regressions the port introduced, all caught by tests rather than by review**, and each
+invisible until it bites a mosque: announcements served unfiltered so switched-off ones returned to
+the running text; `updatePinCode` de-authorised the master, locking the mosque's own tablet out of
+its own display; `resetToDefaults` left every paired device paired against a blank PIN and seeded
+no announcement; `updateConfig` stopped triggering the Kemenag fetch. Worth knowing before the next
+port: a repository rewrite compiles perfectly while quietly dropping behaviour, and the compiler
+has nothing to say about any of it.
+
+**`KemenagFetcher` came out of the repository on the way.** Deciding *which months* a duration
+covers is date arithmetic that can be wrong by a whole month, and it sat interleaved with an HTTP
+call and a database write where no test could reach it. `monthsFor` is now that arithmetic alone.
 
 ### Migration order
 
