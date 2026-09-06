@@ -1086,9 +1086,21 @@ Details that are load-bearing rather than incidental:
   traversal that only looks like one afterwards — mutation-tested by removing the decode, which
   fails the suite. Refused on the device too, not just in tests.
 
-**Cost:** the APK goes from 74 MB to 80 MB — less than the bundle's 15 MB on disk, because the
-assets compress. Every `:app` build now depends on `wasmJsBrowserDistribution`, which is
-up-to-date-checked and so only re-runs when `:webApp` changes.
+**Cost:** the APK grows by the compressed size of the bundle — the two wasm files are 13 MB on
+disk and about 5 MB inside the APK. Every `:app` build now depends on `wasmJsBrowserDistribution`,
+which is up-to-date-checked and so only re-runs when `:webApp` changes.
+
+**`copyWebPanel` is a `Sync`, and it started life as a `Copy`, which was a slow leak.** The
+bundle's filenames carry a content hash, so every change to `:webApp` produces new names — and
+`Copy` never removes what the source no longer has. The staging directory accumulated every bundle
+ever built in that working tree: 45 MB and eight wasm files where two are live, all of it shipped.
+It grows without bound and nothing fails, which is why it went unnoticed until an unrelated hash
+comparison looked wrong. `Sync` deletes what the source dropped, which is the semantics a hashed
+bundle needs.
+
+Worth knowing for later: the panel is *not* what makes this APK large. Uncompressed it is 133 MB,
+of which `classes.dex` is 39.5 MB, Realm's native library across four ABIs is ~31 MB, and two
+default background PNGs are 7.2 MB each. The panel's 14 MB sits well below all of them.
 
 The old panel still serves at `/`. Step 8 removes it, and this was its missing prerequisite.
 

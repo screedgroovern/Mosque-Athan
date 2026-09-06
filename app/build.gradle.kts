@@ -64,12 +64,19 @@ android {
  * The source map is excluded. It is 1.7 MB of debug information no takmir will ever open, and it
  * would be the third-largest thing in the APK.
  *
+ * **`Sync`, not `Copy`, and that is not a style choice.** The bundle's filenames carry a content
+ * hash, so every change to `:webApp` produces a *new* name — and `Copy` never removes what is no
+ * longer in the source. The staging directory silently accumulated every bundle ever built: eight
+ * wasm files totalling 43 MB where two totalling 13 MB are live, all of them shipped inside the
+ * APK. `Sync` deletes whatever the source no longer has, which is exactly the semantics a hashed
+ * bundle needs.
+ *
  * This does make every :app build depend on the wasm bundle. `wasmJsBrowserDistribution` is
  * up-to-date-checked, so it only re-runs when :webApp actually changes.
  */
 val panelAssetsDir: Provider<Directory> = layout.buildDirectory.dir("generated/panelAssets")
 
-val copyWebPanel by tasks.registering(Copy::class) {
+val copyWebPanel by tasks.registering(Sync::class) {
     dependsOn(":webApp:wasmJsBrowserDistribution")
     from(rootProject.project(":webApp").layout.buildDirectory.dir("dist/wasmJs/productionExecutable")) {
         exclude("**/*.map")
