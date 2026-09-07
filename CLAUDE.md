@@ -1800,12 +1800,55 @@ encode threw `Serializer for class 'SnapshotPush' is not found` at runtime. Exac
 `core:protocol`, because nothing there had been serialized yet. **An `@Serializable` class in a
 module without `alias(libs.plugins.kotlin.serialization)` compiles and then throws.**
 
-**Still not driven on hardware.** Everything above is unit-tested — 51 config fields carried on
-both stores and mutation-tested by dropping one, null versus empty, media unreachable, the archived
-announcement surviving, the four device-local fields kept, every written table stamped and no other
-— but nobody has yet pressed Sinkronkan on a phone and watched a television take its settings. That
-is the next thing to do, and the user's stated case for it is the Realme's data overwriting the AQUA
-TV.
+#### Driven on the television: the display's half works, the controller's is untested
+
+Verified on the AQUA TV against a payload produced by the app's **own** encoder — a throwaway
+`jvmTest` wrote what `putSnapshotPush` emits to a file, so the run exercised the real codec rather
+than hand-written JSON. The display was seeded first so the exclusions had something to protect: an
+extra announcement switched **off** (invisible to any controller) and a dashboard background
+uploaded through `POST /upload`.
+
+| Asserted | Result |
+|---|---|
+| Settings cross | method SINGAPORE → MUSLIM_WORLD_LEAGUE, lead 3 → 7, iqomah 10 → 13, offsets, footer |
+| The display *acts* on them | Subuh moved 04:20 → 04:31 on screen, and the running text read "DARI REALME" |
+| `id`, `pinCode`, `connectivityMode`, `remoteTvIp` | unchanged — the push carried `REMOTE` and `192.168.1.128` and the TV stayed `SERVER` |
+| `customBackgroundPath`, `murottalAudioPaths` | unchanged — the push carried two phone-only paths and neither landed |
+| A deletion crosses | the TV's 08:00–17:00 Monday slideshow row replaced by the pushed Friday one |
+| Media tables | all three untouched, the seeded background still there with its **stamp** unchanged |
+| The switched-off announcement | **survived**, while the three active ones were replaced |
+| `table_stamps` | the four written tables share one identical new value; `dashboard_backgrounds` unmoved |
+
+Restored afterwards *through the same mechanism* — all 55 config fields byte-identical, every table
+back, prayer times back to 04:10/04:20/05:37/11:38/14:55/17:37/18:47, and the slideshow row keeping
+its original id.
+
+**Two things the hardware run taught that no unit test would have.**
+
+- **A payload that will not decode used to report success.** The restore was built from values read
+  out of SQLite, so its booleans arrived as `0`/`1`; the decode threw, was swallowed, and the branch
+  answered `{"type":"success"}` having written nothing. From a controller that is indistinguishable
+  from "the display kept its own copy" — silent data loss with a success message on top. Fixed: a
+  malformed payload now names the field and offset that failed, and an empty push still succeeds,
+  because naming no table is what "use the display's copy" sends. The one thing that was already
+  right is that the decode happens *before* the transaction opens, so such a payload cannot
+  half-apply.
+- **`POST /api/action` needs a `deviceId` in the body or it is refused** — with the message
+  "Akses ditolak. Silakan masukkan PIN terlebih dahulu.", which is misleading, since the gate is
+  `deviceId != null && (pinCode.isEmpty() || …)` and fires on a display with no PIN at all. Any
+  `curl` verification against a display must include one. `RemoteActionSender` sends
+  `remote_${Build.MODEL}`, which is why the app never hits this.
+
+**The controller's half is still untested**, and needs the phone unlocked: `syncWithTvServer` is
+reachable only from the Sinkronkan control, so the dialog appearing, the three buttons, and
+`tablesToPush` have not been exercised on a device. What *is* proven is everything downstream of
+the message.
+
+**Two device notes worth keeping.** The AQUA TV sleeps and `MainActivity` goes with it, so port
+8080 stops answering and it reads exactly like a network fault — `dumpsys power | grep
+mWakefulness` first, then `input keyevent 224`. And a locked phone cannot be driven at all:
+`am start` behind the keyguard left the process running with no activity, so no Room database was
+even created.
 
 ### Migration order
 
