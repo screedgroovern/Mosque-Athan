@@ -1740,6 +1740,73 @@ has nothing to say about any of it.
 covers is date arithmetic that can be wrong by a whole month, and it sat interleaved with an HTTP
 call and a database write where no test could reach it. `monthsFor` is now that arithmetic alone.
 
+### Sync has a second direction now
+
+**Until this change sync only ran server → local, and it was silently destructive.**
+`syncWithTvServer` did one GET of `/api/get_config` and wrote the display's values over this
+device: 23 of the config's 51 syncable fields read key by key, both schedule tables ignored
+entirely, and `clearAnnouncements()` called unconditionally. A takmir who spent an evening editing
+at home and pressed Sinkronkan lost all of it without being asked, and the only way to get those
+edits onto the television was to retype them standing in front of it.
+
+`apply_snapshot` is the direction that never existed. **One mechanism serves all three of the
+dialog's options**, which is the whole design: a push applies only the tables its payload names, so
+"use the display's copy" sends nothing, "use this device's" sends every table it can, and "keep
+whichever is newer" sends the tables this device wrote later. `SyncConflict.tablesToPush` is that
+decision, pure and tested; no branch in the server or the ViewModel knows which of the three it is
+carrying out.
+
+Four properties are load-bearing rather than incidental, and each is a way this could quietly
+destroy a mosque's settings:
+
+- **Null means "leave that table alone"; an empty list means "empty it there too".** Conflating
+  them is how an additive sync restores a running text the takmir deleted at home — the deletion
+  simply comes back from the other side on the next sync, forever.
+- **The media tables cannot cross at all** (`SyncConflict.PUSHABLE_TABLES` is four of the seven
+  compared tables). Those rows name *files*, and a path on a phone names nothing on the display —
+  a display that accepted them would read "failed to load image" for every slide, having discarded
+  the rows for files it does hold. So choosing "use this device's copy" leaves the display's media
+  as it was. That is the honest outcome: the alternative is not "media syncs too", it is "media
+  breaks". Getting the files themselves across is the upload problem and still has no design.
+- **Which side owns a file *path* depends on the direction of travel**, so that rule lives at the
+  boundary in `SnapshotPush.sanitisedConfig` rather than inside either store. A display strips
+  `customBackgroundPath` and `murottalAudioPaths` from an incoming push; a controller receiving the
+  display's snapshot adopts them, which is what lets it show the right thumbnails. Withholding them
+  in the store would have broken the download direction in order to protect the push direction.
+  The four genuinely device-local fields — `id`, `pinCode`, `connectivityMode`, `remoteTvIp` — are
+  wrong to adopt whichever way the snapshot travels, and those *are* withheld in the store.
+- **Only the announcements a sender could have seen are replaced.** The state payload carries
+  active announcements alone (see `ServerDataSource.getActiveAnnouncements`), so a switched-off one
+  is invisible to every controller and cannot have been meant for deletion. `replaceTables` calls
+  `clearActiveAnnouncements`, not `clearAnnouncements`. The consequence, worth knowing: switching
+  an announcement *off* does not cross a sync — the same shape of gap as the media tables, and
+  losing a takmir's archive of old running texts would be worse.
+
+**`applySnapshot` is on `ConfigRepository`, not `ServerDataSource`**, and that placement is the
+point rather than a convenience: receiving a whole table is not a server's privilege, it is what
+either end of a sync does. A display applies what a controller pushed; a controller applies the
+snapshot the display just served. One `@Transaction` on Room, one `realm.write` on Realm — a
+half-applied sync leaves a display showing a mixture of two devices' settings with nothing on
+screen to say so.
+
+The pull side decodes as `MosqueSnapshot` now — the class the display already serves — so the field
+list *is* the class rather than a list to keep in step, and both schedule tables reach a controller
+for the first time.
+
+**A real bug the tests found, not review:** `core:protocol` carried the serialization *library* and
+not the compiler plugin, so `SyncConflict.Stamps` was `@Serializable` in name only and the first
+encode threw `Serializer for class 'SnapshotPush' is not found` at runtime. Exactly the trap
+`core:model`'s build file already records in a comment; it had simply never been exercised in
+`core:protocol`, because nothing there had been serialized yet. **An `@Serializable` class in a
+module without `alias(libs.plugins.kotlin.serialization)` compiles and then throws.**
+
+**Still not driven on hardware.** Everything above is unit-tested — 51 config fields carried on
+both stores and mutation-tested by dropping one, null versus empty, media unreachable, the archived
+announcement surviving, the four device-local fields kept, every written table stamped and no other
+— but nobody has yet pressed Sinkronkan on a phone and watched a television take its settings. That
+is the next thing to do, and the user's stated case for it is the Realme's data overwriting the AQUA
+TV.
+
 ### Migration order
 
 Each step is independently reviewable. Steps 1–6 stay Android-only and remain
@@ -1749,7 +1816,7 @@ shippable throughout.
 |---|---|---|
 | ~~1~~ | ~~`build-logic` + `core:model` + `core:prayer`; fix `PrayerCalculator` purity~~ **done** | yes |
 | ~~2~~ | ~~Extract `ConfigRepository` interface + Koin; delete `getInstance()`~~ **done** | yes |
-| 3 | Realm → Room in `data`, shared entity/wire classes, `MosqueSnapshot` | **mostly done** — Room, the DAO, a tested data migration and a Room `ConfigRepository` have landed; Koin still binds Realm until the nine server-only members exist on both. **No longer a data-loss step; see below.** |
+| 3 | Realm → Room in `data`, shared entity/wire classes, `MosqueSnapshot` | **mostly done** — Room, the DAO, a tested data migration, a Room `ConfigRepository` and the push direction have all landed, and Koin binds Room. What remains is IndexedDB for the browser's offline replica, and driving a sync on hardware. **No longer a data-loss step; see below.** |
 | 3a | ~~Split the Realm entities from the domain model~~ **done**, ahead of the rest of step 3 — it touches no schema, so it carries none of step 3's data-loss risk, and both UI modules were blocked on it | yes |
 | 4 | `core:protocol` **started** — action names are shared constants; `org.json` → kotlinx.serialization still to do | yes |
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
@@ -1979,10 +2046,17 @@ Visual version, with swatches and type specimens at true size:
 
 ### Open decisions
 
-**How conflicts are resolved.** Storage is settled; the merge model is not.
-Comparing only local-versus-server fires the confirmation dialog even when just
-one side changed, which trains people to dismiss it — and then they dismiss the
-one that mattered. Keep **three** snapshots instead:
+**How conflicts are resolved — a two-snapshot approximation has shipped; the third
+snapshot has not.** `SyncConflict` compares per-table timestamps and
+`SyncConflictDialog` offers the three choices, so the feature works. But it is
+still local-versus-server, and the concern below is unaddressed rather than
+answered: `needsAsking` suppresses the dialog only when *one side has never
+written at all*, which spares a fresh controller and nothing else. Two devices
+that both write regularly will see the dialog on most syncs, which is precisely
+the reflex that gets it dismissed on the one occasion it mattered.
+
+The fix is unchanged and is a storage question, not a UI one — nothing records
+the state as of the last successful sync. Keep **three** snapshots instead:
 
 | State | Action |
 |---|---|
