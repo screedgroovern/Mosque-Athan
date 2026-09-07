@@ -134,6 +134,21 @@ class SnapshotPushTest {
     }
 
     @Test
+    fun aPayloadWithTheWrongTypesThrowsRatherThanDecodingToDefaults() {
+        // Found on hardware, restoring a display from values read out of SQLite: integer 0/1 where
+        // a Boolean belongs. Silently decoding to defaults would be the worst outcome — the push
+        // would apply, carrying every Boolean setting as false, and report success. Throwing lets
+        // the caller refuse the whole message, which is what the display does.
+        val wrongTypes = """{"action":"apply_snapshot","config":{"jumatEnabled":1}}"""
+
+        val thrown = runCatching { parseSnapshotPush(wrongTypes) }.exceptionOrNull()
+        assertTrue(
+            thrown != null,
+            "a payload whose booleans are 0/1 must not decode; it must be refused"
+        )
+    }
+
+    @Test
     fun theReceiverKeepsItsOwnFilePaths() {
         val sender = MosqueConfig(
             adzanLeadMinutes = 9,

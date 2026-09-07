@@ -1999,10 +1999,25 @@ class SettingsServer(
                     // snapshot is whole objects in both directions, so the @Serializable classes
                     // are the contract and a config field added later crosses on its own. Reading
                     // fifty-one keys by hand here is exactly the drift `update_config` above shows.
-                    val push = runCatching { parseSnapshotPush(message) }.getOrNull()
-                    if (push == null || push.isEmpty) {
-                        // A push naming no table is what "use the display's copy" sends, and it is
-                        // not an error — the broadcast below is the whole answer to it.
+                    // A payload that will not decode and a payload that names no table are two
+                    // different answers and must not be collapsed. Found on hardware: a restore
+                    // whose booleans arrived as 0/1 instead of true/false was discarded *under a
+                    // success reply* — which from the controller is indistinguishable from "the
+                    // display kept its own copy". The takmir is told it worked and their evening's
+                    // edits are simply not there.
+                    val push = try {
+                        parseSnapshotPush(message)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "apply_snapshot payload did not decode", e)
+                        connection.send(JSONObject().apply {
+                            put("type", "error")
+                            put("message", "Data sinkronisasi tidak bisa dibaca: ${e.message}")
+                        }.toString())
+                        return
+                    }
+                    if (push.isEmpty) {
+                        // Naming no table is what "use the display's copy" sends, and it is not an
+                        // error — the broadcast is the whole answer to it.
                         Log.i(TAG, "apply_snapshot carried no table")
                         broadcastState()
                         return
