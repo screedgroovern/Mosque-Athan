@@ -192,7 +192,9 @@ interface MosqueDao {
         backgrounds: List<DashboardBackgroundEntity>,
         slideshow: List<SlideshowScheduleEntity>,
         standby: List<StandbyScheduleEntity>,
-        kemenag: List<KemenagScheduleEntity>
+        kemenag: List<KemenagScheduleEntity>,
+        /** One moment for the whole migration; see RealmToRoomMigration on why. */
+        stampedAt: Long
     ) {
         upsertAnnouncements(announcements)
         upsertMedia(media)
@@ -201,9 +203,26 @@ interface MosqueDao {
         upsertSlideshowSchedules(slideshow)
         upsertStandbySchedules(standby)
         upsertKemenagSchedules(kemenag)
+        // Every table it filled is stamped, at one moment.
+        //
+        // Without this a freshly migrated display reports "never written" for tables plainly full
+        // of rows — the row stamps exist, but table_stamps is what a sync reads — and a controller
+        // comparing notes would conclude the display has nothing and take its own copy. The whole
+        // point of the migration is that the display's data survives; this is what says so.
+        val at = stampedAt
+        if (announcements.isNotEmpty()) stampTable(TableStampEntity("announcements", at))
+        if (media.isNotEmpty()) stampTable(TableStampEntity("media", at))
+        if (fridayMedia.isNotEmpty()) stampTable(TableStampEntity("friday_media", at))
+        if (backgrounds.isNotEmpty()) stampTable(TableStampEntity("dashboard_backgrounds", at))
+        if (slideshow.isNotEmpty()) stampTable(TableStampEntity("slideshow_schedules", at))
+        if (standby.isNotEmpty()) stampTable(TableStampEntity("standby_schedules", at))
+
         // Last, deliberately: it is the marker, so even if the transaction guarantee were ever lost
         // the failure mode becomes "migrate again" rather than "never migrate the rest".
-        if (config != null) upsertConfig(config)
+        if (config != null) {
+            upsertConfig(config)
+            stampTable(TableStampEntity("mosque_config", at))
+        }
     }
 
     /**

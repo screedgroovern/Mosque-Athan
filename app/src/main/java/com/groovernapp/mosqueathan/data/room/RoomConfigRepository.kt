@@ -237,6 +237,9 @@ class RoomConfigRepository(
 
     // --- config writes -----------------------------------------------------------------------
 
+    override suspend fun tableTimestamps(): Map<String, Long> =
+        dao.tableTimestamps().associate { it.tableName to it.lastModified }
+
     override suspend fun resetToDefaults() {
         dao.clearAnnouncements()
         dao.getMedia().forEach { dao.deleteMedia(it.id) }

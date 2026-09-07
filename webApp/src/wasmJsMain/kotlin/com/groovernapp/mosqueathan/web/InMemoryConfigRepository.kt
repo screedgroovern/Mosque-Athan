@@ -83,6 +83,14 @@ class InMemoryConfigRepository(
     override fun getStandbySchedules(): List<StandbySchedule> = standbySchedules.value
     override fun getSlideshowSchedules(): List<SlideshowSchedule> = slideshowSchedules.value
     override fun getIqomahMinutes(prayerType: PrayerType): Int = 0
+    /**
+     * Empty, because this store is not one: the page holds the display's own snapshot and has no
+     * local writes of its own to date. A browser cannot meaningfully offer "keep this device's
+     * copy" until the offline replica lands, and reporting nothing is what keeps the sync from
+     * pretending otherwise.
+     */
+    override suspend fun tableTimestamps(): Map<String, Long> = emptyMap()
+
     override suspend fun resetToDefaults() = Unit
     override suspend fun updateConfig(config: MosqueConfig) = Unit
     override suspend fun updateConnectivityMode(mode: String) = Unit

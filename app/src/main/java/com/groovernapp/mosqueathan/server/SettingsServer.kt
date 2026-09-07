@@ -1133,6 +1133,18 @@ class SettingsServer(
         }
         json.put("standbySchedules", standbyArray)
 
+        // When each table last changed, which is what a controller compares against its own copy
+        // before deciding whose data survives a sync. An empty object means the display's store
+        // cannot say — Realm has no such column — and a controller seeing that asks the user
+        // outright rather than comparing numbers it does not have.
+        //
+        // runBlocking, because this builder is not a suspending function and is called from the
+        // socket threads. It is one small select over seven rows, beside the ten synchronous
+        // repository reads above it.
+        val stamps = JSONObject()
+        runBlocking { repository.tableTimestamps() }.forEach { (table, at) -> stamps.put(table, at) }
+        json.put("tableTimestamps", stamps)
+
         val result = json.toString()
         val duration = System.currentTimeMillis() - startTime
         logDebug("State JSON generated in ${duration}ms, size: ${result.length} bytes")

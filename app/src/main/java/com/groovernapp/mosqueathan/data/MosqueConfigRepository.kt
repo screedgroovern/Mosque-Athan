@@ -323,6 +323,16 @@ class MosqueConfigRepository : ServerDataSource {
         previousPath?.let { deleteFileIfNoLongerReferenced(it) }
     }
 
+    /**
+     * Empty, permanently.
+     *
+     * Realm's entities carry no `lastModified` and adding one would mean a Realm schema migration
+     * for a store that is being retired — so this reports that it cannot say, and a sync asks the
+     * user outright instead of comparing numbers it does not have. It is also the sharpest reason
+     * the Room switch mattered: the conflict dialog is only as useful as this method.
+     */
+    override suspend fun tableTimestamps(): Map<String, Long> = emptyMap()
+
     override suspend fun resetToDefaults() {
         realm.write {
             val entity = query<MosqueConfigEntity>("id == 'config'").first().find()

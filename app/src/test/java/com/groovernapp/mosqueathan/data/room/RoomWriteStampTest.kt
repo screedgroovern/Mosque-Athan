@@ -81,7 +81,11 @@ class RoomWriteStampTest {
         "deleteDevice" to "removes the row; nothing remains to stamp",
         "triggerKemenagFetchForDuration" to
             "stores only what an HTTP fetch returned, and KemenagFetcher is a concrete class " +
-            "with no seam, so this path cannot be reached from a unit test without a network"
+            "with no seam, so this path cannot be reached from a unit test without a network",
+        "tableTimestamps" to
+            "a read, not a write — it is suspend only because Room's queries are, and this " +
+            "class's heuristic reads suspend as mutating. It is what the stamps are *for*, and " +
+            "the guard that it stays truthful is SyncTimestampCoverageTest"
     )
 
     private val cases = listOf(

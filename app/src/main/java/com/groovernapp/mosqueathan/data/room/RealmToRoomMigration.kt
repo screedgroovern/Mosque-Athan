@@ -265,7 +265,8 @@ object RealmToRoomMigration {
             backgrounds = backgrounds,
             slideshow = slideshow,
             standby = standby,
-            kemenag = kemenag
+            kemenag = kemenag,
+            stampedAt = now
         )
 
         Log.i(TAG, "migrated $counts")

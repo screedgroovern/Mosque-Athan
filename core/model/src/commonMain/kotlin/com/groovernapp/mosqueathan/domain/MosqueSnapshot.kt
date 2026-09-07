@@ -33,7 +33,15 @@ data class MosqueSnapshot(
     val dashboardBackgrounds: List<DashboardBackground> = emptyList(),
     val devices: List<ConnectedDevice> = emptyList(),
     val slideshowSchedules: List<SlideshowSchedule> = emptyList(),
-    val standbySchedules: List<StandbySchedule> = emptyList()
+    val standbySchedules: List<StandbySchedule> = emptyList(),
+    /**
+     * When each table on the display last changed, for a sync to compare.
+     *
+     * Defaulted to empty so a snapshot from a display that predates this field still decodes —
+     * which is the same reason every other field here has a default, and the habit the schema-skew
+     * note under *Persistence* asks for.
+     */
+    val tableTimestamps: Map<String, Long> = emptyMap()
 )
 
 /**

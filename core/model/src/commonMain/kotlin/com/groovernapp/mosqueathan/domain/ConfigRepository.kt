@@ -23,6 +23,21 @@ import kotlinx.coroutines.flow.Flow
 interface ConfigRepository : DisplayDataSource {
 
     // Configuration
+    /**
+     * When each table last changed, keyed by table name, for comparing two devices.
+     *
+     * Empty means "this store cannot say", which is a real answer rather than a failure: the Realm
+     * implementation has no such column and never did, so a controller still on Realm reports
+     * nothing and a sync falls back to asking the user outright. Deletions are included — the
+     * value comes from a table that is written on every mutation rather than from `MAX()` over the
+     * rows, because a maximum cannot see a row that is gone.
+     *
+     * The names are [com.groovernapp.mosqueathan.protocol]'s compared-table names. Kept as strings
+     * rather than an enum because they cross the wire and an older peer must be able to send one
+     * this build has never heard of without the decode failing.
+     */
+    suspend fun tableTimestamps(): Map<String, Long>
+
     suspend fun resetToDefaults()
     suspend fun updateConfig(config: MosqueConfig)
 
