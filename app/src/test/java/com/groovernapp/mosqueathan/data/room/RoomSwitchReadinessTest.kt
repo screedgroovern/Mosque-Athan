@@ -36,6 +36,61 @@ class RoomSwitchReadinessTest {
     )
 
     /**
+     * Every other file that names the concrete repository, which this test used to miss entirely.
+     *
+     * It listed two consumers by hand, and `MainActivity` was not one of them — so when the store
+     * was switched, `MainActivity` went on injecting `MosqueConfigRepository` for the server while
+     * `AppViewModel` took `DisplayDataSource` for the display. The app ran **both** stores at once:
+     * a setting changed through the panel landed in Realm, and the television calculated from Room
+     * and showed prayer times from the configuration as it had been before. Nothing failed and each
+     * half looked correct on its own.
+     *
+     * A hand-picked list of consumers cannot catch that. This searches the whole source tree
+     * instead, so a new concrete reference anywhere is a failure rather than a discovery made on a
+     * television.
+     */
+    private val allowedToNameTheConcreteClass = setOf(
+        // Its own file, and the DI module that chooses between the two stores.
+        "MosqueConfigRepository.kt",
+        "AppModule.kt",
+        // The Realm-only adapter, which exists to be swapped for the Room one.
+        "RealmKemenagScheduleSource.kt",
+        // The migration reads the old entities directly; that is its whole job.
+        "RealmToRoomMigration.kt"
+    )
+
+    /**
+     * Comments removed before matching, as in [ActionNameDriftTest] and for the same reason.
+     *
+     * This reads source, and every file that *explains* the switch names the class it moved away
+     * from — including this test's own subject. Matching those would make the guard fire on its
+     * own documentation, which is how a source-reading test earns the reputation of crying wolf.
+     */
+    private fun stripComments(source: String): String {
+        val noBlocks = Regex("/\\*.*?\\*/", RegexOption.DOT_MATCHES_ALL).replace(source, "")
+        return Regex("//[^\n]*").replace(noBlocks, "")
+    }
+
+    @Test
+    fun nothingElseNamesTheConcreteRepository() {
+        val root = File("src/main/java")
+        assertTrue("cannot read ${root.absolutePath}", root.isDirectory)
+        val offenders = root.walkTopDown()
+            .filter { it.isFile && it.extension == "kt" }
+            .filter { it.name !in allowedToNameTheConcreteClass }
+            .filter { "MosqueConfigRepository" in stripComments(it.readText()) }
+            .map { it.name }
+            .toList()
+        assertTrue(
+            "these name MosqueConfigRepository directly, so switching the store leaves them on " +
+                "Realm while the rest moves: $offenders\nReach for ServerDataSource, " +
+                "ConfigRepository or DisplayDataSource instead — whichever is the least authority " +
+                "that file needs.",
+            offenders.isEmpty()
+        )
+    }
+
+    /**
      * Members those consumers call that `RoomConfigRepository` does not have.
      *
      * **Empty, and that is the assertion.** It held nine entries — device registration, presence,

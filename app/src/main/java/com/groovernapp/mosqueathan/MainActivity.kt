@@ -56,7 +56,17 @@ class MainActivity : ComponentActivity() {
             KeyEvent.KEYCODE_DPAD_DOWN
         )
     )
-    private val configRepository: com.groovernapp.mosqueathan.data.MosqueConfigRepository by inject()
+    /**
+     * The interface, not the concrete class — and this line is why the storage switch was
+     * silently half-applied for an hour.
+     *
+     * It injected `MosqueConfigRepository` (Realm) while `AppViewModel` took `DisplayDataSource`
+     * (Room), so the server read and wrote one store and the display read the other. Setting the
+     * calculation method through the panel landed in Realm; the television calculated from Room and
+     * showed prayer times from the config as it had been before. Nothing failed, and both halves
+     * looked right on their own.
+     */
+    private val configRepository: com.groovernapp.mosqueathan.domain.ServerDataSource by inject()
     private var settingsServer: com.groovernapp.mosqueathan.server.SettingsServer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
