@@ -59,14 +59,13 @@ val appModule = module {
     // running in a mosque. Koin builds a single lazily, so whichever is not chosen is never
     // constructed and its database is never opened.
     //
-    // Still Realm. Room has the schema, a tested data migration, a full ConfigRepository and the
-    // eight server members, but the switch itself has not been driven on hardware yet, and the
-    // display's prayer times read through KemenagScheduleSource — the one binding whose being
-    // wrong would be wrong on a television at adzan.
-    single<ServerDataSource> { get<MosqueConfigRepository>() }
-    single<KemenagScheduleSource> { RealmKemenagScheduleSource(get()) }
-    // single<ServerDataSource> { get<RoomConfigRepository>() }
-    // single<KemenagScheduleSource> { RoomKemenagScheduleSource(get()) }
+    // Room. The data is carried across on first launch by RealmToRoomMigration, which never
+    // deletes the old file — so reverting is these two lines plus a reinstall, and the Realm
+    // database is still on disk with a backup beside it.
+    single<ServerDataSource> { get<RoomConfigRepository>() }
+    single<KemenagScheduleSource> { RoomKemenagScheduleSource(get()) }
+    // single<ServerDataSource> { get<MosqueConfigRepository>() }
+    // single<KemenagScheduleSource> { RealmKemenagScheduleSource(get()) }
     // ---------------------------------------------------------------------------------------
 
     // Everything else resolves from whichever was chosen above, so no consumer names a store.
