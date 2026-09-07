@@ -64,6 +64,8 @@ import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.groovernapp.mosqueathan.ui.design.LocalDisplayApproval
+import com.groovernapp.mosqueathan.ui.settings.pairing.PinGate
 import com.groovernapp.mosqueathan.ui.settings.sync.SyncConflictDialog
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesEvent
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel
@@ -481,6 +483,15 @@ fun SettingsScreen(
         // Only present while a sync found changes on both sides. Nothing has been written when
         // this appears: the ViewModel holds the display's snapshot and waits for the answer, so
         // dismissing leaves both devices exactly as they were.
+        // Above everything, including the sync dialog: a device the display has not allowed can
+        // neither read nor write, so there is nothing underneath worth interacting with. Drawn only
+        // when a host can actually verify a PIN — a display has nobody to ask, provides no
+        // DisplayApproval, and never sees this.
+        val approval = LocalDisplayApproval.current
+        if (LocalLinkStatus.current == LinkStatus.NeedsApproval && approval != null) {
+            PinGate(approval)
+        }
+
         syncConflict?.let { prompt ->
             SyncConflictDialog(
                 server = prompt.server,

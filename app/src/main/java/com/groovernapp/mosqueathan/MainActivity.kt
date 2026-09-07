@@ -32,12 +32,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.res.painterResource
+import com.groovernapp.mosqueathan.data.remote.AndroidDisplayApproval
 import com.groovernapp.mosqueathan.data.remote.AndroidMediaImageLoader
+import com.groovernapp.mosqueathan.data.remote.RemoteActionSender
+import com.groovernapp.mosqueathan.data.remote.toUiStatus
 import com.groovernapp.mosqueathan.ui.design.LocalAppVersion
 import com.groovernapp.mosqueathan.ui.design.LocalServerAddress
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.DisplayBackgrounds
 import com.groovernapp.mosqueathan.ui.design.LocalDisplayBackgrounds
+import com.groovernapp.mosqueathan.ui.design.LocalDisplayApproval
+import com.groovernapp.mosqueathan.ui.design.LocalLinkStatus
 import com.groovernapp.mosqueathan.ui.design.LocalMediaImageLoader
 
 class MainActivity : ComponentActivity() {
@@ -67,6 +72,9 @@ class MainActivity : ComponentActivity() {
      * looked right on their own.
      */
     private val configRepository: com.groovernapp.mosqueathan.domain.ServerDataSource by inject()
+
+    /** The session with the display this device controls; a no-op on the display itself. */
+    private val remoteSender: RemoteActionSender by inject()
     private var settingsServer: com.groovernapp.mosqueathan.server.SettingsServer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -93,6 +101,12 @@ class MainActivity : ComponentActivity() {
                 // SettingsServer still serves main_bg_default to the web panel as raw
                 // bytes, so it has to remain reachable as a resource. ui:display receives
                 // them as Painters instead of knowing about R.
+                // Which role this device is playing right now. One build is both, and the user
+                // can switch between them in settings, so this is collected rather than read once.
+                val isController = configRepository.getConfigFlow()
+                    .collectAsState(initial = configRepository.getConfig())
+                    .value.connectivityMode == REMOTE_MODE
+
                 CompositionLocalProvider(
                     // Only the platform can answer this, so it is handed in here rather
                     // than read from the screen that shows it.
@@ -109,6 +123,20 @@ class MainActivity : ComponentActivity() {
                     // both roles, so the loader decides per call rather than assuming local.
                     LocalMediaImageLoader provides remember {
                         AndroidMediaImageLoader(configRepository)
+                    },
+                    // This device's standing with the display it controls. Previously nothing was
+                    // provided here, so an Android controller showed no status chip at all — it
+                    // posted each action and forgot, and had nothing to report. It registers now,
+                    // so it does.
+                    LocalLinkStatus provides remoteSender.status.collectAsState().value.toUiStatus(),
+                    // A display has nobody to ask for approval, so it provides **null** and the
+                    // PIN gate cannot be drawn at all. Gating on the mode rather than trusting the
+                    // link status is deliberate: the status happens to stay Unknown on a display
+                    // today, and if that ever changed the mosque's own television would lock
+                    // itself out of its own settings behind a PIN prompt. Make it impossible
+                    // rather than merely unlikely.
+                    LocalDisplayApproval provides remember(isController) {
+                        if (isController) AndroidDisplayApproval(remoteSender) else null
                     }
                 ) {
                     val appState by appViewModel.appState.collectAsState()
@@ -276,5 +304,6 @@ class MainActivity : ComponentActivity() {
 
     private companion object {
         const val UNKNOWN_VERSION = "unknown"
+        const val REMOTE_MODE = "REMOTE"
     }
 }

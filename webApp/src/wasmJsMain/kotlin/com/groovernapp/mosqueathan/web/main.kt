@@ -4,6 +4,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.groovernapp.mosqueathan.ui.design.LinkStatus
 import com.groovernapp.mosqueathan.ui.design.LocalLinkStatus
+import com.groovernapp.mosqueathan.ui.design.DisplayApproval
+import com.groovernapp.mosqueathan.ui.design.LocalDisplayApproval
 import com.groovernapp.mosqueathan.ui.design.LocalMediaImageLoader
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -58,7 +60,16 @@ fun main() {
                 LocalDisplayBackgrounds provides webBackgrounds,
                 LocalAppVersion provides WEB_APP_VERSION,
                 LocalLinkStatus provides linkStatus.toUiStatus(),
-                LocalMediaImageLoader provides mediaImages
+                LocalMediaImageLoader provides mediaImages,
+                // The way past a display's PIN. The browser holds a registered socket, so it can
+                // await `pin_verification_result` on the same connection that asked — see
+                // DisplayLink.verifyPin. Before this the panel could report NeedsApproval and
+                // offer no way to become the person who approves it.
+                LocalDisplayApproval provides remember {
+                    object : DisplayApproval {
+                        override suspend fun verifyPin(pin: String) = link.verifyPin(pin)
+                    }
+                }
             ) {
                 MosqueTheme {
                     // A second MessageHost, deliberately. SettingsScreen already renders one for

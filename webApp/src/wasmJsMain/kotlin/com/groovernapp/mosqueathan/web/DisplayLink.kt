@@ -1,6 +1,8 @@
 package com.groovernapp.mosqueathan.web
 
 import com.groovernapp.mosqueathan.domain.MosqueSnapshot
+import com.groovernapp.mosqueathan.ui.design.PinResult
+import kotlinx.coroutines.CompletableDeferred
 import com.groovernapp.mosqueathan.domain.mosqueJson
 import com.groovernapp.mosqueathan.protocol.RemoteActions
 import kotlinx.browser.window
@@ -167,6 +169,38 @@ class DisplayLink(
         }
     }
 
+    /**
+     * The PIN attempt currently in flight, waiting for the display to answer.
+     *
+     * One at a time, because the gate that asks does not let a second attempt start while the
+     * first is outstanding. `pin_verification_result` carries no correlation id, so a second
+     * concurrent attempt could only be matched by guessing.
+     */
+    private var pendingPin: CompletableDeferred<PinResult>? = null
+
+    /**
+     * Sends [pin] and suspends until the display answers.
+     *
+     * Not routed through [send], deliberately: [send] queues when the socket is down, and a PIN
+     * held for later delivery would leave the gate spinning with nothing to report. If there is no
+     * open socket there is no approval to be had right now, and saying so is the useful answer.
+     */
+    suspend fun verifyPin(pin: String): PinResult {
+        val open = socket?.takeIf { it.readyState == WebSocket.OPEN }
+            ?: return PinResult.Unreachable(null)
+
+        val awaiting = CompletableDeferred<PinResult>()
+        pendingPin = awaiting
+        open.send(
+            buildJsonObject {
+                put("action", RemoteActions.VERIFY_PIN)
+                put("deviceId", deviceId)
+                put("pin", pin)
+            }.toString()
+        )
+        return awaiting.await()
+    }
+
     /** Sends an action, or holds it until the socket is ready. */
     fun send(action: String, build: JsonObjectBuilder.() -> Unit) {
         val payload = buildJsonObject {
@@ -222,6 +256,22 @@ class DisplayLink(
                 if (allowed) flushPending()
             }
 
+            "pin_verification_result" -> {
+                val success = runCatching {
+                    mosqueJson.parseToJsonElement(text).asObjectField("success") == "true"
+                }.getOrDefault(false)
+                if (success) _status.value = Status.Connected
+                val reason = runCatching {
+                    mosqueJson.parseToJsonElement(text).asObjectField("error")
+                }.getOrNull()
+                // Completing the attempt is what releases the gate. A reply with nothing waiting
+                // on it is not an error — a reconnect can deliver one late.
+                pendingPin?.complete(
+                    if (success) PinResult.Accepted else PinResult.Rejected(reason)
+                )
+                pendingPin = null
+            }
+
             "state" -> {
                 // A snapshot arriving is the only proof the display accepted this device, so it
                 // also settles the status — a registration_result can be missed on a reconnect.
@@ -230,6 +280,14 @@ class DisplayLink(
                         repository.apply(it)
                         _status.value = Status.Connected
                         flushPending()
+                        // A snapshot is proof of acceptance, so it also settles a PIN attempt
+                        // still waiting. On this socket the result frame does arrive and normally
+                        // settles it first; without this, a state delivered *without* it would
+                        // leave the gate spinning on a PIN the display had already accepted. The
+                        // Android controller has no choice in the matter — over HTTP the state is
+                        // the only reply it gets. See DisplayReply in :app.
+                        pendingPin?.complete(PinResult.Accepted)
+                        pendingPin = null
                     }
             }
         }
