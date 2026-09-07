@@ -1072,7 +1072,9 @@ knowing before that work starts.
 
 **Testing note:** the settings entry sequence must arrive back to back. `input dpad -d 0 keyevent`
 is necessary but not sufficient — four presses one second apart never opened settings, and the same
-four in a single `adb shell "…; …; …; …"` opened it every time.
+four in a single `adb shell "…; …; …; …"` opened it every time. **On a phone, send five**: the
+first press is consumed leaving touch input mode, so four only ever accumulate three. Measured on
+the Realme, and it is a real defect for users, not only for scripts — see the sync run below.
 
 ### The QR scanner is not a parity gap — no browser can have one
 
@@ -1839,10 +1841,49 @@ its original id.
   `curl` verification against a display must include one. `RemoteActionSender` sends
   `remote_${Build.MODEL}`, which is why the app never hits this.
 
-**The controller's half is still untested**, and needs the phone unlocked: `syncWithTvServer` is
-reachable only from the Sinkronkan control, so the dialog appearing, the three buttons, and
-`tablesToPush` have not been exercised on a device. What *is* proven is everything downstream of
-the message.
+#### And driven from the phone: the whole thing works, and cost two bugs on the way
+
+Realme as the controller, AQUA TV as the display, both on this build, driven through the Realme's
+**own** settings UI rather than over HTTP. The dialog opened naming five sections with both
+timestamps, "Pakai data perangkat ini" was pressed, and the display took it:
+
+| Asserted | Result |
+|---|---|
+| The dialog appears when both sides have written | yes — five sections named, each with the display's time and this device's |
+| Settings cross | `jumatEnabled` 1 → 0, `standbyModeEnabled`, `slideshowEnabled`, `adzanFooterText`, all four matching the Realme's values exactly |
+| Announcements cross | 3 → 6, the Realme's six, on the television's own running-text bar |
+| A deletion crosses | slideshow 1 → 0, because the Realme holds none |
+| `connectivityMode` / `remoteTvIp` | TV stayed `SERVER` / `""` while the Realme genuinely held `REMOTE` / `192.168.1.128` |
+| Media tables | untouched, `dashboard_backgrounds` stamp unmoved |
+| Cancel | dismissed with the TV's config, tables and stamps byte-identical |
+
+Restored afterwards, all 55 config fields identical and every table back.
+
+**Two bugs the phone found that the HTTP run could not.**
+
+- **On a phone the first D-pad press is swallowed, so UP UP DOWN DOWN does nothing.** Four
+  injected presses all reached `ViewRootImpl` (logged, `source=0x201`) and settings did not open;
+  five presses opened it every time. Compose consumes the first key to leave touch input mode, so
+  `Activity.onKeyDown` sees only three. On the television the app is already in non-touch mode,
+  which is why this has never shown there. **Not fixed** — the fix belongs in `dispatchKeyEvent`
+  and would change the television's path too. For now: on a phone, press the sequence twice.
+- **Connect and the QR scanner synced with the previous address.** Both save the address and sync
+  in one handler, and `syncWithTvServer` read it back out of state, which has not moved yet. The
+  QR half is the takmir's first move after pairing and was worse: a new controller has no stored
+  address, so the sync returned early while the message said "Terhubung ke TV via QR". Fixed —
+  `SyncRequested` carries the address; verified both ways on the Realme (a wrong address now
+  fails instead of silently reaching the right one, and the correct address opens the dialog on
+  the *first* press).
+
+**One honest wrinkle, not a bug.** The dialog lists `dashboard_backgrounds` among the differing
+sections, and no choice can act on it — the media tables are not pushable. So a takmir who picks
+"use this device's copy" will see backgrounds listed again on the next sync. The dialog is right
+that they differ; it just cannot say that this one is not on offer.
+
+**And a property worth stating because it surprised the run:** choosing "use this device's copy"
+really does replace *everything*. `jumatEnabled` went to `false` on the television because the
+Realme had it off — a setting nobody was thinking about when they pressed the button. That is what
+the danger styling is for.
 
 **Two device notes worth keeping.** The AQUA TV sleeps and `MainActivity` goes with it, so port
 8080 stops answering and it reads exactly like a network fault — `dumpsys power | grep
