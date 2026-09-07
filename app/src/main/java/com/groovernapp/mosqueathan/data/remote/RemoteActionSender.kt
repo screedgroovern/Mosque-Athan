@@ -62,6 +62,24 @@ class RemoteActionSender(
     private var registeredWith: String? = null
     private val registration = Mutex()
 
+    /**
+     * Registers with the display now, rather than waiting for the first settings change.
+     *
+     * Without this the gate could not appear at all until the takmir touched something: [status]
+     * starts [Status.Unknown], and only [send] and [verifyPin] register. So a controller opened
+     * against a PIN-protected display showed the panel full of its own stale values, with no
+     * status chip and no PIN prompt — and the first control pressed was refused silently, *then*
+     * the gate appeared. Asking on arrival is what makes "this display wants a PIN" the first
+     * thing the takmir sees instead of the second.
+     *
+     * Safe to call repeatedly and on a display: [target] returns null when this device is not a
+     * controller, so there is nobody to tell and nothing happens.
+     */
+    fun connect() {
+        val target = target() ?: return
+        scope.launch { ensureRegistered(target) }
+    }
+
     override fun send(action: String, build: JsonObjectBuilder.() -> Unit) {
         val target = target() ?: return
         scope.launch {

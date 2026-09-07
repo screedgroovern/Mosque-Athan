@@ -107,6 +107,13 @@ class MainActivity : ComponentActivity() {
                     .collectAsState(initial = configRepository.getConfig())
                     .value.connectivityMode == REMOTE_MODE
 
+                // Ask the display where we stand as soon as a controller opens, so a PIN-protected
+                // display says so before the takmir presses anything. Keyed on the role, so
+                // switching to Remote in settings registers without a restart.
+                LaunchedEffect(isController) {
+                    if (isController) remoteSender.connect()
+                }
+
                 CompositionLocalProvider(
                     // Only the platform can answer this, so it is handed in here rather
                     // than read from the screen that shows it.
