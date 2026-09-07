@@ -184,12 +184,18 @@ class SettingsViewModel(
      * copy. Asking there is how a dialog earns the reflex that dismisses it on the one occasion it
      * mattered.
      */
-    fun syncWithTvServer() {
+    fun syncWithTvServer(address: String? = null) {
         val config = _configState.value
-        if (config.connectivityMode != "REMOTE" || config.remoteTvIp.isEmpty()) return
+        // The caller's address wins, because Connect and the QR scanner save it and sync in the
+        // same handler: the repository write has not travelled back through the config flow yet,
+        // so reading state here would use the *previous* display — and after a first-ever QR scan
+        // there is no previous one, so the sync silently did nothing at all. Measured on the
+        // Realme: the address was stored correctly and the sync went to the old one.
+        val host = address?.trim()?.takeIf { it.isNotEmpty() } ?: config.remoteTvIp
+        if (config.connectivityMode != "REMOTE" || host.isEmpty()) return
 
         viewModelScope.launch {
-            when (val result = http.getText("http://${config.remoteTvIp}:8080/api/get_config")) {
+            when (val result = http.getText("http://$host:8080/api/get_config")) {
                 is HttpResult.Failure ->
                     _messages.emit(Lang.get("Sync failed: ${result.reason}", "Sinkronisasi gagal: ${result.reason}"))
 

@@ -38,5 +38,13 @@ sealed interface RemoteDevicesEvent {
     data class PinCodeEntered(val pin: String) : RemoteDevicesEvent
     data class DeviceMadeMaster(val deviceId: String) : RemoteDevicesEvent
     data class DeviceRemoved(val deviceId: String) : RemoteDevicesEvent
-    data object SyncRequested : RemoteDevicesEvent
+    /**
+     * Sync with the display, optionally at an [address] the user has just supplied.
+     *
+     * The address is carried rather than read back from state because Connect and the QR scanner
+     * both save it and sync in the same handler — and the saved value has not reached the state
+     * flow yet at that moment. Without this, the first press after changing the address syncs
+     * against the *previous* display, and a freshly scanned QR syncs against nothing at all.
+     */
+    data class SyncRequested(val address: String? = null) : RemoteDevicesEvent
 }

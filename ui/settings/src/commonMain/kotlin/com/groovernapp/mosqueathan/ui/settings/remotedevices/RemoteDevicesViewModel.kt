@@ -77,7 +77,7 @@ class RemoteDevicesViewModel(
                 remote.send(RemoteActions.DELETE_DEVICE) { put("deviceId", event.deviceId) }
             }
 
-            RemoteDevicesEvent.SyncRequested -> Unit // handled at the call site
+            is RemoteDevicesEvent.SyncRequested -> Unit // handled at the call site
         }
     }
 

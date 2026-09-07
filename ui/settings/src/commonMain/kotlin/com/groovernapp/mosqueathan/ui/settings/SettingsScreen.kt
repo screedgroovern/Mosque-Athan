@@ -413,7 +413,7 @@ fun SettingsScreen(
                                              // Syncing still needs an Android Context, so it stays here
                                              // rather than moving into the category ViewModel.
                                              if (event is RemoteDevicesEvent.SyncRequested) {
-                                                 viewModel.syncWithTvServer()
+                                                 viewModel.syncWithTvServer(event.address)
                                              } else {
                                                  remoteDevicesViewModel.onEvent(event)
                                              }

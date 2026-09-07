@@ -37,7 +37,7 @@ fun RemoteControlSettingsSegment(
     val isCompact = LocalWindowClass.current.isCompact
     val onUpdateRemoteTvIp: (String) -> Unit = { onEvent(RemoteDevicesEvent.RemoteTvIpEntered(it)) }
     val onUpdatePinCode: (String) -> Unit = { onEvent(RemoteDevicesEvent.PinCodeEntered(it)) }
-    val onSyncWithTv: () -> Unit = { onEvent(RemoteDevicesEvent.SyncRequested) }
+    val onSyncWithTv: (String?) -> Unit = { onEvent(RemoteDevicesEvent.SyncRequested(it)) }
     var ipText by remember(state.remoteTvIp) { mutableStateOf(state.remoteTvIp) }
     var pinText by remember { mutableStateOf("") }
 
@@ -91,7 +91,7 @@ fun RemoteControlSettingsSegment(
                             "Terhubung ke TV via QR: $address"
                         )
                     )
-                    onSyncWithTv()
+                    onSyncWithTv(address)
                 }
             }
         }
@@ -144,7 +144,7 @@ fun RemoteControlSettingsSegment(
                             } else {
                                 onUpdateRemoteTvIp(ipText.trim())
                                 say(Lang.get("Connecting to the TV at ${ipText.trim()}\u2026", "Menghubungkan ke TV ${ipText.trim()}..."))
-                                onSyncWithTv()
+                                onSyncWithTv(ipText.trim())
                             }
                         },
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
@@ -178,7 +178,7 @@ fun RemoteControlSettingsSegment(
                             } else {
                                 onUpdateRemoteTvIp(ipText.trim())
                                 say(Lang.get("Connecting to the TV at ${ipText.trim()}\u2026", "Menghubungkan ke TV ${ipText.trim()}..."))
-                                onSyncWithTv()
+                                onSyncWithTv(ipText.trim())
                             }
                         },
                         shape = RoundedCornerShape(MosqueTheme.radius.md),
@@ -207,7 +207,8 @@ fun RemoteControlSettingsSegment(
                         say(Lang.get("Connect to the TV first.", "Hubungkan ke TV terlebih dahulu!"))
                     } else {
                         say(Lang.get("Syncing with the TV\u2026", "Menyinkronkan data dengan TV..."))
-                        onSyncWithTv()
+                        // No address: this button means "the display I am already connected to".
+                        onSyncWithTv(null)
                     }
                 },
                 shape = RoundedCornerShape(MosqueTheme.radius.md),
