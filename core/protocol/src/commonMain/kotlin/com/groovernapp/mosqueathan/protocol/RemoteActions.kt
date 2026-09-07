@@ -85,6 +85,20 @@ object RemoteActions {
     const val RESET = "reset"
     const val SET_PIN = "set_pin"
     const val UPDATE_CONFIG = "update_config"
+
+    /**
+     * Replaces whole tables with a controller's copy, in one message and one transaction.
+     *
+     * The push direction, which did not exist: every other action changes one thing, and `sync`
+     * only ever *pulled* — so a takmir who edited at home had no way to make the display take their
+     * copy. Only the tables present in the payload are touched, which is what lets one action serve
+     * "keep mine", "keep theirs" and "keep whichever is newer, per table" without three code paths.
+     *
+     * Media rows are deliberately not among them. They name files, and a file on a phone is not a
+     * file on the display — pushing the rows would leave a television showing "failed to load
+     * image" for every slide. Media crosses through the upload endpoint, which already works.
+     */
+    const val APPLY_SNAPSHOT = "apply_snapshot"
     const val UPDATE_DASHBOARD_SETTINGS = "update_dashboard_settings"
     const val UPDATE_SHOW_SETTINGS_ON_TV = "update_show_settings_on_tv"
     const val UPDATE_STANDBY = "update_standby"

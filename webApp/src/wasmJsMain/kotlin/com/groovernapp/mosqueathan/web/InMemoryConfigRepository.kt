@@ -58,13 +58,7 @@ class InMemoryConfigRepository(
      * panel into "server" mode on the first snapshot.
      */
     fun apply(snapshot: MosqueSnapshot) {
-        val local = config.value
-        config.value = snapshot.config.copy(
-            id = local.id,
-            connectivityMode = local.connectivityMode,
-            remoteTvIp = local.remoteTvIp,
-            pinCode = local.pinCode
-        )
+        adopt(snapshot.config)
         media.value = snapshot.mediaList
         backgrounds.value = snapshot.dashboardBackgrounds
         fridayMedia.value = snapshot.fridayMediaList
@@ -72,6 +66,47 @@ class InMemoryConfigRepository(
         devices.value = snapshot.devices
         slideshowSchedules.value = snapshot.slideshowSchedules
         standbySchedules.value = snapshot.standbySchedules
+    }
+
+    /**
+     * The [ConfigRepository] half of the same operation, used when a sync resolves table by table.
+     *
+     * [apply] takes a whole snapshot because that is what arrives on the socket; this takes four
+     * nullable tables because a resolved conflict names a subset. Both funnel the config through
+     * [adopt], so the four fields this device keeps are listed once.
+     *
+     * Nothing here is ever the *push* direction: a browser panel is a connected client, so
+     * [tableTimestamps] returns empty and `SyncConflict.needsAsking` therefore never fires for it.
+     * That changes when IndexedDB lands and this becomes a real offline replica.
+     */
+    override suspend fun applySnapshot(
+        config: MosqueConfig?,
+        announcements: List<Announcement>?,
+        slideshowSchedules: List<SlideshowSchedule>?,
+        standbySchedules: List<StandbySchedule>?
+    ) {
+        config?.let { adopt(it) }
+        announcements?.let { this.announcements.value = it }
+        slideshowSchedules?.let { this.slideshowSchedules.value = it }
+        standbySchedules?.let { this.standbySchedules.value = it }
+    }
+
+    /**
+     * Takes [incoming] as this device's config, keeping the four fields that describe *this*
+     * device.
+     *
+     * Without the carry-over the panel flips to "server" on the first snapshot it receives, since
+     * the display's payload omits `connectivityMode` and `remoteTvIp` and they read back as
+     * defaults.
+     */
+    private fun adopt(incoming: MosqueConfig) {
+        val local = config.value
+        config.value = incoming.copy(
+            id = local.id,
+            connectivityMode = local.connectivityMode,
+            remoteTvIp = local.remoteTvIp,
+            pinCode = local.pinCode
+        )
     }
 
     override fun getConfigFlow(): Flow<MosqueConfig> = config.asStateFlow()

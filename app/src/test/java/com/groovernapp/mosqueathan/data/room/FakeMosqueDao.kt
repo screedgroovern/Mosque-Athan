@@ -171,6 +171,10 @@ class FakeMosqueDao(private val observable: Boolean = true) : MosqueDao {
         announcements.value = emptyList()
     }
 
+    override suspend fun clearActiveAnnouncements() {
+        announcements.value = announcements.value.filterNot { it.isActive }
+    }
+
     // --- slideshow media -----------------------------------------------------------------------
 
     override fun observeMedia(): Flow<List<MediaEntity>> =

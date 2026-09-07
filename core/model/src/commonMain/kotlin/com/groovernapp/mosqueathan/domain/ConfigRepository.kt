@@ -132,4 +132,35 @@ interface ConfigRepository : DisplayDataSource {
     fun getConnectedDevicesFlow(): Flow<List<ConnectedDevice>>
     suspend fun setDeviceMaster(id: String)
     suspend fun updatePinCode(newPin: String, changerDeviceId: String?)
+
+    /**
+     * Replaces whole tables with another device's copy, all or nothing.
+     *
+     * **Both directions use this.** A display applies what a controller pushed; a controller
+     * applies the snapshot the display just served. That symmetry is why it sits here rather than
+     * on [ServerDataSource] — receiving a whole table is not a server's privilege, it is what
+     * either end of a sync does.
+     *
+     * Null means "leave that table alone", which is how one call serves "keep mine wholesale" and
+     * "keep whichever side is newer, table by table" without two code paths. An empty *list* is
+     * not the same thing: it means empty that table here too, which is how a deletion crosses at
+     * all. Additive-only sync is how a running text a takmir removed at home reappears on the
+     * television.
+     *
+     * Media tables are absent by design — those rows name files, and a file on a phone is not a
+     * file on the display. See `SyncConflict.PUSHABLE_TABLES`.
+     *
+     * Four config fields are kept from the row already here whichever way the snapshot travels:
+     * `id`, `pinCode` (which never crosses the wire at all), `connectivityMode` and `remoteTvIp`
+     * (which describe *this* device). Everything else is taken. The file-bearing fields
+     * `customBackgroundPath` and `murottalAudioPaths` are *not* on that list, because which side
+     * owns a path depends on the direction — the display owns it, so a push strips them at the
+     * boundary while a download adopts them. `SnapshotPush.sanitisedConfig` is that boundary.
+     */
+    suspend fun applySnapshot(
+        config: MosqueConfig?,
+        announcements: List<Announcement>?,
+        slideshowSchedules: List<SlideshowSchedule>?,
+        standbySchedules: List<StandbySchedule>?
+    )
 }

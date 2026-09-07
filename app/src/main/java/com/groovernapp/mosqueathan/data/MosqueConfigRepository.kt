@@ -883,6 +883,134 @@ class MosqueConfigRepository : ServerDataSource {
         }
     }
 
+
+    /**
+     * Takes a controller's tables, replacing this device's. See [ServerDataSource.applySnapshot].
+     *
+     * The field list mirrors `MosqueConfigEntity.withSnapshot` in the Room package — four config
+     * fields are deliberately kept from the row already here, and the KDoc there says why each one
+     * is. This exists so that falling back to Realm for a release does not silently lose the
+     * ability to accept a sync; it leaves with the rest of Realm in 2.1.
+     *
+     * One `realm.write` for all four tables, which is Realm's transaction — a half-applied sync
+     * would leave the display showing a mixture of two devices' settings with nothing to say so.
+     */
+    override suspend fun applySnapshot(
+        config: MosqueConfig?,
+        announcements: List<Announcement>?,
+        slideshowSchedules: List<SlideshowSchedule>?,
+        standbySchedules: List<StandbySchedule>?
+    ) {
+        realm.write {
+            if (config != null) {
+                val entity = query<MosqueConfigEntity>("id == 'config'").first().find()
+                    ?: copyToRealm(MosqueConfigEntity().apply { id = "config" })
+                entity.latitude = config.latitude
+                entity.longitude = config.longitude
+                entity.iqomahSubuh = config.iqomahSubuh
+                entity.iqomahDzuhur = config.iqomahDzuhur
+                entity.iqomahAshar = config.iqomahAshar
+                entity.iqomahMaghrib = config.iqomahMaghrib
+                entity.iqomahIsya = config.iqomahIsya
+                entity.calculationMethodName = config.calculationMethodName
+                entity.adzanLeadMinutes = config.adzanLeadMinutes
+                entity.customBackgroundPath = config.customBackgroundPath
+                entity.transitionType = config.transitionType
+                entity.slideIntervalSeconds = config.slideIntervalSeconds
+                entity.videoWaitUntilEnd = config.videoWaitUntilEnd
+                entity.showSettingsOnTv = config.showSettingsOnTv
+                entity.offsetImsak = config.offsetImsak
+                entity.offsetSubuh = config.offsetSubuh
+                entity.offsetSyuruq = config.offsetSyuruq
+                entity.offsetDzuhur = config.offsetDzuhur
+                entity.offsetAshar = config.offsetAshar
+                entity.offsetMaghrib = config.offsetMaghrib
+                entity.offsetIsya = config.offsetIsya
+                entity.includeDefaultImage = config.includeDefaultImage
+                entity.kemenagCityId = config.kemenagCityId
+                entity.kemenagCityName = config.kemenagCityName
+                entity.kemenagDuration = config.kemenagDuration
+                entity.kemenagTargetDate = config.kemenagTargetDate
+                entity.adzanFooterText = config.adzanFooterText
+                entity.iqomahFooterText = config.iqomahFooterText
+                entity.standbyModeEnabled = config.standbyModeEnabled
+                entity.standbyStartTime = config.standbyStartTime
+                entity.standbyEndTime = config.standbyEndTime
+                entity.dashboardRandomize = config.dashboardRandomize
+                entity.dashboardTransitionType = config.dashboardTransitionType
+                entity.dashboardTransitionInterval = config.dashboardTransitionInterval
+                entity.slideshowEnabled = config.slideshowEnabled
+                entity.jumatEnabled = config.jumatEnabled
+                entity.jumatStartTime = config.jumatStartTime
+                entity.jumatEndTime = config.jumatEndTime
+                entity.offsetJumat = config.offsetJumat
+                entity.jumatStandbyOnly = config.jumatStandbyOnly
+                entity.jumatWarningText = config.jumatWarningText
+                entity.murottalEnabled = config.murottalEnabled
+                entity.murottalStartDelay = config.murottalStartDelay
+                entity.murottalAudioPaths = config.murottalAudioPaths
+                entity.jumatSlideshowEnabled = config.jumatSlideshowEnabled
+                entity.includeGlobalSlideshow = config.includeGlobalSlideshow
+                entity.selectedGlobalSlideIds = config.selectedGlobalSlideIds
+                entity.jumatTransitionType = config.jumatTransitionType
+                entity.jumatSlideIntervalSeconds = config.jumatSlideIntervalSeconds
+                entity.jumatSlideIntervalUnit = config.jumatSlideIntervalUnit
+                entity.jumatVideoWaitUntilEnd = config.jumatVideoWaitUntilEnd
+            }
+            if (announcements != null) {
+                delete(query<AnnouncementEntity>().find())
+                announcements.forEach { item ->
+                    copyToRealm(AnnouncementEntity().apply {
+                        id = item.id
+                        content = item.content
+                        isActive = item.isActive
+                        position = item.position
+                    })
+                }
+            }
+            if (slideshowSchedules != null) {
+                delete(query<SlideshowScheduleEntity>().find())
+                slideshowSchedules.forEach { item ->
+                    copyToRealm(SlideshowScheduleEntity().apply {
+                        id = item.id
+                        startTime = item.startTime
+                        endTime = item.endTime
+                        activeDays = item.activeDays
+                        specificDates = item.specificDates
+                        createdAt = item.createdAt
+                        day = item.day
+                        isSpecificDate = item.isSpecificDate
+                    })
+                }
+            }
+            if (standbySchedules != null) {
+                delete(query<StandbyScheduleEntity>().find())
+                standbySchedules.forEach { item ->
+                    copyToRealm(StandbyScheduleEntity().apply {
+                        id = item.id
+                        startTime = item.startTime
+                        endTime = item.endTime
+                        activeDays = item.activeDays
+                        specificDates = item.specificDates
+                        createdAt = item.createdAt
+                        day = item.day
+                        isSpecificDate = item.isSpecificDate
+                    })
+                }
+            }
+        }
+        if (config != null &&
+            config.calculationMethodName == "KEMENAG" &&
+            config.kemenagCityId.isNotEmpty()
+        ) {
+            triggerKemenagFetchForDuration(
+                config.kemenagCityId,
+                config.kemenagDuration,
+                config.kemenagTargetDate
+            )
+        }
+    }
+
     // Device and PIN management
     override fun getConnectedDevicesFlow(): Flow<List<ConnectedDevice>> {
         return realm.query<ConnectedDeviceEntity>()

@@ -60,6 +60,17 @@ interface MosqueDao {
     @Query("DELETE FROM announcements")
     suspend fun clearAnnouncements()
 
+    /**
+     * Removes only the announcements a controller could have seen.
+     *
+     * The state payload carries active announcements alone, so a switched-off one is invisible
+     * outside the display's own settings UI. A sync that emptied the table would therefore delete
+     * rows the sender never knew existed and cannot have meant to remove — a takmir's archive of
+     * old running texts, gone because someone chose "use my copy" on a phone.
+     */
+    @Query("DELETE FROM announcements WHERE isActive = 1")
+    suspend fun clearActiveAnnouncements()
+
     // --- slideshow media ---
 
     @Query("SELECT * FROM media ORDER BY sortOrder ASC")
@@ -222,6 +233,49 @@ interface MosqueDao {
         if (config != null) {
             upsertConfig(config)
             stampTable(TableStampEntity("mosque_config", at))
+        }
+    }
+
+    /**
+     * Replaces whole tables with a controller's copy, all or nothing.
+     *
+     * Null means "leave this table alone", which is what lets one call serve a whole-side choice
+     * and a per-table mix alike. A table that is replaced is emptied first: a sync that only added
+     * rows could never carry a deletion across, and the takmir who removed a running text at home
+     * would find it back on the television.
+     *
+     * One transaction, because a half-applied sync is worse than a refused one — the display would
+     * be showing a mixture of two devices' settings with nothing to say so.
+     */
+    @Transaction
+    suspend fun replaceTables(
+        config: MosqueConfigEntity?,
+        announcements: List<AnnouncementEntity>?,
+        slideshow: List<SlideshowScheduleEntity>?,
+        standby: List<StandbyScheduleEntity>?,
+        stampedAt: Long
+    ) {
+        if (config != null) {
+            upsertConfig(config)
+            stampTable(TableStampEntity("mosque_config", stampedAt))
+        }
+        if (announcements != null) {
+            // Active only: see clearActiveAnnouncements. The consequence is that switching an
+            // announcement off does not cross a sync — the same shape of gap as the media tables,
+            // and for the same reason. Losing a takmir's archive would be worse.
+            clearActiveAnnouncements()
+            upsertAnnouncements(announcements)
+            stampTable(TableStampEntity("announcements", stampedAt))
+        }
+        if (slideshow != null) {
+            getSlideshowSchedules().forEach { deleteSlideshowSchedule(it.id) }
+            upsertSlideshowSchedules(slideshow)
+            stampTable(TableStampEntity("slideshow_schedules", stampedAt))
+        }
+        if (standby != null) {
+            getStandbySchedules().forEach { deleteStandbySchedule(it.id) }
+            upsertStandbySchedules(standby)
+            stampTable(TableStampEntity("standby_schedules", stampedAt))
         }
     }
 

@@ -1,18 +1,13 @@
 package com.groovernapp.mosqueathan.ui.settings
 
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.put
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import com.groovernapp.mosqueathan.util.optionalBoolean
-import com.groovernapp.mosqueathan.util.optionalDouble
-import com.groovernapp.mosqueathan.util.optionalInt
-import com.groovernapp.mosqueathan.util.optionalString
 import com.groovernapp.mosqueathan.domain.MediaStore
 import com.groovernapp.mosqueathan.protocol.HttpFetcher
 import com.groovernapp.mosqueathan.protocol.RemoteActionSink
 import com.groovernapp.mosqueathan.protocol.RemoteActions
+import com.groovernapp.mosqueathan.protocol.SnapshotPush
+import com.groovernapp.mosqueathan.protocol.SyncConflict
+import com.groovernapp.mosqueathan.protocol.putSnapshotPush
 import com.groovernapp.mosqueathan.protocol.HttpResult
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -22,6 +17,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.domain.MosqueConfig
+import com.groovernapp.mosqueathan.domain.MosqueSnapshot
+import com.groovernapp.mosqueathan.domain.mosqueJson
 import com.groovernapp.mosqueathan.domain.Announcement
 import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.domain.ConnectedDevice
@@ -29,7 +26,6 @@ import com.groovernapp.mosqueathan.domain.FridayMedia
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 class SettingsViewModel(
     private val repository: ConfigRepository,
@@ -148,68 +144,64 @@ class SettingsViewModel(
         remote.send(RemoteActions.DELETE_STANDBY_SCHEDULE) { put("id", id) }
     }
 
+    /**
+     * What the takmir is being asked about, or null when nothing is being asked.
+     *
+     * The snapshot is held here rather than re-fetched on the answer, because between the question
+     * and the answer someone may be standing at the television changing things — and then the
+     * timestamps the takmir was shown would not be the ones acted on.
+     */
+    data class SyncConflictPrompt(
+        val server: SyncConflict.Stamps,
+        val local: SyncConflict.Stamps,
+        val snapshot: MosqueSnapshot
+    )
+
+    private val _syncConflict = MutableStateFlow<SyncConflictPrompt?>(null)
+    val syncConflict = _syncConflict.asStateFlow()
+
+    /**
+     * Fetches the display's settings and reconciles them with this device's.
+     *
+     * ### What changed, and why the old shape could not be kept
+     *
+     * This used to be one GET followed by writing the display's values over this device's — 23 of
+     * the config's 51 syncable fields read key by key, both schedule tables ignored entirely, and
+     * `clearAnnouncements()` called unconditionally, so a takmir's own edits were gone with no
+     * question asked. The direction only ever ran server → local. There was no way to hand an
+     * evening's work at home over to the television except retyping it there.
+     *
+     * Now the payload decodes as [MosqueSnapshot] — the class the display already serves — so the
+     * field list is the class rather than a list to keep in step, and both schedule tables arrive.
+     * Then the timestamps decide: if both sides have written since they last agreed, the takmir is
+     * asked, and nothing is written until they answer.
+     *
+     * ### When it does not ask
+     *
+     * `SyncConflict.needsAsking` is false when only one side has ever written, and then
+     * `NewestWins` does the right thing without a dialog: a fresh controller takes everything from
+     * an established display, and a display that has never been configured takes this device's
+     * copy. Asking there is how a dialog earns the reflex that dismisses it on the one occasion it
+     * mattered.
+     */
     fun syncWithTvServer() {
         val config = _configState.value
         if (config.connectivityMode != "REMOTE" || config.remoteTvIp.isEmpty()) return
-        
+
         viewModelScope.launch {
             when (val result = http.getText("http://${config.remoteTvIp}:8080/api/get_config")) {
                 is HttpResult.Failure ->
                     _messages.emit(Lang.get("Sync failed: ${result.reason}", "Sinkronisasi gagal: ${result.reason}"))
 
                 is HttpResult.Success -> try {
-                    val response = result.body
-                    val json = Json.parseToJsonElement(response).jsonObject
-                    val configJson = json["config"] as? JsonObject
-                    
-                    if (configJson != null) {
-                        repository.updateConfig(
-                            latitude = configJson.optionalDouble("latitude"),
-                            longitude = configJson.optionalDouble("longitude"),
-                            iqomahSubuh = configJson.optionalInt("iqomahSubuh"),
-                            iqomahDzuhur = configJson.optionalInt("iqomahDzuhur"),
-                            iqomahAshar = configJson.optionalInt("iqomahAshar"),
-                            iqomahMaghrib = configJson.optionalInt("iqomahMaghrib"),
-                            iqomahIsya = configJson.optionalInt("iqomahIsya"),
-                            calculationMethodName = configJson.optionalString("calculationMethodName"),
-                            adzanLeadMinutes = configJson.optionalInt("adzanLeadMinutes"),
-                            offsetImsak = configJson.optionalInt("offsetImsak"),
-                            offsetSubuh = configJson.optionalInt("offsetSubuh"),
-                            offsetSyuruq = configJson.optionalInt("offsetSyuruq"),
-                            offsetDzuhur = configJson.optionalInt("offsetDzuhur"),
-                            offsetAshar = configJson.optionalInt("offsetAshar"),
-                            offsetMaghrib = configJson.optionalInt("offsetMaghrib"),
-                            offsetIsya = configJson.optionalInt("offsetIsya"),
-                            kemenagCityId = configJson.optionalString("kemenagCityId"),
-                            kemenagCityName = configJson.optionalString("kemenagCityName"),
-                            kemenagDuration = configJson.optionalString("kemenagDuration"),
-                            kemenagTargetDate = configJson.optionalString("kemenagTargetDate"),
-                            triggerFetch = true,
-                            adzanFooterText = configJson.optionalString("adzanFooterText"),
-                            iqomahFooterText = configJson.optionalString("iqomahFooterText")
-                        )
-                        repository.updateStandbySettings(
-                            enabled = configJson.optionalBoolean("standbyModeEnabled"),
-                            startTime = configJson.optionalString("standbyStartTime"),
-                            endTime = configJson.optionalString("standbyEndTime")
-                        )
-                        repository.updateSlideshowEnabled(
-                            enabled = configJson.optionalBoolean("slideshowEnabled")
-                        )
-                        
-                        // Sync announcements
-                        val announcements = json["announcements"] as? JsonArray
-                        if (announcements != null) {
-                            repository.clearAnnouncements()
-                            announcements.filterIsInstance<JsonObject>().forEach { item ->
-                                repository.addAnnouncement(
-                                    content = item.optionalString("content"),
-                                    customId = item.optionalString("id")
-                                )
-                            }
-                        }
-                        
-                        _messages.emit(Lang.get("Sync complete.", "Sinkronisasi berhasil!"))
+                    val snapshot = mosqueJson.decodeFromString<MosqueSnapshot>(result.body)
+                    val server = SyncConflict.Stamps(snapshot.tableTimestamps)
+                    val local = SyncConflict.Stamps(repository.tableTimestamps())
+
+                    if (SyncConflict.needsAsking(server, local)) {
+                        _syncConflict.value = SyncConflictPrompt(server, local, snapshot)
+                    } else {
+                        reconcile(SyncConflict.Choice.NewestWins, SyncConflictPrompt(server, local, snapshot))
                     }
                 } catch (e: Exception) {
                     // The fetch succeeded and the body did not parse: a display running
@@ -221,6 +213,64 @@ class SettingsViewModel(
                 }
             }
         }
+    }
+
+    /** The takmir picked one of the three; carry it out and close the dialog. */
+    fun onSyncChoice(choice: SyncConflict.Choice) {
+        val prompt = _syncConflict.value ?: return
+        _syncConflict.value = null
+        viewModelScope.launch { reconcile(choice, prompt) }
+    }
+
+    /** Cancelled: nothing is written on either side, and the two remain as they were. */
+    fun dismissSyncConflict() {
+        _syncConflict.value = null
+    }
+
+    /**
+     * Applies [choice], pulling the tables the display won and pushing the tables this device won.
+     *
+     * **One mechanism serves all three options**, which is the point of the shape: `TakeServer`
+     * pushes nothing, `TakeLocal` pushes every table it can, and `NewestWins` pushes the ones this
+     * device wrote more recently — and no branch here has to know which of the three it is doing.
+     *
+     * The pull runs first. A table this device won is not touched by it (that argument is null),
+     * so the order matters only in that a display which rejects the push leaves this device
+     * already holding the tables it agreed to take, rather than nothing.
+     */
+    private suspend fun reconcile(choice: SyncConflict.Choice, prompt: SyncConflictPrompt) {
+        val resolution = SyncConflict.resolve(choice, prompt.server, prompt.local)
+        fun serverWon(table: String) = resolution.sideFor(table) == SyncConflict.Side.Server
+        val snapshot = prompt.snapshot
+
+        repository.applySnapshot(
+            config = snapshot.config.takeIf { serverWon(SnapshotPush.TABLE_CONFIG) },
+            announcements = snapshot.announcements.takeIf { serverWon(SnapshotPush.TABLE_ANNOUNCEMENTS) },
+            slideshowSchedules = snapshot.slideshowSchedules.takeIf { serverWon(SnapshotPush.TABLE_SLIDESHOW) },
+            standbySchedules = snapshot.standbySchedules.takeIf { serverWon(SnapshotPush.TABLE_STANDBY) }
+        )
+
+        val toPush = SyncConflict.tablesToPush(choice, prompt.server, prompt.local)
+        if (toPush.isNotEmpty()) {
+            val push = SnapshotPush.of(
+                tables = toPush,
+                config = { _configState.value },
+                announcements = { _announcementsState.value },
+                slideshowSchedules = { repository.getSlideshowSchedules() },
+                standbySchedules = { repository.getStandbySchedules() }
+            )
+            remote.send(RemoteActions.APPLY_SNAPSHOT) { putSnapshotPush(push) }
+        }
+
+        _messages.emit(
+            when {
+                toPush.isEmpty() -> Lang.get("Sync complete.", "Sinkronisasi berhasil!")
+                else -> Lang.get(
+                    "Sync complete. Sent ${toPush.size} section(s) to the display.",
+                    "Sinkronisasi berhasil! ${toPush.size} bagian dikirim ke display."
+                )
+            }
+        )
     }
 
     fun updateStandbyScheduleTime(id: String, startTime: String, endTime: String) {

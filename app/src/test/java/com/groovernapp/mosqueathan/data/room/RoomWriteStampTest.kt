@@ -90,6 +90,39 @@ class RoomWriteStampTest {
 
     private val cases = listOf(
         Case("resetToDefaults", "resetToDefaults()") { it.resetToDefaults() },
+        // Every table it names must move, not just one. A sync push writes four tables at once,
+        // so "some row carries the clock" would pass while three of the four kept a stale stamp
+        // — and a stale stamp is what makes the *next* sync offer to overwrite work it already
+        // took. Announcements are seeded active, so the replace removes them and the pushed row
+        // is the only one left to carry the stamp.
+        Case(
+            "applySnapshot",
+            "applySnapshot(all four tables)",
+            mustMove = { dao ->
+                dao.announcementRows.map { it.lastModified } +
+                    dao.slideshowRows.map { it.lastModified } +
+                    dao.standbyRows.map { it.lastModified }
+            }
+        ) {
+            it.applySnapshot(
+                config = MosqueConfig(adzanLeadMinutes = 9),
+                announcements = listOf(
+                    com.groovernapp.mosqueathan.domain.Announcement(
+                        id = "pushed-a", content = "dari hp", isActive = true, position = 0
+                    )
+                ),
+                slideshowSchedules = listOf(
+                    com.groovernapp.mosqueathan.domain.SlideshowSchedule(
+                        id = "pushed-s", startTime = "05:00", endTime = "06:00", day = "Monday"
+                    )
+                ),
+                standbySchedules = listOf(
+                    com.groovernapp.mosqueathan.domain.StandbySchedule(
+                        id = "pushed-b", startTime = "22:00", endTime = "04:00", day = "Monday"
+                    )
+                )
+            )
+        },
         Case("updateConfig", "updateConfig(config)") {
             it.updateConfig(MosqueConfig(adzanLeadMinutes = 7))
         },

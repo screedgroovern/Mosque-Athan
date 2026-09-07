@@ -1,6 +1,7 @@
 package com.groovernapp.mosqueathan.server
 
 import com.groovernapp.mosqueathan.protocol.RemoteActions
+import com.groovernapp.mosqueathan.protocol.parseSnapshotPush
 import android.content.Context
 import android.net.Uri
 import android.util.Base64
@@ -1991,6 +1992,36 @@ class SettingsServer(
                         ids.add(idsJson.getString(i))
                     }
                     repository.updateDashboardBackgroundOrder(ids)
+                    broadcastState()
+                }
+                RemoteActions.APPLY_SNAPSHOT -> {
+                    // The one place org.json is not used inside this file, and deliberately: a
+                    // snapshot is whole objects in both directions, so the @Serializable classes
+                    // are the contract and a config field added later crosses on its own. Reading
+                    // fifty-one keys by hand here is exactly the drift `update_config` above shows.
+                    val push = runCatching { parseSnapshotPush(message) }.getOrNull()
+                    if (push == null || push.isEmpty) {
+                        // A push naming no table is what "use the display's copy" sends, and it is
+                        // not an error — the broadcast below is the whole answer to it.
+                        Log.i(TAG, "apply_snapshot carried no table")
+                        broadcastState()
+                        return
+                    }
+                    repository.applySnapshot(
+                        // Not push.config: the two file-bearing fields stay this display's, since
+                        // a path on the sender's storage names nothing here.
+                        config = push.sanitisedConfig(repository.getConfig()),
+                        announcements = push.announcements,
+                        slideshowSchedules = push.slideshowSchedules,
+                        standbySchedules = push.standbySchedules
+                    )
+                    Log.i(
+                        TAG,
+                        "apply_snapshot: config=${push.config != null} " +
+                            "announcements=${push.announcements?.size} " +
+                            "slideshow=${push.slideshowSchedules?.size} " +
+                            "standby=${push.standbySchedules?.size}"
+                    )
                     broadcastState()
                 }
                 RemoteActions.RESET -> {

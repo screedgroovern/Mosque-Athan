@@ -64,6 +64,7 @@ import com.groovernapp.mosqueathan.ui.design.component.MosqueSecondaryButton
 import com.groovernapp.mosqueathan.ui.design.component.MosqueIconButton
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.groovernapp.mosqueathan.ui.settings.sync.SyncConflictDialog
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesEvent
 import com.groovernapp.mosqueathan.ui.settings.remotedevices.RemoteDevicesViewModel
 import com.groovernapp.mosqueathan.ui.settings.adzaniqomah.AdzanIqomahEvent
@@ -103,6 +104,7 @@ fun SettingsScreen(
     val slideshowSchedules by viewModel.slideshowSchedulesState.collectAsState()
     val dashboardBackgrounds by viewModel.dashboardBackgroundsState.collectAsState()
     val standbySchedules by viewModel.standbySchedulesState.collectAsState()
+    val syncConflict by viewModel.syncConflict.collectAsState()
 
     val showAllSettings = true
 
@@ -475,6 +477,18 @@ fun SettingsScreen(
         // what happened — sync succeeded, sync failed — and this decides how the
         // platform says it; on Android that is still a Toast.
         MessageHost(viewModel.messages)
+
+        // Only present while a sync found changes on both sides. Nothing has been written when
+        // this appears: the ViewModel holds the display's snapshot and waits for the answer, so
+        // dismissing leaves both devices exactly as they were.
+        syncConflict?.let { prompt ->
+            SyncConflictDialog(
+                server = prompt.server,
+                local = prompt.local,
+                onChoice = { viewModel.onSyncChoice(it) },
+                onDismiss = { viewModel.dismissSyncConflict() }
+            )
+        }
     }
 }
 

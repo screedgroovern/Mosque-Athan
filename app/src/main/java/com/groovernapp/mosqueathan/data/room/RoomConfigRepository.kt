@@ -764,6 +764,52 @@ class RoomConfigRepository(
         writeBackgrounds(listOf(existing.copy(filePath = filePath, lastModified = now())))
     }
 
+    // --- the sync push -----------------------------------------------------------------------
+
+    /**
+     * Takes a controller's tables, replacing this device's.
+     *
+     * Everything is built before the transaction opens, so the transaction contains only writes —
+     * a snapshot that cannot be mapped fails before anything on disk has changed.
+     *
+     * One stamp for every table applied, and it is *this* device's clock rather than the
+     * controller's. The stamp answers "when did this row last change here", which is what the next
+     * sync compares; adopting the controller's clock would tell the next comparison that the
+     * display has not changed since before the sync it just accepted, and the same push would be
+     * offered again.
+     */
+    override suspend fun applySnapshot(
+        config: MosqueConfig?,
+        announcements: List<Announcement>?,
+        slideshowSchedules: List<SlideshowSchedule>?,
+        standbySchedules: List<StandbySchedule>?
+    ) {
+        val at = now()
+        val configRow = config?.let { (dao.getConfig() ?: MosqueConfigEntity()).withSnapshot(it, at) }
+
+        dao.replaceTables(
+            config = configRow,
+            announcements = announcements?.map { it.toEntity(at) },
+            slideshow = slideshowSchedules?.map { it.toEntity(at) },
+            standby = standbySchedules?.map { it.toEntity(at) },
+            stampedAt = at
+        )
+
+        // The same trigger updateConfig carries: a controller can hand over a city this display has
+        // never fetched, and without this the method would read KEMENAG with an empty cache and
+        // fall back to adhan2 silently — which is exactly how the split-store bug hid.
+        if (configRow != null &&
+            configRow.calculationMethodName == KEMENAG_METHOD &&
+            configRow.kemenagCityId.isNotEmpty()
+        ) {
+            triggerKemenagFetchForDuration(
+                configRow.kemenagCityId,
+                configRow.kemenagDuration,
+                configRow.kemenagTargetDate
+            )
+        }
+    }
+
     // --- Kemenag -----------------------------------------------------------------------------
 
     /**

@@ -32,6 +32,39 @@ object SyncConflict {
         "standby_schedules"
     )
 
+    /**
+     * The subset of [COMPARED_TABLES] a controller can actually push to the display.
+     *
+     * The three media tables are absent, and not because pushing them is hard — because those rows
+     * name **files**. A path on a takmir's phone is not a path on the television, so a display that
+     * accepted them would show "failed to load image" for every slide, having thrown away the rows
+     * that named files it does have. Getting the files themselves across is the upload problem, and
+     * it is a separate design.
+     *
+     * The consequence is worth stating rather than discovering: choosing "use this device's copy"
+     * leaves the display's media as it was. That is the honest outcome — the alternative is not
+     * "media syncs too", it is "media breaks".
+     */
+    val PUSHABLE_TABLES: List<String> = listOf(
+        "mosque_config",
+        "announcements",
+        "slideshow_schedules",
+        "standby_schedules"
+    )
+
+    /**
+     * Which tables this device has to send for [choice] to be carried out.
+     *
+     * One mechanism serves all three options, which is the point: `TakeServer` sends nothing and
+     * lets the display's own broadcast overwrite this device, `TakeLocal` sends every pushable
+     * table, and `NewestWins` sends the ones this device wrote more recently. No branch anywhere
+     * has to know which of the three it is implementing.
+     */
+    fun tablesToPush(choice: Choice, server: Stamps, local: Stamps): List<String> {
+        val resolution = resolve(choice, server, local)
+        return PUSHABLE_TABLES.filter { resolution.sideFor(it) == Side.Local }
+    }
+
     /** The newest write in each table, as each side reports it. Missing table means never written. */
     @Serializable
     data class Stamps(val byTable: Map<String, Long> = emptyMap()) {
