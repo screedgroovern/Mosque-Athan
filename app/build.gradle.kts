@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     // Realm stays for one release: 2.0 reads the old database once and writes it into Room.
     alias(libs.plugins.realm)
@@ -48,14 +47,6 @@ android {
         }
     }
 
-    applicationVariants.all {
-        val version = versionName
-        outputs.forEach { output ->
-            val apkOutput = output as? com.android.build.gradle.api.ApkVariantOutput
-            apkOutput?.outputFileName = "Mosque Athan - $version.apk"
-        }
-    }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
@@ -99,6 +90,11 @@ val copyWebPanel = tasks.register<Sync>("copyWebPanel") {
 androidComponents {
     onVariants { variant ->
         variant.sources.assets?.addStaticSourceDirectory(panelAssetsDir.get().asFile.path)
+
+        // "Mosque Athan - 1.4.4.apk". The old `applicationVariants.all { outputs.forEach }` is
+        // gone in AGP 9; the variant API sets the same property per output.
+        val apkName = "Mosque Athan - ${libs.versions.versionName.get()}.apk"
+        variant.outputs.forEach { it.outputFileName.set(apkName) }
     }
 }
 

@@ -22,23 +22,28 @@ Related doc already in the repo: `CODEX.md` (product/UI rules — coordinates, p
 
 JDK 21 toolchain, Gradle 9.8.0, AGP 9.4.0, Kotlin 2.2.10. No ktlint/detekt configured.
 
-**AGP is 9.x because Gradle moved past it, and the migration is half done.** AGP 8.x uses a Gradle
-internal API that Gradle 9.6 removed, so a wrapper at 9.6 or newer fails at plugin application with
-"relies on 'org.gradle.api.problems.internal.InternalProblems'". Today:
+**AGP is 9.x because Gradle moved past it.** AGP 8.x uses a Gradle internal API that Gradle 9.6
+removed, so a wrapper at 9.6 or newer fails at plugin application with "relies on
+'org.gradle.api.problems.internal.InternalProblems'". The migration is complete and runs with
+**no opt-outs** — `android.builtInKotlin` and `android.newDsl` are gone, and AGP 10 would have
+removed them anyway:
 
 - The six library modules are on `com.android.kotlin.multiplatform.library` (AGP 9 refuses
   `com.android.library` beside Kotlin Multiplatform). Their Android config is
   `kotlin { android { … } }`, `commonTest` runs on Android through `withHostTest {}`
   (`testAndroidHostTest`), and `ui:design`'s instrumented tests are `androidDeviceTest`
   (`connectedAndroidDeviceTest`).
-- **`:app` still runs on two temporary opt-outs**, `android.builtInKotlin=false` and
-  `android.newDsl=false`, in both `gradle.properties` and `build-logic/gradle.properties`. AGP 10
-  removes them. `:app` still applies `kotlin-android`, uses `applicationVariants` for the APK name,
-  and `ksp` is 2.2.10-2.0.2 where AGP 9 wants 2.3.1 or newer.
+- `:app` uses AGP's built-in Kotlin: there is no `kotlin-android` plugin in it, the root build or
+  the catalog. The APK name is set through `androidComponents.onVariants` (the old
+  `applicationVariants` is removed), and the browser panel's staged assets are added there too,
+  as a static directory — AGP 9 refuses a `Provider` in `sourceSets { assets.srcDir(...) }`.
+- `ksp` is 2.3.6. AGP 9 needs 2.3.1 or newer, and the old `2.2.10-2.0.2` style of version is gone.
+- Compose Multiplatform is 1.9.3, not 1.9.0: the 1.9.0 plugin calls an AGP method that no longer
+  exists and fails while generating the convention plugins' accessors. Kotlin stays at 2.2.10.
 - `build-logic/build.gradle.kts` repeats the AGP and Compose Multiplatform versions; keep them in
   step with the catalog.
-- Compose Multiplatform is 1.9.3, not 1.9.0: the 1.9.0 plugin calls an AGP method that no longer
-  exists and fails while generating the convention plugins' accessors.
+- **Not verified:** the wasm panel at runtime and `ui:design`'s device tests. Realm 3.2.9 applies
+  and builds under built-in Kotlin, but that is a build result, not a run on a device.
 
 Version is driven from `gradle/libs.versions.toml` (`versionName`, `versionCode`) — bump there, not in `app/build.gradle.kts`.
 
