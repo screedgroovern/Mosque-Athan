@@ -60,12 +60,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
-
-    sourceSets {
-        getByName("main") {
-            assets.srcDir(layout.buildDirectory.dir("generated/panelAssets"))
-        }
-    }
 }
 
 /*
@@ -91,12 +85,21 @@ android {
  */
 val panelAssetsDir: Provider<Directory> = layout.buildDirectory.dir("generated/panelAssets")
 
-val copyWebPanel by tasks.registering(Sync::class) {
+val copyWebPanel = tasks.register<Sync>("copyWebPanel") {
     dependsOn(":webApp:wasmJsBrowserDistribution")
     from(rootProject.project(":webApp").layout.buildDirectory.dir("dist/wasmJs/productionExecutable")) {
         exclude("**/*.map")
     }
     into(panelAssetsDir.map { it.dir("panel") })
+}
+
+// AGP 9 refuses a Provider in `sourceSets { assets.srcDir(...) }`: it cannot tell a generated
+// directory from a static one. This one is staged by `copyWebPanel`, which `preBuild` already
+// waits for, so it is declared static through the variant API rather than as a generated source.
+androidComponents {
+    onVariants { variant ->
+        variant.sources.assets?.addStaticSourceDirectory(panelAssetsDir.get().asFile.path)
+    }
 }
 
 tasks.named("preBuild") { dependsOn(copyWebPanel) }

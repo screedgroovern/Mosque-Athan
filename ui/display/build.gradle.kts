@@ -4,11 +4,11 @@ plugins {
     id("org.jetbrains.compose")
 }
 
-android {
-    namespace = "com.groovernapp.mosqueathan.ui.display"
-}
-
 kotlin {
+    android {
+        namespace = "com.groovernapp.mosqueathan.ui.display"
+    }
+
     sourceSets {
         commonMain.dependencies {
             api(project(":core:model"))

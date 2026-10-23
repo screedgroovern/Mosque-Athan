@@ -1,4 +1,4 @@
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
@@ -14,16 +14,31 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  *  - `wasmJs()` catches the *JVM* assumptions the jvm target happily allows —
  *    `java.*`, reflection, `String.format`. It is the stricter of the two guardrails and
  *    the reason step 7 is buildable at all.
+ *
+ * The Android side is `com.android.kotlin.multiplatform.library`, not `com.android.library`
+ * plus `androidTarget()`: AGP 9 refuses to combine the old plugin with Kotlin Multiplatform
+ * once built-in Kotlin is on. Its Android target is single-variant and opt-in for everything
+ * the old plugin did by default — host tests below, device tests and resources in the modules
+ * that need them.
  */
 plugins {
-    id("com.android.library")
+    id("com.android.kotlin.multiplatform.library")
     id("org.jetbrains.kotlin.multiplatform")
 }
 
 extensions.configure<KotlinMultiplatformExtension> {
     jvmToolchain(21)
 
-    androidTarget {
+    // Looked up by type rather than through a generated `android { }` accessor, which a
+    // precompiled script plugin does not get for an extension nested under `kotlin`.
+    targets.withType<KotlinMultiplatformAndroidLibraryTarget>().configureEach {
+        compileSdk = 36
+        minSdk = 26
+
+        // The old plugin ran commonTest on the Android unit-test task by default; here it is
+        // opt-in, and without it the android side of every commonTest silently stops running.
+        withHostTest {}
+
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_21)
         }
@@ -45,17 +60,4 @@ extensions.configure<KotlinMultiplatformExtension> {
 // commonMain, so it must not be opt-in.
 tasks.matching { it.name == "test" }.configureEach {
     dependsOn(tasks.matching { it.name == "jvmTest" })
-}
-
-extensions.configure<LibraryExtension> {
-    compileSdk = 36
-
-    defaultConfig {
-        minSdk = 26
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
 }

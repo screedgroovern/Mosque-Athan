@@ -7,11 +7,11 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-android {
-    namespace = "com.groovernapp.mosqueathan.protocol"
-}
-
 kotlin {
+    android {
+        namespace = "com.groovernapp.mosqueathan.protocol"
+    }
+
     sourceSets {
         commonMain.dependencies {
             api(project(":core:model"))

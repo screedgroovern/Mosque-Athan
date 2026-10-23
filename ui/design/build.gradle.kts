@@ -8,15 +8,18 @@ plugins {
     id("org.jetbrains.compose")
 }
 
-android {
-    namespace = "com.groovernapp.mosqueathan.ui.design"
-
-    defaultConfig {
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-}
-
 kotlin {
+    android {
+        namespace = "com.groovernapp.mosqueathan.ui.design"
+
+        // Focus behaviour cannot be verified by reading the code: whether the ring
+        // actually draws depends on modifier order, and whether initialFocus lands
+        // depends on composition timing. Both need a device, so these stay Android-only.
+        withDeviceTest {
+            instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
             // Compose Multiplatform rather than Google's artifacts. Same
@@ -55,15 +58,11 @@ kotlin {
             // which is the guardrail that catches Android code reaching commonMain.
             implementation(kotlin("test"))
         }
+        getByName("androidDeviceTest").dependencies {
+            implementation(libs.junit)
+            implementation(libs.androidx.junit)
+            implementation(libs.androidx.ui.test.junit4)
+            implementation(libs.androidx.ui.test.manifest)
+        }
     }
-}
-
-dependencies {
-    // Focus behaviour cannot be verified by reading the code: whether the ring
-    // actually draws depends on modifier order, and whether initialFocus lands
-    // depends on composition timing. Both need a device, so these stay Android-only.
-    androidTestImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }

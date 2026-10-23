@@ -2,11 +2,11 @@ plugins {
     id("mosque.kmp-library")
 }
 
-android {
-    namespace = "com.groovernapp.mosqueathan.core.prayer"
-}
-
 kotlin {
+    android {
+        namespace = "com.groovernapp.mosqueathan.core.prayer"
+    }
+
     sourceSets {
         commonMain.dependencies {
             api(project(":core:model"))

@@ -7,11 +7,11 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-android {
-    namespace = "com.groovernapp.mosqueathan.core.model"
-}
-
 kotlin {
+    android {
+        namespace = "com.groovernapp.mosqueathan.core.model"
+    }
+
     sourceSets {
         commonMain.dependencies {
             // Exposed via the public API of PrayerResult / PrayerType.
