@@ -20,19 +20,29 @@ Related doc already in the repo: `CODEX.md` (product/UI rules — coordinates, p
 ./gradlew lint                          # Android Lint
 ```
 
-JDK 21 toolchain, Gradle 9.4.1, AGP 8.12, Kotlin 2.2.10. No ktlint/detekt configured.
+JDK 21 toolchain, Gradle 9.8.0, AGP 9.4.0, Kotlin 2.2.10. No ktlint/detekt configured.
+
+**AGP is 9.x because Gradle moved past it, and the migration is half done.** AGP 8.x uses a Gradle
+internal API that Gradle 9.6 removed, so a wrapper at 9.6 or newer fails at plugin application with
+"relies on 'org.gradle.api.problems.internal.InternalProblems'". Today:
+
+- The six library modules are on `com.android.kotlin.multiplatform.library` (AGP 9 refuses
+  `com.android.library` beside Kotlin Multiplatform). Their Android config is
+  `kotlin { android { … } }`, `commonTest` runs on Android through `withHostTest {}`
+  (`testAndroidHostTest`), and `ui:design`'s instrumented tests are `androidDeviceTest`
+  (`connectedAndroidDeviceTest`).
+- **`:app` still runs on two temporary opt-outs**, `android.builtInKotlin=false` and
+  `android.newDsl=false`, in both `gradle.properties` and `build-logic/gradle.properties`. AGP 10
+  removes them. `:app` still applies `kotlin-android`, uses `applicationVariants` for the APK name,
+  and `ksp` is 2.2.10-2.0.2 where AGP 9 wants 2.3.1 or newer.
+- `build-logic/build.gradle.kts` repeats the AGP and Compose Multiplatform versions; keep them in
+  step with the catalog.
+- Compose Multiplatform is 1.9.3, not 1.9.0: the 1.9.0 plugin calls an AGP method that no longer
+  exists and fails while generating the convention plugins' accessors.
 
 Version is driven from `gradle/libs.versions.toml` (`versionName`, `versionCode`) — bump there, not in `app/build.gradle.kts`.
 
 `-opt-in=kotlin.time.ExperimentalTime` is set globally; the code uses `kotlin.time.Clock`/`Instant` together with `kotlinx.datetime` types. Note that `kotlinx-datetime` and `kotlinx-coroutines` are **not** declared in the version catalog — they arrive transitively via adhan2/Realm, so a dependency bump there can break compilation broadly.
-
-### Testing the web panel's JavaScript
-
-The web control panel's JS lives inside Kotlin raw strings. The root-level `test_webpage.js` extracts those `"""…"""` blocks from the `WebPageJs*.kt` files and concatenates them into `test_webpage_full.js` so the JS can be syntax-checked outside a build:
-
-```bash
-node test_webpage.js && node --check test_webpage_full.js
-```
 
 ### Checking the layout on a phone
 
@@ -108,14 +118,12 @@ Settings auto-save — there is no Save button. Every event writes to Realm imme
 
 `SettingsServer` is a hand-rolled HTTP + WebSocket server on port **8080**, started in `MainActivity.onCreate` and stopped in `onDestroy`. There is no Ktor/NanoHTTPD — sockets, headers, and WebSocket framing are written by hand, so adding a route means extending the `if (path == ...)` chain in the request handler.
 
-- Routes: `/` (panel HTML), `/manifest.json`, `/sw.js` (PWA), `/background`, `/media*`, `/logs`, `GET /api/get_config`, `POST /api/action`, `POST /upload`.
+- Routes: `/` (a redirect page to `/panel/`; see `RetiredPanel`), `/panel/*` (the wasm bundle), `/manifest.json` (points at `/panel/`), `/sw.js` (kill switch that retires the old panel's service worker), `/background`, `/media*`, `/logs`, `GET /api/get_config`, `POST /api/action`, `POST /upload`.
 - The WebSocket carries a JSON `{"action": ...}` protocol handled by `handleWebSocketMessage` (~50 actions: `update_config`, `preview_adzan`, media/slideshow/standby CRUD, device `register`/`verify_pin`/`set_master`, `reset`, …). `POST /api/action` reuses that same handler through a fake connection object, so **HTTP and WebSocket share one implementation** — add an action once.
 - Realm flows are collected at startup and `broadcastState()` pushes the full state to every connected client on any change.
 - `connectivityMode` is `"SERVER"` (this device is the display, serving the panel) or `"REMOTE"` (this device is a controller; sub-ViewModels additionally POST to `http://<remoteTvIp>:8080/api/action` — see `sendRemoteAction` in the settings ViewModels).
 
-The panel's HTML/CSS/JS is generated as Kotlin raw strings, split across files purely to keep them manageable: `WebPage.kt` + `*WebSegment.kt` (markup per settings tab), `WebPageCss.kt` → `WebPageCssBase/HeaderSidebar/CardsForms/MediaList`, `WebPageJs.kt` → `WebPageJsCore/Connection/Offline/UI/Actions`. The `WebPageCss`/`WebPageJs` aggregators define concatenation order — order matters for both. Note these strings are Kotlin templates: a literal `$` in CSS/JS must be escaped.
-
-External CDN assets (Leaflet, flatpickr, html5-qrcode, Google Fonts) are referenced by URL, so parts of the panel degrade without internet; `WebPageJsOffline.kt` handles that path.
+The panel is the shared Compose settings UI compiled to wasm (`:webApp`), served by the display from its own assets at `/panel/` — see *The display serves the panel itself* below. The hand-written HTML/CSS/JS panel (`WebPage*.kt`, `*WebSegment.kt`, about 9,100 lines of Kotlin raw strings) was deleted in step 8, together with the root-level scripts that syntax-checked its JavaScript; there is no JS to test. `server/` now holds only the transport (`SettingsServer`), `PanelAssets` (the `/panel` path guard) and `RetiredPanel` (the `/` redirect, the manifest and the service-worker kill switch).
 
 ### Settings UI
 
@@ -243,9 +251,9 @@ per-window-class values, rather than moving the same 84 call sites twice. See
 
 ### Why
 
-Not iOS. The driver is that the web control panel is ~9,100 lines of
+Not iOS. The driver was that the web control panel was ~9,100 lines of
 HTML/CSS/JS written as Kotlin raw strings across `server/WebPage*.kt` and
-`server/*WebSegment.kt`, hand-maintained against a *separate* Compose UI that
+`server/*WebSegment.kt` (deleted in step 8), hand-maintained against a *separate* Compose UI that
 renders the same settings. The two drift, and the drift is only detectable by
 eye. Sharing one Compose Multiplatform UI makes that drift **structurally
 impossible** rather than merely rare. (`SettingsServer.kt`, 1,895 lines, is the
@@ -596,7 +604,9 @@ until something renders on wasm. material3 1.9.0 declares kotlinx-datetime 0.7.1
 for foundation/runtime/ui 1.9.1 — exactly what the plugin already resolves — so the pin
 aligns the graph rather than forcing a mismatch. It is applied per-dependency rather than
 with `force()` because each KMP target is its own module (`material3-android`,
-`material3-wasm-js`). Remove it when the plugin's own mapping catches up.
+`material3-wasm-js`). Remove it when the plugin's own mapping catches up. **Not re-verified since the
+plugin moved to 1.9.3** (AGP 9): the build and tests pass, but this failure is a runtime linkage
+error on wasm, so only running the browser panel can say whether the pin still does its job.
 
 This is the concrete instance of the warning under *Build & test*: a kotlinx-datetime bump
 breaks things broadly. Worth knowing that it can break at **runtime linkage** and not at
@@ -622,7 +632,7 @@ compile time, so a green build proves nothing here.
 the mosque display — which is a decision, not a stub. Unit tests moved to `commonTest`
 and were converted from JUnit to `kotlin.test` so they run on the `jvm` guardrail
 target as well as Android; note that `kotlin.test` takes its assertion message **last**
-where `org.junit.Assert` takes it first. Focus tests stay in `androidInstrumentedTest`,
+where `org.junit.Assert` takes it first. Focus tests stay in `androidDeviceTest`,
 because whether a focus ring draws depends on modifier order at runtime.
 
 **Practical cost to plan around:** the iOS target takes about 8½ minutes to compile
@@ -752,6 +762,11 @@ Two things make the change safe to trust:
   three ways: a bare `action: '…'` in the JS fails it, a bare `"…" ->` branch fails it,
   and an action name appearing only in a *comment* does not — comments are stripped
   before matching, which matters because this test reads source rather than behaviour.
+  **The JS half went with the old panel in step 8.** The test now walks `:app`, `:ui`,
+  `:webApp` and `:core` for a hand-spelled `.send("…")` instead, since the browser panel sends
+  from Kotlin like every other controller. What it no longer checks is the old
+  `action: '…'` JS pattern and its `delete_`/`update_` dynamic-prefix exemption — there is no
+  JS left to hold either.
 
 Reading source in a test is unusual; the justification is that the failure being guarded
 against is textual, and there is no runtime moment at which an action nothing handles can
@@ -1058,11 +1073,12 @@ hardware, which had never been shown in one sitting.
 
 Two things fell out of it that were not the point.
 
-**The pairing QR lands on the *old* panel, and step 8 deletes it.** It encodes the bare origin, so a
-scan opens `/` — whose title is still `MOSQUE ATHAN - Web Control Panel`, the hand-written page.
-The new panel is at `/panel/`. **Before `WebPage*.kt` can be removed, `/` has to serve the new
-panel or redirect to it**, or the first thing a takmir does after the upgrade is scan a code that
-leads nowhere. This is a step 8 prerequisite and nothing else records it.
+**The pairing QR landed on the *old* panel, and step 8 deleted it.** It encodes the bare origin, so a
+scan opens `/` — whose title was `MOSQUE ATHAN - Web Control Panel`, the hand-written page.
+The new panel is at `/panel/`. `/` had to serve the new panel or redirect to it before
+`WebPage*.kt` could be removed, or the first thing a takmir does after the upgrade is scan a code
+that leads nowhere. That landed in `385cfe4` (see `RetiredPanel`); it was a step 8 prerequisite and
+nothing else recorded it.
 
 **An Android controller never registers.** The display's device list holds eight `web-*` and ten
 `dev_*` ids and no `remote_*`: `RemoteActionSender` only POSTs actions, and "Connect" calls the
@@ -1072,9 +1088,10 @@ knowing before that work starts.
 
 **Testing note:** the settings entry sequence must arrive back to back. `input dpad -d 0 keyevent`
 is necessary but not sufficient — four presses one second apart never opened settings, and the same
-four in a single `adb shell "…; …; …; …"` opened it every time. **On a phone, send five**: the
-first press is consumed leaving touch input mode, so four only ever accumulate three. Measured on
-the Realme, and it is a real defect for users, not only for scripts — see the sync run below.
+four in a single `adb shell "…; …; …; …"` opened it every time. On a phone, send five *until the
+touch-mode fix is verified on hardware*: the first press is consumed leaving touch input mode, so
+four used to accumulate only three. `MainActivity.dispatchKeyEvent` now counts that press, so four
+should open settings — see the sync run below. It was a real defect for users, not only for scripts.
 
 ### The QR scanner is not a parity gap — no browser can have one
 
@@ -1103,7 +1120,8 @@ Verified on the Xiaomi: the sync section now offers only Hubungkan and Sinkronka
 upload, replace and delete all work from the browser, the display serves the panel itself, the
 Kemenag search is allowed cross-origin (`access-control-allow-origin: *`, checked against the live
 API), and murottal audio is configurable and now actually plays. What the comparison turned up is
-below — and it is large enough that **step 8 must not proceed yet.**
+below — and it was large enough that **step 8 could not proceed until it was fixed.** It has been
+since; step 8 is done.
 
 Two smaller things noticed on the way, neither fixed:
 
@@ -1155,7 +1173,8 @@ Worth knowing for later: the panel is *not* what makes this APK large. Uncompres
 of which `classes.dex` is 39.5 MB, Realm's native library across four ABIs is ~31 MB, and two
 default background PNGs are 7.2 MB each. The panel's 14 MB sits well below all of them.
 
-The old panel still serves at `/`. Step 8 removes it, and this was its missing prerequisite.
+~~The old panel still serves at `/`.~~ Step 8 removed it, and this was its missing prerequisite:
+`/` now answers with a redirect page to `/panel/`.
 
 ### Step 8's pane-by-pane comparison: the new panel cannot write a side table
 
@@ -1192,8 +1211,8 @@ What is affected — the whole list, derived from the two facts above:
 
 **This is not a web-only bug.** `ui:settings` is shared, so an Android device in `REMOTE` mode has
 exactly the same hole — it writes to its own Realm and never tells the display. The old HTML panel
-is currently the *only* controller that can manage media or schedules at all, which is precisely why
-deleting it now would remove capability rather than duplicate it.
+was then the *only* controller that could manage media or schedules at all, which is precisely why
+deleting it before the writes landed would have removed capability rather than duplicated it.
 
 The fix that addresses both controllers is to add the missing `remote.send(...)` calls beside the
 repository calls, matching what announcements already do — roughly thirty call sites across four
@@ -1319,13 +1338,16 @@ returned it; one `fetch_kemenag_schedules` produced 25 schedule rows within four
 
 **Still open:**
 
-- **`verify_pin` — deferred by decision, not finished.** The user's call on 2026-09-06: the mosque
-  does not use the PIN yet, so this is not urgent. It is still a real hole and must not be read as
-  done. `DisplayLink` already *detects* it — a `registration_result` with `isAllowed=false` becomes
-  `Status.NeedsApproval`, and it deliberately stops the reconnect churn in that state — but
-  `ui:settings` contains no PIN entry anywhere. So on any display with a PIN set, the new panel
-  connects, says it needs approval, and offers the takmir no way forward except walking to the
-  television or using the old HTML panel. Step 8 cannot remove the old panel until this exists.
+- ~~**`verify_pin` — deferred by decision, not finished.**~~ **Done** in `720cba0`, with the timing
+  fixed in `ebb2df5`. It was deferred on 2026-09-06 because the mosque does not use the PIN yet, but
+  it was the last thing blocking step 8: `DisplayLink` *detected* a `registration_result` with
+  `isAllowed=false` as `Status.NeedsApproval` and `ui:settings` offered no PIN entry, so on a display
+  with a PIN set the panel connected, said it needed approval, and left the takmir walking to the
+  television or using the old HTML panel. `PinGate` is the way through now (see the commit
+  message for why it blocks rather than asks). **Verified over HTTP against the AQUA TV only — the
+  gate has not been seen drawn in the real UI, on the browser panel or on the Android controller.**
+  With the old panel deleted there is no fallback for a display that has a PIN set, so look at it
+  on a device before relying on it.
 ~~Panel-driven verification of the thumbnails and the twenty-one sends.~~ **Done**, on the Realme
 against the Xiaomi, with the panel served by the display itself:
 
@@ -1401,8 +1423,8 @@ two in a row are now the same height.
 are the only two `MosqueConfig` fields the old panel edits and the new one does not, and
 `updateStandbyStatus` reads **neither** — it iterates `standbySchedules` alone. They are stored,
 served, and editable from the old panel while driving nothing. So the new panel is right to omit
-them, and the old panel has been offering a control that does nothing; that is an argument *for*
-step 8, once the rest is fixed.
+them, and the old panel had been offering a control that did nothing; that was an argument *for*
+step 8, which has since happened.
 
 ### The link's behaviour, verified on hardware
 
@@ -1554,11 +1576,17 @@ the host for what it has to say.
 immediately, and reconciles later — at which point the press is visibly *not* a no-op and there is
 nothing to repeat. The notice is honesty in the meantime, not a substitute.
 
-**The Android controller fails the opposite way, and neither failure is visible.**
-`RemoteActionSender.post` catches, logs, and returns: no queue, no retry, nothing on screen. So on
-a phone in `REMOTE` mode with the display unreachable an edit is *lost entirely*, where the browser
-at least holds it. Web over-delivers, Android under-delivers, and a takmir sees the same thing in
-both cases — nothing. Not fixed; recorded because the two halves want one answer rather than two.
+**The Android controller used to fail the opposite way, and no longer does so silently.**
+`RemoteActionSender.send` posts, and when the display is unreachable it holds nothing back: there is
+no queue and no retry. That is deliberate. Replaying an append is what produced the eight duplicate
+schedules above, and a queue is only safe once an offline replica shows the row immediately so
+nobody presses twice. What it did wrong was say nothing — an edit on a phone in `REMOTE` mode
+vanished with only a logcat line. It now emits a "Not delivered" notice through `notices`, rendered
+by a `MessageHost` in `MainActivity`, so the takmir knows to make the edit again. Web over-delivers
+(it queues) and Android under-delivers (it reports), and both are honest about it; one answer for
+both is still step 3's offline replica. The rule for whether a notice is owed is
+`deliveryNotice(reply)`, a pure function with its own test, because the sender itself opens sockets
+and reads `android.os.Build` and cannot be unit-tested.
 
 Worth knowing when reading the hardware table above: "edits made while the display was down both
 arrived after reconnection" is true, and it is a description of the same mechanism that produced
@@ -1861,12 +1889,15 @@ Restored afterwards, all 55 config fields identical and every table back.
 
 **Two bugs the phone found that the HTTP run could not.**
 
-- **On a phone the first D-pad press is swallowed, so UP UP DOWN DOWN does nothing.** Four
-  injected presses all reached `ViewRootImpl` (logged, `source=0x201`) and settings did not open;
-  five presses opened it every time. Compose consumes the first key to leave touch input mode, so
-  `Activity.onKeyDown` sees only three. On the television the app is already in non-touch mode,
-  which is why this has never shown there. **Not fixed** — the fix belongs in `dispatchKeyEvent`
-  and would change the television's path too. For now: on a phone, press the sequence twice.
+- **On a phone the first D-pad press used to be swallowed, so UP UP DOWN DOWN needed five
+  presses.** Four injected presses all reached `ViewRootImpl` (logged, `source=0x201`) and settings
+  did not open; five opened it every time. Leaving touch input mode consumes the first key before
+  `Activity.onKeyDown` — the only place the sequence was counted — so it saw three.
+  `MainActivity.dispatchKeyEvent` now counts that press: it runs ahead of the view hierarchy, acts
+  only in touch mode and only for the sequence's own keys, and records the press in a `PressLedger`
+  so `onKeyDown` does not count it again if it arrives there too. A television is never in touch
+  mode, so nothing is recorded there and `onKeyDown` behaves as it always did. **Not yet seen on
+  hardware:** confirm that four presses open settings on the Realme.
 - **Connect and the QR scanner synced with the previous address.** Both save the address and sync
   in one handler, and `syncWithTvServer` read it back out of state, which has not moved yet. The
   QR half is the takmir's first move after pairing and was worse: a new controller has no stored
@@ -1906,7 +1937,7 @@ shippable throughout.
 | ~~5~~ | ~~`ui:design` — tokens, window size class~~ **phase A done**; `App*` components pending sign-off | yes |
 | ~~6~~ | ~~`ui:settings` + `ui:display` into `commonMain`~~ **done** | yes |
 | ~~7~~ | ~~`webApp` (wasmJs)~~ **done** — the shared Compose settings UI renders in a browser and controls the display over one WebSocket. Media file handling is the remaining stub. | yes |
-| 8 | Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC) | **blocked on `verify_pin` alone** — deferred by decision, not done. Side-table writes, thumbnails, the two missing actions, the four previews and the Kemenag fetch have all landed |
+| ~~8~~ | ~~Delete `WebPage*.kt` + `*WebSegment.kt` (−9.1k LOC)~~ | **done** — `verify_pin` and the `/` redirect landed first; the files (−9.1k LOC), `ManifestAndSW.kt` (an unused `PwaAssets`) and six root-level scripts that only served the old panel were removed. The PIN gate is still unseen on a device |
 | 9 | `iosApp` — controller + preview | yes |
 
 ~~**Step 3 wipes device data.**~~ **It does not, and this warning was wrong in the dangerous
@@ -2073,7 +2104,8 @@ non-touch mode. Consequences worth knowing:
 Covered by tests: `FocusHighlightTest` captures rendered pixels and asserts the
 ring appears on focus and leaves with it; `InitialFocusTest` asserts a dialog's
 confirm action holds focus, including when the dialog is composed after the
-screen behind it. Run with `./gradlew :ui:design:connectedDebugAndroidTest` — the
+screen behind it. Run with `./gradlew :ui:design:connectedAndroidDeviceTest` (compiled, **not yet
+run**, since the move to AGP 9's `androidDeviceTest`) — the
 Xiaomi test device rejects the APK with `INSTALL_FAILED_USER_RESTRICTED` on
 roughly every other attempt; re-running is enough.
 
@@ -2117,9 +2149,10 @@ Visual version, with swatches and type specimens at true size:
 
 ### Do not
 
-- **Do not delete the `WebPage*`/`*WebSegment*` files before step 7 reaches
-  parity.** The app is in production; keep the old panel serving until the
-  replacement is proven.
+- **Do not bring back a hand-written panel, and do not serve a page from `/` other than the
+  redirect.** Step 8 deleted `WebPage*.kt`/`*WebSegment*`; the panel is the shared Compose UI at
+  `/panel/`. `RetiredPanel` stays for as long as an old service worker could still be installed on
+  a phone — removing the `/sw.js` kill switch strands any device that opened the old panel.
 - **Do not port the server** to iOS or web.
 - **Do not add a Navigation graph.** The `when (AppUiState)` state machine is
   deliberate, works, and is trivially portable.
