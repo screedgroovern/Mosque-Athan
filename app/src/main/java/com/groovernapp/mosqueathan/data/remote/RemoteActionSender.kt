@@ -7,8 +7,11 @@ import com.groovernapp.mosqueathan.protocol.RemoteActionSink
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -80,11 +83,22 @@ class RemoteActionSender(
         scope.launch { ensureRegistered(target) }
     }
 
+    /**
+     * Edits that never reached the display, as a sentence for [com.groovernapp.mosqueathan.ui.design.MessageHost].
+     *
+     * Before this, [send] posted, logged a failure to logcat and returned: on a phone in `REMOTE`
+     * mode with the display unreachable an edit was lost with nothing on screen, while the browser
+     * at least held it. This does not hold anything back — see [deliveryNotice] for why there is
+     * deliberately no queue — it only stops the loss being silent.
+     */
+    private val _notices = MutableSharedFlow<String>(extraBufferCapacity = 16)
+    val notices: SharedFlow<String> = _notices.asSharedFlow()
+
     override fun send(action: String, build: JsonObjectBuilder.() -> Unit) {
         val target = target() ?: return
         scope.launch {
             ensureRegistered(target)
-            request(target, action) { build() }
+            deliveryNotice(request(target, action) { build() })?.let(_notices::tryEmit)
         }
     }
 

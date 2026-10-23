@@ -81,4 +81,78 @@ class SecretSequenceTest {
         s.reset()
         assertFalse(s.feed(down, down))
     }
+
+    @Test
+    fun containsIsTrueOnlyForKeysTheSequenceIsMadeOf() {
+        val s = sequence()
+        assertTrue(up in s)
+        assertTrue(down in s)
+        assertFalse(enter in s)
+    }
+
+    /**
+     * A phone swallows the first D-pad press before `onKeyDown`, so it is counted earlier in
+     * `dispatchKeyEvent`; the ledger is what stops it being counted a second time if it arrives
+     * in `onKeyDown` too. Modelled here as the two callbacks `MainActivity` has.
+     */
+    private class Pipeline(private val s: SecretSequence) {
+        private val ledger = PressLedger()
+
+        /** `dispatchKeyEvent`: counts in touch mode only. */
+        fun dispatch(key: Int, time: Long, touchMode: Boolean): Boolean {
+            if (touchMode && key in s) {
+                ledger.record(key, time)
+                return s.accept(key)
+            }
+            return false
+        }
+
+        /** `onKeyDown`: counts unless the press was already counted. */
+        fun onKeyDown(key: Int, time: Long): Boolean =
+            if (ledger.has(key, time)) false else s.accept(key)
+    }
+
+    @Test
+    fun aSwallowedFirstPressIsStillCounted() {
+        // Touch mode: press 1 is counted in dispatch and never reaches onKeyDown.
+        // Presses 2-4 are in non-touch mode and reach onKeyDown only.
+        val p = Pipeline(sequence())
+        assertFalse(p.dispatch(up, 1, touchMode = true))
+        assertFalse(p.dispatch(up, 2, touchMode = false) || p.onKeyDown(up, 2))
+        assertFalse(p.dispatch(down, 3, touchMode = false) || p.onKeyDown(down, 3))
+        assertTrue(p.dispatch(down, 4, touchMode = false) || p.onKeyDown(down, 4))
+    }
+
+    @Test
+    fun aPressCountedEarlyIsNotCountedAgainWhenItAlsoReachesOnKeyDown() {
+        // A single UP followed by DOWN DOWN must not open settings. If the one press were
+        // counted in both callbacks it would read as UP UP DOWN DOWN and open it.
+        val p = Pipeline(sequence())
+        assertFalse(p.dispatch(up, 1, touchMode = true))
+        assertFalse(p.onKeyDown(up, 1))
+        assertFalse(p.onKeyDown(down, 2))
+        assertFalse(p.onKeyDown(down, 3))
+    }
+
+    @Test
+    fun withoutTouchModeNothingIsCountedEarlyAndOnKeyDownIsUnchanged() {
+        // The television: dispatch never records, so the ledger never matches and onKeyDown
+        // counts every press as it always did.
+        val p = Pipeline(sequence())
+        assertFalse(p.dispatch(up, 1, touchMode = false))
+        assertFalse(p.onKeyDown(up, 1))
+        assertFalse(p.onKeyDown(up, 2))
+        assertFalse(p.onKeyDown(down, 3))
+        assertTrue(p.onKeyDown(down, 4))
+    }
+
+    @Test
+    fun theLedgerMatchesOnlyTheExactPress() {
+        val ledger = PressLedger()
+        assertFalse(ledger.has(up, 0))
+        ledger.record(up, 100)
+        assertTrue(ledger.has(up, 100))
+        assertFalse(ledger.has(down, 100))
+        assertFalse(ledger.has(up, 101))   // a held key's repeat is a later event
+    }
 }

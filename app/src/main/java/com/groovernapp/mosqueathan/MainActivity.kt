@@ -44,6 +44,7 @@ import com.groovernapp.mosqueathan.ui.design.LocalDisplayBackgrounds
 import com.groovernapp.mosqueathan.ui.design.LocalDisplayApproval
 import com.groovernapp.mosqueathan.ui.design.LocalLinkStatus
 import com.groovernapp.mosqueathan.ui.design.LocalMediaImageLoader
+import com.groovernapp.mosqueathan.ui.design.MessageHost
 
 class MainActivity : ComponentActivity() {
 
@@ -61,6 +62,8 @@ class MainActivity : ComponentActivity() {
             KeyEvent.KEYCODE_DPAD_DOWN
         )
     )
+    private val countedBeforeOnKeyDown = com.groovernapp.mosqueathan.ui.navigation.PressLedger()
+
     /**
      * The interface, not the concrete class — and this line is why the storage switch was
      * silently half-applied for an hour.
@@ -254,7 +257,12 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         } // End of when
-                    
+
+                        // Draws nothing on Android (a Toast is its own window); this only
+                        // listens. Edits a controller could not deliver surface here, because
+                        // RemoteActionSender holds nothing back to resend.
+                        MessageHost(remoteSender.notices)
+
                         if (isStandbyActive) {
                             Box(
                                 modifier = Modifier
@@ -271,6 +279,26 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Counts the first D-pad press after a touch, which never reaches [onKeyDown].
+     *
+     * Leaving touch input mode consumes that press before the activity's key handler runs, so
+     * on a phone UP UP DOWN DOWN only ever accumulated three entries. This runs ahead of the
+     * view hierarchy and sees every press; it acts only in touch mode and only for keys the
+     * sequence is made of. A television is always in non-touch mode, so this never acts there
+     * and the press goes straight to [super] and then [onKeyDown] exactly as before.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN &&
+            window.decorView.isInTouchMode &&
+            event.keyCode in secretSequence
+        ) {
+            countedBeforeOnKeyDown.record(event.keyCode, event.eventTime)
+            if (offerToSecretSequence(event.keyCode)) return true
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         val wasStandby = appViewModel.isStandbyActive.value
         if (wasStandby) {
@@ -284,6 +312,16 @@ class MainActivity : ComponentActivity() {
         // the coordinator loop re-enters standby a second later because the clock is
         // still inside the window. Every press was swallowed, so UP UP DOWN DOWN
         // never recorded a single entry — on a device whose only input is a remote.
+        val alreadyCounted = event != null &&
+            countedBeforeOnKeyDown.has(keyCode, event.eventTime)
+        if (!alreadyCounted && offerToSecretSequence(keyCode)) return true
+
+        // Waking from standby should not also act on whatever was pressed.
+        return if (wasStandby) true else super.onKeyDown(keyCode, event)
+    }
+
+    /** Feeds a key to the settings-entry sequence and opens settings if it completes. */
+    private fun offerToSecretSequence(keyCode: Int): Boolean {
         if (appViewModel.activeScreen.value is AppViewModel.ActiveScreen.Dashboard) {
             if (secretSequence.accept(keyCode)) {
                 appViewModel.transitionToSettings()
@@ -292,9 +330,7 @@ class MainActivity : ComponentActivity() {
         } else {
             secretSequence.reset()
         }
-
-        // Waking from standby should not also act on whatever was pressed.
-        return if (wasStandby) true else super.onKeyDown(keyCode, event)
+        return false
     }
 
     override fun onDestroy() {
