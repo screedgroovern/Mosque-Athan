@@ -689,7 +689,7 @@ class SettingsServer(
                 }
 
                 if (path == "/" || path == "/index.html") {
-                    // Not the hand-written panel any more; see RetiredPanel.
+                    // The hand-written panel is gone; see RetiredPanel.
                     val html = RetiredPanel.getRedirectHtml()
                     val htmlBytes = html.toByteArray(Charsets.UTF_8)
                     val response = "HTTP/1.1 200 OK\r\n" +
@@ -2052,10 +2052,10 @@ class SettingsServer(
                     broadcastState()
                 }
                 // Until now an action with no branch here was dropped without a trace,
-                // which is how the panel's rename button came to send 'register_device'
-                // — an action nothing handled — while still showing a success toast. The
-                // panel and this `when` are maintained separately and in two languages,
-                // so the next mismatch is a matter of when, not whether. Make it audible.
+                // which is how the old panel's rename button came to send 'register_device'
+                // — an action nothing handled — while still showing a success toast. Senders
+                // reference RemoteActions now, but a controller built from an older commit
+                // can still name something this `when` lacks. Make it audible.
                 else -> Log.w(TAG, "Unhandled WebSocket action: '$action'")
             }
         } catch (e: Exception) {

@@ -4,20 +4,19 @@ package com.groovernapp.mosqueathan.protocol
  * Every action name the WebSocket protocol carries.
  *
  * These exist because each name used to be typed twice — once in
- * `SettingsServer.handleWebSocketMessage`'s `when`, and once in the panel's JavaScript,
- * which is itself a Kotlin raw string. Nothing connected the two, so a mismatch was
- * invisible until a button quietly stopped working. That is not hypothetical: the
+ * `SettingsServer.handleWebSocketMessage`'s `when`, and once in the hand-written panel's
+ * JavaScript, which was itself a Kotlin raw string. Nothing connected the two, so a mismatch
+ * was invisible until a button quietly stopped working. That is not hypothetical: the
  * panel's rename button sent `register_device` for an unknown length of time while the
  * server only ever handled `register`.
  *
  * Referencing a constant from both sides makes that drift a compile error rather than a
- * silent no-op. The values are the exact strings the protocol already used, so an older
- * panel talking to a newer server still works.
+ * silent no-op. The JavaScript panel has since been deleted and every sender is Kotlin, but
+ * the constants stay: the values are the exact strings the protocol already used, so a
+ * controller built from an older commit still talks to a newer server.
  *
- * Three schedule actions are assembled in JavaScript as `'update_' + type +
- * '_schedule_days'` and cannot reference a constant from that side. They are here for
- * the server, and they are why a name-by-name diff of the two lists shows ten apparent
- * mismatches that are not real.
+ * Three schedule actions used to be assembled in JavaScript as `'update_' + type +
+ * '_schedule_days'`. They remain here for the server.
  */
 object RemoteActions {
 

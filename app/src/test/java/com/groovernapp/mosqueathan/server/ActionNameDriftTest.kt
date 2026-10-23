@@ -7,14 +7,15 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Neither side of the WebSocket protocol may spell an action name by hand.
+ * No side of the WebSocket protocol may spell an action name by hand.
  *
- * The panel's JavaScript and the server's `when` are two separate files in two
- * languages describing one protocol, and nothing used to connect them. That let the
+ * The hand-written panel's JavaScript and the server's `when` used to be two separate
+ * files in two languages describing one protocol, and nothing connected them. That let the
  * rename button send `register_device` while the server only handled `register` — the
- * message was dropped, and the panel reported success anyway.
+ * message was dropped, and the panel reported success anyway. The JavaScript is gone; the
+ * panel is now the shared Compose UI, which sends from Kotlin like every other controller.
  *
- * Both sides now reference [RemoteActions]. This test is what keeps them there, because
+ * Every side now references [RemoteActions]. This test is what keeps them there, because
  * writing a literal is easier than finding the constant and compiles perfectly well.
  *
  * It reads source rather than behaviour, which is unusual and worth justifying: the
@@ -27,12 +28,6 @@ class ActionNameDriftTest {
 
     private val serverDir = File("src/main/java/com/groovernapp/mosqueathan/server")
 
-    /**
-     * Assembled at runtime from a schedule type — `'update_' + type + '_schedule_days'`
-     * — so these cannot reference a constant from the JavaScript side.
-     */
-    private val dynamicPrefixes = setOf("delete_", "update_")
-
     @Test
     fun theServerSourceIsWhereThisTestThinksItIs() {
         // Guards against the whole test passing vacuously from a wrong working directory.
@@ -40,7 +35,6 @@ class ActionNameDriftTest {
             "expected the server sources at ${serverDir.absolutePath}",
             File(serverDir, "SettingsServer.kt").isFile
         )
-        assertTrue(serverDir.listFiles { f -> f.name.startsWith("WebPageJs") }!!.isNotEmpty())
     }
 
     @Test
@@ -52,26 +46,6 @@ class ActionNameDriftTest {
             "these `when` branches still match a string literal; use RemoteActions instead",
             emptyList<String>(),
             literals
-        )
-    }
-
-    @Test
-    fun thePanelSendsConstantsOnly() {
-        val offenders = mutableListOf<String>()
-        serverDir.listFiles { f -> f.name.startsWith("WebPageJs") }!!.forEach { file ->
-            val source = stripComments(file.readText())
-            Regex("""action: *'([a-z_]+)'""").findAll(source).forEach { match ->
-                val name = match.groupValues[1]
-                if (dynamicPrefixes.none { name == it }) {
-                    offenders += "${file.name}: '$name'"
-                }
-            }
-        }
-        assertEquals(
-            "the panel spells these action names by hand; reference RemoteActions so the " +
-                "server and the panel cannot disagree",
-            emptyList<String>(),
-            offenders
         )
     }
 
@@ -103,18 +77,34 @@ class ActionNameDriftTest {
     }
 
     @Test
-    fun theRemoteControllerSendsConstantsOnly() {
-        // The third side of the protocol. A device in REMOTE mode POSTs these to the
+    fun everyControllerSendsConstantsOnly() {
+        // The other sides of the protocol. A device in REMOTE mode POSTs these to the
         // display, and two of them named actions the server did not have: the running-text
-        // reorder and — worse — the access PIN. Both failed in silence.
-        val settings = File("src/main/java/com/groovernapp/mosqueathan")
+        // reorder and — worse — the access PIN. Both failed in silence. The browser panel
+        // sends from `:webApp` and `:ui:settings`, which replaced the JavaScript that used to
+        // be checked here, so those are walked too.
+        val roots = listOf(
+            File("src/main/java/com/groovernapp/mosqueathan"),
+            File("../ui"),
+            File("../webApp"),
+            File("../core")
+        )
+        roots.forEach { assertTrue("expected sources at ${it.absolutePath}", it.isDirectory) }
         val offenders = mutableListOf<String>()
-        settings.walkTopDown().filter { it.extension == "kt" }.forEach { file ->
-            val source = stripComments(file.readText())
-            Regex("""\.send\("([a-z_]+)"""").findAll(source).forEach {
-                offenders += "${file.name}: '${it.groupValues[1]}'"
-            }
+        var scanned = 0
+        roots.forEach { root ->
+            root.walkTopDown()
+                .onEnter { it.name != "build" && it.name != "node_modules" }
+                .filter { it.extension == "kt" }
+                .forEach { file ->
+                    scanned++
+                    val source = stripComments(file.readText())
+                    Regex("""\.send\("([a-z_]+)"""").findAll(source).forEach {
+                        offenders += "${file.name}: '${it.groupValues[1]}'"
+                    }
+                }
         }
+        assertTrue("expected to scan many sources, saw $scanned", scanned > 100)
         assertEquals(
             "these outgoing actions are spelled by hand; reference RemoteActions so a name " +
                 "the server does not handle cannot compile",
