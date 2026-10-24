@@ -21,6 +21,10 @@ val webModule = module {
     // interface, and DisplayLink needs the concrete type to push snapshots into.
     single { InMemoryConfigRepository(displayHost()) }
     single<ConfigRepository> { get<InMemoryConfigRepository>() }
+    // A browser panel is served by one display and so has no list of others to keep.
+    single<com.groovernapp.mosqueathan.domain.KnownServersStore> {
+        com.groovernapp.mosqueathan.domain.InMemoryKnownServers()
+    }
 
     single { DisplayLink(get(), displayHost(), storedDeviceId(), browserDeviceName()) }
     single<RemoteActionSink> { WebRemoteActionSink(get()) }

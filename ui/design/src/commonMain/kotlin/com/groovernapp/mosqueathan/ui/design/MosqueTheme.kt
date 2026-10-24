@@ -30,7 +30,7 @@ fun MosqueTheme(
     val widthDp = with(density) { container.width.toDp() }
     val heightDp = with(density) { container.height.toDp() }
     val isTv = rememberIsTv()
-    val windowClass = windowClassFor(widthDp, isTv)
+    val windowClass = windowClassFor(widthDp, isTv, heightDp)
 
     CompositionLocalProvider(
         LocalWindowClass provides windowClass,

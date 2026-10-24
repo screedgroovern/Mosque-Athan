@@ -2,6 +2,9 @@
 
 package com.groovernapp.mosqueathan.ui.settings.displaymedia
 
+import com.groovernapp.mosqueathan.ui.settings.StopPreviewButton
+import com.groovernapp.mosqueathan.ui.design.isRunning
+import com.groovernapp.mosqueathan.domain.PreviewKind
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -73,6 +76,8 @@ import com.groovernapp.mosqueathan.domain.SlideshowSchedule
 import com.groovernapp.mosqueathan.ui.component.Schedule
 import com.groovernapp.mosqueathan.ui.component.SlideshowComponent
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
+import com.groovernapp.mosqueathan.ui.settings.RunningTextItem
+import com.groovernapp.mosqueathan.ui.settings.RunningTextList
 import com.groovernapp.mosqueathan.util.Lang
 import kotlinx.coroutines.launch
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
@@ -584,7 +589,9 @@ fun SlideshowTabContent(
 
         // Preview Slideshow button
         Spacer(modifier = Modifier.height(MosqueTheme.spacing.md))
-        MosqueSecondaryButton(
+        if (PreviewKind.Slideshow.isRunning) {
+            StopPreviewButton(onClick = onPreviewSlideshow, modifier = Modifier.fillMaxWidth())
+        } else MosqueSecondaryButton(
             onClick = onPreviewSlideshow,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier.fillMaxWidth().heightIn(min = MosqueTheme.size.controlLg)
@@ -735,6 +742,51 @@ fun TransitionAnimationRow(
             }
         }
     }
+}
+
+/**
+ * "Transition interval" for a setting stored as a number of seconds.
+ *
+ * The Dashboard and Slideshow tabs both do this conversion inline — the stored seconds are shown as
+ * the largest unit that divides them evenly, and changing the unit rescales the value — and the
+ * Friday slideshow needs the same control. It stores seconds too, which is what the display reads.
+ * (Its separate seconds/minutes selector never converted anything: picking "Minutes" with 5 left the
+ * display on 5 seconds.)
+ */
+@Composable
+fun TransitionIntervalRow(
+    title: String,
+    seconds: Int,
+    onSecondsChange: (Int) -> Unit
+) {
+    val (displayValue, unitIndex) = remember(seconds) {
+        when {
+            seconds > 0 && seconds % 86400 == 0 -> Pair(seconds / 86400, 3) // days
+            seconds > 0 && seconds % 3600 == 0 -> Pair(seconds / 3600, 2)   // hours
+            seconds > 0 && seconds % 60 == 0 -> Pair(seconds / 60, 1)       // minutes
+            else -> Pair(seconds, 0)                                        // seconds
+        }
+    }
+    val multipliers = listOf(1, 60, 3600, 86400)
+    val maxPerUnit = listOf(60, 60, 24, 30)
+
+    DropdownAdjustmentRow(
+        title = title,
+        value = displayValue,
+        minValue = 1,
+        maxValue = maxPerUnit[unitIndex],
+        unitLabels = listOf(
+            Lang.get("seconds", "detik"),
+            Lang.get("minutes", "menit"),
+            Lang.get("hours", "jam"),
+            Lang.get("days", "hari")
+        ),
+        selectedUnitIndex = unitIndex,
+        onValueChange = { onSecondsChange(it * multipliers[unitIndex]) },
+        onUnitChange = { index ->
+            onSecondsChange(displayValue.coerceIn(1, maxPerUnit[index]) * multipliers[index])
+        }
+    )
 }
 
 @Composable
@@ -967,6 +1019,13 @@ fun ThemeSettingsSegmentPreview() {
     }
 }
 
+/**
+ * The Dashboard's running text: the card around the shared [RunningTextList].
+ *
+ * This used to be its own copy of the list, with inline editing, a delete that happened on the
+ * first press and no way to reorder at all. The Adzan and Iqomah footers had all three; they now
+ * share one list so the Dashboard cannot drift from them again.
+ */
 @Composable
 fun RunningTextSettingsCard(
     announcements: List<com.groovernapp.mosqueathan.domain.Announcement>,
@@ -975,8 +1034,12 @@ fun RunningTextSettingsCard(
     onDelete: (String) -> Unit,
     onReorder: (List<String>) -> Unit
 ) {
-    var newText by remember { mutableStateOf("") }
-    
+    val rows = remember(announcements) {
+        announcements
+            .sortedBy { it.position }
+            .map { RunningTextItem(id = it.id, text = it.content) }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1001,93 +1064,14 @@ fun RunningTextSettingsCard(
                 fontSize = MosqueTheme.typography.caption
             )
         }
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
-        ) {
-            androidx.compose.material3.OutlinedTextField(
-                value = newText,
-                onValueChange = { newText = it },
-                placeholder = { Text(Lang.get("Enter new running text...", "Masukkan teks running text baru..."), color = MosqueTheme.colors.textMuted) },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MosqueTheme.colors.accent,
-                    unfocusedBorderColor = MosqueTheme.colors.border,
-                    focusedTextColor = MosqueTheme.colors.textPrimary,
-                    unfocusedTextColor = MosqueTheme.colors.textPrimary
-                )
-            )
-            MosquePrimaryButton(
-                onClick = {
-                    if (newText.isNotBlank()) {
-                        onAdd(newText)
-                        newText = ""
-                    }
-                },
-                modifier = Modifier.heightIn(min = MosqueTheme.size.controlXl),
-                shape = RoundedCornerShape(MosqueTheme.radius.md)
-            ) {
-                Text(Lang.get("Add", "Tambah"), color = MosqueTheme.colors.onAccent, fontWeight = FontWeight.Bold)
-            }
-        }
-        
-        if (announcements.isNotEmpty()) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
-            ) {
-                announcements.sortedBy { it.position }.forEach { item ->
-                    var isEditing by remember(item.id) { mutableStateOf(false) }
-                    var editText by remember(item.id) { mutableStateOf(item.content) }
-                    
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(MosqueTheme.radius.md))
-                            .background(MosqueTheme.colors.scrim.copy(alpha = 0.3f))
-                            .padding(MosqueTheme.spacing.lg),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
-                    ) {
-                        if (isEditing) {
-                            androidx.compose.material3.OutlinedTextField(
-                                value = editText,
-                                onValueChange = { editText = it },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = MosqueTheme.colors.accent,
-                                    unfocusedBorderColor = MosqueTheme.colors.border,
-                                    focusedTextColor = MosqueTheme.colors.textPrimary,
-                                    unfocusedTextColor = MosqueTheme.colors.textPrimary
-                                )
-                            )
-                            MosqueIconButton(onClick = {
-                                onEdit(item.id, editText)
-                                isEditing = false
-                            }) {
-                                Icon(Icons.Default.Add, contentDescription = "Save", tint = MosqueTheme.colors.accent)
-                            }
-                        } else {
-                            Text(
-                                text = item.content,
-                                color = MosqueTheme.colors.textPrimary,
-                                modifier = Modifier.weight(1f),
-                                fontSize = MosqueTheme.typography.label
-                            )
-                            MosqueIconButton(onClick = { isEditing = true }, modifier = Modifier.size(MosqueTheme.size.controlSm)) {
-                                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = MosqueTheme.colors.textSecondary, modifier=Modifier.size(MosqueTheme.size.iconMd))
-                            }
-                            MosqueIconButton(onClick = { onDelete(item.id) }, modifier = Modifier.size(MosqueTheme.size.controlSm)) {
-                                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MosqueTheme.colors.danger, modifier=Modifier.size(MosqueTheme.size.iconMd))
-                            }
-                        }
-                    }
-                }
-            }
-        }
+
+        RunningTextList(
+            items = rows,
+            placeholderText = Lang.get("Enter new running text...", "Masukkan teks running text baru..."),
+            onAdd = onAdd,
+            onEdit = onEdit,
+            onDelete = onDelete,
+            onReorder = onReorder
+        )
     }
 }

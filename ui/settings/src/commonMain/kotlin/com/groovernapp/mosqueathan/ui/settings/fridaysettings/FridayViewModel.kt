@@ -88,7 +88,6 @@ class FridayViewModel(
             is FridayEvent.SelectedGlobalMediaChanged -> edit { it.copy(selectedGlobalSlideIds = event.ids) }
             is FridayEvent.TransitionTypeChanged -> edit { it.copy(jumatTransitionType = event.type) }
             is FridayEvent.IntervalSecondsChanged -> edit { it.copy(jumatSlideIntervalSeconds = event.seconds) }
-            is FridayEvent.IntervalUnitChanged -> edit { it.copy(jumatSlideIntervalUnit = event.unit) }
             is FridayEvent.VideoWaitUntilEndChanged -> edit { it.copy(jumatVideoWaitUntilEnd = event.wait) }
 
             is FridayEvent.MurottalAudioPicked -> launch {

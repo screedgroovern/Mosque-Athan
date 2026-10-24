@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.groovernapp.mosqueathan.protocol.TvPairing
+import com.groovernapp.mosqueathan.ui.design.LocalCanServe
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MessageHost
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
@@ -221,6 +222,22 @@ fun RemoteControlSettingsSegment(
         }
 
         HorizontalDivider(color = MosqueTheme.colors.fill, thickness = MosqueTheme.stroke.hairline)
+
+        // The displays connected to before. Not on the browser panel: it is served by one display
+        // and has no others to choose between.
+        if (state.servers.isNotEmpty() && LocalCanServe.current) {
+            KnownServersSection(
+                servers = state.servers,
+                currentHost = state.remoteTvIp,
+                onConnect = { host ->
+                    onUpdateRemoteTvIp(host)
+                    say(Lang.get("Connecting to the TV at $host\u2026", "Menghubungkan ke TV $host..."))
+                    onSyncWithTv(host)
+                },
+                onForget = { onEvent(RemoteDevicesEvent.ServerForgotten(it)) }
+            )
+            HorizontalDivider(color = MosqueTheme.colors.fill, thickness = MosqueTheme.stroke.hairline)
+        }
 
         // Section 2: PIN Remote Kontrol
         Column(

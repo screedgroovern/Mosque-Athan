@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.ui.settings.adzaniqomah
 
+import com.groovernapp.mosqueathan.ui.design.isRunning
+import com.groovernapp.mosqueathan.domain.PreviewKind
 import com.groovernapp.mosqueathan.util.footerLines
 import com.groovernapp.mosqueathan.util.encodeFooterLines
 import androidx.compose.foundation.background
@@ -47,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.ui.settings.AdjustmentRow
 import com.groovernapp.mosqueathan.ui.settings.RunningTextListSettingsComponent
+import com.groovernapp.mosqueathan.ui.settings.StopPreviewButton
 import com.groovernapp.mosqueathan.util.Lang
 import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
@@ -119,8 +122,14 @@ fun IqomahSettingsSegment(
             color = MosqueTheme.colors.fillStrong
         )
 
-        // Preview Button
-        MosquePreviewButton(
+        // Preview Button, which becomes Stop while this preview is on the display
+        if (PreviewKind.Iqomah.isRunning) {
+            StopPreviewButton(
+                onClick = onPreviewIqomah,
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.label
+            )
+        } else MosquePreviewButton(
             onClick = onPreviewIqomah,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier.fillMaxWidth().height(40.dp)

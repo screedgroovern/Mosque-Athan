@@ -10,6 +10,15 @@ package com.groovernapp.mosqueathan.protocol
  */
 interface HttpFetcher {
     suspend fun getText(url: String): HttpResult
+
+    /**
+     * Whether something answers at [url], quickly.
+     *
+     * For asking "is that display on?" of several addresses at once, where a full fetch with the
+     * usual patience would make a list of five take as long as its slowest dead entry. The default
+     * is a plain fetch; an implementation that can be impatient should be.
+     */
+    suspend fun isReachable(url: String): Boolean = getText(url) is HttpResult.Success
 }
 
 /**

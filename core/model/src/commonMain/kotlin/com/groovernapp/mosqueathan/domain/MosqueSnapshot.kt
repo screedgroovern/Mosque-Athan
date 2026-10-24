@@ -41,7 +41,15 @@ data class MosqueSnapshot(
      * which is the same reason every other field here has a default, and the habit the schema-skew
      * note under *Persistence* asks for.
      */
-    val tableTimestamps: Map<String, Long> = emptyMap()
+    val tableTimestamps: Map<String, Long> = emptyMap(),
+    /**
+     * The [PreviewKind.wire] of the preview the display is showing, or empty when there is none.
+     * A string rather than the enum so an older controller that has never heard of a newer kind
+     * still decodes the snapshot.
+     */
+    val activePreview: String = "",
+    /** What the display calls itself (its device model), so a controller can list it by name. */
+    val serverName: String = ""
 )
 
 /**

@@ -5,6 +5,17 @@ import kotlinx.serialization.json.put
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.ConfigRepository
+import com.groovernapp.mosqueathan.domain.KnownServersStore
+import com.groovernapp.mosqueathan.protocol.HttpFetcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onStart
 import com.groovernapp.mosqueathan.protocol.RemoteActionSink
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -26,20 +37,62 @@ import kotlinx.coroutines.launch
  */
 class RemoteDevicesViewModel(
     private val repository: ConfigRepository,
-    private val remote: RemoteActionSink
+    private val remote: RemoteActionSink,
+    private val knownServers: KnownServersStore,
+    private val http: HttpFetcher
 ) : ViewModel() {
+
+    /**
+     * Which remembered displays answer, refreshed while someone is looking at the list.
+     *
+     * Part of [uiState], so it runs only while that has a collector — the probe loop stops with the
+     * pane instead of polling every address in the background for as long as the app is open. Each
+     * round asks every address at once, so a list of five takes as long as the slowest, not the sum.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val reachability: Flow<Map<String, Boolean>> =
+        knownServers.servers.flatMapLatest { list ->
+            flow {
+                while (true) {
+                    emit(
+                        coroutineScope {
+                            list.map { server ->
+                                async { server.host to http.isReachable("http://${server.host}:8080/") }
+                            }.awaitAll().toMap()
+                        }
+                    )
+                    delay(PROBE_INTERVAL_MS)
+                }
+            }
+        }
+
+    init {
+        // A controller that was already pointed at a display before this list existed would
+        // otherwise start with an empty one, as if it had never connected anywhere. Seeded once,
+        // from the address it already holds, and only while the list is empty.
+        viewModelScope.launch {
+            val config = repository.getConfig()
+            val address = config.remoteTvIp.trim()
+            if (config.connectivityMode == "REMOTE" && address.isNotEmpty() && knownServers.servers.value.isEmpty()) {
+                knownServers.remember(address, "")
+            }
+        }
+    }
 
     val uiState: StateFlow<RemoteDevicesUiState> =
         combine(
             repository.getConfigFlow(),
-            repository.getConnectedDevicesFlow()
-        ) { config, devices ->
+            repository.getConnectedDevicesFlow(),
+            knownServers.servers,
+            reachability.onStart { emit(emptyMap()) }
+        ) { config, devices, servers, reachable ->
             RemoteDevicesUiState(
                 mode = ConnectivityMode.fromWire(config.connectivityMode),
                 showSettingsOnTv = config.showSettingsOnTv,
                 remoteTvIp = config.remoteTvIp,
                 pinCode = config.pinCode,
-                devices = devices
+                devices = devices,
+                servers = servers.map { ServerEntry(it, reachable[it.host]) }
             )
         }.stateIn(
             scope = viewModelScope,
@@ -77,11 +130,18 @@ class RemoteDevicesViewModel(
                 remote.send(RemoteActions.DELETE_DEVICE) { put("deviceId", event.deviceId) }
             }
 
+            is RemoteDevicesEvent.ServerForgotten -> knownServers.forget(event.host)
+
             is RemoteDevicesEvent.SyncRequested -> Unit // handled at the call site
         }
     }
 
     private fun write(block: suspend () -> Unit) {
         viewModelScope.launch { block() }
+    }
+
+    private companion object {
+        /** Often enough that "online" is believable, rare enough not to keep the radio busy. */
+        const val PROBE_INTERVAL_MS = 10_000L
     }
 }

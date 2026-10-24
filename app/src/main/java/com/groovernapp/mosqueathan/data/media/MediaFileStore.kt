@@ -5,10 +5,24 @@ import android.net.Uri
 import com.groovernapp.mosqueathan.domain.AndroidPickedFile
 import com.groovernapp.mosqueathan.domain.MediaStore
 import com.groovernapp.mosqueathan.domain.PickedFile
+import com.groovernapp.mosqueathan.domain.PictureKind
+import com.groovernapp.mosqueathan.domain.PictureToSend
 import com.groovernapp.mosqueathan.domain.StoredMedia
 import android.provider.OpenableColumns
 import android.util.Log
 import com.groovernapp.mosqueathan.util.ImageUtils
+import com.groovernapp.mosqueathan.util.Lang
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
 import java.io.File
 import java.util.UUID
 
@@ -30,14 +44,83 @@ private val PickedFile.uri: Uri
  * Images are downscaled in place after copying; a phone camera photo is several
  * megabytes and would be decoded in full on every slideshow tick otherwise.
  */
-class MediaFileStore(private val context: Context) : MediaStore {
+class MediaFileStore(
+    private val context: Context,
+    private val previews: com.groovernapp.mosqueathan.data.remote.PreviewCache,
+    private val repository: com.groovernapp.mosqueathan.domain.ConfigRepository
+) : MediaStore {
 
-    override fun storePresentationMedia(file: PickedFile): StoredMedia? = copy(file.uri, PRESENTATION_DIR)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    override fun storeDashboardBackground(file: PickedFile): StoredMedia? = copy(file.uri, DASHBOARD_DIR)
+    private val _notices = MutableSharedFlow<String>(extraBufferCapacity = 8)
+
+    /** What happened to an upload to the display, for the screen to say. Nothing else reports it. */
+    val notices: SharedFlow<String> = _notices.asSharedFlow()
+
+    private val _uploadsFinished = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Emits once the display has accepted an upload, so a controller can re-read its pictures now. */
+    val uploadsFinished: SharedFlow<Unit> = _uploadsFinished.asSharedFlow()
+
+    override suspend fun cacheForOffline(host: String, filePaths: List<String>): Int =
+        previews.refresh(host, filePaths)
+
+    /**
+     * Sends the saved previews to a display that lacks them, one after another so they arrive in the
+     * order they were listed. A picture with no saved preview is skipped, not failed: this device
+     * never held the original, so there is nothing else to send.
+     */
+    override suspend fun sendPicturesToDisplay(host: String, pictures: List<PictureToSend>): Int =
+        withContext(Dispatchers.IO) {
+            var accepted = 0
+            for (picture in pictures) {
+                val file = previews.cachedFile(picture.path) ?: continue
+                val kind = when (picture.kind) {
+                    PictureKind.Slideshow -> ""
+                    PictureKind.Friday -> "&isFriday=true"
+                    PictureKind.Dashboard -> "&isDashboardBg=true"
+                }
+                val name = URLEncoder.encode("${UUID.randomUUID()}.jpg", "UTF-8")
+                val code = try {
+                    post(host, "filename=$name&isVideo=false$kind", file)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Could not send a picture to $host", e)
+                    -1
+                }
+                if (code in 200..299) accepted++
+            }
+            accepted
+        }
+
+    override fun storePresentationMedia(file: PickedFile): StoredMedia? = store(file, PRESENTATION_DIR, "")
+
+    override fun storeDashboardBackground(file: PickedFile): StoredMedia? =
+        store(file, DASHBOARD_DIR, "isDashboardBg=true")
 
     /** Friday slides live in their own directory: they are a separate library, not a subset. */
-    override fun storeFridayMedia(file: PickedFile): StoredMedia? = copy(file.uri, FRIDAY_DIR)
+    override fun storeFridayMedia(file: PickedFile): StoredMedia? =
+        store(file, FRIDAY_DIR, "isFriday=true")
+
+    /**
+     * Where a picked picture goes depends on which device this is.
+     *
+     * On the display it is copied into this device's storage and the caller adds the row. On a
+     * controller it is **uploaded to the display** and this returns null, because the display adds
+     * the row itself — the same arrangement the browser panel uses. Copying it locally instead left
+     * the picture on the phone with a row the display never heard of: it showed "failed to load" on
+     * the controller and did not appear on the display at all.
+     */
+    private fun store(file: PickedFile, dirName: String, uploadQuery: String): StoredMedia? {
+        val host = displayHost() ?: return copy(file.uri, dirName)
+        upload(host, file.uri, uploadQuery)
+        return null
+    }
+
+    /** The display this device controls, or null when it *is* the display (or has none to reach). */
+    private fun displayHost(): String? {
+        val config = repository.getConfig()
+        return config.remoteTvIp.trim().takeIf { config.connectivityMode == REMOTE_MODE && it.isNotEmpty() }
+    }
 
     /**
      * Copies a recitation in, keeping its real extension.
@@ -51,6 +134,12 @@ class MediaFileStore(private val context: Context) : MediaStore {
      */
     override fun storeMurottalAudio(file: PickedFile): StoredMedia? {
         val uri = file.uri
+        // A controller cannot produce a path the display can open, so it uploads and lets the
+        // display record the path it chose.
+        displayHost()?.let { host ->
+            upload(host, uri, "isAudio=true")
+            return null
+        }
         return try {
             val dir = File(context.filesDir, MUROTTAL_DIR).apply { if (!exists()) mkdirs() }
             val target = File(dir, "${System.currentTimeMillis()}_${audioFileName(uri)}")
@@ -100,6 +189,12 @@ class MediaFileStore(private val context: Context) : MediaStore {
     /** Overwrites an existing entry's file, keeping its path so the database row stands. */
     override fun replaceFile(path: String, file: PickedFile): Boolean {
         val uri = file.uri
+        // The path names a file on the display, so the bytes go there. False: dispatched, and the
+        // display's own change is what the controller will see on its next look.
+        displayHost()?.let { host ->
+            upload(host, uri, "replacePath=${URLEncoder.encode(path, "UTF-8")}")
+            return false
+        }
         val target = File(path)
         return try {
             context.contentResolver.openInputStream(uri)?.use { input ->
@@ -115,6 +210,10 @@ class MediaFileStore(private val context: Context) : MediaStore {
 
     override fun storeCustomBackground(file: PickedFile): StoredMedia? {
         val uri = file.uri
+        displayHost()?.let { host ->
+            upload(host, uri, "isBackground=true")
+            return null
+        }
         val target = File(context.filesDir, CUSTOM_BACKGROUND)
         return try {
             val large = isLarge(uri)
@@ -163,6 +262,82 @@ class MediaFileStore(private val context: Context) : MediaStore {
         }
     }
 
+    /**
+     * Sends a picked file to the display's `POST /upload`, off the main thread.
+     *
+     * Copied to a temporary file first, and that is the point rather than a detour: the endpoint
+     * reads exactly `Content-Length` bytes, so the length has to be known before the first byte
+     * goes out, and a content `Uri` often cannot say. It also lets an image be downscaled on the
+     * phone first, so a camera photo does not cross the wifi at full size only to be shrunk on the
+     * other end.
+     *
+     * Fire-and-forget, because [MediaStore] is not suspending; the outcome comes back through
+     * [notices] and [uploadsFinished].
+     */
+    private fun upload(host: String, uri: Uri, extraQuery: String) {
+        scope.launch {
+            val temp = File(context.cacheDir, "upload_${System.nanoTime()}.tmp")
+            try {
+                val resolver = context.contentResolver
+                val isVideo = resolver.getType(uri)?.startsWith("video") == true
+                val isAudio = extraQuery.contains("isAudio=true")
+                resolver.openInputStream(uri)?.use { input ->
+                    temp.outputStream().use { input.copyTo(it) }
+                } ?: throw java.io.IOException("the picked file could not be read")
+                if (!isVideo && !isAudio) ImageUtils.downscaleImageInPlace(temp)
+
+                val name = if (isAudio) audioFileName(uri) else pickedFileName(uri)
+                val query = "filename=${URLEncoder.encode(name, "UTF-8")}&isVideo=$isVideo" +
+                    if (extraQuery.isEmpty()) "" else "&$extraQuery"
+                val code = post(host, query, temp)
+                if (code in 200..299) {
+                    _notices.emit(Lang.get("Sent to the display.", "Terkirim ke display."))
+                    _uploadsFinished.tryEmit(Unit)
+                } else {
+                    _notices.emit(
+                        Lang.get("The display refused the file (HTTP $code).", "Display menolak file (HTTP $code).")
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Upload to the display failed", e)
+                _notices.emit(
+                    Lang.get(
+                        "Could not send the file to the display: ${e.message}",
+                        "Gagal mengirim file ke display: ${e.message}"
+                    )
+                )
+            } finally {
+                temp.delete()
+            }
+        }
+    }
+
+    private fun post(host: String, query: String, file: File): Int {
+        val connection = URL("http://$host:$PORT/upload?$query").openConnection() as HttpURLConnection
+        return try {
+            connection.requestMethod = "POST"
+            connection.doOutput = true
+            connection.connectTimeout = CONNECT_TIMEOUT_MS
+            // Long: a video over mosque wifi is minutes, and the display answers only at the end.
+            connection.readTimeout = UPLOAD_TIMEOUT_MS
+            connection.setFixedLengthStreamingMode(file.length())
+            file.inputStream().use { input -> connection.outputStream.use { input.copyTo(it) } }
+            connection.responseCode
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun pickedFileName(uri: Uri): String {
+        val display = try {
+            context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+                ?.use { if (it.moveToFirst()) it.getString(0) else null }
+        } catch (_: Exception) {
+            null
+        }
+        return (display ?: "upload.jpg").replace(Regex("[/\\\\]"), "_")
+    }
+
     /** Above this, downscaling is worth telling the user about. */
     private fun isLarge(uri: Uri): Boolean = sizeOf(uri) > LARGE_BYTES
 
@@ -185,5 +360,9 @@ class MediaFileStore(private val context: Context) : MediaStore {
         const val MUROTTAL_DIR = "murottal"
         const val CUSTOM_BACKGROUND = "custom_background.jpg"
         const val LARGE_BYTES = 2L * 1024 * 1024
+        const val REMOTE_MODE = "REMOTE"
+        const val PORT = 8080
+        const val CONNECT_TIMEOUT_MS = 5_000
+        const val UPLOAD_TIMEOUT_MS = 10 * 60 * 1000
     }
 }

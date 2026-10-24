@@ -2,12 +2,17 @@ package com.groovernapp.mosqueathan.ui.settings.sync
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import com.groovernapp.mosqueathan.protocol.SyncConflict
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.component.MosqueDangerButton
@@ -52,7 +57,13 @@ fun SyncConflictDialog(
     onDismiss: () -> Unit
 ) {
     val differing = SyncConflict.differingTables(server, local)
+    val mediaDiffers = differing.any { it in SyncConflict.COMPARED_TABLES - SyncConflict.PUSHABLE_TABLES.toSet() }
 
+    // Everything, buttons included, sits in one scrolling column. The buttons used to be the
+    // dialog's own confirm/dismiss slots, which lay a tall column of three beside a fourth: on a
+    // phone held upright that wrapped into overlapping rows, and on a landscape phone it ran off the
+    // bottom with nothing to scroll. In the body they stack full width at any size and scroll with
+    // the text when the window is short.
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -63,7 +74,10 @@ fun SyncConflictDialog(
             )
         },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md)
+            ) {
                 Text(
                     Lang.get(
                         "This device and the display have both been changed. Choose which copy to keep.",
@@ -91,33 +105,59 @@ fun SyncConflictDialog(
                         )
                     }
                 }
-            }
-        },
-        confirmButton = {
-            // The safest of the three leads and holds initial focus, because a D-pad user who
-            // presses Enter without reading should not lose the mosque's own settings.
-            MosquePrimaryButton(
-                modifier = Modifier.initialFocus(),
-                onClick = { onChoice(SyncConflict.Choice.TakeServer) }
-            ) {
-                Text(Lang.get("Use the display's", "Pakai data display"))
-            }
-        },
-        dismissButton = {
-            Column(verticalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.sm)) {
-                MosqueSecondaryButton(onClick = { onChoice(SyncConflict.Choice.NewestWins) }) {
-                    Text(Lang.get("Keep whichever is newer", "Pakai yang terbaru"))
+
+                if (mediaDiffers) {
+                    // Said here because the choice below cannot act on these sections the way it
+                    // acts on the others: picture files only exist on the display.
+                    Text(
+                        Lang.get(
+                            "Picture files live on the display, so this device's pictures are never sent to it, whichever you choose.",
+                            "File gambar ada di display, jadi gambar di perangkat ini tidak pernah dikirim ke display, apa pun pilihannya."
+                        ),
+                        color = MosqueTheme.colors.textSecondary,
+                        fontSize = MosqueTheme.typography.caption
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(MosqueTheme.spacing.sm))
+
+                // The safest of the three leads and holds initial focus, because a D-pad user who
+                // presses Enter without reading should not lose the mosque's own settings.
+                MosquePrimaryButton(
+                    modifier = Modifier.fillMaxWidth().initialFocus(),
+                    onClick = { onChoice(SyncConflict.Choice.TakeServer) }
+                ) {
+                    Text(
+                        Lang.get("Use the display's", "Pakai data display"),
+                        textAlign = TextAlign.Center
+                    )
+                }
+                MosqueSecondaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onChoice(SyncConflict.Choice.NewestWins) }
+                ) {
+                    Text(
+                        Lang.get("Keep whichever is newer", "Pakai yang terbaru"),
+                        textAlign = TextAlign.Center
+                    )
                 }
                 // Danger, because this is the one that can overwrite the display the whole
                 // congregation is looking at with a phone's copy.
-                MosqueDangerButton(onClick = { onChoice(SyncConflict.Choice.TakeLocal) }) {
-                    Text(Lang.get("Use this device's", "Pakai data perangkat ini"))
+                MosqueDangerButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onChoice(SyncConflict.Choice.TakeLocal) }
+                ) {
+                    Text(
+                        Lang.get("Use this device's", "Pakai data perangkat ini"),
+                        textAlign = TextAlign.Center
+                    )
                 }
-                MosqueTextButton(onClick = onDismiss) {
-                    Text(Lang.get("Cancel", "Batal"))
+                MosqueTextButton(modifier = Modifier.fillMaxWidth(), onClick = onDismiss) {
+                    Text(Lang.get("Cancel", "Batal"), textAlign = TextAlign.Center)
                 }
             }
         },
+        confirmButton = {},
         containerColor = MosqueTheme.colors.surfaceRaised
     )
 }

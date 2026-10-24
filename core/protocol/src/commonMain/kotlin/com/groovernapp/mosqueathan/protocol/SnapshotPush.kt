@@ -87,6 +87,12 @@ data class SnapshotPush(
         const val TABLE_ANNOUNCEMENTS = "announcements"
         const val TABLE_SLIDESHOW = "slideshow_schedules"
         const val TABLE_STANDBY = "standby_schedules"
+
+        // Never pushed (see SyncConflict.PUSHABLE_TABLES), but pulled: a controller takes the
+        // display's rows so it can list the pictures the display holds.
+        const val TABLE_MEDIA = "media"
+        const val TABLE_FRIDAY_MEDIA = "friday_media"
+        const val TABLE_BACKGROUNDS = "dashboard_backgrounds"
     }
 }
 

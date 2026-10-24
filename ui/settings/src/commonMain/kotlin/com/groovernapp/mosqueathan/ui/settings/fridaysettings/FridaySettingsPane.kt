@@ -2,6 +2,12 @@
 
 package com.groovernapp.mosqueathan.ui.settings.fridaysettings
 
+import com.groovernapp.mosqueathan.ui.design.LocalWindowClass
+import com.groovernapp.mosqueathan.ui.settings.displaymedia.TransitionIntervalRow
+import com.groovernapp.mosqueathan.ui.settings.displaymedia.TransitionAnimationRow
+import com.groovernapp.mosqueathan.ui.settings.StopPreviewButton
+import com.groovernapp.mosqueathan.ui.design.isRunning
+import com.groovernapp.mosqueathan.domain.PreviewKind
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -303,111 +309,20 @@ private fun FridaySlideshowSection(
 
             Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
 
-            // Transition Settings
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = Lang.get("Transition Type", "Tipe Transisi"),
-                    color = MosqueTheme.colors.textPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-                var expanded by remember { mutableStateOf(false) }
-                Box {
-                    MosqueTertiaryButton(onClick = { expanded = true }) {
-                        Text(state.transitionType)
-                    }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.background(MosqueTheme.colors.surfaceRaised)
-                    ) {
-                        listOf("FADE", "SLIDE", "ZOOM", "NONE").forEach { type ->
-                            DropdownMenuItem(
-                                modifier = Modifier.focusHighlight(
-                                    shape = RoundedCornerShape(MosqueRadius.sm),
-                                    scaleUp = false
-                                ),
-                                text = { Text(type, color = MosqueTheme.colors.textPrimary) },
-                                onClick = {
-                                    onEvent(FridayEvent.TransitionTypeChanged(type))
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
+            // The same two controls the Dashboard and Slideshow tabs use, so the wording and the
+            // layout cannot drift between them.
+            TransitionAnimationRow(
+                title = Lang.get("Transition Animation", "Animasi Transisi"),
+                selectedType = state.transitionType,
+                isCompact = LocalWindowClass.current.isCompact,
+                onTypeSelected = { onEvent(FridayEvent.TransitionTypeChanged(it)) }
+            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(MosqueTheme.spacing.md),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    AdjustmentRow(
-                        title = Lang.get("Slide Duration", "Durasi Slide"),
-                        value = state.intervalSeconds,
-                        minValue = 1,
-                        maxValue = 300,
-                        showSign = false,
-                        unitSuffix = "",
-                        onValueChange = { onEvent(FridayEvent.IntervalSecondsChanged(it)) }
-                    )
-                }
-                var unitExpanded by remember { mutableStateOf(false) }
-                Box {
-                    MosqueTertiaryButton(onClick = { unitExpanded = true }) {
-                        Text(
-                            if (state.intervalUnit == "MINUTES") {
-                                Lang.get("Minutes", "Menit")
-                            } else {
-                                Lang.get("Seconds", "Detik")
-                            }
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = unitExpanded,
-                        onDismissRequest = { unitExpanded = false },
-                        modifier = Modifier.background(MosqueTheme.colors.surfaceRaised)
-                    ) {
-                        DropdownMenuItem(
-                            modifier = Modifier.focusHighlight(
-                                shape = RoundedCornerShape(MosqueRadius.sm),
-                                scaleUp = false
-                            ),
-                            text = {
-                                Text(
-                                    text = Lang.get("Seconds", "Detik"),
-                                    color = MosqueTheme.colors.textPrimary
-                                )
-                            },
-                            onClick = {
-                                onEvent(FridayEvent.IntervalUnitChanged("SECONDS"))
-                                unitExpanded = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            modifier = Modifier.focusHighlight(
-                                shape = RoundedCornerShape(MosqueRadius.sm),
-                                scaleUp = false
-                            ),
-                            text = {
-                                Text(
-                                    text = Lang.get("Minutes", "Menit"),
-                                    color = MosqueTheme.colors.textPrimary
-                                )
-                            },
-                            onClick = {
-                                onEvent(FridayEvent.IntervalUnitChanged("MINUTES"))
-                                unitExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
+            TransitionIntervalRow(
+                title = Lang.get("Transition interval", "Interval transisi"),
+                seconds = state.intervalSeconds,
+                onSecondsChange = { onEvent(FridayEvent.IntervalSecondsChanged(it)) }
+            )
 
             SettingSwitchRow(
                 title = Lang.get("Wait Video End", "Tunggu Video Selesai"),
@@ -420,7 +335,12 @@ private fun FridaySlideshowSection(
             )
 
             Spacer(modifier = Modifier.height(MosqueTheme.spacing.xl))
-            MosquePrimaryButton(
+            if (PreviewKind.FridaySlideshow.isRunning) {
+                StopPreviewButton(
+                    onClick = { onEvent(FridayEvent.SlideshowPreviewRequested) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else MosquePrimaryButton(
                 onClick = { onEvent(FridayEvent.SlideshowPreviewRequested) },
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -535,7 +455,6 @@ private fun GlobalSlideshowSelectionSection(
                 onEvent(FridayEvent.SelectedGlobalMediaChanged(newSet.joinToString(",")))
             },
             showAddButton = false, // Not adding/editing from this view, just selecting
-            onReorderItems = { /* No reorder from here */ },
             onEditItem = { /* No edit from here */ },
             onDeleteItem = { /* No delete from here */ },
             emptyText = Lang.get("No global media found.", "Slideshow global kosong."),

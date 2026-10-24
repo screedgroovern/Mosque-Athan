@@ -211,6 +211,31 @@ fun SlideshowSchedule.toEntity(lastModified: Long): SlideshowScheduleEntity =
         lastModified = lastModified
     )
 
+fun Media.toEntity(lastModified: Long): MediaEntity = MediaEntity(
+    id = id,
+    filePath = filePath,
+    isVideo = isVideo,
+    isUsed = isUsed,
+    sortOrder = sortOrder,
+    lastModified = lastModified
+)
+
+fun FridayMedia.toEntity(lastModified: Long): FridayMediaEntity = FridayMediaEntity(
+    id = id,
+    filePath = filePath,
+    isVideo = isVideo,
+    sortOrder = sortOrder,
+    lastModified = lastModified
+)
+
+fun DashboardBackground.toEntity(lastModified: Long): DashboardBackgroundEntity = DashboardBackgroundEntity(
+    id = id,
+    filePath = filePath,
+    isUsed = isUsed,
+    sortOrder = sortOrder,
+    lastModified = lastModified
+)
+
 fun StandbySchedule.toEntity(lastModified: Long): StandbyScheduleEntity = StandbyScheduleEntity(
     id = id,
     startTime = startTime,

@@ -16,10 +16,10 @@ import androidx.compose.ui.unit.dp
  * of width, rather than collapsing into [Expanded].
  */
 enum class WindowClass {
-    /** Phones. Width < 600dp. */
+    /** Phones, and anything held upright (taller than wide). Width < 600dp otherwise. */
     Compact,
 
-    /** 10" tablets in portrait. 600dp ≤ width < 840dp. */
+    /** Wide windows that are not taller than they are wide, 600dp ≤ width < 840dp. */
     Medium,
 
     /** 10" tablets in landscape, 15" screens. Width ≥ 840dp. */
@@ -118,9 +118,19 @@ data class WindowMetrics(
 
 private val SHORT_HEIGHT = 480.dp
 
-/** Classifies a measured width. Kept separate from measurement so it is testable. */
-fun windowClassFor(width: Dp, isTv: Boolean): WindowClass = when {
+/**
+ * Classifies a measured window.
+ *
+ * Width alone is the whole rule when [height] is not given. Given, it adds one: a window taller
+ * than it is wide is [WindowClass.Compact] whatever its width, because a tablet held upright has the
+ * proportions of a phone — a column of content, not room for a sidebar beside it — and the phone
+ * layout is the one authored for that shape. Landscape and a [WindowClass.Tv] are untouched.
+ *
+ * Kept separate from measurement so it is testable.
+ */
+fun windowClassFor(width: Dp, isTv: Boolean, height: Dp? = null): WindowClass = when {
     isTv -> WindowClass.Tv
+    height != null && height > width -> WindowClass.Compact
     width < 600.dp -> WindowClass.Compact
     width < 840.dp -> WindowClass.Medium
     else -> WindowClass.Expanded

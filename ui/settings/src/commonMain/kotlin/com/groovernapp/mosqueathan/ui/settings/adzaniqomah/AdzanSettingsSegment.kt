@@ -1,5 +1,7 @@
 package com.groovernapp.mosqueathan.ui.settings.adzaniqomah
 
+import com.groovernapp.mosqueathan.ui.design.isRunning
+import com.groovernapp.mosqueathan.domain.PreviewKind
 import com.groovernapp.mosqueathan.util.footerLines
 import com.groovernapp.mosqueathan.util.encodeFooterLines
 import com.groovernapp.mosqueathan.ui.settings.*
@@ -84,8 +86,14 @@ fun AdzanSettingsSegment(
 
         HorizontalDivider(color = MosqueTheme.colors.fillStrong)
 
-        // Preview Button
-        MosquePreviewButton(
+        // Preview Button, which becomes Stop while this preview is on the display
+        if (PreviewKind.Adzan.isRunning) {
+            StopPreviewButton(
+                onClick = onPreviewAdzan,
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = if (isCompact) MosqueTheme.typography.labelSmall else MosqueTheme.typography.label
+            )
+        } else MosquePreviewButton(
             onClick = onPreviewAdzan,
             shape = RoundedCornerShape(MosqueTheme.radius.md),
             modifier = Modifier.fillMaxWidth().height(40.dp)

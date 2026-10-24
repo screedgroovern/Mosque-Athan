@@ -80,6 +80,9 @@ object RemoteActions {
     const val PREVIEW_ADZAN = "preview_adzan"
     const val PREVIEW_IQOMAH = "preview_iqomah"
 
+    /** Ends whichever preview the display is showing and returns it to the screen it left. */
+    const val EXIT_PREVIEW = "exit_preview"
+
     // Everything else
     const val RESET = "reset"
     const val SET_PIN = "set_pin"

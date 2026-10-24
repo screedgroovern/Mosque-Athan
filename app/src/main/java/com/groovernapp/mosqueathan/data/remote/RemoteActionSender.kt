@@ -118,12 +118,32 @@ class RemoteActionSender(
      */
     private suspend fun ensureRegistered(target: String) = registration.withLock {
         if (registeredWith == target && _status.value == Status.Connected) return@withLock
+        register(target)
+    }
+
+    /**
+     * Asks the display whether it is still there, and updates [status] with the answer.
+     *
+     * [status] otherwise only changes when something is sent, so a display that was closed after
+     * the last action left a controller showing "Connected" for as long as nobody touched a
+     * setting. Registering is idempotent on the display and cheap, which makes it an honest
+     * heartbeat: an answer means it is reachable *and* still accepts this device.
+     *
+     * Called on a timer by the host while settings is open; does nothing on a display.
+     */
+    suspend fun checkLink() {
+        val target = target() ?: return
+        registration.withLock { register(target) }
+    }
+
+    private suspend fun register(target: String) {
         val reply = request(target, RemoteActions.REGISTER) {
             put("deviceName", Build.MODEL)
         }
         if (reply == null) {
             _status.value = Status.Offline
-            return@withLock
+            registeredWith = null
+            return
         }
         registeredWith = target
         _status.value = if (DisplayReply.accepted(reply, "isAllowed")) Status.Connected else Status.NeedsApproval

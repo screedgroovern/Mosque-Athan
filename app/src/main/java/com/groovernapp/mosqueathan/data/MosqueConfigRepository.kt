@@ -899,7 +899,10 @@ class MosqueConfigRepository : ServerDataSource {
         config: MosqueConfig?,
         announcements: List<Announcement>?,
         slideshowSchedules: List<SlideshowSchedule>?,
-        standbySchedules: List<StandbySchedule>?
+        standbySchedules: List<StandbySchedule>?,
+        media: List<Media>?,
+        fridayMedia: List<FridayMedia>?,
+        dashboardBackgrounds: List<DashboardBackground>?
     ) {
         realm.write {
             if (config != null) {
@@ -995,6 +998,41 @@ class MosqueConfigRepository : ServerDataSource {
                         createdAt = item.createdAt
                         day = item.day
                         isSpecificDate = item.isSpecificDate
+                    })
+                }
+            }
+            // Rows only: `delete` here removes database rows, never the files they name.
+            if (media != null) {
+                delete(query<MediaEntity>().find())
+                media.forEach { item ->
+                    copyToRealm(MediaEntity().apply {
+                        id = item.id
+                        filePath = item.filePath
+                        isVideo = item.isVideo
+                        isUsed = item.isUsed
+                        sortOrder = item.sortOrder
+                    })
+                }
+            }
+            if (fridayMedia != null) {
+                delete(query<FridayMediaEntity>().find())
+                fridayMedia.forEach { item ->
+                    copyToRealm(FridayMediaEntity().apply {
+                        id = item.id
+                        filePath = item.filePath
+                        isVideo = item.isVideo
+                        sortOrder = item.sortOrder
+                    })
+                }
+            }
+            if (dashboardBackgrounds != null) {
+                delete(query<DashboardBackgroundEntity>().find())
+                dashboardBackgrounds.forEach { item ->
+                    copyToRealm(DashboardBackgroundEntity().apply {
+                        id = item.id
+                        filePath = item.filePath
+                        isUsed = item.isUsed
+                        sortOrder = item.sortOrder
                     })
                 }
             }
@@ -1104,6 +1142,9 @@ class MosqueConfigRepository : ServerDataSource {
             }
         }
     }
+
+    /** Realm keeps no table stamps, so there is nothing to move. */
+    override suspend fun touchMediaFile(filePath: String) = Unit
 
     override suspend fun deleteDevice(id: String) {
         realm.write {

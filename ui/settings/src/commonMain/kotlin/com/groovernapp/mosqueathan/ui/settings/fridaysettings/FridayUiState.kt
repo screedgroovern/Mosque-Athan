@@ -88,7 +88,6 @@ sealed interface FridayEvent {
     data class SelectedGlobalMediaChanged(val ids: String) : FridayEvent
     data class TransitionTypeChanged(val type: String) : FridayEvent
     data class IntervalSecondsChanged(val seconds: Int) : FridayEvent
-    data class IntervalUnitChanged(val unit: String) : FridayEvent
     data class VideoWaitUntilEndChanged(val wait: Boolean) : FridayEvent
 
     // Friday media

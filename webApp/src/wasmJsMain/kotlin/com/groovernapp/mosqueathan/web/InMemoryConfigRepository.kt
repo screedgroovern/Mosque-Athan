@@ -9,6 +9,7 @@ import com.groovernapp.mosqueathan.domain.KemenagSchedule
 import com.groovernapp.mosqueathan.domain.Media
 import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.domain.MosqueSnapshot
+import com.groovernapp.mosqueathan.domain.PreviewKind
 import com.groovernapp.mosqueathan.domain.PrayerType
 import com.groovernapp.mosqueathan.domain.SlideshowSchedule
 import com.groovernapp.mosqueathan.domain.StandbySchedule
@@ -48,6 +49,10 @@ class InMemoryConfigRepository(
     private val slideshowSchedules = MutableStateFlow<List<SlideshowSchedule>>(emptyList())
     private val standbySchedules = MutableStateFlow<List<StandbySchedule>>(emptyList())
     private val kemenagSchedules = MutableStateFlow<List<KemenagSchedule>>(emptyList())
+    private val _activePreview = MutableStateFlow<PreviewKind?>(null)
+
+    /** The preview the display is showing, from its latest snapshot; null until one arrives. */
+    val activePreview: kotlinx.coroutines.flow.StateFlow<PreviewKind?> = _activePreview.asStateFlow()
 
     /**
      * Replaces everything with a snapshot from the display.
@@ -58,6 +63,7 @@ class InMemoryConfigRepository(
      * panel into "server" mode on the first snapshot.
      */
     fun apply(snapshot: MosqueSnapshot) {
+        _activePreview.value = PreviewKind.fromWire(snapshot.activePreview)
         adopt(snapshot.config)
         media.value = snapshot.mediaList
         backgrounds.value = snapshot.dashboardBackgrounds
@@ -83,12 +89,18 @@ class InMemoryConfigRepository(
         config: MosqueConfig?,
         announcements: List<Announcement>?,
         slideshowSchedules: List<SlideshowSchedule>?,
-        standbySchedules: List<StandbySchedule>?
+        standbySchedules: List<StandbySchedule>?,
+        media: List<Media>?,
+        fridayMedia: List<FridayMedia>?,
+        dashboardBackgrounds: List<DashboardBackground>?
     ) {
         config?.let { adopt(it) }
         announcements?.let { this.announcements.value = it }
         slideshowSchedules?.let { this.slideshowSchedules.value = it }
         standbySchedules?.let { this.standbySchedules.value = it }
+        media?.let { this.media.value = it }
+        fridayMedia?.let { this.fridayMedia.value = it }
+        dashboardBackgrounds?.let { this.backgrounds.value = it }
     }
 
     /**

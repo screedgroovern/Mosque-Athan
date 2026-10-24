@@ -1797,8 +1797,18 @@ destroy a mosque's settings:
 - **Null means "leave that table alone"; an empty list means "empty it there too".** Conflating
   them is how an additive sync restores a running text the takmir deleted at home — the deletion
   simply comes back from the other side on the next sync, forever.
-- **The media tables cannot cross at all** (`SyncConflict.PUSHABLE_TABLES` is four of the seven
-  compared tables). Those rows name *files*, and a path on a phone names nothing on the display —
+- **The media tables cross in one direction only: down.** A controller takes the display's rows
+  (`applySnapshot`'s `media`, `fridayMedia`, `dashboardBackgrounds`) so it can list and show the
+  pictures — it fetches the bytes over `/media` — and it never sends its own. Before this a controller
+  that connected saw none of the display's pictures. Pushing is what cannot happen
+  (`SyncConflict.PUSHABLE_TABLES` is four of the seven compared tables).
+  An Android controller keeps no connection to the display, so it re-reads the pictures on a timer
+  while settings is open (`SettingsViewModel.refreshMediaFromDisplay`, every 8 seconds) and straight
+  after one of its uploads lands. It keeps a downscaled copy of each picture (`PreviewCache`) so they
+  still show away from the display. In REMOTE mode `MediaFileStore` **uploads** a picked file to
+  `POST /upload` instead of copying it locally and adding a row the display never hears about — the
+  display adds the row, as it does for the browser. Replacing a file keeps its path, so the display
+  moves the table stamp by hand (`touchMediaFile`); the stamp is what the poll compares. Those rows name *files*, and a path on a phone names nothing on the display —
   a display that accepted them would read "failed to load image" for every slide, having discarded
   the rows for files it does hold. So choosing "use this device's copy" leaves the display's media
   as it was. That is the honest outcome: the alternative is not "media syncs too", it is "media

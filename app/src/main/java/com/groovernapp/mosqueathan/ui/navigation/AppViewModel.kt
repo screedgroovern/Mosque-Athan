@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.groovernapp.mosqueathan.domain.MosqueConfig
 import com.groovernapp.mosqueathan.domain.PrayerType
+import com.groovernapp.mosqueathan.domain.PreviewKind
 import com.groovernapp.mosqueathan.ui.adzan.AdzanViewModel
 import com.groovernapp.mosqueathan.ui.dashboard.DashboardUiState
 import com.groovernapp.mosqueathan.ui.dashboard.DashboardViewModel
@@ -61,8 +62,19 @@ class AppViewModel(
     private var lastCalculatedDate: LocalDate? = null
     private var lastTriggeredPrayer: PrayerType? = null
     private var lastAdzanBeepedSecond = -1
-    var isPreviewMode = false
-        private set
+    private val _activePreview = MutableStateFlow<PreviewKind?>(null)
+
+    /**
+     * The preview on screen, if any. The server reports it in every snapshot, so a controller can
+     * turn the right Preview button into Stop, and drop it again when the display ends a preview
+     * itself.
+     */
+    val activePreview: StateFlow<PreviewKind?> = _activePreview.asStateFlow()
+
+    val isPreviewMode: Boolean get() = _activePreview.value != null
+
+    /** The screen a preview interrupted, which ending the preview goes back to. */
+    private var screenBeforePreview: ActiveScreen? = null
     private var currentConfig = MosqueConfig()
 
     private val _appState = MutableStateFlow<AppUiState>(
@@ -198,7 +210,7 @@ class AppViewModel(
                 
                 if (lastTriggeredPrayer != prayer && secondsUntilPrayer in 1..adzanLeadSeconds) {
                     lastTriggeredPrayer = prayer
-                    isPreviewMode = false
+                    _activePreview.value = null
                     transitionToAdzan(prayer, time)
                     return
                 }
@@ -214,7 +226,7 @@ class AppViewModel(
                 if (iqomahDurationSeconds > 0 && elapsedSeconds in 0 until iqomahDurationSeconds) {
                     if (lastTriggeredPrayer != prayer) {
                         lastTriggeredPrayer = prayer
-                        isPreviewMode = false
+                        _activePreview.value = null
                         val remainingSeconds = iqomahDurationSeconds - elapsedSeconds
                         val zone = TimeZone.currentSystemDefault()
                         val currentLocalDate = Clock.System.now().toLocalDateTime(zone)
@@ -305,7 +317,7 @@ class AppViewModel(
                         if (isPreviewMode) {
                             viewModelScope.launch {
                                 delay(2000)
-                                transitionToSettings()
+                                exitPreview()
                             }
                         } else {
                             val zone = TimeZone.currentSystemDefault()
@@ -356,7 +368,7 @@ class AppViewModel(
                         if (isPreviewMode) {
                             viewModelScope.launch {
                                 delay(2000)
-                                transitionToSettings()
+                                exitPreview()
                             }
                         } else {
                             transitionToDashboard()
@@ -371,7 +383,7 @@ class AppViewModel(
         iqomahCollectorJob?.cancel()
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Dashboard
-        isPreviewMode = false
+        _activePreview.value = null
 
         val mappedFridayMediaFlow = repository.observeFridayMedia().map { fmList: List<com.groovernapp.mosqueathan.domain.FridayMedia> ->
             fmList.map { fm ->
@@ -460,7 +472,7 @@ class AppViewModel(
         iqomahCollectorJob?.cancel()
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Settings
-        isPreviewMode = false
+        _activePreview.value = null
 
         activeStateCollectorJob = viewModelScope.launch {
             combine(
@@ -484,22 +496,23 @@ class AppViewModel(
     }
 
     fun previewAdzan() {
-        isPreviewMode = true
+        startPreview(PreviewKind.Adzan)
         val zone = TimeZone.currentSystemDefault()
         val simulatedTime = Clock.System.now().plus(20, DateTimeUnit.SECOND).toLocalDateTime(zone)
         transitionToAdzan(PrayerType.SUBUH, simulatedTime)
     }
 
     fun previewIqomah() {
-        isPreviewMode = true
+        startPreview(PreviewKind.Iqomah)
         transitionToIqomah(PrayerType.SUBUH, customDurationSeconds = 20)
     }
 
     fun previewSlideshow() {
+        // Before the screen changes: this is where ending the preview returns to.
+        startPreview(PreviewKind.Slideshow)
         iqomahCollectorJob?.cancel()
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Dashboard
-        isPreviewMode = true
 
         activeStateCollectorJob = viewModelScope.launch {
             combine(
@@ -536,10 +549,10 @@ class AppViewModel(
     }
 
     fun previewFridaySlideshow() {
+        startPreview(PreviewKind.FridaySlideshow)
         iqomahCollectorJob?.cancel()
         activeStateCollectorJob?.cancel()
         _activeScreen.value = ActiveScreen.Dashboard
-        isPreviewMode = true
 
         val mappedFridayMediaFlow = repository.observeFridayMedia().map { fmList ->
             fmList.map { fm ->
@@ -592,9 +605,26 @@ class AppViewModel(
         }
     }
 
+    /**
+     * Ends the preview and goes back to the screen it interrupted.
+     *
+     * That used to be Settings every time, which was wrong in the case that matters: a controller
+     * previews on a television that is showing the clock, and the television was left on its own
+     * settings screen afterwards. Settings is only the answer when the preview started there.
+     */
     fun exitPreview() {
-        isPreviewMode = false
-        transitionToSettings()
+        if (!isPreviewMode) return
+        val back = screenBeforePreview
+        screenBeforePreview = null
+        _activePreview.value = null
+        if (back is ActiveScreen.Settings) transitionToSettings() else transitionToDashboard()
+    }
+
+    private fun startPreview(kind: PreviewKind) {
+        // Only the first preview of a run records where it came from: moving straight from one
+        // preview to another would otherwise store the first preview as the place to return to.
+        if (!isPreviewMode) screenBeforePreview = _activeScreen.value
+        _activePreview.value = kind
     }
 
     /**

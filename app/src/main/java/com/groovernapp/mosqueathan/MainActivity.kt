@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -75,6 +77,8 @@ class MainActivity : ComponentActivity() {
      * looked right on their own.
      */
     private val configRepository: com.groovernapp.mosqueathan.domain.ServerDataSource by inject()
+    private val previewCache: com.groovernapp.mosqueathan.data.remote.PreviewCache by inject()
+    private val mediaFileStore: com.groovernapp.mosqueathan.data.media.MediaFileStore by inject()
 
     /** The session with the display this device controls; a no-op on the display itself. */
     private val remoteSender: RemoteActionSender by inject()
@@ -132,7 +136,7 @@ class MainActivity : ComponentActivity() {
                     // Media paths name files on whichever device is the display. This build is
                     // both roles, so the loader decides per call rather than assuming local.
                     LocalMediaImageLoader provides remember {
-                        AndroidMediaImageLoader(configRepository)
+                        AndroidMediaImageLoader(configRepository, previewCache)
                     },
                     // This device's standing with the display it controls. Previously nothing was
                     // provided here, so an Android controller showed no status chip at all — it
@@ -170,6 +174,27 @@ class MainActivity : ComponentActivity() {
                             this@MainActivity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                         } else {
                             this@MainActivity.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        }
+                    }
+
+                    // A controller has no live link to the display, so while settings is open it looks
+                    // at the display's pictures on a timer, and straight away after an upload lands.
+                    // A no-op on a display, and when no display can be reached.
+                    LaunchedEffect(appState is AppUiState.Settings) {
+                        if (appState is AppUiState.Settings) {
+                            launch {
+                                mediaFileStore.uploadsFinished.collect {
+                                    settingsViewModel.refreshMediaFromDisplay()
+                                }
+                            }
+                            while (true) {
+                                // The same tick keeps the connection indicator honest: it only
+                                // changes when something is sent, so a display closed after the last
+                                // edit would otherwise read "Connected" indefinitely.
+                                remoteSender.checkLink()
+                                settingsViewModel.refreshMediaFromDisplay()
+                                delay(PICTURE_POLL_MS)
+                            }
                         }
                     }
 
@@ -217,7 +242,12 @@ class MainActivity : ComponentActivity() {
                                 }
                                 AdzanScreen(
                                     state = state.state,
-                                    onDismiss = { appViewModel.transitionToSettings() }
+                                    onDismiss = {
+                                        // A tapped-away preview goes back where it came from, which
+                                        // is not always Settings.
+                                        if (appViewModel.isPreviewMode) appViewModel.exitPreview()
+                                        else appViewModel.transitionToSettings()
+                                    }
                                 )
                             }
 
@@ -229,7 +259,12 @@ class MainActivity : ComponentActivity() {
                                 }
                                 IqomahScreen(
                                     state = state.state,
-                                    onDismiss = { appViewModel.transitionToSettings() }
+                                    onDismiss = {
+                                        // A tapped-away preview goes back where it came from, which
+                                        // is not always Settings.
+                                        if (appViewModel.isPreviewMode) appViewModel.exitPreview()
+                                        else appViewModel.transitionToSettings()
+                                    }
                                 )
                             }
 
@@ -262,6 +297,9 @@ class MainActivity : ComponentActivity() {
                         // listens. Edits a controller could not deliver surface here, because
                         // RemoteActionSender holds nothing back to resend.
                         MessageHost(remoteSender.notices)
+                        // Whether an upload to the display went through: the store runs it in the
+                        // background and has no other way to say so.
+                        MessageHost(mediaFileStore.notices)
 
                         if (isStandbyActive) {
                             Box(
@@ -348,5 +386,8 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val UNKNOWN_VERSION = "unknown"
         const val REMOTE_MODE = "REMOTE"
+
+        /** How often an open settings screen on a controller looks for new pictures on the display. */
+        const val PICTURE_POLL_MS = 8_000L
     }
 }

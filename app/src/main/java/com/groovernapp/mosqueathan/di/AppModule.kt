@@ -73,8 +73,12 @@ val appModule = module {
     single<DisplayDataSource> { get<ServerDataSource>() }
     single<HijriDateSource> { HijriDateFormatter }
     single { RemoteActionSender(get()) }
+    single<com.groovernapp.mosqueathan.domain.KnownServersStore> {
+        com.groovernapp.mosqueathan.data.remote.PrefsKnownServers(androidContext())
+    }
     single<RemoteActionSink> { get<RemoteActionSender>() }
-    single { MediaFileStore(androidContext()) }
+    single { com.groovernapp.mosqueathan.data.remote.PreviewCache(androidContext()) }
+    single { MediaFileStore(androidContext(), get(), get<ConfigRepository>()) }
     // The only thing in the app that deliberately makes a sound; see MurottalPlayer.
     single { com.groovernapp.mosqueathan.audio.MurottalPlayer(androidContext()) }
     single<HttpFetcher> { HttpUrlFetcher() }

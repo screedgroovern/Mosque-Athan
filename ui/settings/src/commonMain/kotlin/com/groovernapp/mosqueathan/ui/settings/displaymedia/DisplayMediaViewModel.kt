@@ -39,32 +39,37 @@ class DisplayMediaViewModel(
 
     val uiState: StateFlow<DisplayMediaUiState> =
         combine(
-            repository.getConfigFlow(),
-            repository.getMediaListFlow(),
-            repository.getSlideshowSchedulesFlow(),
-            repository.getActiveAnnouncementsFlow(),
+            combine(
+                repository.getConfigFlow(),
+                repository.getMediaListFlow(),
+                repository.getSlideshowSchedulesFlow(),
+                repository.getActiveAnnouncementsFlow(),
+                // A flow, not `getDashboardBackgrounds()` inside the transform: that read ran only
+                // when one of the other sources emitted, so adding, replacing or deleting a
+                // background left the list stale until something unrelated changed.
+                repository.getDashboardBackgroundsFlow()
+            ) { config, media, schedules, announcements, backgrounds ->
+                DisplayMediaUiState(
+                    slideshow = SlideshowSettings(
+                        enabled = config.slideshowEnabled,
+                        transitionType = config.transitionType,
+                        intervalSeconds = config.slideIntervalSeconds,
+                        videoWaitUntilEnd = config.videoWaitUntilEnd,
+                        includeDefaultImage = config.includeDefaultImage,
+                        media = media,
+                        schedules = schedules
+                    ),
+                    dashboard = DashboardSettings(
+                        randomize = config.dashboardRandomize,
+                        transitionType = config.dashboardTransitionType,
+                        transitionIntervalSeconds = config.dashboardTransitionInterval,
+                        backgrounds = backgrounds
+                    ),
+                    announcements = announcements
+                )
+            },
             notice
-        ) { config, media, schedules, announcements, notice ->
-            DisplayMediaUiState(
-                slideshow = SlideshowSettings(
-                    enabled = config.slideshowEnabled,
-                    transitionType = config.transitionType,
-                    intervalSeconds = config.slideIntervalSeconds,
-                    videoWaitUntilEnd = config.videoWaitUntilEnd,
-                    includeDefaultImage = config.includeDefaultImage,
-                    media = media,
-                    schedules = schedules
-                ),
-                dashboard = DashboardSettings(
-                    randomize = config.dashboardRandomize,
-                    transitionType = config.dashboardTransitionType,
-                    transitionIntervalSeconds = config.dashboardTransitionInterval,
-                    backgrounds = repository.getDashboardBackgrounds()
-                ),
-                announcements = announcements,
-                notice = notice
-            )
-        }.stateIn(
+        ) { state, notice -> state.copy(notice = notice) }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = DisplayMediaUiState()

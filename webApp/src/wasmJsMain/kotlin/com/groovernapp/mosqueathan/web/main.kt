@@ -15,7 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ComposeViewport
 import com.groovernapp.mosqueathan.protocol.RemoteActionSink
 import com.groovernapp.mosqueathan.protocol.RemoteActions
+import com.groovernapp.mosqueathan.domain.PreviewKind
+import com.groovernapp.mosqueathan.ui.design.LocalActivePreview
 import com.groovernapp.mosqueathan.ui.design.LocalAppVersion
+import com.groovernapp.mosqueathan.ui.design.LocalCanServe
 import com.groovernapp.mosqueathan.ui.design.LocalDisplayBackgrounds
 import com.groovernapp.mosqueathan.ui.design.MosqueTheme
 import com.groovernapp.mosqueathan.ui.design.MessageHost
@@ -56,9 +59,25 @@ fun main() {
             // is no state to write, only a screen for the display to show.
             val remote = koinInject<RemoteActionSink>()
 
+            // Which preview the display is showing, so that button can say Stop. Only meaningful
+            // while connected: a snapshot from before a drop describes a screen nobody can vouch
+            // for any more, and a Stop button for it would send into the void.
+            val displayPreview by koinInject<InMemoryConfigRepository>().activePreview.collectAsState()
+            val activePreview = if (linkStatus == DisplayLink.Status.Connected) displayPreview else null
+
+            // One handler per button: pressing the preview that is already running ends it. The
+            // display returns to the screen it was on, so the controller only has to say stop.
+            fun togglePreview(kind: PreviewKind, start: String) {
+                if (activePreview == kind) remote.send(RemoteActions.EXIT_PREVIEW) {}
+                else remote.send(start) {}
+            }
+
             CompositionLocalProvider(
                 LocalDisplayBackgrounds provides webBackgrounds,
                 LocalAppVersion provides WEB_APP_VERSION,
+                // A browser cannot listen on a socket, so Server Mode is not on offer here.
+                LocalCanServe provides false,
+                LocalActivePreview provides activePreview,
                 LocalLinkStatus provides linkStatus.toUiStatus(),
                 LocalMediaImageLoader provides mediaImages,
                 // The way past a display's PIN. The browser holds a registered socket, so it can
@@ -86,11 +105,13 @@ fun main() {
                         // browser left all four at their `{}` default, so the buttons drew, took
                         // focus, and did nothing — the same defect as the Back button that went
                         // nowhere, and the server side had been waiting all along.
-                        onPreviewAdzan = { remote.send(RemoteActions.PREVIEW_ADZAN) {} },
-                        onPreviewIqomah = { remote.send(RemoteActions.PREVIEW_IQOMAH) {} },
-                        onPreviewSlideshow = { remote.send(RemoteActions.PREVIEW_SLIDESHOW) {} },
+                        onPreviewAdzan = { togglePreview(PreviewKind.Adzan, RemoteActions.PREVIEW_ADZAN) },
+                        onPreviewIqomah = { togglePreview(PreviewKind.Iqomah, RemoteActions.PREVIEW_IQOMAH) },
+                        onPreviewSlideshow = {
+                            togglePreview(PreviewKind.Slideshow, RemoteActions.PREVIEW_SLIDESHOW)
+                        },
                         onPreviewFridaySlideshow = {
-                            remote.send(RemoteActions.PREVIEW_FRIDAY_SLIDESHOW) {}
+                            togglePreview(PreviewKind.FridaySlideshow, RemoteActions.PREVIEW_FRIDAY_SLIDESHOW)
                         },
                         // Nothing to go back to: in the browser the settings UI *is* the app, where
                         // on the television it is a screen you leave to return to the clock. Null

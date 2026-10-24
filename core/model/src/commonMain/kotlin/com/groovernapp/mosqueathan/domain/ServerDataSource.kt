@@ -54,6 +54,15 @@ interface ServerDataSource : ConfigRepository {
     /** Points an existing background row at a different file, after an upload replaced it. */
     suspend fun updateDashboardBackgroundPath(id: String, filePath: String)
 
+    /**
+     * Marks every picture table that names [filePath] as changed.
+     *
+     * For an upload that replaced a file's bytes and left its path alone: no row is written, so
+     * nothing else would move the table's stamp, and a controller deciding whether to re-read the
+     * display's pictures goes by that stamp. Without it a replaced picture looks unchanged forever.
+     */
+    suspend fun touchMediaFile(filePath: String)
+
     /** Approves or refuses a device; approving also restarts its session clock. */
     suspend fun updateDeviceAllowed(id: String, allowed: Boolean)
 

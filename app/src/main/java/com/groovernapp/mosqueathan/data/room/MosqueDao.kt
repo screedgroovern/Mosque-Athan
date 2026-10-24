@@ -253,6 +253,9 @@ interface MosqueDao {
         announcements: List<AnnouncementEntity>?,
         slideshow: List<SlideshowScheduleEntity>?,
         standby: List<StandbyScheduleEntity>?,
+        media: List<MediaEntity>?,
+        fridayMedia: List<FridayMediaEntity>?,
+        backgrounds: List<DashboardBackgroundEntity>?,
         stampedAt: Long
     ) {
         if (config != null) {
@@ -276,6 +279,23 @@ interface MosqueDao {
             getStandbySchedules().forEach { deleteStandbySchedule(it.id) }
             upsertStandbySchedules(standby)
             stampTable(TableStampEntity("standby_schedules", stampedAt))
+        }
+        // Rows only. The files they name stay where they are: deleting a row here must not delete
+        // a file, and these are the display's rows, which the display's files back.
+        if (media != null) {
+            getMedia().forEach { deleteMedia(it.id) }
+            upsertMedia(media)
+            stampTable(TableStampEntity("media", stampedAt))
+        }
+        if (fridayMedia != null) {
+            getFridayMedia().forEach { deleteFridayMedia(it.id) }
+            upsertFridayMedia(fridayMedia)
+            stampTable(TableStampEntity("friday_media", stampedAt))
+        }
+        if (backgrounds != null) {
+            getDashboardBackgrounds().forEach { deleteDashboardBackground(it.id) }
+            upsertDashboardBackgrounds(backgrounds)
+            stampTable(TableStampEntity("dashboard_backgrounds", stampedAt))
         }
     }
 

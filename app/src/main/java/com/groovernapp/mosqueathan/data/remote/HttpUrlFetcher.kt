@@ -42,7 +42,25 @@ class HttpUrlFetcher : HttpFetcher {
         }
     }
 
+    /** Impatient on purpose: this is asked of every remembered display, most of them probably off. */
+    override suspend fun isReachable(url: String): Boolean = withContext(Dispatchers.IO) {
+        var connection: HttpURLConnection? = null
+        try {
+            connection = (URL(url).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = PROBE_TIMEOUT_MS
+                readTimeout = PROBE_TIMEOUT_MS
+            }
+            connection.responseCode == 200
+        } catch (_: Exception) {
+            false
+        } finally {
+            connection?.disconnect()
+        }
+    }
+
     private companion object {
         const val TIMEOUT_MS = 5_000
+        const val PROBE_TIMEOUT_MS = 2_000
     }
 }

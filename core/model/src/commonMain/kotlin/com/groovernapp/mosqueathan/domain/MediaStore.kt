@@ -67,4 +67,33 @@ interface MediaStore {
 
     /** Removes the custom background, so the display falls back to the bundled default. */
     fun deleteCustomBackground(): Boolean
+
+    /**
+     * Keeps a copy of the display's pictures on this device, so they still show when it is away.
+     *
+     * A sync copies the display's rows, which only *name* files on the display. A controller that
+     * stopped there showed "failed to load" for every picture the moment it left the mosque's wifi.
+     * [host] is the display, [filePaths] are the pictures it holds, and the result is how many were
+     * saved. The copies are previews, not the media: nothing here can be sent back.
+     *
+     * Nothing to do by default: a display holds the files itself, and a browser stays connected.
+     */
+    suspend fun cacheForOffline(host: String, filePaths: List<String>): Int = 0
+
+    /**
+     * Copies pictures this device holds to a display that does not have them, and returns how many
+     * were accepted.
+     *
+     * What is sent is the saved preview of each picture ([cacheForOffline]), not an original: the
+     * originals only ever existed on the display they came from. So a picture arrives smaller than
+     * it left, and one that was never saved here cannot be sent at all. The display adds the rows
+     * itself. Nothing to do by default: only an Android controller holds copies to send.
+     */
+    suspend fun sendPicturesToDisplay(host: String, pictures: List<PictureToSend>): Int = 0
 }
+
+/** Which of the display's picture lists a picture belongs to. */
+enum class PictureKind { Slideshow, Friday, Dashboard }
+
+/** A picture to copy to a display: [path] is how this device knows it, [kind] where it goes there. */
+data class PictureToSend(val path: String, val kind: PictureKind)

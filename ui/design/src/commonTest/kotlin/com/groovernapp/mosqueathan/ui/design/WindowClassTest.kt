@@ -25,6 +25,29 @@ class WindowClassTest {
     }
 
     @Test
+    fun aTabletHeldUprightGetsThePhoneLayout() {
+        // The Xiaomi tablet: 1137x711dp in landscape, so 711x1137dp upright.
+        assertEquals(WindowClass.Compact, windowClassFor(711.dp, isTv = false, height = 1137.dp))
+        assertEquals(WindowClass.Compact, windowClassFor(820.dp, isTv = false, height = 1180.dp))
+    }
+
+    @Test
+    fun aTabletInLandscapeKeepsItsWidthClass() {
+        assertEquals(WindowClass.Expanded, windowClassFor(1137.dp, isTv = false, height = 711.dp))
+        assertEquals(WindowClass.Medium, windowClassFor(800.dp, isTv = false, height = 360.dp))
+    }
+
+    @Test
+    fun aSquareWindowIsNotUpright() {
+        assertEquals(WindowClass.Medium, windowClassFor(700.dp, isTv = false, height = 700.dp))
+    }
+
+    @Test
+    fun aTelevisionIsNeverReclassifiedByItsShape() {
+        assertEquals(WindowClass.Tv, windowClassFor(540.dp, isTv = true, height = 960.dp))
+    }
+
+    @Test
     fun tabletPortraitWidthsAreMedium() {
         assertEquals(WindowClass.Medium, windowClassFor(600.dp, isTv = false))
         assertEquals(WindowClass.Medium, windowClassFor(839.dp, isTv = false))

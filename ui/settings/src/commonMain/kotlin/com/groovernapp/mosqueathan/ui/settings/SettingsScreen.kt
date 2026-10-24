@@ -111,8 +111,9 @@ fun SettingsScreen(
     val showAllSettings = true
 
     var selectedCategory by remember(showAllSettings) {
-        mutableStateOf(if (showAllSettings) SettingsCategory.PRAYER_SCHEDULE else SettingsCategory.REMOTE_DEVICES)
+        mutableStateOf(if (showAllSettings) viewModel.lastCategory else SettingsCategory.REMOTE_DEVICES)
     }
+    LaunchedEffect(selectedCategory) { viewModel.lastCategory = selectedCategory }
     val isTv = LocalWindowClass.current.isTv
 
     // Location States
@@ -777,15 +778,15 @@ enum class SettingsCategory(
         getDescription = { Lang.get("Configure background wallpapers, slideshows, and scrolling running texts.", "Atur gambar latar belakang, interval slideshow, dan running text.") },
         icon = Icons.Default.Image
     ),
-    REMOTE_DEVICES(
-        getDisplayName = { Lang.get("Connectivity", "Konektivitas") },
-        getDescription = { Lang.get("Manage web control server access, connected devices, and PIN security.", "Kelola akses server kontrol web, perangkat yang terhubung, PIN, dan otoritas master.") },
-        icon = Icons.Default.Devices
-    ),
     FRIDAY_SETTINGS(
         getDisplayName = { Lang.get("Friday", "Hari Jum'at") },
         getDescription = { Lang.get("Configure Friday specific schedules, standby modes, khutbah warnings, and murottal audio.", "Atur jadwal khusus hari Jumat, standby, murottal sebelum adzan, dan teks pengumuman khutbah.") },
         icon = StarCrescent
+    ),
+    REMOTE_DEVICES(
+        getDisplayName = { Lang.get("Connectivity", "Konektivitas") },
+        getDescription = { Lang.get("Manage web control server access, connected devices, and PIN security.", "Kelola akses server kontrol web, perangkat yang terhubung, PIN, dan otoritas master.") },
+        icon = Icons.Default.Devices
     ),
     SYSTEM_MAINTENANCE(
         getDisplayName = { Lang.get("System & Reset", "Sistem & Reset") },

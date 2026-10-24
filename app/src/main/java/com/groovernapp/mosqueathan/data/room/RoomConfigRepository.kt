@@ -669,6 +669,12 @@ class RoomConfigRepository(
 
     override suspend fun deleteDevice(id: String) = dao.deleteDevice(id)
 
+    override suspend fun touchMediaFile(filePath: String) {
+        if (dao.getMedia().any { it.filePath == filePath }) touch(TABLE_MEDIA)
+        if (dao.getFridayMedia().any { it.filePath == filePath }) touch(TABLE_FRIDAY_MEDIA)
+        if (dao.getDashboardBackgrounds().any { it.filePath == filePath }) touch(TABLE_BACKGROUNDS)
+    }
+
     override suspend fun setDeviceMaster(id: String) {
         val at = now()
         dao.upsertDevices(
@@ -782,7 +788,10 @@ class RoomConfigRepository(
         config: MosqueConfig?,
         announcements: List<Announcement>?,
         slideshowSchedules: List<SlideshowSchedule>?,
-        standbySchedules: List<StandbySchedule>?
+        standbySchedules: List<StandbySchedule>?,
+        media: List<Media>?,
+        fridayMedia: List<FridayMedia>?,
+        dashboardBackgrounds: List<DashboardBackground>?
     ) {
         val at = now()
         val configRow = config?.let { (dao.getConfig() ?: MosqueConfigEntity()).withSnapshot(it, at) }
@@ -792,6 +801,9 @@ class RoomConfigRepository(
             announcements = announcements?.map { it.toEntity(at) },
             slideshow = slideshowSchedules?.map { it.toEntity(at) },
             standby = standbySchedules?.map { it.toEntity(at) },
+            media = media?.map { it.toEntity(at) },
+            fridayMedia = fridayMedia?.map { it.toEntity(at) },
+            backgrounds = dashboardBackgrounds?.map { it.toEntity(at) },
             stampedAt = at
         )
 

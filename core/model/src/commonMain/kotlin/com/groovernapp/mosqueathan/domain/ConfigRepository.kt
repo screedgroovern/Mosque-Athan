@@ -147,8 +147,13 @@ interface ConfigRepository : DisplayDataSource {
      * all. Additive-only sync is how a running text a takmir removed at home reappears on the
      * television.
      *
-     * Media tables are absent by design — those rows name files, and a file on a phone is not a
-     * file on the display. See `SyncConflict.PUSHABLE_TABLES`.
+     * The three media tables ([media], [fridayMedia], [dashboardBackgrounds]) travel in **one
+     * direction only**: a controller takes the display's rows, and never sends its own. Those rows
+     * name files, and a file on a phone is not a file on the display — so a display must not accept
+     * them (`SyncConflict.PUSHABLE_TABLES` keeps them out of every push, and the server never passes
+     * them here). A controller can, because the display owns the files and serves them over HTTP;
+     * taking the rows is what lets it list and show them at all. Before this, a controller that
+     * connected to a display saw none of its pictures.
      *
      * Four config fields are kept from the row already here whichever way the snapshot travels:
      * `id`, `pinCode` (which never crosses the wire at all), `connectivityMode` and `remoteTvIp`
@@ -161,6 +166,9 @@ interface ConfigRepository : DisplayDataSource {
         config: MosqueConfig?,
         announcements: List<Announcement>?,
         slideshowSchedules: List<SlideshowSchedule>?,
-        standbySchedules: List<StandbySchedule>?
+        standbySchedules: List<StandbySchedule>?,
+        media: List<Media>? = null,
+        fridayMedia: List<FridayMedia>? = null,
+        dashboardBackgrounds: List<DashboardBackground>? = null
     )
 }

@@ -1,16 +1,12 @@
 package com.groovernapp.mosqueathan.data.remote
 
-import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import com.groovernapp.mosqueathan.domain.ConfigRepository
 import com.groovernapp.mosqueathan.ui.design.MediaImageLoader
 import com.groovernapp.mosqueathan.ui.design.decodeImageFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.net.HttpURLConnection
-import java.net.URL
-import java.net.URLEncoder
+import java.io.File
 
 /**
  * Resolves a media path either from this device's storage or from the display it is controlling.
@@ -23,8 +19,14 @@ import java.net.URLEncoder
  * files in the *display's* private storage, and a controller's own `filesDir` has the same shape,
  * so `File(path)` there is simply absent — every thumbnail on a paired phone read "failed to load".
  * That is why this is not a web-only fix: `ui:settings` is shared, and so was the defect.
+ *
+ * Pictures fetched from the display are kept by [PreviewCache], so a controller that has synced
+ * still shows them when it is away from the display.
  */
-class AndroidMediaImageLoader(private val repository: ConfigRepository) : MediaImageLoader {
+class AndroidMediaImageLoader(
+    private val repository: ConfigRepository,
+    private val cache: PreviewCache
+) : MediaImageLoader {
 
     override suspend fun load(path: String): ImageBitmap? {
         if (path.isBlank()) return null
@@ -33,43 +35,19 @@ class AndroidMediaImageLoader(private val repository: ConfigRepository) : MediaI
             config.connectivityMode == REMOTE_MODE && it.isNotEmpty()
         }
         return withContext(Dispatchers.IO) {
-            if (remoteHost == null) decodeImageFile(path) else fetch(remoteHost, path)
-        }
-    }
-
-    /**
-     * Asks the display for the file it already serves at `/media?path=`.
-     *
-     * Returns null on anything at all — no route to the display, a file it has since deleted, a
-     * path it refuses, bytes that are not an image. The caller needs only "no thumbnail", and
-     * `Throwable` rather than `Exception` because an oversized image fails as `OutOfMemoryError`
-     * in the decoder, which must cost one tile and not the settings screen.
-     */
-    private fun fetch(host: String, path: String): ImageBitmap? {
-        return try {
-            val encoded = URLEncoder.encode(path, "UTF-8")
-            val connection = URL("http://$host:$PORT/media?path=$encoded")
-                .openConnection() as HttpURLConnection
-            connection.connectTimeout = TIMEOUT_MS
-            connection.readTimeout = TIMEOUT_MS
-            try {
-                if (connection.responseCode !in 200..299) {
-                    null
-                } else {
-                    val bytes = connection.inputStream.use { it.readBytes() }
-                    BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
-                }
-            } finally {
-                connection.disconnect()
+            when {
+                remoteHost == null -> decodeImageFile(path)
+                // A picture added on this controller is a real file here, and the display does not
+                // have it, so asking the display would only fail.
+                File(path).exists() -> decodeImageFile(path)
+                // The saved copy first: it is what keeps a picture showing when the display is
+                // away, and a miss falls through to the display and saves what it gets.
+                else -> cache.read(path) ?: cache.fetchAndStore(remoteHost, path)
             }
-        } catch (_: Throwable) {
-            null
         }
     }
 
     private companion object {
         const val REMOTE_MODE = "REMOTE"
-        const val PORT = 8080
-        const val TIMEOUT_MS = 5_000
     }
 }

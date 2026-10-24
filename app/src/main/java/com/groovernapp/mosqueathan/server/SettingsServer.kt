@@ -43,6 +43,10 @@ class SettingsServer(
     private var repoJob: Job? = null
 
     companion object {
+        /** How long a controller may be silent before it no longer counts as online. */
+        private const val PRESENCE_TIMEOUT_MS = 30_000L
+        private const val PRESENCE_SWEEP_MS = 10_000L
+
         private const val TAG = "SettingsServer"
 
         fun getIpAddress(): String? {
@@ -104,6 +108,10 @@ class SettingsServer(
         }
     }
 
+    /** Which preview the display is showing; set once at [start], read when building each snapshot. */
+    @Volatile
+    private var previewState: kotlinx.coroutines.flow.StateFlow<com.groovernapp.mosqueathan.domain.PreviewKind?>? = null
+
     fun start(port: Int = 8080) {
         if (isRunning) return
         isRunning = true
@@ -143,6 +151,37 @@ class SettingsServer(
             launch {
                 repository.observeFridayMedia().collect {
                     broadcastState()
+                }
+            }
+            // A preview starting or ending changes which button a controller shows as Stop, and the
+            // display ends previews itself, so this cannot be left to the controller to infer.
+            launch {
+                // Fetched on the main thread like every other use of the view model here, then
+                // collected on this scope: broadcasting builds the whole payload, which is not main
+                // thread work.
+                val previews = withContext(Dispatchers.Main) {
+                    (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.activePreview
+                }
+                previewState = previews
+                previews?.collect { broadcastState() }
+            }
+            // A controller on Android posts over HTTP and holds no socket, so nothing ever tells the
+            // display it has gone: `registerDevice` marks it online and only a closing socket marks
+            // anything offline. The "controllers online" count therefore only ever went up. A
+            // controller re-registers every few seconds while its settings are open, so one that has
+            // been silent for [PRESENCE_TIMEOUT_MS] and holds no socket is gone.
+            launch {
+                while (isRunning) {
+                    delay(PRESENCE_SWEEP_MS)
+                    try {
+                        val connected = activeConnections.mapNotNull { connectionDeviceMap[it] }.toSet()
+                        val cutoff = System.currentTimeMillis() - PRESENCE_TIMEOUT_MS
+                        repository.getConnectedDevices()
+                            .filter { it.isOnline && it.deviceId !in connected && it.lastSeen < cutoff }
+                            .forEach { repository.updateDeviceOnlineStatus(it.deviceId, false) }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error sweeping device presence", e)
+                    }
                 }
             }
             // Periodic check for expired device sessions (1 hour PIN validity)
@@ -568,6 +607,9 @@ class SettingsServer(
                                     throw java.io.IOException("could not move the replacement into place")
                                 }
                                 logDebug("Replaced ${replaceTarget.name} ($totalRead bytes)")
+                                // No row changes, so move the table stamp by hand: it is what tells
+                                // a controller that polls for pictures that this one is new.
+                                repository.touchMediaFile(replaceTarget.absolutePath)
                                 // The path is unchanged, so no row is written — the broadcast is
                                 // what tells every client to re-read the file.
                                 broadcastState()
@@ -1146,6 +1188,11 @@ class SettingsServer(
         val stamps = JSONObject()
         runBlocking { repository.tableTimestamps() }.forEach { (table, at) -> stamps.put(table, at) }
         json.put("tableTimestamps", stamps)
+        json.put(
+            "activePreview",
+            previewState?.value?.wire ?: ""
+        )
+        json.put("serverName", android.os.Build.MODEL ?: "")
 
         val result = json.toString()
         val duration = System.currentTimeMillis() - startTime
@@ -1300,6 +1347,11 @@ class SettingsServer(
                 RemoteActions.PREVIEW_FRIDAY_SLIDESHOW -> {
                     withContext(Dispatchers.Main) {
                         (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.previewFridaySlideshow()
+                    }
+                }
+                RemoteActions.EXIT_PREVIEW -> {
+                    withContext(Dispatchers.Main) {
+                        (context as? com.groovernapp.mosqueathan.MainActivity)?.appViewModel?.exitPreview()
                     }
                 }
                 RemoteActions.ADD_ANNOUNCEMENT -> {
